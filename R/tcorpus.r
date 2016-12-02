@@ -275,6 +275,9 @@ subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL) {
     tc@doc_meta = tc@doc_meta[r,]
     tc@data[unique(tc@doc_meta$doc_id)]
   }
+
+  tc@data = droplevels(tc@data)
+  tc@doc_meta = droplevels(tc@doc_meta)
   if(!key(tc@data) == 'doc_id') setkey(tc@data, 'doc_id')
   if(!key(tc@doc_meta) == 'doc_id')setkey(tc@doc_meta, 'doc_id')
 
@@ -298,120 +301,6 @@ function(){
   tc@data
   mean(test)
 }
-
-#' Title
-#'
-#' @param tc tcorpus object
-#' @param filter_keep a custom filter indicating which data to keep. If given, has to be a logical vector or a numerical vector with indices of the same length as the tcorpus data. The custom filter will override
-#' @param filter_ignore a custom filter indicating which data to ignore. If given, has to be a logical vector or a numerical vector with indices of the same length as the tcorpus data.
-#' @param keep_filtered_data
-#' @param feature
-#' @param language
-#' @param ignore_stopwords
-#' @param ignore_punctuation
-#' @param ignore_features
-#' @param keep_features
-#' @param max_word_i
-#' @param max_sent_i
-#' @param ignore_doc_id
-#' @param keep_doc_id
-#' @param reset_feature_matrix
-#'
-#' @return
-#' @export
-#'
-#' @examples
-filter_tcorpus <- function(tc, filter_keep=NULL, filter_ignore=NULL,
-                               feature=NULL, language='english', ignore_stopwords=T, ignore_punctuation=T, ignore_features=NULL, keep_features=NULL,
-                               max_word_i=NULL, max_sent_i=NULL, ignore_doc_id=NULL, keep_doc_id=NULL,
-                               reset_feature_matrix=T, keep_filtered_data=T){
-
-  filter = filter_position(tc, max_word_i, max_sent_i, ignore_doc_id, keep_doc_id)
-
-  if(!is.null(feature)){
-    filter = filter & filter_features(tc, feature, language='english', ignore_stopwords=T, ignore_punctuation=T, ignore_features=NULL, keep_features=NULL)
-  } else {
-    cat('Not filtering on feature characteristics (feature == NULL)\n')
-  }
-
-  if(!is.null(filter_keep)){
-    if(!is(filter_keep, 'logical')) filter_keep = filter_keep %in% 1:nrow(tc@data)
-    filter = filter & filter_keep
-  }
-  if(!is.null(filter_ignore)){
-    if(!is(filter_ignore, 'logical')) filter_ignore = filter_ignore %in% 1:nrow(tc@data)
-    filter = filter & !filter_ignore
-  }
-  if(keep_filtered_data){
-    tc@data$filter = F
-    tc@data$filter[filter] = T
-  } else {
-    if(!all(filter)){
-      tc@data = tc@data[filter]
-      if(get_provenance(tc)$feature_index){
-        cat('\tResetting feature index\n')
-        tc = reset_feature_index(tc)
-      }
-    }
-  }
-  tc
-}
-
-filter_features <- function(tc, feature, language='english', ignore_stopwords=T, ignore_punctuation=T, ignore_features=NULL, keep_features=NULL){
-  feature = if(is(feature, 'factor')) feature else as.factor(tc@data[[feature]])
-  levels(feature) = tolower(levels(feature))
-
-  filter = rep(T, nrow(tc@data))
-  if(is.null(keep_features)){
-    if(!is.null(ignore_features)) {
-      cat('\tremoving features specified in "ignore_features"\n')
-      filter = ifelse(feature %in% ignore_features, F, filter)
-    }
-    if(ignore_stopwords) {
-      cat('\tremoving stopwords\n')
-      filter = ifelse(feature %in% quanteda::stopwords(language), F, filter)
-    }
-    if(ignore_punctuation) {
-      cat('\tremoving punctuation\n')
-      has_punc = grep('[:;"\'|(),.<>?!=/]', levels(feature), value=T)
-      filter = ifelse(feature %in% has_punc, F, filter)
-    }
-  } else {
-    cat('\tonly keeping features specified in "keep_features"\n')
-    filter = ifelse(feature %in% keep_features, T, filter)
-  }
-  filter
-}
-
-filter_position <- function(tc, max_word_i=NULL, max_sent_i=NULL, ignore_doc_id=NULL, keep_doc_id=NULL){
-  filter = rep(T, nrow(tc@data))
-  if(is.null(keep_doc_id)){
-    if(!is.null(ignore_doc_id)) {
-      cat('\tremoving documents with doc_id as specified in "ignore_doc_id"\n')
-      if(is(ignore_doc_id, 'logical')) ignore_doc_id = which(ignore_doc_id)
-      filter = ifelse(tc@data$doc_id %in% ignore_doc_id, F, filter)
-    }
-  } else {
-    cat('\tkeeping only documents with doc_id as specified in "keep_doc_id"\n')
-    if(is(keep_doc_id, 'logical')) keep_doc_id = which(keep_doc_id)
-    filter = ifelse(!tc@data$doc_id %in% keep_doc_id, F, filter)
-  }
-  if(!is.null(max_word_i)) {
-    cat(sprintf('\tremoving all features with word_i above %s\n', max_word_i))
-    filter = ifelse(tc@data$word_i > max_word_i, F, filter)
-  }
-  if(!is.null(max_sent_i)) {
-    if('sent_i' %in% colnames(tc@data)) {
-      cat(sprintf('\tremoving all features with sent_i above %s\n', max_sent_i))
-      filter = ifelse(tc@data$sent_i > max_sent_i, F, filter)
-    } else {
-      warning('Sentence level filtering not possible without sent_i column')
-    }
-  }
-  filter
-}
-
-
 
 
 ### FEATURE INDEX ###
