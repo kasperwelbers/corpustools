@@ -1,0 +1,47 @@
+test_that("Query search works", {
+  library(tcorpus)
+  text = c('Renewable fuel is better than fossil fuels!',
+           'A fueled debate about fuel',
+           'Mark Rutte is simply Rutte')
+  tc = create_tcorpus(text)
+
+  ## simple keyword only
+  hits = search_features(tc, keyword = 'fuel')
+  expect_equal(as.character(hits$feature), c('fuel','fuel'))
+
+  ## set global i
+  tc = set_feature_index(tc, feature='word')
+
+  ## two keywords
+  hits = search_features(tc, keyword = 'fuel fuels')
+  expect_equal(as.character(hits$feature), c('fuel','fuels','fuel'))
+
+  ## keyword with wildcard
+  hits = search_features(tc, keyword = 'fuel*')
+  expect_equal(as.character(hits$feature), c('fuel','fuels','fueled','fuel'))
+
+  ## keyword and condition
+  hits = search_features(tc, keyword = 'fuel*', condition = 'renewable green clean')
+  expect_equal(as.character(hits$feature), c('fuel','fuels'))
+
+  ## condition with default_window
+  hits = search_features(tc, keyword = 'fuel*', condition = 'renewable green clean', default_window = 2)
+  expect_equal(as.character(hits$feature), c('fuel'))
+
+  ## condition once parameter
+  hits_f = search_features(tc, keyword = 'rutte', condition = 'mark~2')
+  hits_t = search_features(tc, keyword = 'rutte', condition = 'mark~2', condition_once = T)
+  expect_equal(as.character(hits_f$feature), c('Rutte'))
+  expect_equal(as.character(hits_t$feature), c('Rutte','Rutte'))
+
+  ## multiple queries
+  queries = data.frame(code=c('renewable fuel', 'mark rutte', 'debate'),
+                       keyword=c('fuel*', 'rutte', 'debate'),
+                       condition = c('renewable green clean', 'mark~2', ''))
+  hits = search_features(tc, queries=queries, condition_once=c(F,T,F))
+  expect_equal(as.character(hits$feature), c('fuel','fuels','debate', 'Rutte', 'Rutte'))
+
+  ## code queries
+  ##code = code_features(tc, queries, condition_once=c(F,T,F))
+  ##expect_equal(as.numeric(table(code)), c(12,1,2,2))
+})

@@ -1,0 +1,13 @@
+Package: tcorpus
+Version: 0.102
+Date: 2016-10-18
+Title: Tokenized Corpus
+Author: Kasper Welbers & Wouter van Atteveldt
+Maintainer: Kasper Welbers <kasperwelbers@gmail.com>
+Depends: R (>= 3.2.0), Matrix, data.table, quanteda
+Imports: plyr, wordcloud, slam, igraph
+Description: A class for a tokenized Corpus, with functions to prepare the corpus for computational text analysis and visualize the results
+License: MIT
+URL: http://github.com/kasperwelbers/tcorpus
+Roxygen: list(wrap = FALSE)
+RoxygenNote: 5.0.1
