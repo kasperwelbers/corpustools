@@ -1,5 +1,4 @@
 test_that("Semnet works", {
-
   library(tcorpus)
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
@@ -21,4 +20,11 @@ test_that("Semnet works", {
   expect_equal(ecount(g), 88)
   g = cooccurrence_window(tc, 'word', window.size = 5)
   expect_equal(ecount(g), 82)
+
+  ## backbone extraction
+
+  g = cooccurrence(tc, 'word', measure = 'cosine')
+  gb = getBackboneNetwork(g, alpha=0.5)
+  expect_equal(ecount(gb), 43)
+
 })
