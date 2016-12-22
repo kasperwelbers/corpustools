@@ -4,8 +4,8 @@
 \alias{wordWindowOccurence}
 \title{Gives the window in which a term occured in a matrix.}
 \usage{
-wordWindowOccurence(tokenlist, window.size = 10, direction = "<>",
-  distance.as.value = F, feature.col = tokenlist@feature.col, filter = T)
+wordWindowOccurence(tc, feature, context_level = c("document", "sentence"),
+  window.size = 10, direction = "<>", distance_as_value = F)
 }
 \arguments{
 \item{window.size}{The distance within which words should occur from each other to be counted as a co-occurence.}

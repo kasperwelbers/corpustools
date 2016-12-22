@@ -11,10 +11,14 @@ tCorpus = setClass("tCorpus",
                      feature_index = data.table()
                    ))
 
+#' @export
 as.tcorpus <- function(x) UseMethod('as.tcorpus')
-as.tcorpus.tCorpus <- function(x) x
-as.tcorpus.default <- function(x) stop('x has to be a tCorpus object')
 
+#' @export
+as.tcorpus.tCorpus <- function(x) x
+
+#' @export
+as.tcorpus.default <- function(x) stop('x has to be a tCorpus object')
 ## params: preprocess_params=list, filter_params,
 
 ###### create_tcorpus method ######
@@ -94,7 +98,7 @@ tokens_to_tcorpus <- function(tokens, doc_col, word_i_col, sent_i_col=NULL, doc_
     tokens = tokens[order(tokens[,doc_col], tokens[,word_i_col]),]
   }
   #docs = unique(tokens[,doc_col])
-  positions = data.frame(doc_id= tokens[,doc_col],
+  positions = data.frame(doc_id= as.factor(tokens[,doc_col]),
                          sent_i = tokens[,sent_i_col],
                          word_i = tokens[,word_i_col])
 
@@ -207,6 +211,7 @@ tokenize_to_datatable <- function(x, doc_id=1:length(x), split_sentences=F, max_
     colnames(x) = c('doc_id', 'word_i', 'word')
   }
   x$word = as.factor(x$word)
+  x$doc_id = as.factor(x$doc_id)
   data.table(x, key='doc_id')
 }
 
@@ -222,6 +227,8 @@ unlist_to_df <- function(l, ids=1:length(l), global_position=F){
              position = position,
              value = unlist(l[filter]))
 }
+#' @export
+featurenames <- function(tc) colnames(tc@data)[!colnames(tc@data) %in% c('doc_id','sent_i','word_i')]
 
 preprocess_feature <- function(tc, input_col, output_col=input_col, language='english', use_stemming=F, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence')){
   feature = as.factor(tc@data[[input_col]])
