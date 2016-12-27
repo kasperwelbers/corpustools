@@ -1,0 +1,99 @@
+#' Get a data.table for quick lookup of features
+#'
+#' #' The feature index has 3 columns:
+#' \itemize{
+#'    \item{feature is a factor of a given feature column, and is set as the key of the data.table}
+#'    \item{i is the index of the rows in tc@data.}
+#'    \item{global_i is an index for features with gaps between contexts (e.g., documents, sentences) to enable word disstance computations using a single vector.}
+#' }
+#'
+#' Automatically filters out features based on the filter columns in tc@data
+#'
+#' @param tc
+#' @param feature
+#' @param context_level
+#' @param max_window_size
+#'
+#' @export
+get_feature_index <- function(tc, feature='word', context_level='document', max_window_size=100){
+  prov = get_provenance(tc)
+  if(!prov[['feature_index']]){
+    cat('Creating feature index (can be precomputed with set_feature_index())')
+    timer = Sys.time()
+    fi = create_feature_index(tc, feature=feature, context_level=context_level, max_window_size=max_window_size)
+    cat(sprintf('  (%s seconds)\n', round(as.numeric(difftime(Sys.time(), timer, units = 's')),2)))
+  } else {
+    ## if a feature index exists, check whether it matches the current parameters
+    cfeature = prov[['feature']] == feature
+    clevel = prov[['context_level']] == context_level
+    cgap = prov[['max_window_size']] >= max_window_size
+    if(!cfeature | !clevel | !cgap){
+      cat('Existing feature index does not match current paramters. Creating ad-hoc feature index')
+      timer = Sys.time()
+      fi = create_feature_index(tc, feature=feature, context_level=context_level, max_window_size=max_window_size)
+      cat(sprintf('  (%s seconds)\n', round(as.numeric(difftime(Sys.time(), timer, units = 's')),2)))
+    } else {
+      fi = tc@feature_index
+    }
+  }
+  filter = get_filter(tc)
+  if(!is.null(filter)) return(droplevels(fi[filter,])) else return(fi)  # note to self: droplevels drops all unused factors in fi
+}
+
+
+get_filter <- function(tc){
+  cn = colnames(tc@data)
+  if(!'doc_filter' %in% cn & !'feature_filter' %in% cn) return(NULL)
+  if( 'doc_filter' %in% cn &  'feature_filter' %in% cn) return(tc@data$doc_filter & tc@data$feature_filter)
+  if( 'doc_filter' %in% cn & !'feature_filter' %in% cn) return(tc@data$doc_filter)
+  if(!'doc_filter' %in% cn &  'feature_filter' %in% cn) return(tc@data$feature_filter)
+}
+
+create_feature_index <- function(tc, feature, context_level=c('document','sentence'), max_window_size=100){
+  context_level = match.arg(context_level)
+  feature_index = data.table(feature = tc@data[[feature]])
+  if(!is(feature_index$feature, 'factor')) feature_index$feature = as.factor(feature_index$feature)
+  feature_index$i = 1:nrow(feature_index)
+  feature_index$global_i = get_global_i(tc, context_level, max_window_size)
+  setkey(feature_index, 'feature')
+  feature_index
+}
+
+#' Create a feature index within a tCorpus
+#'
+#' @param tc
+#' @param feature
+#' @param context_level
+#' @param max_window_size
+#'
+#' @export
+set_feature_index <- function(tc, feature, context_level=c('document','sentence'), max_window_size=100){
+  context_level = match.arg(context_level)
+  tc@feature_index = create_feature_index(tc, feature, context_level, max_window_size)
+  tc = set_provenance(tc, feature_index=T, feature=feature, context_level=context_level, max_window_size=max_window_size)
+  tc
+}
+
+#' Reset feature index
+#'
+#' Reset the feature_index. This is for instance necessary after filtering the data without keeping the data
+#'
+#' @param tc
+#'
+#' @export
+reset_feature_index <- function(tc){
+  p = get_provenance(tc)
+  set_feature_index(tc, feature=p$feature, context_level=p$context_level, max_window_size=p$max_window_size)
+}
+
+#' delete feature index
+#'
+#' @param tc
+#'
+#' @export
+delete_feature_index <- function(tc){
+  tc@feature_index = data.table()
+  tc = set_provenance(feature_index=F, feature=NA, context_level=NA, max_window_size=NA)
+  tc
+}
+

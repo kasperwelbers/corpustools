@@ -1,3 +1,27 @@
+#' Compute global feature positions
+#'
+#' Features are given global ids, with an added distance (max_window_size) between contexts (e.g., documents, sentences).
+#' This way, the distance of features can be calculated across multiple contexts using a single vector
+#'
+#' @param tc tCorpus object
+#' @param context_level The context within which
+#' @param max_window_size
+#'
+#' @return a tCorpus object
+#' @export
+get_global_i <- function(tc, context_level=c('document','sentence'), max_window_size=200){
+  context_level = match.arg(context_level)
+  if(context_level == 'document'){
+    global_i = global_position(position = tc@data[['word_i']], context = tc@data[['doc_id']], max_window_size = max_window_size, presorted=T)
+  }
+  if(context_level == 'sentence'){
+    if(!'sent_i' %in% colnames(tc@data)) stop('Sentence level not possible, since no sentence information is available. To enable sentence level analysis, use split_sentences = T in "create_tcorpus()" or specify sent_i_col in "tokens_to_tcorpus()"')
+    globsent = global_position(position = tc@data[['sent_i']], context = tc@data[['doc_id']], presorted=T)
+    global_i = global_position(position = tc@data[['word_i']], context = globsent, max_window_size = max_window_size, presorted=T)
+  }
+  global_i
+}
+
 position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, abs_distance=T, return_i_filter=NULL){
   shifts = shifts[order(abs(shifts))] # order shifts from 0 to higher (this way the shortest distance is used if distance_as_value = T)
 

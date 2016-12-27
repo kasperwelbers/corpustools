@@ -11,7 +11,7 @@ cooccurrence <- function(tc, feature, measure=c('cooccurrence','cosine','conprob
   tc = as.tcorpus(tc)
   feature = match.arg(feature, featurenames(tc))
   measure = match.arg(measure)
-  x = getDTM(tc, feature, context_level)
+  x = get_dtm(tc, feature, context_level)
 
   if(measure == 'cosine') {
     mat = as(getCosine(x), 'dgCMatrix')
@@ -51,15 +51,11 @@ cooccurrence_window <- function(tc, feature, context_level=c('document','sentenc
   calculateAdjacency(mat$position.mat, mat$window.mat)
 }
 
-#g = cooccurrence_window(tc, 'word')
-#plot.semnet(g)
-#plot(g)
-
-dtmToSparseMatrix <- function(dtm){
+DocumentTermMatrix_to_dgTMatrix <- function(dtm){
   sm = spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
   rownames(sm) = rownames(dtm)
   colnames(sm) = colnames(dtm)
-  sm
+  as(sm, 'dgTMatrix')
 }
 
 getcooccurrence <- function(m1, m2=NULL){

@@ -4,8 +4,8 @@
 \alias{tokens_to_tcorpus}
 \title{Create a tcorpus based on tokens (i.e. preprocessed texts)}
 \usage{
-tokens_to_tcorpus(tokens, doc_col, word_i_col, sent_i_col = NULL,
-  doc_meta = NULL, feature_cols = NULL)
+tokens_to_tcorpus(tokens, doc_col = "doc_id", word_i_col = NULL,
+  sent_i_col = NULL, doc_meta = NULL, feature_cols = NULL)
 }
 \arguments{
 \item{feature_cols}{}

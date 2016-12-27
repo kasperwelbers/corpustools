@@ -5,7 +5,7 @@
 #' @param context_level
 #'
 #' @export
-getDTM <- function(tc, feature, context_level=c('document','sentence')){
+get_dtm <- function(tc, feature, context_level=c('document','sentence')){
   context_level = match.arg(context_level)
   if(context_level == 'document') {
     i = as.numeric(tc@data$doc_id)

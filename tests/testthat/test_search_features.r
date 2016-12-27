@@ -3,7 +3,7 @@ test_that("Query search works", {
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte')
-  tc = create_tcorpus(text)
+  tc = create_tcorpus(text, doc_id = c('a','b','c'))
 
   ## simple keyword only
   hits = search_features(tc, keyword = 'fuel')
