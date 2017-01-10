@@ -54,10 +54,27 @@ freq <- function(x) {
 }
 
 #' @export
+freq_top <- function(x, n=100) {
+  d = as.data.frame(table(x))
+  top = head(d[order(-d$Freq),], n)
+  d$top = ifelse(d$x %in% top$x, T, F)
+  d$top[match(x, d$x)]
+}
+
+#' @export
 docfreq <- function(x, doc_id=parent.frame()$doc_id) {
   d = unique(data.frame(id=doc_id, term=x))
   d = as.data.frame(table(d$term))
   d$Freq[match(x, d$Var1)]
+}
+
+#' @export
+docfreq_top <- function(x, n=100, doc_id=parent.frame()$doc_id) {
+  d = unique(data.frame(id=doc_id, term=x))
+  d = as.data.frame(table(d$term))
+  top = head(d[order(-d$Freq),], n)
+  d$top = ifelse(d$Var1 %in% top$Var1, T, F)
+  d$top[match(x, d$Var1)]
 }
 
 #' @export

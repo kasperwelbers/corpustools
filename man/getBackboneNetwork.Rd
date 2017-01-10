@@ -5,7 +5,7 @@
 \title{Extract the backbone of a network.}
 \usage{
 getBackboneNetwork(g, alpha = 0.05, direction = "none",
-  delete.isolates = T, max.vertices = NULL, use.original.alpha = T,
+  delete.isolates = F, max.vertices = NULL, use.original.alpha = T,
   k.is.Nvertices = F)
 }
 \arguments{

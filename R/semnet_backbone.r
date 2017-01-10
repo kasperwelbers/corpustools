@@ -46,7 +46,7 @@ filterVerticesByAlpha <- function(g, max.vertices, use.original.alpha){
 #' @param use.original.alpha if max.vertices is not NULL, this determines whether the lower alpha for selecting the top vertices is also used as a threshold for the edges, or whether the original value given in the alpha parameter is used.
 #' @return A graph in the Igraph format
 #' @export
-getBackboneNetwork <- function(g, alpha=0.05, direction='none', delete.isolates=T, max.vertices=NULL, use.original.alpha=T, k.is.Nvertices=F){
+getBackboneNetwork <- function(g, alpha=0.05, direction='none', delete.isolates=F, max.vertices=NULL, use.original.alpha=T, k.is.Nvertices=F){
   if(direction == 'none') E(g)$alpha = backbone.alpha(g, k.is.Nvertices)
   if(direction == 'in') E(g)$alpha = backbone.indegree.alpha(g, k.is.Nvertices)
   if(direction == 'out') E(g)$alpha = backbone.outdegree.alpha(g, k.is.Nvertices)
@@ -75,9 +75,7 @@ calcAlpha <- function(mat, weightsum, k){
 #' @return A vector of alpha values, which matches the edges. Can thus easily be made an edge attribute: E(g)$alpha = backbone.alpha(g)
 #' @export
 backbone.alpha <- function(g, k.is.Nvertices=F){
-  mat = get.adjacency(g, attr='weight')
-  if(!is.directed(g)) mat[lower.tri(mat)] = 0 # prevents counting edges double in symmetric matrix (undirected graph)
-
+  mat = if(is.directed(g)) get.adjacency(g, attr='weight') else get.adjacency(g, attr='weight', type='upper') # prevents counting edges double in symmetric matrix (undirected graph)
   weightsum = Matrix::rowSums(mat) + Matrix::colSums(mat)
   k = if(k.is.Nvertices) nrow(mat) else Matrix::rowSums(mat>0) + Matrix::colSums(mat>0)
   if(is.directed(g) & k.is.Nvertices) k = k + ncol(mat)

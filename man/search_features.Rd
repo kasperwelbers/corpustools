@@ -5,9 +5,8 @@
 \title{Find tokens using a Lucene-like search query}
 \usage{
 search_features(tc, keyword = NA, condition = NA, code = NA,
-  queries = NULL, feature = "word", default_window = NA,
-  condition_once = F, keyword_filter = NULL, keep_false_condition = F,
-  verbose = F)
+  queries = NULL, feature = "word", condition_once = F,
+  keyword_filter = NULL, keep_false_condition = F, verbose = F)
 }
 \arguments{
 \item{tc}{a tCorpus object}
@@ -20,8 +19,6 @@ search_features(tc, keyword = NA, condition = NA, code = NA,
 
 \item{queries}{Alternatively, a data.frame can be given that contains a "keyword" column, and optionally columns for the "condition", "code" and "condition_once" paramters.}
 
-\item{default_window}{Determines the default word distance of the condition terms to the keyword (thus, if no specific word distance is set with the ~ symbol)}
-
 \item{condition_once}{logical. If TRUE, then if an keyword satisfies its conditions once in an article, all keywords within that article are coded.}
 
 \item{keyword_filter}{A logical vector that indicates which tokens can match an keyword. Can for instance be used to only select tokens that are proper names (using POS tagging) when looking for people.}
@@ -32,6 +29,9 @@ search_features(tc, keyword = NA, condition = NA, code = NA,
 Search tokens in a tokenlist using a query that consists of an keyword, and optionally a condition. For a detailed explanation of the query language please consult the query_tutorial markdown file. For a quick summary see the details below.
 }
 \details{
+Note that the query arguments (keyword, condition, code, condition_once) can be vectors to search multiple queries at once. Alternatively, the queries argument can be used to pass these arguments in a data.frame
+
+
 Brief summary of the query language
 
 The keyword:
@@ -48,12 +48,11 @@ The condition:
    \item{has to be TRUE for the keyword to be accepted. Thus, if a condition is given, the query can be interpreted as: keyword AND condition}
    \item{can contain complex boolean statements, using AND, OR and NOT statements, and using parentheses}
    \item{accepts the ? and * wildcards}
-   \item{can be specified for a maximum word distance of the keyword. The terms in the condition are looked up within this word distance. The default word distance can be given with the default_window parameter. More specifically, individual terms can be given a custom word distance using the ~ symbol, where "word~50" means that "word" is looked up within 50 words of the keyword. If a default_window is used, it is also possible to ignore the word distance for specific terms by using word~d (where d stands for document).}
+   \item{can be specified for a maximum word distance of the keyword. The terms in the condition are looked up within this word distance. Individual terms can be given a word distance using the ~ symbol, where "word~50" means that "word" is looked up within 50 words of the keyword.}
 }
 
 Parameters:
 \itemize{
-   \item{default_window -> determines the default word distance of the condition terms to the keyword (thus, if no specific word distance is set with the ~ symbol)}
    \item{condition_once -> if TRUE, then if the condition is satisfied at least once in an article, all occurences of the keyword are accepted. }
 }
 }

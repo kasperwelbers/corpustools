@@ -16,13 +16,17 @@
 #'
 #' @return Plots a network, and returns the network object if return_graph is TRUE.
 #' @export
-plot_semnet <- function(g, weight_attr='weight', minweight=NA, vertexsize_attr='freq', vertexcolor_attr=NA, labelsize_coef=1, labeldist_coef=1.1, reduce_labeloverlap=T, redo_layout=F, return_graph=T, layout=layout_with_fr, ...){
-  if(redo_layout | is.null(g$layout)) g$layout = layout(g)
-
+plot_semnet <- function(g, weight_attr='weight', min_weight=NA, vertexsize_attr='freq', vertexsize_coef=1, vertexcolor_attr=NA, max_backbone_alpha=NA, labelsize_coef=1, labeldist_coef=1.1, reduce_labeloverlap=T, redo_layout=F, return_graph=T, layout_fun=layout_with_fr, ...){
   E(g)$weight = get.edge.attribute(g, weight_attr)
-  if(!is.na(minweight)) g = delete.edges(g, which(E(g)$weight < minweight))
+  if(!is.na(minweight)) g = delete.edges(g, which(E(g)$weight < min_weight))
 
-  g = setNetworkAttributes(g, vertexsize_attr, vertexcolor_attr)
+  if(!is.na(max_backbone_alpha)) {
+    if(!'alpha' %in% edge_attr_names(g)) E(g)$alpha = backbone.alpha(g)
+    g = delete.edges(g, which(E(g)$alpha > max_alpha))
+  }
+
+  g = setNetworkAttributes(g, vertexsize_attr, vertexcolor_attr, redo_layout = redo_layout, layout_fun=layout_fun)
+  V(g)$size = vertexsize_coef * V(g)$size
   V(g)$label.cex = labelsize_coef * V(g)$label.cex
 
   if(reduce_labeloverlap){
@@ -55,10 +59,10 @@ plotArgsToAttributes <- function(g, args){
 #' @param if TRUE, isolates are placed next to the network
 #' @return a network in the Igraph format
 #' @export
-setNetworkAttributes <- function(g, size_attribute='freq', color_attribute=NA, redo_layout=F){
+setNetworkAttributes <- function(g, size_attribute='freq', color_attribute=NA, redo_layout=F, layout_fun=layout_with_fr){
   g = setVertexAttributes(g, size_attribute, color_attribute)
   g = setEdgeAttributes(g)
-  if(is.null(g$layout)) g$layout = layout_with_fr(g)
+  if(is.null(g$layout) | redo_layout) g$layout = layout_fun(g)
   g
 }
 
@@ -68,7 +72,7 @@ setVertexColors <- function(g, color){
       pal = substr(rainbow(length(unique(color)), s=0.6,alpha=0.5), 1,7)
       duplicates = unique(color[duplicated(color)])
       color = match(color, duplicates) # re-index colors, and setting isolates to NA
-      V(g)$color[!is.na(color)] = pal[color[!is.na(color)]]
+      V(g)$color = ifelse(is.na(color), '#AEAEAE', pal[color])
     } else {
       V(g)$color = color
     }
@@ -85,7 +89,7 @@ setVertexAttributes <- function(g, size, color){
     color = fastgreedy.community(as.undirected(g))$membership
     message('No (valid) color attribute given. Vertex color now based on undirected fastgreedy.community() clustering')
   } else {
-    color = get.vertex.attribute(g, color)
+    color = unlist(get.vertex.attribute(g, color))
   }
   g = setVertexColors(g, color)
 
@@ -96,10 +100,10 @@ setVertexAttributes <- function(g, size, color){
     size = get.vertex.attribute(g, size)
   }
 
-  V(g)$size= rescale_var(size^0.4, 2, 15)
+  V(g)$size= rescale_var(size^0.4, 2, 10)
   V(g)$label.color = 'black'
 
-  V(g)$label.cex = rescale_var(size^0.4, 0.75, 1)
+  V(g)$label.cex = rescale_var(size^0.4, 0.8, 1)
   V(g)$label = V(g)$name
   g
 }

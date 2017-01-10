@@ -4,10 +4,11 @@
 \alias{plot_semnet}
 \title{Visualize a semnet network}
 \usage{
-plot_semnet(g, weight_attr = "weight", minweight = NA,
-  vertexsize_attr = "freq", vertexcolor_attr = NA, labelsize_coef = 1,
-  labeldist_coef = 1.1, reduce_labeloverlap = T, redo_layout = F,
-  return_graph = T, layout = layout_with_fr, ...)
+plot_semnet(g, weight_attr = "weight", min_weight = NA,
+  vertexsize_attr = "freq", vertexsize_coef = 1, vertexcolor_attr = NA,
+  max_backbone_alpha = NA, labelsize_coef = 1, labeldist_coef = 1.1,
+  reduce_labeloverlap = T, redo_layout = F, return_graph = T,
+  layout_fun = layout_with_fr, ...)
 }
 \arguments{
 \item{g}{A network in the igraph format. Specifically designed for the output of coOccurenceNetwork() and windowedCoOccurenceNetwork()}

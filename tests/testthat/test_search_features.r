@@ -24,9 +24,6 @@ test_that("Query search works", {
   hits = search_features(tc, keyword = 'fuel*', condition = 'renewable green clean')
   expect_equal(as.character(hits$feature), c('fuel','fuels'))
 
-  ## condition with default_window
-  hits = search_features(tc, keyword = 'fuel*', condition = 'renewable green clean', default_window = 2)
-  expect_equal(as.character(hits$feature), c('fuel'))
 
   ## condition once parameter
   hits_f = search_features(tc, keyword = 'rutte', condition = 'mark~2')

@@ -32,7 +32,7 @@ test_that("tCorpus class works", {
   expect_equal(doc, as.factor(c(rep(1, 16), rep(2,5))))
 
   docsent = get_context(tc, 'sentence')
-  expect_equal(docsent, c(rep(1, 8), rep(2,8), rep(3,5)))
+  expect_equal(docsent, as.factor(c(rep(1, 8), rep(2,8), rep(3,5))))
 
   ### create from data.frame
   d = data.frame(text = c('Renewable fuel is better than fossil fuels!',

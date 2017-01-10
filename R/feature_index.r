@@ -18,10 +18,10 @@
 get_feature_index <- function(tc, feature='word', context_level='document', max_window_size=100){
   prov = get_provenance(tc)
   if(!prov[['feature_index']]){
-    cat('Creating feature index (can be precomputed with set_feature_index())')
     timer = Sys.time()
     fi = create_feature_index(tc, feature=feature, context_level=context_level, max_window_size=max_window_size)
-    cat(sprintf('  (%s seconds)\n', round(as.numeric(difftime(Sys.time(), timer, units = 's')),2)))
+    time_passed = as.numeric(difftime(Sys.time(), timer, units = 's'))
+    if(time_passed > 5) cat(sprintf('Creating feature index took more than 5 seconds (%s). For repeated use, note that the feature index can be precomputed and kept in memory with set_feature_index()', round(time_passed)))
   } else {
     ## if a feature index exists, check whether it matches the current parameters
     cfeature = prov[['feature']] == feature

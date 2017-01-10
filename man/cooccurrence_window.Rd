@@ -4,16 +4,13 @@
 \alias{cooccurrence_window}
 \title{A sliding window approach to calculate the co-occurence of words}
 \usage{
-cooccurrence_window(tc, feature, context_level = c("document", "sentence"),
-  window.size = 10, direction = "<>")
+cooccurrence_window(tc, feature, measure = c("con_prob", "cosine",
+  "count_directed", "count_undirected"), context_level = c("document",
+  "sentence"), window.size = 10, direction = "<>", chi2 = F,
+  backbone = F)
 }
 \arguments{
-\item{window.size}{The distance within which words should occur from each other to be counted as a co-occurence.}
-
-\item{direction}{a string indicating whether only the left ('<') or right ('>') side of the window, or both ('<>'), should be used.}
-}
-\value{
-An edgelist (data.frame) with columns x, y and weight, in which weight represents the number of times y occured within a [window.size] word distance from x.
+\item{backbone}{}
 }
 \description{
 A sliding window approach to calculate the co-occurence of words

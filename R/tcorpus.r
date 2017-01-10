@@ -32,17 +32,17 @@ setMethod("show", "tCorpus",
           '\nsplit by documents (n = ', nrow(meta), ')', sent_info,
           '\ncontaining ', length(fnames), ' feature(s): ', paste(fnames, collapse=','), sep='')
       cat('\n\n@data\n')
-      print(head(object@data))
+      print(object@data)
 
       cat('\n@doc_meta\n')
-      print(head(object@doc_meta))
+      print(object@doc_meta)
     }
 )
 
 setMethod("print", "tCorpus",
     function(x) {
-      print(head(x@data))
-      print(head(x@doc_meta))
+      print(x@data)
+      print(x@doc_meta)
     }
 )
 
@@ -77,7 +77,7 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), doc_meta=NULL, split
     doc_meta = data.table(doc_id=doc_id, key = 'doc_id')
   }
   tCorpus(data = tokenize_to_datatable(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose),
-          doc_meta = doc_meta)
+          doc_meta = droplevels(doc_meta))
 }
 
 #' @rdname create_tcorpus
@@ -120,6 +120,7 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   for(cname in c(doc_col, word_i_col, sent_i_col)){
     if(!cname %in% colnames(tokens)) stop(sprintf('"%s" is not an existing columnname in "tokens"', cname))
   }
+  tokens = droplevels(tokens)
 
   if(is.null(word_i_col)){
     warning('No word_i column specified. It is now assumed that "tokens" is ordered according to the occurence of words in documents. If this is not the case, results of functions where word order is relevant will be wrong!')
@@ -207,7 +208,9 @@ unlist_to_df <- function(l, ids=1:length(l), global_position=F){
 ## manage data
 
 #' @export
-get_data <- function(tc, as_data_frame=F) if(as_data_frame) as.data.frame(tc@data) else tc@data
+get_data <- function(tc, as_data_frame=F) {
+  if(as_data_frame) as.data.frame(tc@data) else tc@data
+}
 
 #' @export
 get_column <- function(tc, name) get_data(tc)[[name]]
@@ -215,7 +218,27 @@ get_column <- function(tc, name) get_data(tc)[[name]]
 #' @export
 set_column <- function(tc, name, value) {
   if(name %in% c('doc_id', 'sent_i', 'word_i')) stop(sprintf('Cannot manually change %s', name))
-  tc@data[[name]] = value
+  tc@data[[name]] = droplevels(value)
+  tc
+}
+
+#' Recode a (feature) column in a tCorpus
+#'
+#' @param tc
+#' @param column the name of the (feature) column
+#' @param new_value the new value
+#' @param i an index for which values to replace
+#' @param old_value a vector containing one or more old values to replace
+#'
+#' @return
+#' @export
+#'
+#' @examples
+recode_column <- function(tc, column, new_value, i=NULL, old_value=NULL){
+  if(!new_value %in% levels(tc@data[[column]])) levels(tc@data[[column]]) = c(levels(tc@data[[column]]), new_value)
+  if(!is.null(i)) tc@data[[column]][i] = new_value
+  if(!is.null(old_value)) tc@data[[column]][tc@data[[column]] %in% old_value] = new_value
+  tc@data[[column]] = droplevels(tc@data[[column]])
   tc
 }
 
@@ -225,7 +248,10 @@ featurenames <- function(tc) colnames(get_data(tc))[!colnames(get_data(tc)) %in%
 get_context <- function(tc, context_level = c('document','sentence')){
   context_level = match.arg(context_level)
   if(context_level == 'document') context = get_column(tc, 'doc_id')
-  if(context_level == 'sentence') context = global_position(get_column(tc, 'sent_i'), get_column(tc, 'doc_id'), presorted = T)
+  if(context_level == 'sentence') {
+    if(is.null(get_column(tc, 'sent_i'))) stop('Sentence level not possible, since no sentence information is available. To enable sentence level analysis, use split_sentences = T in "create_tcorpus()" or specify sent_i_col in "tokens_to_tcorpus()"')
+    context = factor(global_position(get_column(tc, 'sent_i'), get_column(tc, 'doc_id'), presorted = T))
+  }
   context
 }
 
@@ -253,6 +279,26 @@ get_meta_column <- function(tc, name) get_meta(tc)[[name]]
 set_meta_column <- function(tc, name, value) {
   if(name %in% c('doc_id')) stop(sprintf('Cannot manually change %s', name))
   tc@doc_meta[[name]] = value
+  tc
+}
+
+#' Recode a document meta column in a tCorpus
+#'
+#' @param tc
+#' @param column the name of the document meta column
+#' @param new_value the new value
+#' @param i an index for which values to replace
+#' @param old_value a vector containing one or more old values to replace
+#'
+#' @return
+#' @export
+#'
+#' @examples
+recode_meta_column <- function(tc, column, new_value, i=NULL, old_value=NULL){
+  if(!new_value %in% levels(tc@doc_meta[[column]])) levels(tc@doc_meta[[column]]) = c(levels(tc@doc_meta[[column]]), new_value)
+  if(!is.null(i)) tc@doc_meta[[column]][i] = new_value
+  if(!is.null(old_value)) tc@doc_meta[[column]][tc@doc_meta[[column]] %in% old_value] = new_value
+  tc@data[[column]] = droplevels(tc@doc_meta[[column]])
   tc
 }
 
