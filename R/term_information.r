@@ -30,6 +30,21 @@ dtm_compare <- function(dtm.x, dtm.y=NULL, smooth=1, min.over=NULL, min.chi=NULL
   f
 }
 
+#' Title
+#'
+#' @param tc_x
+#' @param tc_y
+#' @param feature
+#' @param context_level
+#' @param smooth
+#' @param min.over
+#' @param min.chi
+#' @param x_is_subset
+#'
+#' @return
+#' @export
+#'
+#' @examples
 tcorpus_compare <- function(tc_x, tc_y, feature, context_level=c('document','sentence'), smooth=1, min.over=NULL, min.chi=NULL, x_is_subset=F) {
   dtm_compare(get_dtm(tc_x, feature, context_level), get_dtm(tc_y, feature, context_level), smooth=smooth, min.over=min.over, min.chi=min.chi, x_is_subset=x_is_subset)
 }
