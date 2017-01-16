@@ -7,7 +7,7 @@
 #' @export
 #'
 #' @examples
-subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index=F) {
+subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index=F, drop_levels=T) {
   e = substitute(subset)
   e_meta = substitute(subset_meta)
   r = eval(e, tc@data, parent.frame())
@@ -26,8 +26,10 @@ subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index
     tc@data[unique(tc@doc_meta$doc_id)]
   }
 
-  tc@data = droplevels(tc@data)
-  tc@doc_meta = droplevels(tc@doc_meta)
+  if(drop_levels){
+    tc@data = droplevels(tc@data)
+    tc@doc_meta = droplevels(tc@doc_meta)
+  }
   if(is.null(key(tc@data))) setkey(tc@data, 'doc_id')
   if(is.null(key(tc@doc_meta))) setkey(tc@doc_meta, 'doc_id')
 
@@ -43,9 +45,6 @@ subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index
 }
 
 ## subset functions ##
-
-## DOESN'T WORK!!
-## USE NAMESPACE WITHIN SUBSET FUNCTION!!!
 
 #' @export
 freq <- function(x) {

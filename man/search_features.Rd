@@ -23,7 +23,7 @@ search_features(tc, keyword = NA, condition = NA, code = NA,
 
 \item{keyword_filter}{A logical vector that indicates which tokens can match an keyword. Can for instance be used to only select tokens that are proper names (using POS tagging) when looking for people.}
 
-\item{keep_false_condition}{if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is to strict, causing false negatives}
+\item{keep_false_condition}{if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives}
 }
 \description{
 Search tokens in a tokenlist using a query that consists of an keyword, and optionally a condition. For a detailed explanation of the query language please consult the query_tutorial markdown file. For a quick summary see the details below.

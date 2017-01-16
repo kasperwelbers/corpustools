@@ -8,7 +8,7 @@
 #' @param vertexsize_attr a character string indicating a vertex attribute that represents size. Default is 'freq', which is created in the coOccurenceNetwork functions to indicate the number of times a word occured.
 #' @param vertexcolor_attr a character string indicating a vertex attribute that represents color. The attribute can also be a numeric value (e.g., a cluster membership) in which case colors are assigned to numbers.
 #' @param labelsize_coef a coefficient for increasing or decreasing the size of the vertexlabel.
-#' @param labeldist_coef a coefficient that roughly determines the minimal distance between vertex labels, based on the size of labels. Only used if reduce_labeloverlap is TRUE.
+#' @param labelspace_coef a coefficient that roughly determines the minimal distance between vertex labels, based on the size of labels. Only used if reduce_labeloverlap is TRUE.
 #' @param reduce_labeloverlap if TRUE, an algorithm is used to reduce overlap as best as possible.
 #' @param redo_layout If TRUE, a new layout will be calculated using layout_with_fr(). If g does not have a layout attribute (g$layout), a new layout is automatically calculated.
 #' @param return_graph if TRUE, plot_semnet() also returns the graph object with the attributes and layout as shown in the plot.
@@ -16,7 +16,7 @@
 #'
 #' @return Plots a network, and returns the network object if return_graph is TRUE.
 #' @export
-plot_semnet <- function(g, weight_attr='weight', min_weight=NA, vertexsize_attr='freq', vertexsize_coef=1, vertexcolor_attr=NA, max_backbone_alpha=NA, labelsize_coef=1, labeldist_coef=1.1, reduce_labeloverlap=T, redo_layout=F, return_graph=T, layout_fun=layout_with_fr, ...){
+plot_semnet <- function(g, weight_attr='weight', min_weight=NA, vertexsize_attr='freq', vertexsize_coef=1, vertexcolor_attr=NA, edgewidth_coef=1, max_backbone_alpha=NA, labelsize_coef=1, labelspace_coef=1.1, reduce_labeloverlap=T, redo_layout=F, return_graph=T, vertex.label.dist=0.4, layout_fun=layout_with_fr, ...){
   E(g)$weight = get.edge.attribute(g, weight_attr)
   if(!is.na(min_weight)) g = delete.edges(g, which(E(g)$weight < min_weight))
 
@@ -25,12 +25,13 @@ plot_semnet <- function(g, weight_attr='weight', min_weight=NA, vertexsize_attr=
     g = delete.edges(g, which(E(g)$alpha > max_alpha))
   }
 
-  g = setNetworkAttributes(g, vertexsize_attr, vertexcolor_attr, redo_layout = redo_layout, layout_fun=layout_fun)
+  g = setNetworkAttributes(g, vertexsize_attr, vertexcolor_attr, redo_layout = redo_layout, edgewidth_coef=edgewidth_coef, layout_fun=layout_fun)
   V(g)$size = vertexsize_coef * V(g)$size
   V(g)$label.cex = labelsize_coef * V(g)$label.cex
+  V(g)$label.dist = vertex.label.dist
 
   if(reduce_labeloverlap){
-    g = reduceLabelOverlap(g, labeldist_coef, cex_from_device = T)
+    g = reduceLabelOverlap(g, labelspace_coef, cex_from_device = T)
   }
   g = plotArgsToAttributes(g, args=list(...))
 
@@ -59,9 +60,9 @@ plotArgsToAttributes <- function(g, args){
 #' @param if TRUE, isolates are placed next to the network
 #' @return a network in the Igraph format
 #' @export
-setNetworkAttributes <- function(g, size_attribute='freq', color_attribute=NA, redo_layout=F, layout_fun=layout_with_fr){
+setNetworkAttributes <- function(g, size_attribute='freq', color_attribute=NA, redo_layout=F, edgewidth_coef=1, layout_fun=layout_with_fr){
   g = setVertexAttributes(g, size_attribute, color_attribute)
-  g = setEdgeAttributes(g)
+  g = setEdgeAttributes(g, edgewidth_coef)
   if(is.null(g$layout) | redo_layout) g$layout = layout_fun(g)
   g
 }
@@ -109,8 +110,8 @@ setVertexAttributes <- function(g, size, color){
 }
 
 
-setEdgeAttributes <- function(g){
-  E(g)$width = rescale_var(E(g)$weight, 1, 10)
+setEdgeAttributes <- function(g, edgewidth_coef){
+  E(g)$width = rescale_var(E(g)$weight, 1, 10) * edgewidth_coef
   E(g)$arrow.size= 0.00001
   E(g)$color='lightgrey'
   g
@@ -124,7 +125,7 @@ rescale_var <- function(x, new_min=0, new_max=1, x_min=min(x), x_max=max(x)){
   return(x + new_min)
 }
 
-reduceLabelOverlap <- function(g, labeldist_coef=1.1, cex_from_device=F, label.attr='label', labelsize.attr='label.cex', rstep=0.01, tstep=0.2){
+reduceLabelOverlap <- function(g, labelspace_coef=1.1, cex_from_device=F, label.attr='label', labelsize.attr='label.cex', rstep=0.01, tstep=0.2){
   layout_matrix = layout.norm(g$layout)
 
   vnames = names(vertex.attributes(g))
@@ -149,10 +150,10 @@ reduceLabelOverlap <- function(g, labeldist_coef=1.1, cex_from_device=F, label.a
 
 
   plot(layout_matrix, axes = F, frame.plot = F, xlab='', ylab='', type='n', xlim = c(-1,1), ylim=c(-1,1))
-  newlayout = wordcloud::wordlayout(layout_matrix[,1], layout_matrix[,2], label, cex=label.cex*labeldist_coef, rstep = rstep, tstep=tstep, xlim = c(-1,1), ylim=c(-1,1))
+  newlayout = wordcloud::wordlayout(layout_matrix[,1], layout_matrix[,2], label, cex=label.cex*labelspace_coef, rstep = rstep, tstep=tstep, xlim = c(-1,1), ylim=c(-1,1))
 
   ## calculate new cex based on percentual difference old and new word width
-  #oldwidth = mapply(strwidth, s=label, cex=label.cex*labeldist_coef)
+  #oldwidth = mapply(strwidth, s=label, cex=label.cex*labelspace_coef)
   #shrinkcoef = newlayout[,'width'] / oldwidth
   #newlayout = cbind(newlayout, newcex=label.cex*shrinkcoef)
 

@@ -6,9 +6,10 @@
 \usage{
 plot_semnet(g, weight_attr = "weight", min_weight = NA,
   vertexsize_attr = "freq", vertexsize_coef = 1, vertexcolor_attr = NA,
-  max_backbone_alpha = NA, labelsize_coef = 1, labeldist_coef = 1.1,
-  reduce_labeloverlap = T, redo_layout = F, return_graph = T,
-  layout_fun = layout_with_fr, ...)
+  edgewidth_coef = 1, max_backbone_alpha = NA, labelsize_coef = 1,
+  labelspace_coef = 1.1, reduce_labeloverlap = T, redo_layout = F,
+  return_graph = T, vertex.label.dist = 0.4, layout_fun = layout_with_fr,
+  ...)
 }
 \arguments{
 \item{g}{A network in the igraph format. Specifically designed for the output of coOccurenceNetwork() and windowedCoOccurenceNetwork()}
@@ -19,7 +20,7 @@ plot_semnet(g, weight_attr = "weight", min_weight = NA,
 
 \item{labelsize_coef}{a coefficient for increasing or decreasing the size of the vertexlabel.}
 
-\item{labeldist_coef}{a coefficient that roughly determines the minimal distance between vertex labels, based on the size of labels. Only used if reduce_labeloverlap is TRUE.}
+\item{labelspace_coef}{a coefficient that roughly determines the minimal distance between vertex labels, based on the size of labels. Only used if reduce_labeloverlap is TRUE.}
 
 \item{reduce_labeloverlap}{if TRUE, an algorithm is used to reduce overlap as best as possible.}
 

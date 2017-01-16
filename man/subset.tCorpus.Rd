@@ -5,7 +5,7 @@
 \title{Subset a tCorpus}
 \usage{
 \method{subset}{tCorpus}(tc, subset = NULL, subset_meta = NULL,
-  keep_feature_index = F)
+  keep_feature_index = F, drop_levels = T)
 }
 \arguments{
 \item{tc}{tCorpus object}

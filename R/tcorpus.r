@@ -108,15 +108,16 @@ create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, s
 
 #' Create a tcorpus based on tokens (i.e. preprocessed texts)
 #'
-#' @param tokens
-#' @param doc_col
-#' @param word_i_col
-#' @param sent_i_col
-#' @param doc_meta
-#' @param feature_cols
+#' @param tokens A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (word_i_col)
+#' @param doc_col The name of the column that contains the document ids/names
+#' @param word_i_col The name of the column that contains the positions of words. If NULL, it is assumed that the data.frame is ordered by the order of words and does not contain gaps (e.g., filtered out words)
+#' @param sent_i_col Optionally, the name of the column that indicates the sentences in which tokens occured.
+#' @param doc_meta Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)
+#' @param autodetect_meta If True, any columns in the tokens data.frame that only have 1 unique value per document are considered to be document meta data
+#' @param feature_cols Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)
 #'
 #' @export
-tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, doc_meta=NULL, feature_cols=NULL) {
+tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, doc_meta=NULL, autodetect_meta=T, feature_cols=NULL) {
   for(cname in c(doc_col, word_i_col, sent_i_col)){
     if(!cname %in% colnames(tokens)) stop(sprintf('"%s" is not an existing columnname in "tokens"', cname))
   }
@@ -166,8 +167,20 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
     if(class(tokens[,fcol]) %in% c('factor','character')) tokens[,fcol] = as.factor(as.character(tokens[,fcol]))
   }
 
-  tCorpus(data = data.table(cbind(positions, tokens[,feature_cols,drop=F]), key = 'doc_id'),
-          doc_meta = doc_meta)
+  data = data.table(cbind(positions, tokens[,feature_cols,drop=F]), key = 'doc_id')
+  if(autodetect_meta){
+    agg = data[, lapply(.SD, function(x) length(unique(x))), by=doc_id]
+    doc_meta_cols = colnames(agg)[(colSums(agg==1) / nrow(agg)) == 1]
+    doc_meta_cols = doc_meta_cols[!doc_meta_cols %in% c(doc_col, sent_i_col, word_i_col)]
+    if(length(doc_meta_cols) > 0){
+      print(sprintf('Interpreted [%s] columns as document meta', paste(doc_meta_cols, collapse=', ')))
+      new_doc_meta = unique(data[, c('doc_id', doc_meta_cols), with=F])
+      doc_meta = merge(doc_meta, new_doc_meta, by='doc_id', all.x=T)
+      data[, (doc_meta_cols):=NULL]
+    }
+  }
+
+  tCorpus(data=data.table(data), doc_meta = data.table(doc_meta))
 }
 
 tokenize_to_datatable <- function(x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F){
@@ -245,6 +258,7 @@ recode_column <- function(tc, column, new_value, i=NULL, old_value=NULL){
 #' @export
 featurenames <- function(tc) colnames(get_data(tc))[!colnames(get_data(tc)) %in% c('doc_id','sent_i','word_i')]
 
+#' @export
 get_context <- function(tc, context_level = c('document','sentence')){
   context_level = match.arg(context_level)
   if(context_level == 'document') context = get_column(tc, 'doc_id')

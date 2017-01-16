@@ -16,3 +16,4 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence')){
   dimnames(m) = list(levels(i), levels(feature))
   as(as(m,'dgCMatrix'), 'dgTMatrix')
 }
+

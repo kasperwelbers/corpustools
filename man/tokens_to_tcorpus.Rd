@@ -5,10 +5,23 @@
 \title{Create a tcorpus based on tokens (i.e. preprocessed texts)}
 \usage{
 tokens_to_tcorpus(tokens, doc_col = "doc_id", word_i_col = NULL,
-  sent_i_col = NULL, doc_meta = NULL, feature_cols = NULL)
+  sent_i_col = NULL, doc_meta = NULL, autodetect_meta = T,
+  feature_cols = NULL)
 }
 \arguments{
-\item{feature_cols}{}
+\item{tokens}{A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (word_i_col)}
+
+\item{doc_col}{The name of the column that contains the document ids/names}
+
+\item{word_i_col}{The name of the column that contains the positions of words. If NULL, it is assumed that the data.frame is ordered by the order of words and does not contain gaps (e.g., filtered out words)}
+
+\item{sent_i_col}{Optionally, the name of the column that indicates the sentences in which tokens occured.}
+
+\item{doc_meta}{Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)}
+
+\item{autodetect_meta}{If True, any columns in the tokens data.frame that only have 1 unique value per document are considered to be document meta data}
+
+\item{feature_cols}{Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)}
 }
 \description{
 Create a tcorpus based on tokens (i.e. preprocessed texts)

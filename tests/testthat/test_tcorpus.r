@@ -3,10 +3,10 @@ test_that("tCorpus class works", {
 
   ### create from data.frame
   tokens = data.frame(document = c(rep(1, 8), rep(2, 5), rep(3, 5)),
-                 sentence = c(rep(1, 8), rep(2, 5), rep(3, 5)),
+                 sentence = c(1:8, 1:5, 1:5),
                  id = 1:18,
                  word = c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte'))
-  tc = tokens_to_tcorpus(tokens, doc_col ='document', sent_i_col = 'sentence', word_i_col = 'id')
+  tc = tokens_to_tcorpus(tokens, doc_col ='document', sent_i_col = 'sentence', word_i_col = 'id', autodetect_meta = F)
 
   doc_id = get_column(tc, 'doc_id')
   expect_equal(doc_id, as.factor(c(rep('1', 8), rep('2', 5), rep('3', 5))))

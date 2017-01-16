@@ -23,6 +23,7 @@ preprocess_feature <- function(tc, column, new_column='feature', language='engli
   set_column(tc, new_column, feature)
 }
 
+#' @export
 preprocess_words <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1){
   if(!is(x, 'factor')) x = as.factor(x)
   if(lowercase) levels(x) = tolower(levels(x))
