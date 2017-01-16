@@ -22,8 +22,16 @@ get_global_i <- function(tc, context_level=c('document','sentence'), max_window_
   global_i
 }
 
-position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, abs_distance=T, return_i_filter=NULL){
+position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, abs_distance=T, return_i_filter=NULL, batch_rows=NULL){
   shifts = shifts[order(abs(shifts))] # order shifts from 0 to higher (this way the shortest distance is used if distance_as_value = T)
+
+  nrows = max(i, na.rm = T)
+  ncols = max(j, na.rm = T)
+
+  if(!is.null(batch_rows)){ ## dangerous!! only implemented to enable batches, but batches have to be full contexts (documents or sentences) or you might cut off the window matrix
+    i = i[batch_rows]
+    j = j[batch_rows]
+  }
 
   shift = rep(shifts, times=length(i))
   newi = rep(i, each = length(shifts)) + shift
@@ -35,23 +43,24 @@ position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, a
     select = newi > 0 & newi <= max(i)
   }
 
+
+
   if(sum(select) == 0) {
-    mat = spMatrix(nrow=max(i), ncol=max(j))
+    mat = spMatrix(nrow=nrows, ncol=ncols)
   } else {
     if(distance_as_value){
       select = select & !duplicated(data.frame(newi, newj)) # remove duplicates. since duplicates are ordered by shifts, this leaves the shortest distance to a term when using distance_as_value=T
       if(abs_distance) {
-        mat = spMatrix(nrow=max(i), ncol=max(j), i=newi[select], j=newj[select], x=abs(shift)[select]+1)
+        mat = spMatrix(nrow=nrows, ncol=ncols, i=newi[select], j=newj[select], x=abs(shift)[select]+1)
       } else {
-        mat = spMatrix(nrow=max(i), ncol=max(j), i=newi[select], j=newj[select], x=(shift)[select])
+        mat = spMatrix(nrow=nrows, ncol=ncols, i=newi[select], j=newj[select], x=(shift)[select])
       }
     } else{
-      mat = spMatrix(nrow=max(i), ncol=max(j), i=newi[select], j=newj[select], x=rep(1, sum(select)))
+      mat = spMatrix(nrow=nrows, ncol=ncols, i=newi[select], j=newj[select], x=rep(1, sum(select)))
       mat = as(mat, 'dgCMatrix')
       if(count_once) mat@x[mat@x>0] = 1
     }
   }
-
   mat = as(mat, 'dgTMatrix')
   mat[i,,drop=F]
 }
@@ -69,8 +78,8 @@ position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, a
 #'
 #' @return A list with two matrices. position.mat gives the specific position of a term, and window.mat gives the window in which each word occured. The rows represent the position of a term, and matches the input of this function (position, term and context). The columns represents terms.
 #' @export
-wordWindowOccurence <- function(tc, feature, context_level=c('document','sentence'), window.size=10, direction='<>', distance_as_value=F, drop_NA=T){
-  tc = subset(tc, !is.na(get_column(tc, feature)))
+wordWindowOccurence <- function(tc, feature, context_level=c('document','sentence'), window.size=10, direction='<>', distance_as_value=F, batch_rows=NULL){
+  #tc = subset(tc, !is.na(get_column(tc, feature)))
 
   context_level = match.arg(context_level)
   feature = match.arg(feature, featurenames(tc))
@@ -81,58 +90,178 @@ wordWindowOccurence <- function(tc, feature, context_level=c('document','sentenc
   if(direction == '>') shifts = 0:window.size
 
   feature = droplevels(get_column(tc, feature))
-  notNA = !is.na(feature)
   term_index = as.numeric(feature)
   position = get_global_i(tc, context_level, window.size)
 
-  position.mat = position_matrix(position, term_index, 0)
-  window.mat = position_matrix(position, term_index, shifts, distance_as_value=distance_as_value)
+  batch_rows = if(!is.null(batch_rows)) batch_rows[!is.na(feature[batch_rows])] else !is.na(feature)
+  position.mat = position_matrix(position, term_index, shifts = 0, batch_rows=batch_rows)
+  window.mat = position_matrix(position, term_index, shifts, distance_as_value=distance_as_value, batch_rows=batch_rows)
+
+
 
   colnames(position.mat) = colnames(window.mat) = levels(feature)
-  rownames(position.mat) = rownames(window.mat) = position
+  rownames(position.mat) = rownames(window.mat) = position[batch_rows]
 
   list(position.mat=position.mat, window.mat=window.mat)
 }
 
 #### matrix functions
 
-transform_count <- function(m, mode, alpha=2){
+transform_count <- function(m, count_mode=c('normal','dicho','prob'), alpha=2){
+  count_mode = match.arg(count_mode)
   m = as(as(m, 'dgCMatrix'), 'dgTMatrix') ## ensure that values above 1 are not spread out over different indices
-  if(mode == 'dicho') {
-    m@x[m@x > 0] = 1
-  }
-  if(mode == 'norm') {
-    norm = sqrt(Matrix::colSums(m^2))
-    m@x = m@x / norm[m@j+1]
-  }
-  if(mode == 'prob') {
+  if(count_mode == 'normal') NULL
+  if(count_mode == 'dicho') m@x[m@x > 0] = 1
+  if(count_mode == 'prob') {
     get_prob <- function(x, alpha) 1 - ((1/alpha) ^ x)
     m@x[m@x > 0] = get_prob(m@x[m@x > 0], alpha)
   }
   m
 }
 
-calc_cooccurrence <- function(m1, m2=NULL, mode='directed', count_mode=c('dicho','prob','norm'), alpha=2, diag=F){
+
+
+feature_cooccurrence <- function(tc, feature, matrix_mode=c('dtm', 'windowXwindow', 'positionXwindow'), count_mode=c('normal','dicho','prob'), mat_stats=c('sum.x','sum.y','magnitude.x','magnitude.y'), context_level=c('document','sentence'), direction='<>', window.size=10, n.batches=1, alpha=2){
+  matrix_mode = match.arg(matrix_mode)
   count_mode = match.arg(count_mode)
-  m1 = as(m1, 'dgTMatrix')
-  if(!is.null(m2)){
-    m2 = as(m2, 'dgTMatrix')
-    #same_columns = colnames(m1)[colnames(m1) %in% colnames(m2)]
-    #if(!identical(m1[,same_columns], m2[,same_columns])) stop('The two matrices contain columns with the same names but different values.') ## this does make sense in the case of a position matrix and a window matrix
-    m1 = transform_count(m1, count_mode, alpha)
-    m2 = transform_count(m2, count_mode, alpha)
-    mat = Matrix::crossprod(m1,m2)
-    mat = squarify_matrix(mat) ## ensure matrix is square and symmetrical (for igraph.adjacency)
-  } else {
-    m1 = transform_count(m1, count_mode, alpha)
+  context_level = match.arg(context_level)
+  if(matrix_mode == 'dtm') {
+    ml = cooccurrence_matrix(tc, feature, count_mode=count_mode, mat_stats=mat_stats, context_level=context_level, n.batches=n.batches, alpha=alpha)
+  }
+  if(matrix_mode %in% c('positionXwindow', 'windowXwindow')) {
+    ml = cooccurrence_matrix_window(tc, feature, matrix_mode=matrix_mode, count_mode=count_mode, mat_stats=mat_stats, context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
+  }
+  ml$mat = as(as(ml$mat, 'dgCMatrix'), 'dgTMatrix')
+  ml
+}
+
+cooccurrence_crossprod <- function(m1, m2=NULL, count_mode, mat_stats, alpha){
+  m1 = transform_count(as(m1, 'dgTMatrix'), count_mode=count_mode, alpha=alpha)
+  if(is.null(m2)){
     mat = Matrix::crossprod(m1)
+    mat_stats = get_matrix_stats(m1, mat_stats=mat_stats)
+  } else {
+    m2 = transform_count(as(m2, 'dgTMatrix'), count_mode=count_mode, alpha=alpha)
+    mat = Matrix::crossprod(m1,m2)
+    mat_stats = get_matrix_stats(m1, m2=m2, mat_stats=mat_stats)
+  }
+  c(list(mat=mat), mat_stats)
+}
+
+get_matrix_stats <- function(m1, m2=NULL, mat_stats = c('sum.x','sum.y','magnitude.x','magnitude.y')){
+  r = list()
+  for(mat_stat in mat_stats){
+    if(mat_stat == 'sum.x') r[['sum.x']] = Matrix::colSums(m1)
+    if(mat_stat == 'magnitude.x') r[['magnitude.x']] = sqrt(Matrix::colSums(m1^2))
+
+    if(!is.null(m2)){
+      if(mat_stat == 'sum.y') r[['sum.y']] = Matrix::colSums(m2)
+      if(mat_stat == 'magnitude.y') r[['magnitude.y']] = sqrt(Matrix::colSums(m2^2))
+    } else {
+      if(mat_stat == 'sum.y') r[['sum.x']] = Matrix::colSums(m1)
+      if(mat_stat == 'magnitude.y') r[['magnitude.y']] = sqrt(Matrix::colSums(m1^2))
+    }
+  }
+  r
+}
+
+
+#### DTM based cooccurrene ####
+
+get_batch_i <- function(n, n.batches){
+  if(!n.batches == 1){
+    splits = split((1:n), cut(seq_along(1:n), n.batches, labels = FALSE))
+    splits = split((1:n), cut(seq_along(1:n), n.batches, labels = FALSE))
+    splits = sapply(splits, FUN=function(x) cbind(min(x), max(x)))
+    data.frame(start=splits[1,], end=splits[2,])
+  } else data.frame(start=1, end=n)
+}
+
+cooccurrence_matrix <- function(tc, feature, count_mode, mat_stats, context_level, n.batches, alpha){
+  m = get_dtm(tc, feature=feature, context_level = context_level)
+
+  if(is.na(n.batches)){
+    ml = cooccurrence_crossprod(m, count_mode=count_mode, mat_stats=mat_stats, alpha=alpha)
+  } else {
+    batch_i = get_batch_i(n=nrow(m), n.batches=n.batches)
+    ml = list()
+
+    pb <- txtProgressBar(0, nrow(batch_i), style = 3)
+    setTxtProgressBar(pb, 0)
+    for(i in 1:nrow(batch_i)){
+      batch_rows = batch_i$start[i]:batch_i$end[i]
+      cooc = cooccurrence_crossprod(m[batch_rows,,drop=F], count_mode=count_mode, mat_stats=mat_stats, alpha=alpha)
+      for(n in names(cooc)) ml[[n]] = if(n %in% names(ml)) ml[[n]] + cooc[[n]] else cooc[[n]]
+      setTxtProgressBar(pb, i)
+    }
+    close(pb)
+  }
+  ml$freq = Matrix::colSums(m)
+  ml$doc_freq = Matrix::colSums(m)
+  ml
+}
+
+
+#### window based cooccurrene ####
+
+get_batch_i_window <- function(con_id, n.batches=10){
+  if(!n.batches == 1){
+    break_each = length(con_id) / n.batches
+    break_con = con_id[rep(break_each, n.batches) * 1:n.batches] # do not break within documents
+    break_i = sapply(break_con, function(x) min(which(con_id == x)))
+    break_i = unique(break_i)
+    break_i = break_i[break_i > 1 & break_i < length(con_id)]
+    data.frame(start=c(1,break_i), end=c(break_i, length(con_id)))
+  } else data.frame(start=1, end=length(con_id))
+}
+
+#' Calculate the cooccurrence of features.
+#'
+#' Returns a list with the cooccurrence matrix, and the matrix statistics specified in mat_stats.
+#'
+#' The reason for making this a separate, complex function is that it enables the construction of the window matrix and the matrix multiplication to be executed in batches/shards
+#'
+#' @param tc a tcorpus object
+#' @param feature
+#' @param mode Either 'window_to_window' or 'position_to_window'. With 'window_to_window', cooccurrence is calculated as the number of times the window of two features overlaps. With 'position_to_window', cooccurrence is calculated as the number of times a feature occurs (is positioned) within the window of another feature
+#' @param count_mode
+#' @param mat_stats A character vector indicating which matrix statistics to calculate. These are necessary for calculating similarity/distance metrics.
+#' @param context_level
+#' @param window.size
+#' @param n.batches
+#' @param alpha
+#'
+#' @return a list with the cooccurrence matrix and the specified matrix statistics (mat_stats)
+#' @export
+cooccurrence_matrix_window <- function(tc, feature, matrix_mode='position_to_window', count_mode='dicho', mat_stats=c('sum.x','sum.y','magnitude.x','magnitude.y'), context_level='document', direction='<>', window.size=10, n.batches=window.size, alpha=2){
+  if(is.na(n.batches)){
+    wwo = wordWindowOccurence(tc, feature, context_level, window.size, direction)
+    if(matrix_mode == 'windowXwindow') ml = cooccurrence_crossprod(wwo$window.mat, wwo$window.mat, count_mode=count_mode, alpha=alpha, mat_stats=mat_stats)
+    if(matrix_mode == 'positionXwindow') ml = cooccurrence_crossprod(wwo$position.mat, wwo$window.mat, count_mode=count_mode, alpha=alpha, mat_stats=mat_stats)
+    ml[['freq']] = Matrix::colSums(wwo$position.mat)
+  } else {
+
+    batch_i = get_batch_i_window(get_context(tc, context_level = context_level), n.batches)
+    ml = list()
+    pb <- txtProgressBar(0, nrow(batch_i), style = 3)
+    setTxtProgressBar(pb, 0)
+    for(i in 1:nrow(batch_i)){
+      batch_rows = batch_i$start[i]:batch_i$end[i]
+      wwo = wordWindowOccurence(tc, feature, context_level, window.size, direction, batch_rows=batch_rows)
+      if(matrix_mode == 'windowXwindow') cooc = cooccurrence_crossprod(wwo$window.mat, wwo$window.mat, count_mode=count_mode, alpha=alpha, mat_stats=mat_stats)
+      if(matrix_mode == 'positionXwindow') cooc = cooccurrence_crossprod(wwo$position.mat, wwo$window.mat, count_mode=count_mode, alpha=alpha, mat_stats=mat_stats)
+
+      for(n in names(cooc)) ml[[n]] = if(n %in% names(ml)) ml[[n]] + cooc[[n]] else cooc[[n]]
+      ml[['freq']] = if('freq' %in% names(ml)) ml[['freq']] + Matrix::colSums(wwo$position.mat) else Matrix::colSums(wwo$position.mat)
+
+      setTxtProgressBar(pb, i)
+    }
+    close(pb)
   }
 
-  if(mode == 'directed') g = igraph::graph.adjacency(mat, mode='directed', diag=diag, weighted=T)
-  if(mode == 'undirected') g = igraph::graph.adjacency(mat, mode='upper', diag=diag, weighted=T)
-  g = cooccurrence_graph_freq(g, m1, m2)
-  g
+  ml # a list containing an adjacency matrix, with additional statistics
 }
+
 
 cooccurrence_graph_freq <- function(g, m1, m2){
   if(is.null(m2)) {
@@ -148,51 +277,6 @@ cooccurrence_graph_freq <- function(g, m1, m2){
   }
   g
 }
-
-cooccurrence_graph <- function(m1, m2=NULL, measure=c('cooccurrence','cosine','con_prob','con_prob_weighted','obs/exp','obs/exp_weighted'), chi2=F, backbone=T, alpha=2){
-  N = nrow(m1)
-  if(measure == 'cosine') {
-    g = calc_cooccurrence(m1, m2, mode='undirected', count_mode='norm')
-  }
-  if(measure == 'count_undirected') {
-    g = calc_cooccurrence(m1, m2, mode='undirected', count_mode='dicho')
-  }
-  if(measure == 'count_directed') {
-    g = calc_cooccurrence(m1, m2, mode='directed', count_mode='dicho')
-  }
-  if(measure == 'con_prob') {
-    g = calc_cooccurrence(m1, m2, mode='directed', count_mode='dicho')
-    E(g)$weight = E(g)$weight / V(g)$sum[get.edges(g, E(g))[,1]]
-  }
-  if(measure == 'con_prob_weighted') {
-    g = calc_cooccurrence(m1, m2, mode='directed', count_mode='prob', alpha=alpha)
-    E(g)$weight = E(g)$weight / V(g)$sum[get.edges(g, E(g))[,1]]
-  }
-  if(measure == 'obs/exp') {
-    g = calc_cooccurrence(m1, m2, mode='directed', count_mode='dicho')
-    p = V(g)$sum / N
-    e = get.edges(g, E(g))
-    exp = (p[e[,1]] * p[e[,2]]) * N
-    E(g)$weight = E(g)$weight / exp
-  }
-
-  if(chi2){
-    if(measure %in% c('count_undirected', 'count_directed')){
-      g_occurrence = g
-    } else {
-      mode = if(is.directed(g)) 'directed' else 'undirected'
-      g_occurrence = calc_cooccurrence(m1, m2, mode=mode, count_mode='dicho')
-    }
-    E(g)$chi2 = cooc_chi2(g_occurrence, m1, m2, autocorrect=T)$chi2
-    E(g)$chi2.p = 1-pchisq(E(g)$chi2, 1)
-  }
-  if(backbone) E(g)$alpha = backbone.alpha(g)
-
-  g$measure = measure
-  V(g)$term_freq = Matrix::colSums(m1)
-  g
-}
-
 
 is_symmetrical <- function(mat) identical(colnames(mat), rownames(mat))
 
@@ -238,11 +322,9 @@ calc_chi2 <- function(a,b,c,d, autocorrect=T, yates_correction=rep(F, length(a))
   ifelse(is.na(chi), 0, chi)
 }
 
-cooc_chi2 <- function(g, m1, m2=NULL, autocorrect=T){
+cooc_chi2 <- function(g, x_sum, y_sum=x_sum, autocorrect=T){
   cooc = get.edgelist(g, names = F)
   cooc = data.frame(x=cooc[,1], y=cooc[,2], cooc=E(g)$weight)
-  x_sum = as.numeric(Matrix::colSums(m1 > 0))
-  y_sum = if(is.null(m2)) x_sum else as.numeric(Matrix::colSums(m2 > 0))
 
   cooc$chi2 = calc_chi2(a = cooc$cooc,                                                   # x=1, y=1
                         b = y_sum[cooc$y] - cooc$cooc,                                   # x=0, y=1
@@ -262,3 +344,4 @@ cooc_chi2 <- function(g, m1, m2=NULL, autocorrect=T){
 #  log_p = binom.coef.log(a+b,a) + binom.coef.log(c+d,c) - binom.coef.log(n,a+c)
 #  exp(log_p)
 #}
+

@@ -11,17 +11,17 @@
 #' @param alpha
 #'
 #' @export
-cooccurrence <- function(tc, feature, measure=c('conprob', 'con_prob_weighted', 'cosine', 'obs/exp', 'obs/exp_weighted', 'count_directed', 'count_undirected'), context_level=c('document','sentence'), chi2=F, backbone=F, alpha=2){
+semnet <- function(tc, feature, measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected'), context_level=c('document','sentence'), backbone=F, n.batches=NA, alpha=2){
   tc = as.tcorpus(tc)
   feature = match.arg(feature, featurenames(tc))
   measure = match.arg(measure)
   context_level = match.arg(context_level)
 
-  dtm = get_dtm(tc, feature, context_level)
+  g = create_semnet(tc, feature, measure=measure, matrix_mode='dtm', context_level=context_level, n.batches=n.batches, alpha=alpha)
 
-  g = cooccurrence_graph(dtm, measure=measure, chi2=chi2, backbone = backbone, alpha=2)
+  if(backbone) E(g)$alpha = backbone.alpha(g)
+  g$measure = measure
 
-  g$N.documents = nrow(dtm)
   class(g) = c('semnet', 'dtm_cooc', measure, class(g))
   g
 }
@@ -39,29 +39,62 @@ cooccurrence <- function(tc, feature, measure=c('conprob', 'con_prob_weighted', 
 #' @param backbone
 #'
 #' @export
-cooccurrence_window <- function(tc, feature, measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected'), context_level=c('document','sentence'), window.size=10, direction='<>', chi2=F, backbone=F){
+semnet_window <- function(tc, feature, measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=5, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
   tc = as.tcorpus(tc)
   feature = match.arg(feature, featurenames(tc))
   measure = match.arg(measure)
+  set_matrix_mode = match.arg(set_matrix_mode)
   context_level = match.arg(context_level)
 
-  mat = wordWindowOccurence(tc, feature, context_level, window.size, direction)
+  ## developer note: might be other interesting combinations. Should we allow the user to specifiy the matrix_mode manually, or decide for them which to use? I'm currently thinking of the latter, but with the set_matrix_mode paramter to override it if wanted
+  if(measure %in% c('cosine')) matrix_mode = 'windowXwindow'
+  if(measure %in% c('con_prob','count_directed','count_undirected','chi2')) matrix_mode='positionXwindow'
 
-  ## window %*% window measures
-  if(measure %in% c('cosine', 'count_undirected')) {
-    g = cooccurrence_graph(mat$window.mat, measure=measure, chi2=chi2, backbone=backbone)
-  }
-  ## position %*% window measures
-  if(measure %in% c('con_prob', 'count_directed')) {
-    g = cooccurrence_graph(mat$position.mat, mat$window.mat, measure=measure, chi2=chi2, backbone=backbone)
-  }
+  g = create_semnet(tc, feature, measure=measure, matrix_mode=matrix_mode, context_level=context_level, window.size=window.size, direction='<>', n.batches=n.batches, alpha=alpha)
 
-  g$N.documents = length(unique(get_column(tc, 'doc_id')))
-  g$N.windows = nrow(mat$position.mat)
+  if(backbone) E(g)$alpha = backbone.alpha(g)
+  g$measure = measure
+
   class(g) = c('semnet', 'window_cooc', measure, class(g))
   g
 }
 
+create_semnet <- function(tc, feature, measure, matrix_mode, context_level, direction, window.size, n.batches, alpha){
+  if(measure == 'cosine') {
+    ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='normal', mat_stats=c('sum.x','count.x','magnitude.x','magnitude.y'), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
+    ml$mat@x = ml$mat@x / (ml$magnitude.x[ml$mat@i+1] * ml$magnitude.y[ml$mat@j+1])
+    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'upper', diag = F, weighted = T)
+  }
+  if(measure == 'con_prob') {
+    ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='dicho', mat_stats=c('sum.x'), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
+    ml$mat = ml$mat / ml$sum.x
+    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'directed', diag = F, weighted = T)
+  }
+  if(measure == 'con_prob_weighted') {
+    ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='prob', mat_stats=c('sum.x'), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
+    ml$mat = ml$mat / ml$sum.x
+    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'directed', diag = F, weighted = T)
+  }
+  if(measure == 'count_directed') {
+    ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='dicho', mat_stats=c(), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
+    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'directed', diag = F, weighted = T)
+  }
+  if(measure == 'count_undirected') {
+    ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='dicho', mat_stats=c(), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
+    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'upper', diag = F, weighted = T)
+  }
+  if(measure == 'chi2'){
+    ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='dicho', mat_stats=c('sum.x','sum.y'), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
+    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode='directed', diag=F, weighted=T)
+    E(g)$weight = cooc_chi2(g, ml$sum.x, ml$sum.y, autocorrect=T)$chi2
+  }
+
+  ## match frequencies (and if available document frequencies)
+  match_i = match(V(g)$name, names(ml$freq))
+  V(g)$freq = ml$freq[match_i]
+  if('doc_freq' %in% ml) V(g)$doc_freq = ml$doc_freq[match_i]
+  g
+}
 DocumentTermMatrix_to_dgTMatrix <- function(dtm){
   sm = spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
   rownames(sm) = rownames(dtm)

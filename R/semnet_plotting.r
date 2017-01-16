@@ -18,7 +18,7 @@
 #' @export
 plot_semnet <- function(g, weight_attr='weight', min_weight=NA, vertexsize_attr='freq', vertexsize_coef=1, vertexcolor_attr=NA, max_backbone_alpha=NA, labelsize_coef=1, labeldist_coef=1.1, reduce_labeloverlap=T, redo_layout=F, return_graph=T, layout_fun=layout_with_fr, ...){
   E(g)$weight = get.edge.attribute(g, weight_attr)
-  if(!is.na(minweight)) g = delete.edges(g, which(E(g)$weight < min_weight))
+  if(!is.na(min_weight)) g = delete.edges(g, which(E(g)$weight < min_weight))
 
   if(!is.na(max_backbone_alpha)) {
     if(!'alpha' %in% edge_attr_names(g)) E(g)$alpha = backbone.alpha(g)
