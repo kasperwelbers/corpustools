@@ -10,20 +10,18 @@
 subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index=F, drop_levels=T) {
   e = substitute(subset)
   e_meta = substitute(subset_meta)
+
   r = eval(e, tc@data, parent.frame())
-  #r = eval(e, parent.frame())
-  #r = eval(e, tc@data, sys.nframe())
   if(!is.null(r)){
     tc@data = tc@data[r,]
-    tc@doc_meta = tc@doc_meta[tc@doc_meta$doc_id %in% unique(tc@data$doc_id),]
+    tc@doc_meta = tc@doc_meta[as.character(unique(tc@data$doc_id)),]
   }
 
   r_meta = eval(e_meta, tc@doc_meta, parent.frame())
-  #r_meta = eval(e_meta, parent.frame())
-  #r_meta = eval(e_meta, tc@doc_meta, sys.nframe())
   if(!is.null(r_meta)){
-    tc@doc_meta = tc@doc_meta[r,]
-    tc@data[unique(tc@doc_meta$doc_id)]
+    tc@doc_meta = tc@doc_meta[r_meta,]
+    if(is.null(key(tc@data))) setkey(tc@data, 'doc_id')
+    tc@data = tc@data[as.character(unique(tc@doc_meta$doc_id))]
   }
 
   if(drop_levels){
