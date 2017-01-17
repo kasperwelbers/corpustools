@@ -22,15 +22,16 @@ get_global_i <- function(tc, context_level=c('document','sentence'), max_window_
   global_i
 }
 
-position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, abs_distance=T, return_i_filter=NULL, batch_rows=NULL){
+position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, abs_distance=T, return_i_filter=NULL, rows=NULL){
   shifts = shifts[order(abs(shifts))] # order shifts from 0 to higher (this way the shortest distance is used if distance_as_value = T)
 
   nrows = max(i, na.rm = T)
   ncols = max(j, na.rm = T)
+  return_i = i
 
-  if(!is.null(batch_rows)){ ## dangerous!! only implemented to enable batches, but batches have to be full contexts (documents or sentences) or you might cut off the window matrix
-    i = i[batch_rows]
-    j = j[batch_rows]
+  if(!is.null(rows)){
+    i = i[rows]
+    j = j[rows]
   }
 
   shift = rep(shifts, times=length(i))
@@ -42,8 +43,6 @@ position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, a
   } else {
     select = newi > 0 & newi <= max(i)
   }
-
-
 
   if(sum(select) == 0) {
     mat = spMatrix(nrow=nrows, ncol=ncols)
@@ -62,7 +61,7 @@ position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, a
     }
   }
   mat = as(mat, 'dgTMatrix')
-  mat[i,,drop=F]
+  mat[return_i,,drop=F]
 }
 
 #' Gives the window in which a term occured in a matrix.
@@ -93,14 +92,12 @@ wordWindowOccurence <- function(tc, feature, context_level=c('document','sentenc
   term_index = as.numeric(feature)
   position = get_global_i(tc, context_level, window.size)
 
-  batch_rows = if(!is.null(batch_rows)) batch_rows[!is.na(feature[batch_rows])] else !is.na(feature)
-  position.mat = position_matrix(position, term_index, shifts = 0, batch_rows=batch_rows)
-  window.mat = position_matrix(position, term_index, shifts, distance_as_value=distance_as_value, batch_rows=batch_rows)
-
-
+  rows = if(!is.null(batch_rows)) batch_rows[!is.na(feature[batch_rows])] else !is.na(feature)
+  position.mat = position_matrix(position, term_index, shifts = 0, rows=rows)
+  window.mat = position_matrix(position, term_index, shifts, distance_as_value=distance_as_value, rows=rows)
 
   colnames(position.mat) = colnames(window.mat) = levels(feature)
-  rownames(position.mat) = rownames(window.mat) = position[batch_rows]
+  rownames(position.mat) = rownames(window.mat) = position
 
   list(position.mat=position.mat, window.mat=window.mat)
 }

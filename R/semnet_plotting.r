@@ -6,7 +6,7 @@
 #'
 #' @param g A network in the igraph format. Specifically designed for the output of coOccurenceNetwork() and windowedCoOccurenceNetwork()
 #' @param vertexsize_attr a character string indicating a vertex attribute that represents size. Default is 'freq', which is created in the coOccurenceNetwork functions to indicate the number of times a word occured.
-#' @param vertexcolor_attr a character string indicating a vertex attribute that represents color. The attribute can also be a numeric value (e.g., a cluster membership) in which case colors are assigned to numbers.
+#' @param vertexcolor_attr a character string indicating a vertex attribute that represents color. The attribute can also be a numeric value (e.g., a cluster membership) in which case colors are assigned to numbers. If no (valid) color attribute is given, vertex color are based on undirected fastgreedy.community() clustering.
 #' @param labelsize_coef a coefficient for increasing or decreasing the size of the vertexlabel.
 #' @param labelspace_coef a coefficient that roughly determines the minimal distance between vertex labels, based on the size of labels. Only used if reduce_labeloverlap is TRUE.
 #' @param reduce_labeloverlap if TRUE, an algorithm is used to reduce overlap as best as possible.
@@ -16,7 +16,7 @@
 #'
 #' @return Plots a network, and returns the network object if return_graph is TRUE.
 #' @export
-plot_semnet <- function(g, weight_attr='weight', min_weight=NA, vertexsize_attr='freq', vertexsize_coef=1, vertexcolor_attr=NA, edgewidth_coef=1, max_backbone_alpha=NA, labelsize_coef=1, labelspace_coef=1.1, reduce_labeloverlap=T, redo_layout=F, return_graph=T, vertex.label.dist=0.4, layout_fun=layout_with_fr, ...){
+plot_semnet <- function(g, weight_attr='weight', min_weight=NA, vertexsize_attr='freq', vertexsize_coef=1, vertexcolor_attr=NA, edgewidth_coef=1, max_backbone_alpha=NA, labelsize_coef=1, labelspace_coef=1.1, reduce_labeloverlap=T, redo_layout=F, return_graph=T, vertex.label.dist=0.25, layout_fun=layout_with_fr, ...){
   E(g)$weight = get.edge.attribute(g, weight_attr)
   if(!is.na(min_weight)) g = delete.edges(g, which(E(g)$weight < min_weight))
 
@@ -88,7 +88,7 @@ setVertexAttributes <- function(g, size, color){
   vattrs = names(vertex.attributes(g))
   if(is.na(color) | !color %in% vattrs) {
     color = fastgreedy.community(as.undirected(g))$membership
-    message('No (valid) color attribute given. Vertex color now based on undirected fastgreedy.community() clustering')
+    #message('No (valid) color attribute given. Vertex color now based on undirected fastgreedy.community() clustering')
   } else {
     color = unlist(get.vertex.attribute(g, color))
   }

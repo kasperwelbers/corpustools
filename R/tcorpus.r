@@ -113,12 +113,12 @@ create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, s
 #' @param word_i_col The name of the column that contains the positions of words. If NULL, it is assumed that the data.frame is ordered by the order of words and does not contain gaps (e.g., filtered out words)
 #' @param sent_i_col Optionally, the name of the column that indicates the sentences in which tokens occured.
 #' @param doc_meta Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)
-#' @param autodetect_meta If True, any columns in the tokens data.frame that only have 1 unique value per document are considered to be document meta data
+#' @param doc_meta_cols Alternatively, if there are document meta columns in the tokens data.table, doc_meta_cols can be used to recognized them. Note that these values have to be unique within documents.
 #' @param feature_cols Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)
 #'
 #' @export
-tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, doc_meta=NULL, autodetect_meta=T, feature_cols=NULL) {
-  for(cname in c(doc_col, word_i_col, sent_i_col)){
+tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, doc_meta=NULL, doc_meta_cols=NULL, feature_cols=NULL) {
+  for(cname in c(doc_col, word_i_col, sent_i_col, doc_meta_cols)){
     if(!cname %in% colnames(tokens)) stop(sprintf('"%s" is not an existing columnname in "tokens"', cname))
   }
   tokens = droplevels(tokens)
@@ -157,28 +157,36 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   ## match doc_meta
   docs = unique(positions$doc_id)
   if(!is.null(doc_meta)) {
-    doc_meta = data.table(doc_meta[match(docs, doc_meta[,doc_col]),], key='doc_id')
+    colnames(doc_meta)[colnames(doc_meta) == doc_col] = 'doc_id'
+    doc_meta$doc_id = as.factor(doc_meta$doc_id)
+    doc_meta = data.table(doc_meta[match(docs, doc_meta$doc_id),], key='doc_id')
   } else {
-    doc_meta = data.table(doc_id=docs, key='doc_id')
+    doc_meta = data.table(doc_id=as.factor(docs), key='doc_id')
   }
 
-  if(is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sent_i_col, word_i_col)]
+  if(!is.null(doc_meta_cols)){
+    add_doc_meta = unique(tokens[,c(doc_col, doc_meta_cols)])
+    if(nrow(add_doc_meta) > nrow(doc_meta)) stop('The document meta columns specified in doc_meta_cols are not unique within documents')
+    doc_meta = cbind(doc_meta, add_doc_meta[,doc_meta_cols])
+  }
+
+  if(is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sent_i_col, word_i_col, doc_meta_cols)]
   for(fcol in feature_cols) {
     if(class(tokens[,fcol]) %in% c('factor','character')) tokens[,fcol] = as.factor(as.character(tokens[,fcol]))
   }
 
   data = data.table(cbind(positions, tokens[,feature_cols,drop=F]), key = 'doc_id')
-  if(autodetect_meta){
-    agg = data[, lapply(.SD, function(x) length(unique(x))), by=doc_id]
-    doc_meta_cols = colnames(agg)[(colSums(agg==1) / nrow(agg)) == 1]
-    doc_meta_cols = doc_meta_cols[!doc_meta_cols %in% c(doc_col, sent_i_col, word_i_col)]
-    if(length(doc_meta_cols) > 0){
-      print(sprintf('Interpreted [%s] columns as document meta', paste(doc_meta_cols, collapse=', ')))
-      new_doc_meta = unique(data[, c('doc_id', doc_meta_cols), with=F])
-      doc_meta = merge(doc_meta, new_doc_meta, by='doc_id', all.x=T)
-      data[, (doc_meta_cols):=NULL]
-    }
-  }
+  #if(autodetect_meta){ ## fun, but takes too long
+  #  agg = data[, lapply(.SD, function(x) length(unique(x))), by=doc_id]
+  #  doc_meta_cols = colnames(agg)[(colSums(agg==1) / nrow(agg)) == 1]
+  #  doc_meta_cols = doc_meta_cols[!doc_meta_cols %in% c(doc_col, sent_i_col, word_i_col)]
+  #  if(length(doc_meta_cols) > 0){
+  #    print(sprintf('Interpreted [%s] columns as document meta', paste(doc_meta_cols, collapse=', ')))
+  #    new_doc_meta = unique(data[, c('doc_id', doc_meta_cols), with=F])
+  #    doc_meta = merge(doc_meta, new_doc_meta, by='doc_id', all.x=T)
+  #    data[, (doc_meta_cols):=NULL]
+  #  }
+  #}
 
   tCorpus(data=data.table(data), doc_meta = data.table(doc_meta))
 }
@@ -186,14 +194,14 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
 tokenize_to_datatable <- function(x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F){
   x = gsub('_', ' ', x, fixed=T)
   if(split_sentences | !is.null(max_sentences)) {
-    x = tokenize(x, what = 'sentence', verbose=verbose)
+    x = quanteda::tokenize(x, what = 'sentence', verbose=verbose)
     names(x) = doc_id
     if(!is.null(max_sentences)) x = sapply(x, head, max_sentences)
-    x = plyr::ldply(x, function(x) unlist_to_df(tokenize(x, what='word'), global_position=T))
+    x = plyr::ldply(x, function(x) unlist_to_df(quanteda::tokenize(x, what='word'), global_position=T))
     if(!is.null(max_words)) x = x[x$position <= max_words,]
     colnames(x) = c('doc_id','sent_i','word_i','word')
   } else {
-    x = tokenize(x, what = 'word', verbose=verbose)
+    x = quanteda::tokenize(x, what = 'word', verbose=verbose)
     if(!is.null(max_words)) x = sapply(x, head, max_words)
     x = unlist_to_df(x, doc_id)
     colnames(x) = c('doc_id', 'word_i', 'word')

@@ -4,8 +4,8 @@ Date: 2016-10-18
 Title: Tokenized Corpus
 Author: Kasper Welbers & Wouter van Atteveldt
 Maintainer: Kasper Welbers <kasperwelbers@gmail.com>
-Depends: R (>= 3.2.0), Matrix, data.table, quanteda, igraph
-Imports: plyr, wordcloud, slam
+Depends: R (>= 3.2.0), Matrix, data.table, igraph
+Imports: plyr, wordcloud, slam, quanteda
 Description: A class for a tokenized Corpus, with functions to prepare the corpus for computational text analysis and visualize the results
 License: MIT
 URL: http://github.com/kasperwelbers/tcorpus

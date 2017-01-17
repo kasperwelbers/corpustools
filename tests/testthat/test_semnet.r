@@ -32,6 +32,6 @@ test_that("Semnet works", {
   tc_withNA = search_recode(tc, 'word', NA, 'Rutte OR Renewable')
   g = semnet(tc_withNA, 'word', measure = 'count_undirected')
   expect_true(!'Rutte' %in% V(g)$name)
-  g = semnet_window(tc_withNA, 'word', window.size = 10)
+  g = semnet_window(tc_withNA, 'word', window.size = 10, n.batches = NA)
   expect_true(!'Rutte' %in% V(g)$name)
 })

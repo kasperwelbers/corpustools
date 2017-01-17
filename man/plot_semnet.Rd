@@ -8,7 +8,7 @@ plot_semnet(g, weight_attr = "weight", min_weight = NA,
   vertexsize_attr = "freq", vertexsize_coef = 1, vertexcolor_attr = NA,
   edgewidth_coef = 1, max_backbone_alpha = NA, labelsize_coef = 1,
   labelspace_coef = 1.1, reduce_labeloverlap = T, redo_layout = F,
-  return_graph = T, vertex.label.dist = 0.4, layout_fun = layout_with_fr,
+  return_graph = T, vertex.label.dist = 0.25, layout_fun = layout_with_fr,
   ...)
 }
 \arguments{
@@ -16,7 +16,7 @@ plot_semnet(g, weight_attr = "weight", min_weight = NA,
 
 \item{vertexsize_attr}{a character string indicating a vertex attribute that represents size. Default is 'freq', which is created in the coOccurenceNetwork functions to indicate the number of times a word occured.}
 
-\item{vertexcolor_attr}{a character string indicating a vertex attribute that represents color. The attribute can also be a numeric value (e.g., a cluster membership) in which case colors are assigned to numbers.}
+\item{vertexcolor_attr}{a character string indicating a vertex attribute that represents color. The attribute can also be a numeric value (e.g., a cluster membership) in which case colors are assigned to numbers. If no (valid) color attribute is given, vertex color are based on undirected fastgreedy.community() clustering.}
 
 \item{labelsize_coef}{a coefficient for increasing or decreasing the size of the vertexlabel.}
 

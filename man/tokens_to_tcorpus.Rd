@@ -5,7 +5,7 @@
 \title{Create a tcorpus based on tokens (i.e. preprocessed texts)}
 \usage{
 tokens_to_tcorpus(tokens, doc_col = "doc_id", word_i_col = NULL,
-  sent_i_col = NULL, doc_meta = NULL, autodetect_meta = T,
+  sent_i_col = NULL, doc_meta = NULL, doc_meta_cols = NULL,
   feature_cols = NULL)
 }
 \arguments{
@@ -19,7 +19,7 @@ tokens_to_tcorpus(tokens, doc_col = "doc_id", word_i_col = NULL,
 
 \item{doc_meta}{Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)}
 
-\item{autodetect_meta}{If True, any columns in the tokens data.frame that only have 1 unique value per document are considered to be document meta data}
+\item{doc_meta_cols}{Alternatively, if there are document meta columns in the tokens data.table, doc_meta_cols can be used to recognized them. Note that these values have to be unique within documents.}
 
 \item{feature_cols}{Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)}
 }
