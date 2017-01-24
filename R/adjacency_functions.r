@@ -118,7 +118,7 @@ transform_count <- function(m, count_mode=c('normal','dicho','prob'), alpha=2){
 
 
 
-feature_cooccurrence <- function(tc, feature, matrix_mode=c('dtm', 'windowXwindow', 'positionXwindow'), count_mode=c('normal','dicho','prob'), mat_stats=c('sum.x','sum.y','magnitude.x','magnitude.y'), context_level=c('document','sentence'), direction='<>', window.size=10, n.batches=1, alpha=2){
+feature_cooccurrence <- function(tc, feature, matrix_mode=c('dtm', 'windowXwindow', 'positionXwindow'), count_mode=c('normal','dicho','prob'), mat_stats=c('sum.x','sum.y','magnitude.x','magnitude.y', 'nrow'), context_level=c('document','sentence'), direction='<>', window.size=10, n.batches=1, alpha=2){
   matrix_mode = match.arg(matrix_mode)
   count_mode = match.arg(count_mode)
   context_level = match.arg(context_level)
@@ -134,6 +134,7 @@ feature_cooccurrence <- function(tc, feature, matrix_mode=c('dtm', 'windowXwindo
 
 cooccurrence_crossprod <- function(m1, m2=NULL, count_mode, mat_stats, alpha){
   m1 = transform_count(as(m1, 'dgTMatrix'), count_mode=count_mode, alpha=alpha)
+
   if(is.null(m2)){
     mat = Matrix::crossprod(m1)
     mat_stats = get_matrix_stats(m1, mat_stats=mat_stats)
@@ -145,8 +146,11 @@ cooccurrence_crossprod <- function(m1, m2=NULL, count_mode, mat_stats, alpha){
   c(list(mat=mat), mat_stats)
 }
 
-get_matrix_stats <- function(m1, m2=NULL, mat_stats = c('sum.x','sum.y','magnitude.x','magnitude.y')){
+get_matrix_stats <- function(m1, m2=NULL, mat_stats = c('sum.x','sum.y','magnitude.x','magnitude.y', 'nrow')){
   r = list()
+
+  if('nrow' %in% mat_stats) r[['nrow']] = nrow(m1)
+
   for(mat_stat in mat_stats){
     if(mat_stat == 'sum.x') r[['sum.x']] = Matrix::colSums(m1)
     if(mat_stat == 'magnitude.x') r[['magnitude.x']] = sqrt(Matrix::colSums(m1^2))
@@ -155,7 +159,7 @@ get_matrix_stats <- function(m1, m2=NULL, mat_stats = c('sum.x','sum.y','magnitu
       if(mat_stat == 'sum.y') r[['sum.y']] = Matrix::colSums(m2)
       if(mat_stat == 'magnitude.y') r[['magnitude.y']] = sqrt(Matrix::colSums(m2^2))
     } else {
-      if(mat_stat == 'sum.y') r[['sum.x']] = Matrix::colSums(m1)
+      if(mat_stat == 'sum.y') r[['sum.y']] = Matrix::colSums(m1)
       if(mat_stat == 'magnitude.y') r[['magnitude.y']] = sqrt(Matrix::colSums(m1^2))
     }
   }
@@ -284,7 +288,8 @@ squarify_matrix <- function(mat){
     rnames = rownames(mat)
     cnames = colnames(mat)
     dnames = unique(c(rnames,cnames))
-    mat = data.frame(i=mat@i+1, j=mat@j+1, x=mat@x)
+
+    mat = summary(mat)
 
     conv_i = match(rnames, dnames)
     conv_j = match(cnames, dnames)

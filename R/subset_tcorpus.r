@@ -20,7 +20,7 @@ subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index
   r_meta = eval(e_meta, tc@doc_meta, parent.frame())
   if(!is.null(r_meta)){
     tc@doc_meta = tc@doc_meta[r_meta,]
-    if(is.null(key(tc@data))) setkey(tc@data, 'doc_id')
+    set_keys(tc)
     tc@data = tc@data[as.character(unique(tc@doc_meta$doc_id))]
   }
 
@@ -28,8 +28,7 @@ subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index
     tc@data = droplevels(tc@data)
     tc@doc_meta = droplevels(tc@doc_meta)
   }
-  if(is.null(key(tc@data))) setkey(tc@data, 'doc_id')
-  if(is.null(key(tc@doc_meta))) setkey(tc@doc_meta, 'doc_id')
+  set_keys(tc)
 
   if(get_provenance(tc)$feature_index){
     if(keep_feature_index){

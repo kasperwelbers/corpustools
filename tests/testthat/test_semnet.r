@@ -13,12 +13,20 @@ test_that("Semnet works", {
   expect_equal(sum(E(g)$weight), 77.5)
   g = semnet(tc, 'word', measure = 'con_prob_weighted')
   expect_equal(round(sum(E(g)$weight),2), 39.38)
+  g = semnet(tc, 'word', measure = 'chi2')
+  expect_equal(round(sum(E(g)$weight),2), 36.35)
+
+  g_ego = ego_semnet(g, c('fuel','fuels'), only_filter_vertices = F)
+  expect_equal(unique(get.data.frame(g_ego)$from), c('fuel','fuels'))
+
 
   ## windowed semnet
   g = semnet_window(tc, 'word', window.size = 10, measure = 'count_directed')
   expect_equal(ecount(g), 88)
   g = semnet_window(tc, 'word', window.size = 5, measure = 'count_directed')
   expect_equal(ecount(g), 82)
+  g = semnet_window(tc, 'word', window.size = 10, measure = 'chi2')
+  expect_equal(ecount(g), 88)
 
   g = semnet_window(tc, 'word', window.size = 10, measure = 'cosine')
   g = semnet_window(tc, 'word', window.size = 10, measure = 'con_prob')

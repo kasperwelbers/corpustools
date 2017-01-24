@@ -76,8 +76,10 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), doc_meta=NULL, split
     if(!length(doc_id) == length(x)) stop('"doc_id" is not of the same length as "x"')
     doc_meta = data.table(doc_id=doc_id, key = 'doc_id')
   }
-  tCorpus(data = tokenize_to_datatable(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose),
-          doc_meta = droplevels(doc_meta))
+  tc = tCorpus(data = tokenize_to_datatable(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose),
+               doc_meta = droplevels(doc_meta))
+  set_keys(tc)
+  tc
 }
 
 #' @rdname create_tcorpus
@@ -118,6 +120,7 @@ create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, s
 #'
 #' @export
 tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, doc_meta=NULL, doc_meta_cols=NULL, feature_cols=NULL) {
+  tokens = as.data.frame(tokens)
   for(cname in c(doc_col, word_i_col, sent_i_col, doc_meta_cols)){
     if(!cname %in% colnames(tokens)) stop(sprintf('"%s" is not an existing columnname in "tokens"', cname))
   }
@@ -129,8 +132,8 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
     word_i_col = 'word_i'
   }
 
-  if(!is(tokens[,word_i_col], 'numeric')) stop('word_i_col has to be numeric')
-  if(!is.null(sent_i_col)) if(!is(tokens[,sent_i_col], 'numeric')) stop('sent_i_col has to be numeric')
+  if(!is(tokens[,word_i_col], 'numeric')) stop('word_i_col has to be numeric/integer')
+  if(!is.null(sent_i_col)) if(!is(tokens[,sent_i_col], 'numeric')) stop('sent_i_col has to be numeric/integer')
 
   if(!is.null(doc_meta)){
     if(!doc_col %in% colnames(doc_meta)) stop(sprintf('"doc_meta" does not contain the document id column (%s)', doc_col))
@@ -142,7 +145,7 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   } else {
     tokens = tokens[order(tokens[,doc_col], tokens[,word_i_col]),]
   }
-  #docs = unique(tokens[,doc_col])
+
   positions = data.frame(doc_id= as.factor(tokens[,doc_col]),
                          sent_i = tokens[,sent_i_col],
                          word_i = tokens[,word_i_col])
@@ -159,6 +162,9 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   if(!is.null(doc_meta)) {
     colnames(doc_meta)[colnames(doc_meta) == doc_col] = 'doc_id'
     doc_meta$doc_id = as.factor(doc_meta$doc_id)
+    if(!all(docs %in% doc_meta$doc_id)) warning('For some documents in tokens the meta data is missing')
+    if(!all(doc_meta$doc_id %in% docs)) warning('For some documents in the meta data there are no tokens. These documents will not be included in the meta data')
+
     doc_meta = data.table(doc_meta[match(docs, doc_meta$doc_id),], key='doc_id')
   } else {
     doc_meta = data.table(doc_id=as.factor(docs), key='doc_id')
@@ -175,20 +181,10 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
     if(class(tokens[,fcol]) %in% c('factor','character')) tokens[,fcol] = as.factor(as.character(tokens[,fcol]))
   }
 
-  data = data.table(cbind(positions, tokens[,feature_cols,drop=F]), key = 'doc_id')
-  #if(autodetect_meta){ ## fun, but takes too long
-  #  agg = data[, lapply(.SD, function(x) length(unique(x))), by=doc_id]
-  #  doc_meta_cols = colnames(agg)[(colSums(agg==1) / nrow(agg)) == 1]
-  #  doc_meta_cols = doc_meta_cols[!doc_meta_cols %in% c(doc_col, sent_i_col, word_i_col)]
-  #  if(length(doc_meta_cols) > 0){
-  #    print(sprintf('Interpreted [%s] columns as document meta', paste(doc_meta_cols, collapse=', ')))
-  #    new_doc_meta = unique(data[, c('doc_id', doc_meta_cols), with=F])
-  #    doc_meta = merge(doc_meta, new_doc_meta, by='doc_id', all.x=T)
-  #    data[, (doc_meta_cols):=NULL]
-  #  }
-  #}
-
-  tCorpus(data=data.table(data), doc_meta = data.table(doc_meta))
+  tc = tCorpus(data=data.table(cbind(positions, tokens[,feature_cols,drop=F])),
+               doc_meta = data.table(doc_meta))
+  set_keys(tc)
+  tc
 }
 
 tokenize_to_datatable <- function(x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F){
@@ -208,7 +204,7 @@ tokenize_to_datatable <- function(x, doc_id=1:length(x), split_sentences=F, max_
   }
   x$word = as.factor(x$word)
   x$doc_id = as.factor(x$doc_id)
-  data.table(x, key='doc_id')
+  data.table(x)
 }
 
 unlist_to_df <- function(l, ids=1:length(l), global_position=F){
@@ -228,8 +224,18 @@ unlist_to_df <- function(l, ids=1:length(l), global_position=F){
 
 ## manage data
 
+set_keys <- function(tc){
+  if(is.null(key(tc@data))){
+    if('sent_i' %in% colnames(tc@data)) setkey(tc@data, 'doc_id', 'sent_i') else setkey(tc@data, 'doc_id')
+  }
+  if(is.null(key(tc@doc_meta))){
+    setkey(tc@doc_meta, 'doc_id')
+  }
+}
+
 #' @export
 get_data <- function(tc, as_data_frame=F) {
+  set_keys(tc)
   if(as_data_frame) as.data.frame(tc@data) else tc@data
 }
 
@@ -292,7 +298,10 @@ get_context <- function(tc, context_level = c('document','sentence')){
 ## manage meta
 
 #' @export
-get_meta <- function(tc, as_data_frame=F) if(as_data_frame) as.data.frame(tc@doc_meta) else tc@doc_meta
+get_meta <- function(tc, as_data_frame=F) {
+  set_keys(tc)
+  if(as_data_frame) as.data.frame(tc@doc_meta) else tc@doc_meta
+}
 
 #' @export
 get_meta_column <- function(tc, name) get_meta(tc)[[name]]

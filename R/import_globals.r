@@ -4,4 +4,5 @@
 #' @import Matrix
 #' @import igraph
 #' @import data.table
+#' @import plyr
 importglobals <- function(x) NULL

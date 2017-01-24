@@ -11,7 +11,7 @@
 #' @param alpha
 #'
 #' @export
-semnet <- function(tc, feature, measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected'), context_level=c('document','sentence'), backbone=F, n.batches=NA, alpha=2){
+semnet <- function(tc, feature, measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA, alpha=2){
   tc = as.tcorpus(tc)
   feature = match.arg(feature, featurenames(tc))
   measure = match.arg(measure)
@@ -39,7 +39,7 @@ semnet <- function(tc, feature, measure=c('con_prob', 'con_prob_weighted', 'cosi
 #' @param backbone
 #'
 #' @export
-semnet_window <- function(tc, feature, measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=5, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
+semnet_window <- function(tc, feature, measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=5, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
   tc = as.tcorpus(tc)
   feature = match.arg(feature, featurenames(tc))
   measure = match.arg(measure)
@@ -84,9 +84,14 @@ create_semnet <- function(tc, feature, measure, matrix_mode, context_level, dire
     g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'upper', diag = F, weighted = T)
   }
   if(measure == 'chi2'){
-    ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='dicho', mat_stats=c('sum.x','sum.y'), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
-    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode='directed', diag=F, weighted=T)
-    E(g)$weight = cooc_chi2(g, ml$sum.x, ml$sum.y, autocorrect=T)$chi2
+    ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='dicho', mat_stats=c('sum.x','sum.y','nrow'), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
+
+    xtab = data.frame(a = ml$mat@x,                           # x=1, y=1
+                      b = ml$sum.x[ml$mat@i+1] - ml$mat@x,    # x=0, y=1
+                      c = ml$sum.y[ml$mat@j+1] - ml$mat@x)    # x=1, y=0
+    xtab$d = ml$nrow - ((xtab$b + xtab$c) - xtab$a)           # x=0, y=0
+    ml$mat@x = calc_chi2(xtab$a, xtab$b, xtab$c, xtab$d, correct=T) ## replace sparse matrix values with chi2
+    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'directed', diag = F, weighted = T)
   }
 
   ## match frequencies (and if available document frequencies)
@@ -95,6 +100,7 @@ create_semnet <- function(tc, feature, measure, matrix_mode, context_level, dire
   if('doc_freq' %in% ml) V(g)$doc_freq = ml$doc_freq[match_i]
   g
 }
+
 DocumentTermMatrix_to_dgTMatrix <- function(dtm){
   sm = spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
   rownames(sm) = rownames(dtm)
@@ -102,11 +108,15 @@ DocumentTermMatrix_to_dgTMatrix <- function(dtm){
   as(sm, 'dgTMatrix')
 }
 
+## usefull?
+##merge_semnet_edges <- function()
+
 #####
 aggCoOc <- function(x, position.mat, window.mat){
   cooc = position.mat[,x] & window.mat
   cooc = as(cooc, 'lgTMatrix')
-  cooc = data.frame(x=x, y=cooc@j+1, context=cooc@i+1, weight=cooc@x)
+  cooc = summary(cooc)
+  cooc = data.frame(x=x, y=cooc@j, context=cooc@i, weight=cooc@x)
   cooc = cooc[!cooc$x == cooc$y,]
   plyr::ddply(cooc, .(x,y,context), summarize, weight=sum(weight))
 }

@@ -13,12 +13,25 @@
 #' @param redo_layout If TRUE, a new layout will be calculated using layout_with_fr(). If g does not have a layout attribute (g$layout), a new layout is automatically calculated.
 #' @param return_graph if TRUE, plot_semnet() also returns the graph object with the attributes and layout as shown in the plot.
 #' @param ... additional arguments are passed on to plot.igraph()
+#' @param weight_attr
+#' @param min_weight
+#' @param delete_isolates
+#' @param vertexsize_coef
+#' @param edgewidth_coef
+#' @param max_backbone_alpha
+#' @param vertex.label.dist
+#' @param layout_fun
 #'
 #' @return Plots a network, and returns the network object if return_graph is TRUE.
 #' @export
-plot_semnet <- function(g, weight_attr='weight', min_weight=NA, vertexsize_attr='freq', vertexsize_coef=1, vertexcolor_attr=NA, edgewidth_coef=1, max_backbone_alpha=NA, labelsize_coef=1, labelspace_coef=1.1, reduce_labeloverlap=T, redo_layout=F, return_graph=T, vertex.label.dist=0.25, layout_fun=layout_with_fr, ...){
+plot_semnet <- function(g, weight_attr='weight', min_weight=NA, delete_isolates=F, vertexsize_attr='freq', vertexsize_coef=1, vertexcolor_attr=NA, edgewidth_coef=1, max_backbone_alpha=NA, labelsize_coef=1, labelspace_coef=1.1, reduce_labeloverlap=T, redo_layout=F, return_graph=T, vertex.label.dist=0.25, layout_fun=layout_with_fr, ...){
   E(g)$weight = get.edge.attribute(g, weight_attr)
   if(!is.na(min_weight)) g = delete.edges(g, which(E(g)$weight < min_weight))
+  if(delete_isolates) g = delete.vertices(g, which(degree(g) == 0))
+  if(vcount(g) == 0) {
+    plot.igraph(g, ...)
+    if(return_graph) return(g) else return(NULL)
+  }
 
   if(!is.na(max_backbone_alpha)) {
     if(!'alpha' %in% edge_attr_names(g)) E(g)$alpha = backbone.alpha(g)
@@ -36,8 +49,7 @@ plot_semnet <- function(g, weight_attr='weight', min_weight=NA, vertexsize_attr=
   g = plotArgsToAttributes(g, args=list(...))
 
   plot.igraph(g, ...)
-
-  if(return_graph) g
+  if(return_graph) return(g)
 }
 
 plotArgsToAttributes <- function(g, args){

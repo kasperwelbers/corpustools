@@ -5,7 +5,7 @@
 \title{A sliding window approach to calculate the co-occurence of words}
 \usage{
 semnet_window(tc, feature, measure = c("con_prob", "cosine", "count_directed",
-  "count_undirected"), context_level = c("document", "sentence"),
+  "count_undirected", "chi2"), context_level = c("document", "sentence"),
   window.size = 10, direction = "<>", backbone = F, n.batches = 5,
   set_matrix_mode = c(NA, "windowXwindow", "positionXwindow"))
 }

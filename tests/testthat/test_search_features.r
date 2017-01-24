@@ -3,13 +3,23 @@ test_that("Query search works", {
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte')
-  tc = create_tcorpus(text, doc_id = c('a','b','c'))
+  tc = create_tcorpus(text, doc_id = c('a','b','c'), split_sentences = T)
+
+  #search_contexts(tc, 'mark AND rutte')
 
   ## simple keyword only
   hits = search_features(tc, keyword = 'fuel')
   expect_equal(as.character(hits$feature), c('fuel','fuel'))
 
-  ## set global i
+  ## multiword keywords
+  hits = search_features(tc, '"a fueled debate"', only_last_mword = T)
+  expect_equal(as.character(hits$feature), c('debate'))
+
+  ## keep all words in multiword search
+  hits = search_features(tc, '"a fueled debate"', only_last_mword = F)
+  expect_equal(as.character(hits$feature), c('A','fueled', 'debate'))
+
+  ## pre-compute feature index
   tc = set_feature_index(tc, feature='word')
 
   ## two keywords

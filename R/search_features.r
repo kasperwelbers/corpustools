@@ -1,47 +1,4 @@
 
-
-search_keyword <- function(tc, fi, kw){
-  kw_regex = get_feature_regex(kw)
-  hit = fi[J(batch_grepl(kw_regex$regex, levels(fi$feature)))]
-  hit$doc_id = tc@data$doc_id[hit$i]
-  hit
-}
-
-search_condition <- function(tc, fi, hit, condition, feature, default_window=NA){
-  con_regex = get_feature_regex(condition, default_window = default_window)
-  qm = Matrix::spMatrix(nrow(hit),nrow(con_regex), x=logical())
-  colnames(qm) = con_regex$term
-
-  if(nrow(con_regex) == 0){
-    return(hit)
-  } else {
-    hit_doc = unique(hit$doc_id)
-    remaining_features = as.character(unique(tc@data[J(hit_doc), feature, with=F][[1]]))
-
-    for(con_regex_term in unique(con_regex$regex)){
-      con_hit = fi[J(batch_grepl(con_regex_term, remaining_features)), c('i','global_i'), with=F]
-
-      for(i in which(con_regex$regex == con_regex_term)){
-        term = as.character(con_regex$term[i])
-        window = con_regex$window[i]
-
-        if(is.na(window)) {
-          con_doc = tc@data[con_hit$i,]$doc_id
-          qm[,term] = hit$doc_id %in% con_doc
-        } else {
-          shifts = -window:window
-          shift = rep(shifts, times=nrow(con_hit))
-          con_window = rep(con_hit$global_i, each = length(shifts)) + shift
-          qm[,term] = hit$global_i %in% con_window
-        }
-      }
-    }
-  }
-  q = parse_queries(condition)
-  eval_query_matrix(qm, q[1,]$terms, q[1,]$form)
-}
-
-
 #' Find tokens using a Lucene-like search query
 #'
 #' Search tokens in a tokenlist using a query that consists of an keyword, and optionally a condition. For a detailed explanation of the query language please consult the query_tutorial markdown file. For a quick summary see the details below.
@@ -81,9 +38,10 @@ search_condition <- function(tc, fi, hit, condition, feature, default_window=NA)
 #' @param condition_once logical. If TRUE, then if an keyword satisfies its conditions once in an article, all keywords within that article are coded.
 #' @param keyword_filter A logical vector that indicates which tokens can match an keyword. Can for instance be used to only select tokens that are proper names (using POS tagging) when looking for people.
 #' @param keep_false_condition if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives
+#' @param only_last_mword If TRUE, then if multiword keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last word. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, word co-occurence analysis)
 #'
 #' @export
-search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, keyword_filter=NULL, keep_false_condition=F, verbose=F){
+search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, keyword_filter=NULL, keep_false_condition=F, only_last_mword=T, verbose=F){
   if(is.null(queries)) queries = data.frame(keyword=keyword, condition=condition, code=code, condition_once=condition_once)
   if(!'condition' %in% colnames(queries)) queries$condition = NA
   if(!'code' %in% colnames(queries)) queries$code = NA
@@ -92,6 +50,7 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   if(!feature %in% colnames(tc@data)) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(colnames(tc@data)[!colnames(tc@data) %in% c('doc_id','sent_i','word_i','filter')],collapse=', ')))
   if(any(is.na(queries$keyword))) stop('keyword cannot be NA. Provide either the keyword or queries argument')
 
+  queries$code = as.character(queries$code)
   queries$code = ifelse(is.na(queries$code), sprintf('query %s', 1:nrow(queries)), queries$code)
   windows = na.omit(get_feature_regex(queries$condition, default_window = NA)$window)
   max_window_size = if(length(windows) > 0) max(windows) else 0
@@ -99,17 +58,20 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   fi = get_feature_index(tc, feature=feature, context_level='document', max_window_size = max_window_size)
 
   res = list()
-  for(i in 1:nrow(queries)){
+  n = nrow(queries)
+  for(i in 1:n){
     code = queries$code[i]
-    if(verbose) print(sprintf('%s:\t%s', i, code))
+    if(verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
     kw = queries$keyword[i]
-    hit = search_keyword(tc, fi, queries$keyword[i])
+    hit = search_string(tc, fi, queries$keyword[i], allow_proximity = F, only_last_mword = only_last_mword)
+    hit$doc_id = get_column(tc, 'doc_id')[hit$i]
+
     if(!is.null(keyword_filter)) hit = hit[hit$i]
 
     if(nrow(hit) == 0) next
 
     if(!is.na(queries$condition[i]) & !queries$condition[i] == ''){
-      hit$condition = search_condition(tc, fi, hit, queries$condition[i], feature=feature, default_window=NA)
+      hit$condition = evaluate_condition(tc, fi, hit, queries$condition[i], feature=feature, default_window=NA)
     } else {
       hit$condition = T
     }
@@ -125,11 +87,45 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
       res[[code]] = hit[,c('feature','i','doc_id','condition'), with=F]
     }
   }
-  # make proper ldply wrapper to enable verbose
+  ## make proper plyr function to enable verbose
   hits = plyr::ldply(res, function(x) x, .id='code')
   if(nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor())
 
   hits[order(hits$i),]
+}
+
+evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=NA){
+  con_regex = get_feature_regex(condition, default_window = default_window)
+  qm = Matrix::spMatrix(nrow(hit),nrow(con_regex), x=logical())
+  colnames(qm) = con_regex$term
+
+  if(nrow(con_regex) == 0){
+    return(hit)
+  } else {
+    hit_doc = unique(hit$doc_id)
+    remaining_features = as.character(unique(get_data(tc)[J(hit_doc), feature, with=F][[1]]))
+
+    for(con_regex_term in unique(con_regex$regex)){
+      con_hit = fi[J(batch_grep(con_regex_term, remaining_features)), c('i','global_i'), with=F]
+
+      for(i in which(con_regex$regex == con_regex_term)){
+        term = as.character(con_regex$term[i])
+        window = con_regex$window[i]
+
+        if(is.na(window)) {
+          con_doc = tc@data[con_hit$i,]$doc_id
+          qm[,term] = hit$doc_id %in% con_doc
+        } else {
+          shifts = -window:window
+          shift = rep(shifts, times=nrow(con_hit))
+          con_window = rep(con_hit$global_i, each = length(shifts)) + shift
+          qm[,term] = hit$global_i %in% con_window
+        }
+      }
+    }
+  }
+  q = parse_queries(condition)
+  eval_query_matrix(qm, q[1,]$terms, q[1,]$form)
 }
 
 

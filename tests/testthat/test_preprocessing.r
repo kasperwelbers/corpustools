@@ -9,7 +9,7 @@ test_that("preprocessing works", {
 
   ## test preprocess_feature
   word = get_column(tc, 'word')
-  tc
+
   context = get_context(tc, 'document')
   feature = preprocess_words(word, context=context, language='english', lowercase = T, use_stemming = T, ngrams = 3)
 

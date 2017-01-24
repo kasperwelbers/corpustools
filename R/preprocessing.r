@@ -24,11 +24,12 @@ preprocess_feature <- function(tc, column, new_column='feature', language='engli
 }
 
 #' @export
-preprocess_words <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=T){
+preprocess_words <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=T, remove_accented=F){
   language = match.arg(language, choices=c('danish','dutch','english','finnish','french','german','hungarian','italian','norwegian','porter','portuguese','romanian','russian','spanish','swedish','turkish'))
   if(!is(x, 'factor')) x = as.factor(x)
   if(replace_whitespace) levels(x) = gsub(' ', '_', levels(x), fixed=T)
   if(lowercase) levels(x) = tolower(levels(x))
+  if(remove_accented) levels(x) = iconv(levels(x), to='ASCII//TRANSLIT')
   if(use_stemming) levels(x) = quanteda::char_wordstem(levels(x), language=language)
   if(ngrams > 1) {
     if(is.null(context)) stop('For ngrams, the "context" argument has to be specified. If no context is available, "context" can be NA')

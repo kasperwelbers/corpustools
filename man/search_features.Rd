@@ -6,7 +6,8 @@
 \usage{
 search_features(tc, keyword = NA, condition = NA, code = NA,
   queries = NULL, feature = "word", condition_once = F,
-  keyword_filter = NULL, keep_false_condition = F, verbose = F)
+  keyword_filter = NULL, keep_false_condition = F, only_last_mword = T,
+  verbose = F)
 }
 \arguments{
 \item{tc}{a tCorpus object}
@@ -24,6 +25,8 @@ search_features(tc, keyword = NA, condition = NA, code = NA,
 \item{keyword_filter}{A logical vector that indicates which tokens can match an keyword. Can for instance be used to only select tokens that are proper names (using POS tagging) when looking for people.}
 
 \item{keep_false_condition}{if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives}
+
+\item{only_last_mword}{If TRUE, then if multiword keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last word. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, word co-occurence analysis)}
 }
 \description{
 Search tokens in a tokenlist using a query that consists of an keyword, and optionally a condition. For a detailed explanation of the query language please consult the query_tutorial markdown file. For a quick summary see the details below.

@@ -5,7 +5,7 @@
 \title{Create a semantic network based on the co-occurence of words in documents}
 \usage{
 semnet(tc, feature, measure = c("con_prob", "con_prob_weighted", "cosine",
-  "count_directed", "count_undirected"), context_level = c("document",
+  "count_directed", "count_undirected", "chi2"), context_level = c("document",
   "sentence"), backbone = F, n.batches = NA, alpha = 2)
 }
 \arguments{

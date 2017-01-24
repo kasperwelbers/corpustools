@@ -5,11 +5,11 @@
 \title{Visualize a semnet network}
 \usage{
 plot_semnet(g, weight_attr = "weight", min_weight = NA,
-  vertexsize_attr = "freq", vertexsize_coef = 1, vertexcolor_attr = NA,
-  edgewidth_coef = 1, max_backbone_alpha = NA, labelsize_coef = 1,
-  labelspace_coef = 1.1, reduce_labeloverlap = T, redo_layout = F,
-  return_graph = T, vertex.label.dist = 0.25, layout_fun = layout_with_fr,
-  ...)
+  delete_isolates = F, vertexsize_attr = "freq", vertexsize_coef = 1,
+  vertexcolor_attr = NA, edgewidth_coef = 1, max_backbone_alpha = NA,
+  labelsize_coef = 1, labelspace_coef = 1.1, reduce_labeloverlap = T,
+  redo_layout = F, return_graph = T, vertex.label.dist = 0.25,
+  layout_fun = layout_with_fr, ...)
 }
 \arguments{
 \item{g}{A network in the igraph format. Specifically designed for the output of coOccurenceNetwork() and windowedCoOccurenceNetwork()}
@@ -27,6 +27,8 @@ plot_semnet(g, weight_attr = "weight", min_weight = NA,
 \item{redo_layout}{If TRUE, a new layout will be calculated using layout_with_fr(). If g does not have a layout attribute (g$layout), a new layout is automatically calculated.}
 
 \item{return_graph}{if TRUE, plot_semnet() also returns the graph object with the attributes and layout as shown in the plot.}
+
+\item{layout_fun}{}
 
 \item{...}{additional arguments are passed on to plot.igraph()}
 }
