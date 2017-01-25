@@ -26,17 +26,32 @@ setMethod("show", "tCorpus",
       data = get_data(object)
       meta = get_meta(object)
       fnames = featurenames(object)
+      mnames = metanames(object)
 
-      sent_info = if('sent_i' %in% colnames(data)) ' and sentences' else ''
+      sent_info = if('sent_i' %in% colnames(data)) paste(' and sentences (n = ', length(unique(get_context(object, 'sentence'))), ')', sep='') else ''
       cat('tCorpus containing ', nrow(data), ' tokens',
           '\nsplit by documents (n = ', nrow(meta), ')', sent_info,
-          '\ncontaining ', length(fnames), ' feature(s): ', paste(fnames, collapse=','), sep='')
-      cat('\n\n@data\n')
-      print(object@data)
-
-      cat('\n@doc_meta\n')
-      print(object@doc_meta)
+          '\ncontaining:',
+          '\n\t- ', length(fnames), ' feature(s):\t     ', paste(fnames, collapse=','),
+          '\n\t- ', length(mnames), ' meta columns(s): ', paste(mnames, collapse=','), sep='')
     }
+)
+
+setMethod("summary", "tCorpus",
+          function(object) {
+            data = get_data(object)
+            meta = get_meta(object)
+            fnames = featurenames(object)
+
+            sent_info = if('sent_i' %in% colnames(data)) paste(' and sentences (n = ', length(unique(get_context(object, 'sentence'))), ')', sep='') else ''
+            cat('tCorpus containing ', nrow(data), ' tokens',
+                '\nsplit by documents (n = ', nrow(meta), ')', sent_info, sep='')
+            cat('\n\n@data\n')
+            print(object@data)
+
+            cat('\n@doc_meta\n')
+            print(object@doc_meta)
+          }
 )
 
 setMethod("print", "tCorpus",
@@ -225,18 +240,20 @@ unlist_to_df <- function(l, ids=1:length(l), global_position=F){
 ## manage data
 
 set_keys <- function(tc){
-  if(is.null(key(tc@data))){
-    if('sent_i' %in% colnames(tc@data)) setkey(tc@data, 'doc_id', 'sent_i') else setkey(tc@data, 'doc_id')
+  if('sent_i' %in% colnames(tc@data)){
+    if(!identical(key(tc@data), c('doc_id', 'sent_i'))) setkey(tc@data, 'doc_id', 'sent_i')
+  } else {
+    if(!identical(key(tc@data), c('doc_id'))) setkey(tc@data, 'doc_id')
   }
-  if(is.null(key(tc@doc_meta))){
-    setkey(tc@doc_meta, 'doc_id')
-  }
+  if(!identical(key(tc@doc_meta), c('doc_id'))) setkey(tc@doc_meta, 'doc_id')
 }
 
 #' @export
-get_data <- function(tc, as_data_frame=F) {
+get_data <- function(tc, columns=NULL, as_data_frame=F) {
   set_keys(tc)
-  if(as_data_frame) as.data.frame(tc@data) else tc@data
+  data = if(!is.null(columns)) tc@data[,columns, with=F] else tc@data
+  if(as_data_frame) data = as.data.frame(data)
+  data
 }
 
 #' @export
@@ -298,13 +315,20 @@ get_context <- function(tc, context_level = c('document','sentence')){
 ## manage meta
 
 #' @export
-get_meta <- function(tc, as_data_frame=F) {
+get_meta <- function(tc, columns=NULL, as_data_frame=F, per_token=F) {
   set_keys(tc)
-  if(as_data_frame) as.data.frame(tc@doc_meta) else tc@doc_meta
+  if(!is.null(columns)) meta = tc@doc_meta[,columns, with=F] else meta = tc@doc_meta
+  if(as_data_frame) meta = as.data.frame(meta)
+  if(per_token) meta = meta[match(get_column(tc, 'doc_id'), get_meta_column(tc, 'doc_id')), ,drop=F]
+  meta
 }
 
 #' @export
-get_meta_column <- function(tc, name) get_meta(tc)[[name]]
+get_meta_column <- function(tc, name, per_token=F) {
+  col = get_meta(tc)[[name]]
+  if(per_token) col = col[match(get_column(tc, 'doc_id'), get_meta_column(tc, 'doc_id'))]
+  col
+}
 
 #' @export
 set_meta_column <- function(tc, name, value) {
@@ -332,6 +356,11 @@ recode_meta_column <- function(tc, column, new_value, i=NULL, old_value=NULL){
   tc@data[[column]] = droplevels(tc@doc_meta[[column]])
   tc
 }
+
+
+#' @export
+metanames <- function(tc) colnames(get_meta(tc))
+
 
 ## provenance management ##
 set_provenance <- function(tc, ...){

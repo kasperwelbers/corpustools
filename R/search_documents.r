@@ -10,25 +10,18 @@
 subset_query <- function(tc, query, code=NULL, feature='word', context_level=c('document','sentence')){
   context_level = match.arg(context_level)
   hits = search_contexts(tc, query, code=code, feature=feature, context_level=context_level)
-  hits
   if(context_level == 'document'){
     tc = subset(tc, doc_id %in% unique(hits$doc_id))
   }
   if(context_level == 'sentence'){
-    d = get_data(tc)[,c('doc_id','sent_i')]
+    d = get_data(tc, columns = c('doc_id','sent_i'))
     d$i = 1:nrow(d)
-    rows = d[J(hits$doc_id, hits$sent_i)]$i
+    rows = d[list(hits$doc_id, hits$sent_i)]$i
     tc = subset(tc, rows)
   }
   tc
 }
 
-x = data.table(x = c('a','a','b','b','c','c'), y=c('d','e','d','e','d','e'))
-setkey(x, x, y)
-
-xis = c('a','c')
-yis = c('d','e')
-x[J(xis, yis)]
 
 #' Title
 #'
