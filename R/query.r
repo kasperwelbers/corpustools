@@ -1,3 +1,5 @@
+REGEX_ALLOW_SYMBOLS = '([+*?.a-z0-9%@$€:;#/~_-]+)'
+
 parse_queries <- function(query){
   query = iconv(query, to='ASCII//TRANSLIT') # if present, try to remove accented characters
 
@@ -5,22 +7,32 @@ parse_queries <- function(query){
   query = gsub(' AND ', ' & ', query)
   query = gsub(' NOT ', ' &! ', query)
 
-  ## if within quotations, replace spaces with underscores (to prepare for multi-word string matching)
-  rematch = regexpr('".*"', query)
-  for(m in regmatches(query, rematch)) {
-    replacewith = gsub('"', '', gsub(' ', '_', m, fixed=T), fixed=T) # replace space with underscore and remove quotes
-    query = gsub(m, replacewith, query, fixed=T)
-  }
-
   ## also allow empty space as OR
   query = gsub('(?<=[+*?.a-zA-Z0-9/~_)-])[ ]+(?=[+*?.a-zA-Z0-9/~_(-])', ' | ', query, perl=T)
+
+  ## parts of the string between quotes are treated as single query terms
+  ## if within quotations, spaces stay spaces. Except within parentheses within quotes, spaces are again OR statements
+  ## if ~[0-9] after quotes (used to indicate word proximities) take these along as well
+  rematch = regexpr('".*"(~[0-9]+)?', query)
+  for(m in regmatches(query, rematch)) {
+    if(grepl('&', m)) stop('Queries cannot contain &/AND statements within quotes')
+    replacewith = sprintf('{%s}', m) ## surround with {} to keep entire string as single term
+    replacewith = gsub(' | ', ' ', replacewith, fixed=T) # replace space with underscore and remove quotes
+    query = gsub(m, replacewith, query, fixed=T)
+
+    parmatch = regexpr('\\(.*\\)', query)
+    for(m in regmatches(query, parmatch)) {
+      query = gsub(m, gsub(' ', '|', m, fixed=T), query, fixed=T)
+    }
+  }
 
   ## make " * ", as a 'find all' solution, an immediate TRUE
   query = tolower(query) # safety first: for the odd possibility that someone uses T or F as a query term, which would be interpreted as TRUE or FALSE
   query = gsub('(?<= )\\*(?= )|(?<=^)\\*(?= )', 'T', query, perl=T)
 
-  query_form = as.list(gsub('([+*?.a-z0-9/~_-]+)', '%s', query)) # note that uppercase is not replaced, to keep the TRUE
-  query_terms = regmatches(query, gregexpr('([+*?.a-z0-9/~_-]+)', query))
+  split_regex = paste('(?<={).*(?=})', REGEX_ALLOW_SYMBOLS, sep='|') ##
+  query_form = as.list(gsub(split_regex, '%s', query, perl=T)) # note that uppercase is not replaced, to keep the TRUE
+  query_terms = regmatches(query, gregexpr(split_regex, query, perl=T))
 
   query_form[query_form == ''] = NA
   t(mapply(function(x,y) list(form=x, terms=y), query_form, query_terms))
@@ -64,9 +76,15 @@ get_feature_regex <- function(terms, default_window=NA){
 
   terms$regex = gsub('*', '.*', terms$regex, fixed=T) # wildcard: none or any symbols
   terms$regex = gsub('?', '.{1}', terms$regex, fixed=T) # wildcard: one character that can be anything
-  terms$regex = sprintf('\\b%s\\b', terms$regex)
+  terms$regex = gsub('"', '', terms$regex, fixed=T) # wildcard: one character that can be anything
+  #terms$regex = sprintf('\\b%s\\b', terms$regex)
+  terms$regex = gsub(REGEX_ALLOW_SYMBOLS, '\\\\b\\1\\\\b', terms$regex)
   unique(terms)
 }
+
+#query = '"(mark OR marki) rutte"~5'
+#print(parse_queries(query)[1,]$terms)
+#print(get_feature_regex(query))
 
 qualify_queries <- function(queries){
   boo = c()

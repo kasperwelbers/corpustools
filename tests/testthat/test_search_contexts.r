@@ -19,10 +19,23 @@ test_that("Query document search works", {
   expect_true(is.null(hits))
 
   ## proximity search
-  hits = search_contexts(tc, '"bos wouter"~5', context_level = 'sentence')
+  hits = search_contexts(tc, '"bos wouter"~5', context_level = 'sentence') # bos and wouter within a word distance of 5
   expect_true(is.null(hits))
 
-  hits = search_contexts(tc, '"bos wouter"~10', context_level = 'sentence')
+  hits = search_contexts(tc, '"bos wouter"~10', context_level = 'sentence') #  bos and wouter within a word distance of 10
+  expect_true(!is.null(hits))
+
+  hits = search_contexts(tc, '"!bos wouter"~10', context_level = 'sentence') # wouter should not occur within 10 words from bos
+  expect_true(is.null(hits))
+
+  ## proximity with additional or statements
+  hits = search_contexts(tc, '"(bos test) wouter"~10', context_level = 'sentence') # finds "bos wouter"~10 OR "test wouter"~10 (but more efficiently than entering these terms manually)
+  expect_true(!is.null(hits))
+
+  hits = search_contexts(tc, '"(!bos test) wouter"~10', context_level = 'sentence') # finds "(NOT bos) wouter"~10 OR "test wouter"~10
+  expect_true(is.null(hits))
+
+  hits = search_contexts(tc, '"(bos !test) wouter"~10', context_level = 'sentence') # finds "bos wouter"~10 OR "(NOT test) wouter"~10
   expect_true(!is.null(hits))
 
   ## query subsetting
