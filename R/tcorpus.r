@@ -28,12 +28,12 @@ setMethod("show", "tCorpus",
       fnames = featurenames(object)
       mnames = metanames(object)
 
-      sent_info = if('sent_i' %in% colnames(data)) paste(' and sentences (n = ', length(unique(get_context(object, 'sentence'))), ')', sep='') else ''
+      sent_info = if('sent_i' %in% colnames(data)) paste(' and sentences (n = ', nrow(unique(get_data(object, columns = c('doc_id','sent_i')))), ')', sep='') else ''
       cat('tCorpus containing ', nrow(data), ' tokens',
           '\nsplit by documents (n = ', nrow(meta), ')', sent_info,
           '\ncontaining:',
-          '\n\t- ', length(fnames), ' feature(s):\t     ', paste(fnames, collapse=','),
-          '\n\t- ', length(mnames), ' meta columns(s): ', paste(mnames, collapse=','), sep='')
+          '\n  - ', length(fnames), ' feature', if(length(fnames) > 1) '(s)', ': ', paste(fnames, collapse=','),
+          '\n  - ', length(mnames), ' meta column', if(length(mnames) > 1) '(s)', ': ', paste(mnames, collapse=','), sep='')
     }
 )
 
@@ -43,7 +43,7 @@ setMethod("summary", "tCorpus",
             meta = get_meta(object)
             fnames = featurenames(object)
 
-            sent_info = if('sent_i' %in% colnames(data)) paste(' and sentences (n = ', length(unique(get_context(object, 'sentence'))), ')', sep='') else ''
+            sent_info = if('sent_i' %in% colnames(data)) paste(' and sentences (n = ', nrow(unique(get_data(object, columns = c('doc_id','sent_i')))), ')', sep='') else ''
             cat('tCorpus containing ', nrow(data), ' tokens',
                 '\nsplit by documents (n = ', nrow(meta), ')', sent_info, sep='')
             cat('\n\n@data\n')
@@ -387,8 +387,8 @@ local_position <- function(position, context, presorted=F){
     context = context[ord]
   }
   newcontext = which(!duplicated(context))
-  repeat_multiplier = c(newcontext[-1], length(context)+1) - newcontext
-  context_start = rep(position[newcontext], repeat_multiplier)
+  repeat_add = c(newcontext[-1], length(context)+1) - newcontext
+  context_start = rep(position[newcontext], repeat_add)
   position = (position - context_start) + 1
   if(!presorted) position = position[match(1:length(position), ord)]
   position
@@ -404,7 +404,7 @@ global_position <- function(position, context, max_window_size=NA, presorted=F){
     context = context[ord]
   }
 
-  ## first, make sure position is local and starts at 1 for each context (otherwise things get very slow)
+  ## first, make sure position is local and starts at 1 for each context (otherwise the global id can become absurdly high)
   position = local_position(position, context, presorted=T)
 
   if(min(position) == 0) position = position + 1 ## position will be treated as an index, so it cannot be zero in r where an index starts at 1 (and some parsers start indexing at zero)
@@ -414,11 +414,11 @@ global_position <- function(position, context, max_window_size=NA, presorted=F){
 
     context.max = position[newcontext-1] # the highest value of each context
     if(!is.na(max_window_size)) context.max = context.max + max_window_size # increase the highest value of each context with max_window_size to make sure windows of different contexts do not overlap.
-    multiplier_scores = cumsum(c(0,context.max)) # the amount that should be added to the position at the start of each context
+    add_scores = cumsum(c(0,context.max)) # the amount that should be added to the position at the start of each context
 
-    repeat_multiplier = c(newcontext[-1], length(position)+1) - newcontext # the number of times the multiplier scores need to be repeated to match the position vector
-    multiplier_vector = rep(multiplier_scores, repeat_multiplier)
-    position = position + multiplier_vector
+    repeat_add = c(newcontext[-1], length(position)+1) - newcontext # the number of times the add scores need to be repeated to match the position vector
+    add_vector = rep(add_scores, repeat_add)
+    position = position + add_vector
   }
   if(!presorted) position = position[match(1:length(position), ord)]
   position

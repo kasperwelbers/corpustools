@@ -3,13 +3,12 @@
 #' @param tc tCorpus object
 #' @param subset
 #'
-#' @return
 #' @export
-#'
-#' @examples
 subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index=F, drop_levels=T) {
-  e = substitute(subset)
-  e_meta = substitute(subset_meta)
+  e = if(is(substitute(subset), 'character')) parse(text=subset) else substitute(subset)
+  e_meta = if(is(substitute(subset_meta), 'character')) parse(text=subset_meta) else substitute(subset_meta)
+  #e = substitute(subset)
+  #e_meta = substitute(subset_meta)
 
   r = eval(e, tc@data, parent.frame())
   if(!is.null(r)){

@@ -75,16 +75,11 @@ get_feature_regex <- function(terms, default_window=NA){
   terms$regex = gsub('([.+])', '\\\\\\1', terms$regex) ## escape special regex characters
 
   terms$regex = gsub('*', '.*', terms$regex, fixed=T) # wildcard: none or any symbols
-  terms$regex = gsub('?', '.{1}', terms$regex, fixed=T) # wildcard: one character that can be anything
-  terms$regex = gsub('"', '', terms$regex, fixed=T) # wildcard: one character that can be anything
-  #terms$regex = sprintf('\\b%s\\b', terms$regex)
-  terms$regex = gsub(REGEX_ALLOW_SYMBOLS, '\\\\b\\1\\\\b', terms$regex)
+  terms$regex = gsub('?', '.?', terms$regex, fixed=T) # wildcard: one character that can be anything
+  terms$regex = gsub('"', '', terms$regex, fixed=T) # remove quotes
+  terms$regex = gsub(REGEX_ALLOW_SYMBOLS, '\\\\b\\1\\\\b', terms$regex) ## add word boundaries
   unique(terms)
 }
-
-#query = '"(mark OR marki) rutte"~5'
-#print(parse_queries(query)[1,]$terms)
-#print(get_feature_regex(query))
 
 qualify_queries <- function(queries){
   boo = c()

@@ -36,16 +36,21 @@
 #' @param code The code given to the tokens that match the query (usefull when looking for multiple queries)
 #' @param queries Alternatively, a data.frame can be given that contains a "keyword" column, and optionally columns for the "condition", "code" and "condition_once" paramters.
 #' @param condition_once logical. If TRUE, then if an keyword satisfies its conditions once in an article, all keywords within that article are coded.
-#' @param keyword_filter A logical vector that indicates which tokens can match an keyword. Can for instance be used to only select tokens that are proper names (using POS tagging) when looking for people.
 #' @param keep_false_condition if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives
 #' @param only_last_mword If TRUE, then if multiword keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last word. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, word co-occurence analysis)
+#' @param feature
+#' @param subset_tokens A call (or character string of a call) as one would normally pass to subset.tCorpus. If given, the keyword has to occur within the subset. This is for instance usefull to only look in named entity POS tags when searching for people or organization. Note that the condition does not have to occur within the subset.
+#' @param subset_meta A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).
+#' @param verbose
 #'
 #' @export
-search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, keyword_filter=NULL, keep_false_condition=F, only_last_mword=T, verbose=F){
-  if(is.null(queries)) queries = data.frame(keyword=keyword, condition=condition, code=code, condition_once=condition_once)
-  if(!'condition' %in% colnames(queries)) queries$condition = NA
-  if(!'code' %in% colnames(queries)) queries$code = NA
-  if(!'condition_once' %in% queries) queries$condition_once = condition_once
+search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mword=T, verbose=F){
+  if(is.null(queries)) queries = data.frame(keyword=keyword)
+  if(!'condition' %in% colnames(queries)) queries$condition = condition
+  if(!'code' %in% colnames(queries)) queries$code = code
+  if(!'condition_once' %in% colnames(queries)) queries$condition_once = condition_once
+  if(!'subset_tokens' %in% colnames(queries)) queries$subset_tokens = if(is(substitute(subset_tokens), 'call')) deparse(substitute(subset_tokens)) else subset_tokens
+  if(!'subset_meta' %in% colnames(queries)) queries$subset_meta = if(is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
 
   if(!feature %in% colnames(tc@data)) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(colnames(tc@data)[!colnames(tc@data) %in% c('doc_id','sent_i','word_i','filter')],collapse=', ')))
   if(any(is.na(queries$keyword))) stop('keyword cannot be NA. Provide either the keyword or queries argument')
@@ -66,7 +71,20 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
     hit = search_string(tc, fi, queries$keyword[i], allow_proximity = F, only_last_mword = only_last_mword)
     hit$doc_id = get_column(tc, 'doc_id')[hit$i]
 
-    if(!is.null(keyword_filter)) hit = hit[hit$i]
+    ## take subset into account
+    subset_tokens = queries$subset_tokens[i]
+    subset_meta = queries$subset_meta[i]
+    if(!is.na(subset_tokens) | !is.na(subset_meta)){
+      if(i == 1) {
+        i_filter = subset_i(tc, subset=subset_tokens, subset_meta=subset_meta)
+      } else { # if subset_tokens and subset_meta are identical to previous query, i_filter does not need to be calculated again (this is easily the case, since its convenient to give a subset globally by passing a single value)
+
+        if(!identical(subset_tokens, queries$subset_tokens[i-1]) | !identical(subset_meta, queries$subset_meta[i-1])) {
+          i_filter = subset_i(tc, subset=subset_tokens, subset_meta=subset_meta)
+        }
+      }
+      hit = hit[hit$i %in% i_filter,]
+    }
 
     if(nrow(hit) == 0) next
 
@@ -82,9 +100,9 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
     }
 
     if(!keep_false_condition) {
-      res[[code]] = hit[hit$condition, c('feature','i','doc_id'), with=F]
+      res[[code]] = hit[hit$condition, c('feature','i','doc_id')]
     } else {
-      res[[code]] = hit[,c('feature','i','doc_id','condition'), with=F]
+      res[[code]] = hit[,c('feature','i','doc_id','condition')]
     }
   }
   ## make proper plyr function to enable verbose
@@ -92,6 +110,35 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   if(nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor())
 
   hits[order(hits$i),]
+}
+
+subset_i <- function(tc, subset=NA, subset_meta=NA){
+  ## subset and subset need to be given as a character string
+  n = nrow(get_data(tc))
+  if(is.na(subset)){
+    r = NULL
+  } else {
+    e = parse(text=as.character(subset))
+    r = (1:n)[eval(e, tc@data, parent.frame())]
+  }
+
+  n_meta = nrow(get_meta(tc))
+  if(is.na(subset_meta)){
+    r_meta = NULL
+  } else {
+    e_meta = parse(text=as.character(subset_meta))
+    r_meta = (1:n_meta)[eval(e_meta, tc@doc_meta, parent.frame())]
+    if(length(r_meta) > 0) {
+      r_meta = 1:n_meta %in% r_meta
+      r_meta = r_meta[match(get_column(tc, 'doc_id'), get_meta_column(tc, 'doc_id'))] ## extend to length()
+      r_meta = which(r_meta)
+    }
+  }
+
+  if(!is.null(r) & !is.null(r_meta)) return(intersect(r, r_meta))
+  if(is.null(r) & is.null(r_meta)) return(1:n)
+  if(!is.null(r) & is.null(r_meta)) return(r)
+  if(is.null(r) & !is.null(r_meta)) return(r_meta)
 }
 
 evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=NA){
@@ -128,7 +175,6 @@ evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=N
   eval_query_matrix(qm, q[1,]$terms, q[1,]$form)
 }
 
-
 #' Recode features in a tCorpus based on a search string
 #'
 #' Search features (see documentation for search_features function for instructions) and replace features with a new value
@@ -141,8 +187,8 @@ evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=N
 #' @param condition_once
 #' @param keyword_filter
 #'
-#' @export
-search_recode <- function(tc, feature, new_value, keyword, condition=NA, condition_once=F, keyword_filter=NULL){
-  hits = search_features(tc, keyword=keyword, condition=condition, condition_once=F, keyword_filter=NULL)
+#' @exports
+search_recode <- function(tc, feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA){
+  hits = search_features(tc, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta)
   recode_column(tc, feature, new_value, i=hits$i)
 }

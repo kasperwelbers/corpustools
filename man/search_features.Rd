@@ -6,8 +6,8 @@
 \usage{
 search_features(tc, keyword = NA, condition = NA, code = NA,
   queries = NULL, feature = "word", condition_once = F,
-  keyword_filter = NULL, keep_false_condition = F, only_last_mword = T,
-  verbose = F)
+  subset_tokens = NA, subset_meta = NA, keep_false_condition = F,
+  only_last_mword = T, verbose = F)
 }
 \arguments{
 \item{tc}{a tCorpus object}
@@ -22,11 +22,15 @@ search_features(tc, keyword = NA, condition = NA, code = NA,
 
 \item{condition_once}{logical. If TRUE, then if an keyword satisfies its conditions once in an article, all keywords within that article are coded.}
 
-\item{keyword_filter}{A logical vector that indicates which tokens can match an keyword. Can for instance be used to only select tokens that are proper names (using POS tagging) when looking for people.}
+\item{subset_tokens}{A call (or character string of a call) as one would normally pass to subset.tCorpus. If given, the keyword has to occur within the subset. This is for instance usefull to only look in named entity POS tags when searching for people or organization. Note that the condition does not have to occur within the subset.}
+
+\item{subset_meta}{A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).}
 
 \item{keep_false_condition}{if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives}
 
 \item{only_last_mword}{If TRUE, then if multiword keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last word. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, word co-occurence analysis)}
+
+\item{verbose}{}
 }
 \description{
 Search tokens in a tokenlist using a query that consists of an keyword, and optionally a condition. For a detailed explanation of the query language please consult the query_tutorial markdown file. For a quick summary see the details below.

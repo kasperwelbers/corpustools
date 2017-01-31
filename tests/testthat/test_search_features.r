@@ -5,8 +5,6 @@ test_that("Query search works", {
            'Mark Rutte is simply Rutte')
   tc = create_tcorpus(text, doc_id = c('a','b','c'), split_sentences = T)
 
-  #search_contexts(tc, 'mark AND rutte')
-
   ## simple keyword only
   hits = search_features(tc, keyword = 'fuel')
   expect_equal(as.character(hits$feature), c('fuel','fuel'))
@@ -47,6 +45,10 @@ test_that("Query search works", {
                        condition = c('renewable green clean', 'mark~2', ''))
   hits = search_features(tc, queries=queries, condition_once=c(F,T,F))
   expect_equal(as.character(hits$feature), c('fuel','fuels','debate', 'Rutte', 'Rutte'))
+
+  ## with subsetting
+  hits = search_features(tc, keyword = 'fuel', subset_meta = doc_id == 'a')
+  expect_true(nrow(hits) == 1) ## should be only the hit in doc 'a', instead of 'a' and 'b'
 
   ## code queries
   ##code = code_features(tc, queries, condition_once=c(F,T,F))

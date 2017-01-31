@@ -1,6 +1,6 @@
 ### search strings
 
-search_string <- function(tc, fi, string, allow_multiword=T, allow_proximity=T, only_last_mword=T){
+search_string <- function(tc, fi, string, allow_multiword=T, allow_proximity=T, allow_subset=F, only_last_mword=T){
   ## look up a string
   ## multiple strings can be used at once (in which case they are seen as related by OR statements)
   ## supports single word strings, multiword strings demarcated with quotes (e.g., "this string") and word proximities (e.g., "marco polo"~10)
@@ -8,10 +8,13 @@ search_string <- function(tc, fi, string, allow_multiword=T, allow_proximity=T, 
   regex = get_feature_regex(string)
   is_multiword = grepl(' ', regex$term)
   is_proximity = !is.na(regex$window)
+  #is_subset = grepl('subset=', regex$term)
+
 
   single = regex[!is_multiword,,drop=F]
   multi = regex[is_multiword & !is_proximity,,drop=F]
   proxi = regex[is_multiword & is_proximity,,drop=F]
+
 
 
   if(nrow(single) > 0){

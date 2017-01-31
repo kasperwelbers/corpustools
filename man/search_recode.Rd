@@ -5,7 +5,7 @@
 \title{Recode features in a tCorpus based on a search string}
 \usage{
 search_recode(tc, feature, new_value, keyword, condition = NA,
-  condition_once = F, keyword_filter = NULL)
+  condition_once = F, subset_tokens = NA, subset_meta = NA)
 }
 \arguments{
 \item{keyword_filter}{}

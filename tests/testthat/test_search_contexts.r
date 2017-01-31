@@ -39,6 +39,6 @@ test_that("Query document search works", {
   expect_true(!is.null(hits))
 
   ## query subsetting
+  subset(tc, doc_id %in% 'a')
   subset_query(tc, '"mark rutte"~2')
-
 })
