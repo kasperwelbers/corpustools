@@ -1,6 +1,6 @@
 ### search strings
 
-search_string <- function(tc, fi, string, allow_multiword=T, allow_proximity=T, allow_subset=F, only_last_mword=T){
+search_string <- function(tc, fi, string, allow_multiword=T, allow_proximity=T, only_last_mword=T){
   ## look up a string
   ## multiple strings can be used at once (in which case they are seen as related by OR statements)
   ## supports single word strings, multiword strings demarcated with quotes (e.g., "this string") and word proximities (e.g., "marco polo"~10)
@@ -8,18 +8,14 @@ search_string <- function(tc, fi, string, allow_multiword=T, allow_proximity=T, 
   regex = get_feature_regex(string)
   is_multiword = grepl(' ', regex$term)
   is_proximity = !is.na(regex$window)
-  #is_subset = grepl('subset=', regex$term)
-
 
   single = regex[!is_multiword,,drop=F]
   multi = regex[is_multiword & !is_proximity,,drop=F]
   proxi = regex[is_multiword & is_proximity,,drop=F]
 
-
-
   if(nrow(single) > 0){
     hit_single = batch_grep(single$regex, levels(fi$feature)) # pun intended
-    hit_single = fi[J(hit_single)]
+    hit_single = fi[J(hit_single),,nomatch=0]
   } else {
     hit_single = NULL
   }
@@ -27,7 +23,7 @@ search_string <- function(tc, fi, string, allow_multiword=T, allow_proximity=T, 
   if(nrow(multi) > 0){
     if(!allow_multiword) stop('Multiword queries ("word1 word2") not allowed here (allow_multiword == F)')
     hit_multi = multiword_grepl(fi, multi$regex, only_last=only_last_mword)
-    hit_multi = fi[hit_multi]
+    hit_multi = fi[hit_multi,,nomatch=0]
   } else {
     hit_multi = NULL
   }
@@ -35,7 +31,7 @@ search_string <- function(tc, fi, string, allow_multiword=T, allow_proximity=T, 
   if(nrow(proxi) > 0){
     if(!allow_proximity) stop('Proximity queries ("word1 word2"~5) not allowed here (allow_proximity == F)')
     hit_proxi = proximity_grepl(fi, proxi$regex, proxi$window, only_last=only_last_mword)
-    hit_proxi = fi[hit_proxi]
+    hit_proxi = fi[hit_proxi,,nomatch=0]
   } else {
     hit_proxi = NULL
   }

@@ -169,14 +169,7 @@ get_matrix_stats <- function(m1, m2=NULL, mat_stats = c('sum.x','sum.y','magnitu
 
 #### DTM based cooccurrene ####
 
-get_batch_i <- function(n, n.batches){
-  if(!n.batches == 1){
-    splits = split((1:n), cut(seq_along(1:n), n.batches, labels = FALSE))
-    splits = split((1:n), cut(seq_along(1:n), n.batches, labels = FALSE))
-    splits = sapply(splits, FUN=function(x) cbind(min(x), max(x)))
-    data.frame(start=splits[1,], end=splits[2,])
-  } else data.frame(start=1, end=n)
-}
+
 
 cooccurrence_matrix <- function(tc, feature, count_mode, mat_stats, context_level, n.batches, alpha){
   m = get_dtm(tc, feature=feature, context_level = context_level)
@@ -184,18 +177,18 @@ cooccurrence_matrix <- function(tc, feature, count_mode, mat_stats, context_leve
   if(is.na(n.batches)){
     ml = cooccurrence_crossprod(m, count_mode=count_mode, mat_stats=mat_stats, alpha=alpha)
   } else {
-    batch_i = get_batch_i(n=nrow(m), n.batches=n.batches)
+    batch_i = get_batch_i(tc, n.batches=n.batches)
     ml = list()
 
-    pb <- txtProgressBar(0, nrow(batch_i), style = 3)
-    setTxtProgressBar(pb, 0)
+    #pb <- txtProgressBar(0, nrow(batch_i), style = 3)
+    #setTxtProgressBar(pb, 0)
     for(i in 1:nrow(batch_i)){
       batch_rows = batch_i$start[i]:batch_i$end[i]
       cooc = cooccurrence_crossprod(m[batch_rows,,drop=F], count_mode=count_mode, mat_stats=mat_stats, alpha=alpha)
       for(n in names(cooc)) ml[[n]] = if(n %in% names(ml)) ml[[n]] + cooc[[n]] else cooc[[n]]
-      setTxtProgressBar(pb, i)
+      #setTxtProgressBar(pb, i)
     }
-    close(pb)
+    #close(pb)
   }
   ml$freq = Matrix::colSums(m)
   ml$doc_freq = Matrix::colSums(m)
@@ -204,17 +197,6 @@ cooccurrence_matrix <- function(tc, feature, count_mode, mat_stats, context_leve
 
 
 #### window based cooccurrene ####
-
-get_batch_i_window <- function(con_id, n.batches=10){
-  if(!n.batches == 1){
-    break_each = length(con_id) / n.batches
-    break_con = con_id[rep(break_each, n.batches) * 1:n.batches] # do not break within documents
-    break_i = sapply(break_con, function(x) min(which(con_id == x)))
-    break_i = unique(break_i)
-    break_i = break_i[break_i > 1 & break_i < length(con_id)]
-    data.frame(start=c(1,break_i), end=c(break_i, length(con_id)))
-  } else data.frame(start=1, end=length(con_id))
-}
 
 #' Calculate the cooccurrence of features.
 #'
@@ -242,10 +224,10 @@ cooccurrence_matrix_window <- function(tc, feature, matrix_mode='position_to_win
     ml[['freq']] = Matrix::colSums(wwo$position.mat)
   } else {
 
-    batch_i = get_batch_i_window(get_context(tc, context_level = context_level), n.batches)
+    batch_i = data_batch(tc, context_level, n.batches)
     ml = list()
-    pb <- txtProgressBar(0, nrow(batch_i), style = 3)
-    setTxtProgressBar(pb, 0)
+    #pb <- txtProgressBar(0, nrow(batch_i), style = 3)
+    #setTxtProgressBar(pb, 0)
     for(i in 1:nrow(batch_i)){
       batch_rows = batch_i$start[i]:batch_i$end[i]
       wwo = wordWindowOccurence(tc, feature, context_level, window.size, direction, batch_rows=batch_rows)
@@ -255,9 +237,9 @@ cooccurrence_matrix_window <- function(tc, feature, matrix_mode='position_to_win
       for(n in names(cooc)) ml[[n]] = if(n %in% names(ml)) ml[[n]] + cooc[[n]] else cooc[[n]]
       ml[['freq']] = if('freq' %in% names(ml)) ml[['freq']] + Matrix::colSums(wwo$position.mat) else Matrix::colSums(wwo$position.mat)
 
-      setTxtProgressBar(pb, i)
+      #setTxtProgressBar(pb, i)
     }
-    close(pb)
+    #close(pb)
   }
 
   ml # a list containing an adjacency matrix, with additional statistics

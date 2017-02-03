@@ -112,35 +112,6 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   hits[order(hits$i),]
 }
 
-subset_i <- function(tc, subset=NA, subset_meta=NA){
-  ## subset and subset need to be given as a character string
-  n = nrow(get_data(tc))
-  if(is.na(subset)){
-    r = NULL
-  } else {
-    e = parse(text=as.character(subset))
-    r = (1:n)[eval(e, tc@data, parent.frame())]
-  }
-
-  n_meta = nrow(get_meta(tc))
-  if(is.na(subset_meta)){
-    r_meta = NULL
-  } else {
-    e_meta = parse(text=as.character(subset_meta))
-    r_meta = (1:n_meta)[eval(e_meta, tc@doc_meta, parent.frame())]
-    if(length(r_meta) > 0) {
-      r_meta = 1:n_meta %in% r_meta
-      r_meta = r_meta[match(get_column(tc, 'doc_id'), get_meta_column(tc, 'doc_id'))] ## extend to length()
-      r_meta = which(r_meta)
-    }
-  }
-
-  if(!is.null(r) & !is.null(r_meta)) return(intersect(r, r_meta))
-  if(is.null(r) & is.null(r_meta)) return(1:n)
-  if(!is.null(r) & is.null(r_meta)) return(r)
-  if(is.null(r) & !is.null(r_meta)) return(r_meta)
-}
-
 evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=NA){
   con_regex = get_feature_regex(condition, default_window = default_window)
   qm = Matrix::spMatrix(nrow(hit),nrow(con_regex), x=logical())

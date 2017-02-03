@@ -5,8 +5,7 @@
 \title{Create a tcorpus based on tokens (i.e. preprocessed texts)}
 \usage{
 tokens_to_tcorpus(tokens, doc_col = "doc_id", word_i_col = NULL,
-  sent_i_col = NULL, doc_meta = NULL, doc_meta_cols = NULL,
-  feature_cols = NULL)
+  sent_i_col = NULL, meta = NULL, meta_cols = NULL, feature_cols = NULL)
 }
 \arguments{
 \item{tokens}{A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (word_i_col)}
@@ -17,9 +16,9 @@ tokens_to_tcorpus(tokens, doc_col = "doc_id", word_i_col = NULL,
 
 \item{sent_i_col}{Optionally, the name of the column that indicates the sentences in which tokens occured.}
 
-\item{doc_meta}{Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)}
+\item{meta}{Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)}
 
-\item{doc_meta_cols}{Alternatively, if there are document meta columns in the tokens data.table, doc_meta_cols can be used to recognized them. Note that these values have to be unique within documents.}
+\item{meta_cols}{Alternatively, if there are document meta columns in the tokens data.table, meta_cols can be used to recognized them. Note that these values have to be unique within documents.}
 
 \item{feature_cols}{Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)}
 }

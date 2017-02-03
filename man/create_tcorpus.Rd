@@ -9,11 +9,11 @@
 \usage{
 create_tcorpus(x, ...)
 
-\method{create_tcorpus}{character}(x, doc_id = 1:length(x), doc_meta = NULL,
+\method{create_tcorpus}{character}(x, doc_id = 1:length(x), meta = NULL,
   split_sentences = F, max_sentences = NULL, max_words = NULL,
   verbose = F)
 
-\method{create_tcorpus}{factor}(x, doc_id = 1:length(x), doc_meta = NULL,
+\method{create_tcorpus}{factor}(x, doc_id = 1:length(x), meta = NULL,
   split_sentences = F, max_sentences = NULL, max_words = NULL,
   verbose = F)
 
@@ -22,7 +22,7 @@ create_tcorpus(x, ...)
   max_words = NULL)
 }
 \arguments{
-\item{doc_meta}{A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x}
+\item{meta}{A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x}
 
 \item{split_sentences}{Logical. If TRUE, the sentence number of tokens is also computed. This is done using the sentence tokenization of quanteda::tokenize, which is noted by the authors to be good (especially for english) but not perfect.}
 

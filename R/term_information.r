@@ -66,8 +66,8 @@ term.statistics <- function(tc, feature, context_level=c('document','sentence'))
              nonalpha = grepl("\\W", vocabulary),
              termfreq = Matrix::colSums(dtm),
              docfreq = Matrix::colSums(dtm > 0),
-             reldocfreq = Matrix::colSums(dtm > 0) / nDocs(dtm),
-             tfidf = tapply(dtm$v/Matrix::rowSums(dtm)[dtm$i], dtm$j, mean) * log2(nDocs(dtm)/Matrix::colSums(dtm > 0)),
+             reldocfreq = Matrix::colSums(dtm > 0) / nrow(dtm),
+             tfidf = tapply(dtm$v/Matrix::rowSums(dtm)[dtm$i], dtm$j, mean) * log2(nrow(dtm)/Matrix::colSums(dtm > 0)),
              stringsAsFactors=F)
 }
 

@@ -10,7 +10,6 @@
 subset_query <- function(tc, query, code=NULL, feature='word', context_level=c('document','sentence')){
   context_level = match.arg(context_level)
   hits = search_contexts(tc, query, code=code, feature=feature, context_level=context_level)
-  print(hits)
   if(context_level == 'document'){
     tc = subset(tc, doc_id %in% unique(hits$doc_id))
   }

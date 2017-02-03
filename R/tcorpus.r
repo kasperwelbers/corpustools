@@ -1,9 +1,18 @@
 ######  TCORPUS CLASS  ######
 
 ## define create_tcorpus class
+
+#' tCorpus; a corpus for tokenized texts
+#'
+#' @slot data data.table.
+#' @slot meta data.table.
+#' @slot feature_index data.table.
+#' @slot p list.
+#'
+#' @export
 tCorpus = setClass("tCorpus",
                    slots = c(data = 'data.table',
-                             doc_meta = 'data.table',
+                             meta = 'data.table',
                              feature_index = 'data.table',
                              p = 'list'),
                    prototype=list(
@@ -21,19 +30,25 @@ as.tcorpus.tCorpus <- function(x) x
 as.tcorpus.default <- function(x) stop('x has to be a tCorpus object')
 ## params: preprocess_params=list, filter_params,
 
+summary_data <- function(tc){
+  data = get_data(tc)
+  meta = get_meta(tc)
+  data_colnames = colnames(data)
+  meta_colnames = colnames(meta)
+  mb = format(object.size(tc), 'Mb')
+  sent_info = if('sent_i' %in% data_colnames) paste(' and sentences (n = ', nrow(unique(get_data(tc, columns = c('doc_id','sent_i')))), ')', sep='') else ''
+  list(n=nrow(data), n_meta=nrow(meta), data_colnames=data_colnames, meta_colnames=meta_colnames, sent_info=sent_info, mb=mb)
+}
+
 setMethod("show", "tCorpus",
     function(object) {
-      data = get_data(object)
-      meta = get_meta(object)
-      fnames = featurenames(object)
-      mnames = metanames(object)
-
-      sent_info = if('sent_i' %in% colnames(data)) paste(' and sentences (n = ', nrow(unique(get_data(object, columns = c('doc_id','sent_i')))), ')', sep='') else ''
-      cat('tCorpus containing ', nrow(data), ' tokens',
-          '\nsplit by documents (n = ', nrow(meta), ')', sent_info,
-          '\ncontaining:',
-          '\n  - ', length(fnames), ' feature', if(length(fnames) > 1) '(s)', ': ', paste(fnames, collapse=','),
-          '\n  - ', length(mnames), ' meta column', if(length(mnames) > 1) '(s)', ': ', paste(mnames, collapse=','), sep='')
+      info = summary_data(object)
+      cat('tCorpus containing ', info$n, ' tokens (', info$mb, ')',
+          '\nsplit by documents (n = ', info$n_meta, ')', info$sent_info,
+          '\ncontains:',
+          '\n  - ', length(info$data_colnames), ' data column', if(length(info$data_colnames) > 1) '(s)', ':\t', paste(info$data_colnames, collapse=', '),
+          '\n  - ', length(info$meta_colnames), ' meta column', if(length(info$meta_colnames) > 1) '(s)', ': \t', paste(info$meta_colnames, collapse=', '),
+          '\n', sep='')
     }
 )
 
@@ -41,24 +56,29 @@ setMethod("summary", "tCorpus",
           function(object) {
             data = get_data(object)
             meta = get_meta(object)
-            fnames = featurenames(object)
 
             sent_info = if('sent_i' %in% colnames(data)) paste(' and sentences (n = ', nrow(unique(get_data(object, columns = c('doc_id','sent_i')))), ')', sep='') else ''
             cat('tCorpus containing ', nrow(data), ' tokens',
                 '\nsplit by documents (n = ', nrow(meta), ')', sent_info, sep='')
             cat('\n\n@data\n')
-            print(object@data)
+            print(head(object@data))
 
-            cat('\n@doc_meta\n')
-            print(object@doc_meta)
+            cat('\n@meta\n')
+            print(head(object@meta))
           }
 )
 
+
 setMethod("print", "tCorpus",
-    function(x) {
-      print(x@data)
-      print(x@doc_meta)
-    }
+      function(x) {
+        info = summary_data(x)
+        cat('tCorpus containing ', info$n, ' tokens (', info$mb, ')',
+            '\nsplit by documents (n = ', info$n_meta, ')', info$sent_info,
+            '\ncontains:',
+            '\n  - ', length(info$data_colnames), ' data column', if(length(info$data_colnames) > 1) '(s)', ':\t', paste(info$data_colnames, collapse=', '),
+            '\n  - ', length(info$meta_colnames), ' meta column', if(length(info$meta_colnames) > 1) '(s)', ': \t', paste(info$meta_colnames, collapse=', '),
+            '\n', sep='')
+      }
 )
 
 ###### create_tcorpus method ######
@@ -68,7 +88,7 @@ setMethod("print", "tCorpus",
 #' @rdname create_tcorpus
 #'
 #' @param x
-#' @param doc_meta A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x
+#' @param meta A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x
 #' @param split_sentences Logical. If TRUE, the sentence number of tokens is also computed. This is done using the sentence tokenization of quanteda::tokenize, which is noted by the authors to be good (especially for english) but not perfect.
 #' @param max_words An integer. Limits the number of words per document to the specified number
 #' @param max_sentences An integer. Limits the number of sentences per document to the specified number. If set when split_sentences == FALSE, split_sentences will be set to TRUE.
@@ -81,26 +101,28 @@ create_tcorpus <- function(x, ...) {
 
 #' @rdname create_tcorpus
 #' @export
-create_tcorpus.character <- function(x, doc_id=1:length(x), doc_meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F) {
-  if(!is.null(doc_meta)){
-      if(!is(doc_meta, 'data.frame')) stop('"doc_meta" is not a data.frame or data.table')
-      if(!nrow(doc_meta) == length(x)) stop('The number of rows in "doc_meta" does not match the number of texts in "x"')
-      if(!'doc_id' %in% colnames(doc_meta)) doc_meta = cbind(doc_id=doc_id, doc_meta)
-      doc_meta = data.table(doc_meta, key = 'doc_id')
+create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F) {
+  if(!is.null(meta)){
+      if(!is(meta, 'data.frame')) stop('"meta" is not a data.frame or data.table')
+      if(!nrow(meta) == length(x)) stop('The number of rows in "meta" does not match the number of texts in "x"')
+      if(!'doc_id' %in% colnames(meta)) meta = cbind(doc_id=doc_id, meta)
+      meta = data.table(meta, key = 'doc_id')
   } else {
     if(!length(doc_id) == length(x)) stop('"doc_id" is not of the same length as "x"')
-    doc_meta = data.table(doc_id=doc_id, key = 'doc_id')
+    meta = data.table(doc_id=doc_id, key = 'doc_id')
   }
-  tc = tCorpus(data = tokenize_to_datatable(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose),
-               doc_meta = droplevels(doc_meta))
+  meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
+
+  tc = tCorpus(data = data.table(tokenize_to_dataframe(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose)),
+               meta = droplevels(meta))
   set_keys(tc)
   tc
 }
 
 #' @rdname create_tcorpus
 #' @export
-create_tcorpus.factor <- function(x, doc_id=1:length(x), doc_meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F) {
-  create_tcorpus(as.character(x), doc_id=doc_id, doc_meta=doc_meta, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose)
+create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F) {
+  create_tcorpus(as.character(x), doc_id=doc_id, meta=meta, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose)
 }
 
 
@@ -119,7 +141,7 @@ create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, s
 
   create_tcorpus(text,
                  doc_id = doc_id,
-                 doc_meta = d[,!colnames(d) %in% c(text_columns, doc_column), drop=F],
+                 meta = d[,!colnames(d) %in% c(text_columns, doc_column), drop=F],
                  split_sentences = split_sentences, max_sentences = max_sentences, max_words = max_words)
 }
 
@@ -129,14 +151,14 @@ create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, s
 #' @param doc_col The name of the column that contains the document ids/names
 #' @param word_i_col The name of the column that contains the positions of words. If NULL, it is assumed that the data.frame is ordered by the order of words and does not contain gaps (e.g., filtered out words)
 #' @param sent_i_col Optionally, the name of the column that indicates the sentences in which tokens occured.
-#' @param doc_meta Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)
-#' @param doc_meta_cols Alternatively, if there are document meta columns in the tokens data.table, doc_meta_cols can be used to recognized them. Note that these values have to be unique within documents.
+#' @param meta Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)
+#' @param meta_cols Alternatively, if there are document meta columns in the tokens data.table, meta_cols can be used to recognized them. Note that these values have to be unique within documents.
 #' @param feature_cols Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)
 #'
 #' @export
-tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, doc_meta=NULL, doc_meta_cols=NULL, feature_cols=NULL) {
+tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL) {
   tokens = as.data.frame(tokens)
-  for(cname in c(doc_col, word_i_col, sent_i_col, doc_meta_cols)){
+  for(cname in c(doc_col, word_i_col, sent_i_col, meta_cols)){
     if(!cname %in% colnames(tokens)) stop(sprintf('"%s" is not an existing columnname in "tokens"', cname))
   }
   tokens = droplevels(tokens)
@@ -150,8 +172,8 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   if(!is(tokens[,word_i_col], 'numeric')) stop('word_i_col has to be numeric/integer')
   if(!is.null(sent_i_col)) if(!is(tokens[,sent_i_col], 'numeric')) stop('sent_i_col has to be numeric/integer')
 
-  if(!is.null(doc_meta)){
-    if(!doc_col %in% colnames(doc_meta)) stop(sprintf('"doc_meta" does not contain the document id column (%s)', doc_col))
+  if(!is.null(meta)){
+    if(!doc_col %in% colnames(meta)) stop(sprintf('"meta" does not contain the document id column (%s)', doc_col))
   }
 
   ## order and index doc_id, sent_i, word_i
@@ -172,54 +194,63 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   }
   positions$word_i = local_position(positions$word_i, positions$doc_id, presorted=T) ## make words locally unique within documents
 
-  ## match doc_meta
+  ## match meta
   docs = unique(positions$doc_id)
-  if(!is.null(doc_meta)) {
-    colnames(doc_meta)[colnames(doc_meta) == doc_col] = 'doc_id'
-    doc_meta$doc_id = as.factor(doc_meta$doc_id)
-    if(!all(docs %in% doc_meta$doc_id)) warning('For some documents in tokens the meta data is missing')
-    if(!all(doc_meta$doc_id %in% docs)) warning('For some documents in the meta data there are no tokens. These documents will not be included in the meta data')
+  if(!is.null(meta)) {
+    colnames(meta)[colnames(meta) == doc_col] = 'doc_id'
+    meta$doc_id = as.factor(meta$doc_id)
+    if(!all(docs %in% meta$doc_id)) warning('For some documents in tokens the meta data is missing')
+    if(!all(meta$doc_id %in% docs)) warning('For some documents in the meta data there are no tokens. These documents will not be included in the meta data')
 
-    doc_meta = data.table(doc_meta[match(docs, doc_meta$doc_id),], key='doc_id')
+    meta = data.table(meta[match(docs, meta$doc_id),], key='doc_id')
   } else {
-    doc_meta = data.table(doc_id=as.factor(docs), key='doc_id')
+    meta = data.table(doc_id=docs, key='doc_id')
   }
 
-  if(!is.null(doc_meta_cols)){
-    add_doc_meta = unique(tokens[,c(doc_col, doc_meta_cols)])
-    if(nrow(add_doc_meta) > nrow(doc_meta)) stop('The document meta columns specified in doc_meta_cols are not unique within documents')
-    doc_meta = cbind(doc_meta, add_doc_meta[,doc_meta_cols])
+  if(!is.null(meta_cols)){
+    add_meta = unique(tokens[,c(doc_col, meta_cols)])
+    if(nrow(add_meta) > nrow(meta)) stop('The document meta columns specified in meta_cols are not unique within documents')
+    meta = cbind(meta, add_meta[,meta_cols])
   }
+  meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
 
-  if(is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sent_i_col, word_i_col, doc_meta_cols)]
+  if(is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sent_i_col, word_i_col, meta_cols)]
   for(fcol in feature_cols) {
     if(class(tokens[,fcol]) %in% c('factor','character')) tokens[,fcol] = as.factor(as.character(tokens[,fcol]))
   }
 
   tc = tCorpus(data=data.table(cbind(positions, tokens[,feature_cols,drop=F])),
-               doc_meta = data.table(doc_meta))
+               meta = data.table(meta))
   set_keys(tc)
   tc
 }
 
-tokenize_to_datatable <- function(x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F){
+tokenize_to_dataframe <- function(x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F){
+  batch_i = get_batch_i(length(doc_id), batchsize=5000, return_list=T)
+  prog = if(verbose) 'text' else 'none'
+  plyr::ldply(batch_i, tokenize_to_dataframe_batch, x=x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, .progress=prog)
+}
+
+tokenize_to_dataframe_batch <- function(batch_i, x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_words=NULL){
+  x = x[batch_i]
+  doc_id = doc_id[batch_i]
   x = gsub('_', ' ', x, fixed=T)
   if(split_sentences | !is.null(max_sentences)) {
-    x = quanteda::tokenize(x, what = 'sentence', verbose=verbose)
+    x = quanteda::tokenize(x, what = 'sentence')
     names(x) = doc_id
     if(!is.null(max_sentences)) x = sapply(x, head, max_sentences)
     x = plyr::ldply(x, function(x) unlist_to_df(quanteda::tokenize(x, what='word'), global_position=T))
     if(!is.null(max_words)) x = x[x$position <= max_words,]
     colnames(x) = c('doc_id','sent_i','word_i','word')
   } else {
-    x = quanteda::tokenize(x, what = 'word', verbose=verbose)
+    x = quanteda::tokenize(x, what = 'word')
     if(!is.null(max_words)) x = sapply(x, head, max_words)
     x = unlist_to_df(x, doc_id)
     colnames(x) = c('doc_id', 'word_i', 'word')
   }
   x$word = as.factor(x$word)
   x$doc_id = as.factor(x$doc_id)
-  data.table(x)
+  x
 }
 
 unlist_to_df <- function(l, ids=1:length(l), global_position=F){
@@ -241,11 +272,14 @@ unlist_to_df <- function(l, ids=1:length(l), global_position=F){
 
 set_keys <- function(tc){
   if('sent_i' %in% colnames(tc@data)){
-    if(!identical(key(tc@data), c('doc_id', 'sent_i'))) setkey(tc@data, 'doc_id', 'sent_i')
+    #if(!identical(key(tc@data), c('doc_id', 'sent_i'))) setkey(tc@data, 'doc_id', 'sent_i') ## let data.table check, since row order can (somehow) still get messed up with keys seemingly intact
+    setkey(tc@data, 'doc_id', 'sent_i')
   } else {
-    if(!identical(key(tc@data), c('doc_id'))) setkey(tc@data, 'doc_id')
+    #if(!identical(key(tc@data), c('doc_id'))) setkey(tc@data, 'doc_id')
+    setkey(tc@data, 'doc_id')
   }
-  if(!identical(key(tc@doc_meta), c('doc_id'))) setkey(tc@doc_meta, 'doc_id')
+  #if(!identical(key(tc@meta), c('doc_id'))) setkey(tc@meta, 'doc_id')
+  setkey(tc@meta, 'doc_id')
 }
 
 #' @export
@@ -256,8 +290,10 @@ get_data <- function(tc, columns=NULL, as_data_frame=F) {
   data
 }
 
+n_data <- function(tc) nrow(tc@data)
+
 #' @export
-get_column <- function(tc, name) get_data(tc)[[name]]
+get_column <- function(tc, name) tc@data[[name]]
 
 #' @export
 set_column <- function(tc, name, value) {
@@ -317,15 +353,17 @@ get_context <- function(tc, context_level = c('document','sentence')){
 #' @export
 get_meta <- function(tc, columns=NULL, as_data_frame=F, per_token=F) {
   set_keys(tc)
-  if(!is.null(columns)) meta = tc@doc_meta[,columns, with=F] else meta = tc@doc_meta
+  if(!is.null(columns)) meta = tc@meta[,columns, with=F] else meta = tc@meta
   if(as_data_frame) meta = as.data.frame(meta)
   if(per_token) meta = meta[match(get_column(tc, 'doc_id'), get_meta_column(tc, 'doc_id')), ,drop=F]
   meta
 }
 
+n_meta <- function(tc) nrow(tc@meta)
+
 #' @export
 get_meta_column <- function(tc, name, per_token=F) {
-  col = get_meta(tc)[[name]]
+  col = tc@meta[[name]]
   if(per_token) col = col[match(get_column(tc, 'doc_id'), get_meta_column(tc, 'doc_id'))]
   col
 }
@@ -333,7 +371,7 @@ get_meta_column <- function(tc, name, per_token=F) {
 #' @export
 set_meta_column <- function(tc, name, value) {
   if(name %in% c('doc_id')) stop(sprintf('Cannot manually change %s', name))
-  tc@doc_meta[[name]] = value
+  tc@meta[[name]] = value
   tc
 }
 
@@ -350,13 +388,12 @@ set_meta_column <- function(tc, name, value) {
 #'
 #' @examples
 recode_meta_column <- function(tc, column, new_value, i=NULL, old_value=NULL){
-  if(!new_value %in% levels(tc@doc_meta[[column]])) levels(tc@doc_meta[[column]]) = c(levels(tc@doc_meta[[column]]), new_value)
-  if(!is.null(i)) tc@doc_meta[[column]][i] = new_value
-  if(!is.null(old_value)) tc@doc_meta[[column]][tc@doc_meta[[column]] %in% old_value] = new_value
-  tc@data[[column]] = droplevels(tc@doc_meta[[column]])
+  if(!new_value %in% levels(tc@meta[[column]])) levels(tc@meta[[column]]) = c(levels(tc@meta[[column]]), new_value)
+  if(!is.null(i)) tc@meta[[column]][i] = new_value
+  if(!is.null(old_value)) tc@meta[[column]][tc@meta[[column]] %in% old_value] = new_value
+  tc@data[[column]] = droplevels(tc@meta[[column]])
   tc
 }
-
 
 #' @export
 metanames <- function(tc) colnames(get_meta(tc))

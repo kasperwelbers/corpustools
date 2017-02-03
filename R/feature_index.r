@@ -67,7 +67,7 @@ create_feature_index <- function(tc, feature, context_level=c('document','senten
 #' @param max_window_size
 #'
 #' @export
-set_feature_index <- function(tc, feature, context_level=c('document','sentence'), max_window_size=100){
+set_feature_index <- function(tc, feature='word', context_level=c('document','sentence'), max_window_size=100){
   context_level = match.arg(context_level)
   tc@feature_index = create_feature_index(tc, feature, context_level, max_window_size)
   tc = set_provenance(tc, feature_index=T, feature=feature, context_level=context_level, max_window_size=max_window_size)
@@ -93,7 +93,7 @@ reset_feature_index <- function(tc){
 #' @export
 delete_feature_index <- function(tc){
   tc@feature_index = data.table()
-  tc = set_provenance(feature_index=F, feature=NA, context_level=NA, max_window_size=NA)
+  tc = set_provenance(tc, feature_index=F, feature=NA, context_level=NA, max_window_size=NA)
   tc
 }
 
