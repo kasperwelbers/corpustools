@@ -4,9 +4,8 @@
 \alias{shatter_tcorpus}
 \title{Create a shattered tCorpus from a single (large) tCorpus}
 \usage{
-shatter_tcorpus(tc, name, path = "", meta_columns = c(),
-  tokens_per_shard = 1e+06, if_exists = c("stop", "overwrite", "append"),
-  compress = TRUE)
+shatter_tcorpus(tc, tc_index, meta_columns = c(), tokens_per_shard = 1e+06,
+  if_exists = c("stop", "append", "overwrite"), compress = TRUE)
 }
 \arguments{
 \item{tc}{a tCorpus object}

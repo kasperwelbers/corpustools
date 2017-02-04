@@ -77,7 +77,7 @@ position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, a
 #'
 #' @return A list with two matrices. position.mat gives the specific position of a term, and window.mat gives the window in which each word occured. The rows represent the position of a term, and matches the input of this function (position, term and context). The columns represents terms.
 #' @export
-wordWindowOccurence <- function(tc, feature, context_level=c('document','sentence'), window.size=10, direction='<>', distance_as_value=F, batch_rows=NULL){
+wordWindowOccurence <- function(tc, feature, context_level=c('document','sentence'), window.size=10, direction='<>', distance_as_value=F, batch_rows=NULL, drop_empty_terms=T){
   #tc = subset(tc, !is.na(get_column(tc, feature)))
 
   context_level = match.arg(context_level)
@@ -88,7 +88,8 @@ wordWindowOccurence <- function(tc, feature, context_level=c('document','sentenc
   if(direction == '<>') shifts = -window.size:window.size
   if(direction == '>') shifts = 0:window.size
 
-  feature = droplevels(get_column(tc, feature))
+  feature = get_column(tc, feature)
+  if(drop_empty_terms) feature = droplevels(feature)
   term_index = as.numeric(feature)
   position = get_global_i(tc, context_level, window.size)
 
@@ -169,10 +170,8 @@ get_matrix_stats <- function(m1, m2=NULL, mat_stats = c('sum.x','sum.y','magnitu
 
 #### DTM based cooccurrene ####
 
-
-
-cooccurrence_matrix <- function(tc, feature, count_mode, mat_stats, context_level, n.batches, alpha){
-  m = get_dtm(tc, feature=feature, context_level = context_level)
+cooccurrence_matrix <- function(tc, feature, count_mode, mat_stats, context_level, n.batches, alpha, drop_empty_terms=T){
+  m = get_dtm(tc, feature=feature, context_level = context_level, drop_empty_terms=drop_empty_terms)
 
   if(is.na(n.batches)){
     ml = cooccurrence_crossprod(m, count_mode=count_mode, mat_stats=mat_stats, alpha=alpha)
@@ -180,15 +179,11 @@ cooccurrence_matrix <- function(tc, feature, count_mode, mat_stats, context_leve
     batch_i = get_batch_i(tc, n.batches=n.batches)
     ml = list()
 
-    #pb <- txtProgressBar(0, nrow(batch_i), style = 3)
-    #setTxtProgressBar(pb, 0)
     for(i in 1:nrow(batch_i)){
       batch_rows = batch_i$start[i]:batch_i$end[i]
       cooc = cooccurrence_crossprod(m[batch_rows,,drop=F], count_mode=count_mode, mat_stats=mat_stats, alpha=alpha)
       for(n in names(cooc)) ml[[n]] = if(n %in% names(ml)) ml[[n]] + cooc[[n]] else cooc[[n]]
-      #setTxtProgressBar(pb, i)
     }
-    #close(pb)
   }
   ml$freq = Matrix::colSums(m)
   ml$doc_freq = Matrix::colSums(m)
@@ -216,9 +211,9 @@ cooccurrence_matrix <- function(tc, feature, count_mode, mat_stats, context_leve
 #'
 #' @return a list with the cooccurrence matrix and the specified matrix statistics (mat_stats)
 #' @export
-cooccurrence_matrix_window <- function(tc, feature, matrix_mode='position_to_window', count_mode='dicho', mat_stats=c('sum.x','sum.y','magnitude.x','magnitude.y'), context_level='document', direction='<>', window.size=10, n.batches=window.size, alpha=2){
+cooccurrence_matrix_window <- function(tc, feature, matrix_mode='position_to_window', count_mode='dicho', mat_stats=c('sum.x','sum.y','magnitude.x','magnitude.y'), context_level='document', direction='<>', window.size=10, n.batches=window.size, alpha=2, drop_empty_terms=T){
   if(is.na(n.batches)){
-    wwo = wordWindowOccurence(tc, feature, context_level, window.size, direction)
+    wwo = wordWindowOccurence(tc, feature, context_level, window.size, direction, drop_empty_terms=drop_empty_terms)
     if(matrix_mode == 'windowXwindow') ml = cooccurrence_crossprod(wwo$window.mat, wwo$window.mat, count_mode=count_mode, alpha=alpha, mat_stats=mat_stats)
     if(matrix_mode == 'positionXwindow') ml = cooccurrence_crossprod(wwo$position.mat, wwo$window.mat, count_mode=count_mode, alpha=alpha, mat_stats=mat_stats)
     ml[['freq']] = Matrix::colSums(wwo$position.mat)

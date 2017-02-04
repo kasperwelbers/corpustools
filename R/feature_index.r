@@ -36,18 +36,10 @@ get_feature_index <- function(tc, feature='word', context_level='document', max_
       fi = tc@feature_index
     }
   }
-  filter = get_filter(tc)
-  if(!is.null(filter)) return(droplevels(fi[filter,])) else return(fi)  # note to self: droplevels drops all unused factors in fi
+  fi
 }
 
 
-get_filter <- function(tc){
-  cn = colnames(tc@data)
-  if(!'doc_filter' %in% cn & !'feature_filter' %in% cn) return(NULL)
-  if( 'doc_filter' %in% cn &  'feature_filter' %in% cn) return(tc@data$doc_filter & tc@data$feature_filter)
-  if( 'doc_filter' %in% cn & !'feature_filter' %in% cn) return(tc@data$doc_filter)
-  if(!'doc_filter' %in% cn &  'feature_filter' %in% cn) return(tc@data$feature_filter)
-}
 
 create_feature_index <- function(tc, feature, context_level=c('document','sentence'), max_window_size=100){
   context_level = match.arg(context_level)

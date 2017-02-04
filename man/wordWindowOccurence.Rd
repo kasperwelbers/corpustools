@@ -6,7 +6,7 @@
 \usage{
 wordWindowOccurence(tc, feature, context_level = c("document", "sentence"),
   window.size = 10, direction = "<>", distance_as_value = F,
-  batch_rows = NULL)
+  batch_rows = NULL, drop_empty_terms = T)
 }
 \arguments{
 \item{window.size}{The distance within which words should occur from each other to be counted as a co-occurence.}

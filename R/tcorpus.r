@@ -272,14 +272,12 @@ unlist_to_df <- function(l, ids=1:length(l), global_position=F){
 
 set_keys <- function(tc){
   if('sent_i' %in% colnames(tc@data)){
-    #if(!identical(key(tc@data), c('doc_id', 'sent_i'))) setkey(tc@data, 'doc_id', 'sent_i') ## let data.table check, since row order can (somehow) still get messed up with keys seemingly intact
     setkey(tc@data, 'doc_id', 'sent_i')
   } else {
-    #if(!identical(key(tc@data), c('doc_id'))) setkey(tc@data, 'doc_id')
     setkey(tc@data, 'doc_id')
   }
-  #if(!identical(key(tc@meta), c('doc_id'))) setkey(tc@meta, 'doc_id')
   setkey(tc@meta, 'doc_id')
+  if(get_provenance(tc)$feature_index) setkey(tc@feature_index, 'feature')
 }
 
 #' @export
@@ -298,7 +296,7 @@ get_column <- function(tc, name) tc@data[[name]]
 #' @export
 set_column <- function(tc, name, value) {
   if(name %in% c('doc_id', 'sent_i', 'word_i')) stop(sprintf('Cannot manually change %s', name))
-  tc@data[[name]] = droplevels(value)
+  tc@data[[name]] = value
   tc
 }
 
@@ -318,7 +316,7 @@ recode_column <- function(tc, column, new_value, i=NULL, old_value=NULL){
   if(!new_value %in% levels(tc@data[[column]])) levels(tc@data[[column]]) = c(levels(tc@data[[column]]), new_value)
   if(!is.null(i)) tc@data[[column]][i] = new_value
   if(!is.null(old_value)) tc@data[[column]][tc@data[[column]] %in% old_value] = new_value
-  tc@data[[column]] = droplevels(tc@data[[column]])
+  tc@data[[column]] = tc@data[[column]]
   tc
 }
 
@@ -391,7 +389,7 @@ recode_meta_column <- function(tc, column, new_value, i=NULL, old_value=NULL){
   if(!new_value %in% levels(tc@meta[[column]])) levels(tc@meta[[column]]) = c(levels(tc@meta[[column]]), new_value)
   if(!is.null(i)) tc@meta[[column]][i] = new_value
   if(!is.null(old_value)) tc@meta[[column]][tc@meta[[column]] %in% old_value] = new_value
-  tc@data[[column]] = droplevels(tc@meta[[column]])
+  tc@data[[column]] = tc@meta[[column]]
   tc
 }
 

@@ -5,10 +5,11 @@
 #' @param context_level
 #'
 #' @export
-get_dtm <- function(tc, feature, context_level=c('document','sentence')){
+get_dtm <- function(tc, feature, context_level=c('document','sentence'), drop_empty_terms=T){
   context_level = match.arg(context_level)
   i = get_context(tc, context_level)
-  feature = droplevels(get_column(tc, feature))
+  feature = get_column(tc, feature)
+  if(drop_empty_terms) feature = droplevels(feature)
   notNA = !is.na(feature)
   m = Matrix::spMatrix(length(levels(i)), length(levels(feature)),
                        as.numeric(i)[notNA], as.numeric(feature)[notNA],

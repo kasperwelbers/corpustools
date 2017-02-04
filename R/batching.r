@@ -38,3 +38,4 @@ data_batch <- function(tc, context_level, n.batches=10, batchsize=NA, return_lis
   if(return_vector) batch_i = rep(1:length(batch_i), sapply(batch_i, length))
   batch_i
 }
+

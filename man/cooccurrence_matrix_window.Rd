@@ -7,7 +7,8 @@
 cooccurrence_matrix_window(tc, feature, matrix_mode = "position_to_window",
   count_mode = "dicho", mat_stats = c("sum.x", "sum.y", "magnitude.x",
   "magnitude.y"), context_level = "document", direction = "<>",
-  window.size = 10, n.batches = window.size, alpha = 2)
+  window.size = 10, n.batches = window.size, alpha = 2,
+  drop_empty_terms = T)
 }
 \arguments{
 \item{tc}{a tcorpus object}

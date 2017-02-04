@@ -44,3 +44,21 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
 
   tokens_to_tcorpus(data, doc_col='doc_id', sent_i_col=sent_col, word_i_col='word_i', meta=meta)
 }
+
+#' Merge tCorpus shards
+#'
+#' Similar to merge_tcorpora, but assumes that the tCorpora are identical in structure (same columns in the same order and same provenance)
+#'
+#' @param shards a named list or named arguments with tCorpus objects
+#'
+#' @return a tCorpus object
+#' @export
+merge_shards <- function(shards){
+  tc = tCorpus(data=rbindlist(lapply(shards, get_data)),
+               meta=rbindlist(lapply(shards, get_meta)),
+               feature_index=rbindlist(lapply(shards, get_feature_index)),
+               p = get_provenance(shards[[1]]))
+  set_keys(tc)
+  tc
+}
+

@@ -4,7 +4,8 @@
 \alias{get_dtm}
 \title{Create a document term matrix from a tCorpus}
 \usage{
-get_dtm(tc, feature, context_level = c("document", "sentence"))
+get_dtm(tc, feature, context_level = c("document", "sentence"),
+  drop_empty_terms = T)
 }
 \arguments{
 \item{context_level}{}
