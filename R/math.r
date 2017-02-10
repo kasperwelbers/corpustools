@@ -23,3 +23,9 @@ calc_chi2 <- function(a,b,c,d, correct=T, cochrans_criteria=F){
   ifelse(is.na(chi), 0, chi)
 }
 
+
+good_turing <- function(term, freq){
+  ##https://github.com/Bioconductor-mirror/edgeR/blob/master/R/goodTuring.R
+  NULL
+  }
+

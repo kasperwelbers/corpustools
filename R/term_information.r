@@ -1,11 +1,34 @@
+
+
+#' Title
+#'
+#' @param tc_x
+#' @param tc_y
+#' @param feature
+#' @param context_level
+#' @param smooth
+#' @param min.over
+#' @param min.chi
+#' @param x_is_subset
+#'
+#' @return
+#' @export
+#'
+#' @examples
+tcorpus_compare <- function(tc_x, tc_y, feature, context_level=c('document','sentence'), smooth=1, min.over=NULL, min.chi=NULL, x_is_subset=F) {
+  dtm_compare(get_dtm(tc_x, feature, context_level), get_dtm(tc_y, feature, context_level), smooth=smooth, min.over=min.over, min.chi=min.chi, x_is_subset=x_is_subset)
+}
+
 #' Compare two corpora
 #'
 #' Compare the term use in corpus dtm with a refernece corpus dtm.ref, returning relative frequencies
-#' and overrepresentation using various measures
+#' and overrepresentation using various measures.
+#'
+#' Note that the relative frequency (relfreq) and over-ratio (over) are based on smoothed scores, to prevent the over ratio to be 0 or Inf. Smoothing can be turned of by setting smooth to 0
 #'
 #' @param dtm.x the main document-term matrix
 #' @param dtm.y the 'reference' document-term matrix
-#' @param smooth the smoothing parameter for computing overrepresentation
+#' @param smooth the smoothing parameter for Laplace smoothing. for computing overrepresentation. Currently using Laplace smoothing.
 #' @return A data frame with rows corresponding to the terms in dtm and the statistics in the columns
 #' @export
 dtm_compare <- function(dtm.x, dtm.y=NULL, smooth=1, min.over=NULL, min.chi=NULL, select.rows=NULL, x_is_subset=F) {
@@ -28,25 +51,6 @@ dtm_compare <- function(dtm.x, dtm.y=NULL, smooth=1, min.over=NULL, min.chi=NULL
   if(!is.null(min.over)) f = f[f$over > min.over,]
   if(!is.null(min.chi)) f = f[f$chi > min.chi,]
   f
-}
-
-#' Title
-#'
-#' @param tc_x
-#' @param tc_y
-#' @param feature
-#' @param context_level
-#' @param smooth
-#' @param min.over
-#' @param min.chi
-#' @param x_is_subset
-#'
-#' @return
-#' @export
-#'
-#' @examples
-tcorpus_compare <- function(tc_x, tc_y, feature, context_level=c('document','sentence'), smooth=1, min.over=NULL, min.chi=NULL, x_is_subset=F) {
-  dtm_compare(get_dtm(tc_x, feature, context_level), get_dtm(tc_y, feature, context_level), smooth=smooth, min.over=min.over, min.chi=min.chi, x_is_subset=x_is_subset)
 }
 
 #' Compute some useful corpus statistics for a dtm

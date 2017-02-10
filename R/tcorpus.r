@@ -1,7 +1,4 @@
 ######  TCORPUS CLASS  ######
-
-## define create_tcorpus class
-
 #' tCorpus; a corpus for tokenized texts
 #'
 #' @slot data data.table.
@@ -29,6 +26,14 @@ as.tcorpus.tCorpus <- function(x) x
 #' @export
 as.tcorpus.default <- function(x) stop('x has to be a tCorpus object')
 ## params: preprocess_params=list, filter_params,
+
+is_tcorpus <- function(x, allow_stc=F){
+  if(!class(x) %in% c('tCorpus', 'shattered_tCorpus')) stop('not a tCorpus object')
+  if(is_shattered(x) & !allow_stc) stop('function not implemented for shattered_tCorpus')
+  TRUE
+}
+
+is_shattered <- function(x) is(x, 'shattered_tCorpus')
 
 summary_data <- function(tc){
   data = get_data(tc)
@@ -102,6 +107,7 @@ create_tcorpus <- function(x, ...) {
 #' @rdname create_tcorpus
 #' @export
 create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F) {
+  if(any(duplicated(doc_id))) stop('doc_id should not contain duplicate values')
   if(!is.null(meta)){
       if(!is(meta, 'data.frame')) stop('"meta" is not a data.frame or data.table')
       if(!nrow(meta) == length(x)) stop('The number of rows in "meta" does not match the number of texts in "x"')
@@ -164,9 +170,15 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   tokens = droplevels(tokens)
 
   if(is.null(word_i_col)){
-    warning('No word_i column specified. It is now assumed that "tokens" is ordered according to the occurence of words in documents. If this is not the case, results of functions where word order is relevant will be wrong!')
+    warning('No word_i column specified. Word order used instead (see documentation).')
     tokens$word_i = 1:nrow(tokens)
     word_i_col = 'word_i'
+  } else {
+    if(is.null(sent_i_col)) {
+      if(any(duplicated(tokens[,c(doc_col, word_i_col)]))) stop('tokens should not contain duplicate doubles of documents (doc_col) and word positions (word_i_col)')
+    } else {
+      if(any(duplicated(tokens[,c(doc_col, sent_i_col, word_i_col)]))) stop('tokens should not contain duplicate triples of documents (doc_col), sentences (sent_i_col) and word positions (word_i_col)')
+    }
   }
 
   if(!is(tokens[,word_i_col], 'numeric')) stop('word_i_col has to be numeric/integer')
@@ -308,11 +320,11 @@ set_column <- function(tc, name, value) {
 #' @param i an index for which values to replace
 #' @param old_value a vector containing one or more old values to replace
 #'
-#' @return
 #' @export
-#'
-#' @examples
 recode_column <- function(tc, column, new_value, i=NULL, old_value=NULL){
+  is_tcorpus(tc, T)
+  if(is(tc, 'shattered_tCorpus')) return(shard_recode_column(stc=tc, column=column, new_value=new_value, i=i, old_value=old_value))
+
   if(!new_value %in% levels(tc@data[[column]])) levels(tc@data[[column]]) = c(levels(tc@data[[column]]), new_value)
   if(!is.null(i)) tc@data[[column]][i] = new_value
   if(!is.null(old_value)) tc@data[[column]][tc@data[[column]] %in% old_value] = new_value
@@ -321,10 +333,22 @@ recode_column <- function(tc, column, new_value, i=NULL, old_value=NULL){
 }
 
 #' @export
-featurenames <- function(tc) colnames(get_data(tc))[!colnames(get_data(tc)) %in% c('doc_id','sent_i','word_i')]
+datanames <- function(tc) {
+  is_tcorpus(tc, T)
+  if(is(tc, 'shattered_tCorpus')) return(colnames(get_info(stc)$data_head)) else return(colnames(get_data(tc)))
+}
+
+#' @export
+featurenames <- function(tc) {
+  is_tcorpus(tc, T)
+  n = datanames(tc)
+  n[!n %in% c('doc_id','sent_i','word_i')]
+}
 
 #' @export
 get_context <- function(tc, context_level = c('document','sentence')){
+  is_tcorpus(tc)
+
   context_level = match.arg(context_level)
   if(context_level == 'document') context = get_column(tc, 'doc_id')
   if(context_level == 'sentence') {
@@ -357,7 +381,10 @@ get_meta <- function(tc, columns=NULL, as_data_frame=F, per_token=F) {
   meta
 }
 
-n_meta <- function(tc) nrow(tc@meta)
+n_meta <- function(tc) {
+  is_tcorpus(tc, T)
+  if(is(tc, 'shattered_tCorpus')) return(get_info(stc)$n_meta) else return(nrow(tc@meta))
+}
 
 #' @export
 get_meta_column <- function(tc, name, per_token=F) {

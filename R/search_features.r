@@ -45,6 +45,9 @@
 #'
 #' @export
 search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mword=T, verbose=F){
+  is_tcorpus(tc, T)
+  if(is_shattered(tc)) return(shardloop_rbind(stc=tc, mcall=match.call(), verbose=verbose))
+
   if(is.null(queries)) queries = data.frame(keyword=keyword)
   if(!'condition' %in% colnames(queries)) queries$condition = condition
   if(!'code' %in% colnames(queries)) queries$code = code
@@ -56,7 +59,7 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   if(any(is.na(queries$keyword))) stop('keyword cannot be NA. Provide either the keyword or queries argument')
 
   queries$code = as.character(queries$code)
-  queries$code = ifelse(is.na(queries$code), sprintf('query %s', 1:nrow(queries)), queries$code)
+  queries$code = ifelse(is.na(queries$code), sprintf('query_%s', 1:nrow(queries)), queries$code)
   windows = na.omit(get_feature_regex(queries$condition, default_window = NA)$window)
   max_window_size = if(length(windows) > 0) max(windows) else 0
 
@@ -160,6 +163,9 @@ evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=N
 #'
 #' @exports
 search_recode <- function(tc, feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA){
+  is_tcorpus(tc, T)
+  if(is(tc, 'shattered_tCorpus')) return(shard_search_recode(stc=tc, feature=feature, new_value=new_value, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta))
+
   hits = search_features(tc, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta)
   recode_column(tc, feature, new_value, i=hits$i)
 }

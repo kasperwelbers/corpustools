@@ -17,17 +17,17 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
   if(keep_data == 'intersect') {
     cnames = lapply(tc_list, function(x) colnames(get_data(x)))
     cnames = Reduce(intersect, cnames)
-    data = ldply(lapply(tc_list, get_data, columns=cnames), .id = NULL)
+    data = plyr::ldply(lapply(tc_list, get_data, columns=cnames), .id = NULL)
   } else {
-    data = ldply(lapply(tc_list, get_data), .id = NULL)
+    data = plyr::ldply(lapply(tc_list, get_data), .id = NULL)
   }
 
   if(keep_meta == 'intersect') {
     cnames = lapply(tc_list, function(x) colnames(get_meta(x)))
     cnames = Reduce(intersect, cnames)
-    meta = ldply(lapply(tc_list, get_meta, columns=cnames), .id = 'subcorpus')
+    meta = plyr::ldply(lapply(tc_list, get_meta, columns=cnames), .id = 'subcorpus')
   } else {
-    meta = ldply(lapply(tc_list, get_meta), .id = 'subcorpus')
+    meta = plyr::ldply(lapply(tc_list, get_meta), .id = 'subcorpus')
   }
 
   if('sent_i' %in% colnames(data)){

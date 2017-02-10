@@ -5,14 +5,21 @@
 \title{Subset a tCorpus}
 \usage{
 \method{subset}{tCorpus}(tc, subset = NULL, subset_meta = NULL,
-  keep_feature_index = T, drop_levels = F)
+  keep_feature_index = T, drop_levels = F, window = NULL)
 }
 \arguments{
 \item{tc}{tCorpus object}
 
-\item{subset}{}
+\item{subset}{logical expression indicating elements or rows to keep in the tokens data.}
+
+\item{window}{If not NULL, an integer specifiying the window to be used to return the subset. For instance, if the subset contains word 10 in a document and window is 5, the subset will contain word 5 to 15. Naturally, this does not apply to subset_meta.}
 }
 \description{
-Subset a tCorpus
+Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta).
+}
+\details{
+In the logical expression (e.g., sent_i ) for subset and subset_meta can contain the
+
+Note that you can also use objects from your (global) environment. For example, if you have a vector called filter_doc_ids, your logical expression can be: doc_id %in% filter_doc_ids. This is also a good way to filter words, for instance by using
 }
 

@@ -4,13 +4,14 @@
 \alias{shatter_tcorpus}
 \title{Create a shattered tCorpus from a single (large) tCorpus}
 \usage{
-shatter_tcorpus(tc, tc_index, meta_columns = c(), tokens_per_shard = 1e+06,
-  if_exists = c("stop", "append", "overwrite"), compress = TRUE)
+shatter_tcorpus(tc, stc, meta_columns = NULL, tokens_per_shard = 1e+06,
+  if_exists = c("stop", "append", "overwrite"), if_duplicates = c("stop",
+  "skip", "rename"), compress = TRUE, verbose = F)
 }
 \arguments{
 \item{tc}{a tCorpus object}
 
-\item{tokens_per_shard}{the number of tokens per shard. This is an approximation, since the tCorpus can not be broken within documents.}
+\item{tokens_per_shard}{The number of tokens per shard. This is an approximation, since a tCorpus should not be broken within documents. Also, given the number of shards that is required, tokens will be evently distributed (for instance, if tokens_per_shard is 1,000,000, and there are 1,500,000 tokens, you'll get 2 tokens of 750,000 shards)}
 
 \item{n_shards}{Alternatively, you can specify the number of shards. This is also only an approximation, as the algorithm tries to find equal sized shards that do not break documents}
 

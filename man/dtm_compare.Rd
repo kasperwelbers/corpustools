@@ -12,13 +12,16 @@ dtm_compare(dtm.x, dtm.y = NULL, smooth = 1, min.over = NULL,
 
 \item{dtm.y}{the 'reference' document-term matrix}
 
-\item{smooth}{the smoothing parameter for computing overrepresentation}
+\item{smooth}{the smoothing parameter for Laplace smoothing. for computing overrepresentation. Currently using Laplace smoothing.}
 }
 \value{
 A data frame with rows corresponding to the terms in dtm and the statistics in the columns
 }
 \description{
 Compare the term use in corpus dtm with a refernece corpus dtm.ref, returning relative frequencies
-and overrepresentation using various measures
+and overrepresentation using various measures.
+}
+\details{
+Note that the relative frequency (relfreq) and over-ratio (over) are based on smoothed scores, to prevent the over ratio to be 0 or Inf. Smoothing can be turned of by setting smooth to 0
 }
 

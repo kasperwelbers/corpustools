@@ -1,4 +1,5 @@
 test_that("Semnet works", {
+  #devtools::install_github('kasperwelbers/tcorpus')
   library(tcorpus)
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
@@ -18,7 +19,6 @@ test_that("Semnet works", {
 
   g_ego = ego_semnet(g, c('fuel','fuels'), only_filter_vertices = F)
   expect_equal(unique(get.data.frame(g_ego)$from), c('fuel','fuels'))
-
 
   ## windowed semnet
   g = semnet_window(tc, 'word', window.size = 10, measure = 'count_directed')

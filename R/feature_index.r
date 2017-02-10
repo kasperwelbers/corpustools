@@ -16,6 +16,8 @@
 #'
 #' @export
 get_feature_index <- function(tc, feature='word', context_level='document', max_window_size=100){
+  is_tcorpus(tc)
+
   prov = get_provenance(tc)
   if(!prov[['feature_index']]){
     timer = Sys.time()
@@ -36,10 +38,9 @@ get_feature_index <- function(tc, feature='word', context_level='document', max_
       fi = tc@feature_index
     }
   }
+  setkey(fi, 'feature')
   fi
 }
-
-
 
 create_feature_index <- function(tc, feature, context_level=c('document','sentence'), max_window_size=100){
   context_level = match.arg(context_level)
@@ -59,12 +60,17 @@ create_feature_index <- function(tc, feature, context_level=c('document','senten
 #' @param max_window_size
 #'
 #' @export
-set_feature_index <- function(tc, feature='word', context_level=c('document','sentence'), max_window_size=100){
+set_feature_index <- function(tc, feature='word', context_level=c('document','sentence'), max_window_size=100, verbose=F){
+  is_tcorpus(tc, T)
+  if(is_shattered(tc)) return(shardloop_transform(stc=tc, mcall=match.call(), verbose=verbose))
+
   context_level = match.arg(context_level)
   tc@feature_index = create_feature_index(tc, feature, context_level, max_window_size)
   tc = set_provenance(tc, feature_index=T, feature=feature, context_level=context_level, max_window_size=max_window_size)
   tc
 }
+
+
 
 #' Reset feature index
 #'
@@ -74,6 +80,9 @@ set_feature_index <- function(tc, feature='word', context_level=c('document','se
 #'
 #' @export
 reset_feature_index <- function(tc){
+  is_tcorpus(tc, T)
+  if(is(tc, 'shattered_tCorpus')) return(shard_reset_feature_index(stc=tc))
+
   p = get_provenance(tc)
   set_feature_index(tc, feature=p$feature, context_level=p$context_level, max_window_size=p$max_window_size)
 }
@@ -84,6 +93,9 @@ reset_feature_index <- function(tc){
 #'
 #' @export
 delete_feature_index <- function(tc){
+  is_tcorpus(tc, T)
+  if(is(tc, 'shattered_tCorpus')) return(shard_delete_feature_index(stc=tc))
+
   tc@feature_index = data.table()
   tc = set_provenance(tc, feature_index=F, feature=NA, context_level=NA, max_window_size=NA)
   tc

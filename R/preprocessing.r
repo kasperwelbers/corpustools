@@ -11,16 +11,43 @@
 #' @param ngram_context
 #'
 #' @export
-preprocess_feature <- function(tc, column, new_column='feature', language='english', use_stemming=F, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence')){
+preprocess_feature <- function(tc, column, new_column, language='english', use_stemming=F, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), remove_accented=F){
+  is_tcorpus(tc, T)
+  if(is(tc, 'shattered_tCorpus')) return(shard_preprocess_feature(stc=tc, column=column, new_column=new_column, use_stemming=use_stemming, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, remove_accented=remove_accented))
+
   feature = get_column(tc, column)
 
   if(ngrams == 1) {
     feature = preprocess_words(feature, context=NA, language=language, use_stemming=use_stemming, lowercase=lowercase)
   } else {
     context = get_context(tc, context_level=ngram_context)
-    feature = preprocess_words(feature, context=context, language=language, use_stemming=use_stemming, lowercase=lowercase, ngrams = ngrams)
+    feature = preprocess_words(feature, context=context, language=language, use_stemming=use_stemming, lowercase=lowercase, ngrams = ngrams, remove_accented=remove_accented)
   }
   set_column(tc, new_column, feature)
+}
+
+#' Filter features
+#'
+#' Similar to subsetting, but keeps data and only sets the . This way the vocabulary can be reduced while still beign able to bring results of analyses back to the full text
+#'
+#' @param tc
+#' @param column
+#' @param new_column
+#' @param filter
+#'
+#' @return
+#' @export
+#'
+#' @examples
+filter_feature <- function(tc, column, new_column, filter){
+  is_tcorpus(tc, T)
+  if(is(tc, 'shattered_tCorpus')) return(shard_filter_feature(stc=tc, column=column, new_column=new_column, filter=filter))
+
+  i = subset_i(tc, subset)
+  feature = tc@data[[column]]
+  feature[i] = NA
+  set_column(tc, new_column, feature)
+  tc
 }
 
 #' @export
@@ -38,6 +65,9 @@ preprocess_words <- function(x, context=NULL, language='english', use_stemming=F
   x
 }
 
+## try to make an ngram function using ddply and rcpp, where ddply loops over contexts and rcpp
+## also compare performance to just using rcpp to create ngrams for all words. For this, give a single vector of words, using global_i to add empty strings.
+## or combine the two, so that ddply can be used with batches
 grouped_ngrams <- function(words, group, n, filter=rep(T, length(words))){
   words = words[filter]
   group = if(length(group) == 1) rep(group, length(words)) else group[filter]
@@ -49,11 +79,12 @@ grouped_ngrams <- function(words, group, n, filter=rep(T, length(words))){
   for(i in 1:(n-1)) {
     replace_i = newart+i-1
     replace_i = replace_i[replace_i <= nrow(ngram_mat)]
-    if(length(replace_i) > 0) ngram_mat[replace_i, 1:(n-i)] = '#'
+    if(length(replace_i) > 0) ngram_mat[replace_i, 1:(n-i)] = ''
   }
 
   ngrams = vector('character', length(filter))
   ngrams[which(filter)] = apply(ngram_mat, 1, paste, collapse='_')
   as.factor(ngrams)
 }
+
 

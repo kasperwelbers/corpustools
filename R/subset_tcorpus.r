@@ -1,10 +1,20 @@
 #' Subset a tCorpus
 #'
+#' Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta).
+#'
+#' In the logical expression (e.g., sent_i ) for subset and subset_meta can contain the
+#'
+#' Note that you can also use objects from your (global) environment. For example, if you have a vector called filter_doc_ids, your logical expression can be: doc_id %in% filter_doc_ids. This is also a good way to filter words, for instance by using
+#'
 #' @param tc tCorpus object
-#' @param subset
+#' @param subset logical expression indicating elements or rows to keep in the tokens data.
+#' @param subset_meta
+#' @param keep_feature_index
+#' @param drop_levels
+#' @param window If not NULL, an integer specifiying the window to be used to return the subset. For instance, if the subset contains word 10 in a document and window is 5, the subset will contain word 5 to 15. Naturally, this does not apply to subset_meta.
 #'
 #' @export
-subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index=T, drop_levels=F) {
+subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index=T, drop_levels=F, window=NULL) {
   e = if(is(substitute(subset), 'character')) parse(text=subset) else substitute(subset)
   e_meta = if(is(substitute(subset_meta), 'character')) parse(text=subset_meta) else substitute(subset_meta)
 
@@ -17,6 +27,12 @@ subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index
   set_keys(tc)
   r = eval(e, tc@data, parent.frame())
   if(!is.null(r)){
+    if(!is.null(window)){
+      global_i = get_global_i(tc, max_window_size=window)
+      global_r = global_i[r]
+      global_window = rep(global_r, window*2 + 1) + rep(-window:window, each=length(global_r)) ## add window
+      r = global_i %in% global_window
+    }
     tc@data = tc@data[r,,nomatch=0]
     set_keys(tc)
     tc@meta = tc@meta[as.character(unique(tc@data$doc_id)),,nomatch=0]
@@ -41,14 +57,44 @@ subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index
   tc
 }
 
+#' Title
+#'
+#' @param tc
+#' @param query
+#' @param code
+#' @param feature
+#' @param context_level
+#'
+#' @export
+subset_query <- function(tc, query, code=NULL, feature='word', context_level=c('document','sentence')){
+  context_level = match.arg(context_level)
+  hits = search_contexts(tc, query, code=code, feature=feature, context_level=context_level)
+  if(is.null(hits)) return(NULL)
+  if(context_level == 'document'){
+    tc = subset(tc, doc_id %in% unique(hits$doc_id))
+  }
+  if(context_level == 'sentence'){
+    d = get_data(tc, columns = c('doc_id','sent_i'))
+    d$i = 1:nrow(d)
+    rows = d[list(hits$doc_id, hits$sent_i)]$i
+    tc = subset(tc, rows)
+  }
+  tc
+}
+
+
 subset_i <- function(tc, subset=NA, subset_meta=NA){
-  ## subset and subset need to be given as a character string
+  ## subset and subset_meta can be either a call or a character vector of length 1
+  subset = if(is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
+  subset_meta = if(is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
+
   n = nrow(get_data(tc))
   if(is.na(subset)){
     r = NULL
   } else {
     e = parse(text=as.character(subset))
-    r = (1:n)[eval(e, tc@data, parent.frame())]
+    r = eval(e, tc@data, parent.frame())
+    r = (1:n)[r]
   }
 
   n_meta = nrow(get_meta(tc))

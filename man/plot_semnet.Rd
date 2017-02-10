@@ -7,7 +7,7 @@
 plot_semnet(g, weight_attr = "weight", min_weight = NA,
   delete_isolates = F, vertexsize_attr = "freq", vertexsize_coef = 1,
   vertexcolor_attr = NA, edgewidth_coef = 1, max_backbone_alpha = NA,
-  labelsize_coef = 1, labelspace_coef = 1.1, reduce_labeloverlap = T,
+  labelsize_coef = 1, labelspace_coef = 1.1, reduce_labeloverlap = F,
   redo_layout = F, return_graph = T, vertex.label.dist = 0.25,
   layout_fun = layout_with_fr, ...)
 }

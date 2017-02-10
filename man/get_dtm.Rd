@@ -5,7 +5,8 @@
 \title{Create a document term matrix from a tCorpus}
 \usage{
 get_dtm(tc, feature, context_level = c("document", "sentence"),
-  drop_empty_terms = T)
+  weight = c("termfreq", "docfreq", "tfidf", "norm_tfidf"),
+  drop_empty_terms = T, form = c("Matrix", "tm_dtm", "quanteda_dfm"))
 }
 \arguments{
 \item{context_level}{}

@@ -5,7 +5,7 @@
 \title{Title}
 \usage{
 search_contexts(tc, query, code = NULL, feature = "word",
-  context_level = c("document", "sentence"))
+  context_level = c("document", "sentence"), verbose = F)
 }
 \arguments{
 \item{context_level}{}

@@ -10,6 +10,7 @@
 #' @return a tCorpus object
 #' @export
 get_global_i <- function(tc, context_level=c('document','sentence'), max_window_size=200){
+  is_tcorpus(tc)
   context_level = match.arg(context_level)
   if(context_level == 'document'){
     global_i = global_position(position = tc@data[['word_i']], context = tc@data[['doc_id']], max_window_size = max_window_size, presorted=T)
@@ -78,6 +79,7 @@ position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, a
 #' @return A list with two matrices. position.mat gives the specific position of a term, and window.mat gives the window in which each word occured. The rows represent the position of a term, and matches the input of this function (position, term and context). The columns represents terms.
 #' @export
 wordWindowOccurence <- function(tc, feature, context_level=c('document','sentence'), window.size=10, direction='<>', distance_as_value=F, batch_rows=NULL, drop_empty_terms=T){
+  is_tcorpus(tc)
   #tc = subset(tc, !is.na(get_column(tc, feature)))
 
   context_level = match.arg(context_level)
@@ -120,6 +122,9 @@ transform_count <- function(m, count_mode=c('normal','dicho','prob'), alpha=2){
 
 
 feature_cooccurrence <- function(tc, feature, matrix_mode=c('dtm', 'windowXwindow', 'positionXwindow'), count_mode=c('normal','dicho','prob'), mat_stats=c('sum.x','sum.y','magnitude.x','magnitude.y', 'nrow'), context_level=c('document','sentence'), direction='<>', window.size=10, n.batches=1, alpha=2){
+  is_tcorpus(tc, allow_stc = T)
+  if(is(tc, 'shattered_tCorpus')) return(shard_feature_cooccurrence(stc=tc, feature, matrix_mode=matrix_mode, count_mode=count_mode, mat_stats=mat_stats, context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha))
+
   matrix_mode = match.arg(matrix_mode)
   count_mode = match.arg(count_mode)
   context_level = match.arg(context_level)
@@ -190,27 +195,6 @@ cooccurrence_matrix <- function(tc, feature, count_mode, mat_stats, context_leve
   ml
 }
 
-
-#### window based cooccurrene ####
-
-#' Calculate the cooccurrence of features.
-#'
-#' Returns a list with the cooccurrence matrix, and the matrix statistics specified in mat_stats.
-#'
-#' The reason for making this a separate, complex function is that it enables the construction of the window matrix and the matrix multiplication to be executed in batches/shards
-#'
-#' @param tc a tcorpus object
-#' @param feature
-#' @param mode Either 'window_to_window' or 'position_to_window'. With 'window_to_window', cooccurrence is calculated as the number of times the window of two features overlaps. With 'position_to_window', cooccurrence is calculated as the number of times a feature occurs (is positioned) within the window of another feature
-#' @param count_mode
-#' @param mat_stats A character vector indicating which matrix statistics to calculate. These are necessary for calculating similarity/distance metrics.
-#' @param context_level
-#' @param window.size
-#' @param n.batches
-#' @param alpha
-#'
-#' @return a list with the cooccurrence matrix and the specified matrix statistics (mat_stats)
-#' @export
 cooccurrence_matrix_window <- function(tc, feature, matrix_mode='position_to_window', count_mode='dicho', mat_stats=c('sum.x','sum.y','magnitude.x','magnitude.y'), context_level='document', direction='<>', window.size=10, n.batches=window.size, alpha=2, drop_empty_terms=T){
   if(is.na(n.batches)){
     wwo = wordWindowOccurence(tc, feature, context_level, window.size, direction, drop_empty_terms=drop_empty_terms)
@@ -221,8 +205,6 @@ cooccurrence_matrix_window <- function(tc, feature, matrix_mode='position_to_win
 
     batch_i = data_batch(tc, context_level, n.batches)
     ml = list()
-    #pb <- txtProgressBar(0, nrow(batch_i), style = 3)
-    #setTxtProgressBar(pb, 0)
     for(i in 1:nrow(batch_i)){
       batch_rows = batch_i$start[i]:batch_i$end[i]
       wwo = wordWindowOccurence(tc, feature, context_level, window.size, direction, batch_rows=batch_rows)
@@ -231,10 +213,7 @@ cooccurrence_matrix_window <- function(tc, feature, matrix_mode='position_to_win
 
       for(n in names(cooc)) ml[[n]] = if(n %in% names(ml)) ml[[n]] + cooc[[n]] else cooc[[n]]
       ml[['freq']] = if('freq' %in% names(ml)) ml[['freq']] + Matrix::colSums(wwo$position.mat) else Matrix::colSums(wwo$position.mat)
-
-      #setTxtProgressBar(pb, i)
     }
-    #close(pb)
   }
 
   ml # a list containing an adjacency matrix, with additional statistics

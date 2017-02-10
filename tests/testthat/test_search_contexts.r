@@ -40,5 +40,5 @@ test_that("Query document search works", {
 
   ## query subsetting
   subset(tc, doc_id %in% 'a')
-  subset_query(tc, '"mark rutte"~2')
+  subset_query(tc, '"mark ruddtte"~2', context_level = 'sentence')
 })

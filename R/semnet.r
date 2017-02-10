@@ -12,7 +12,8 @@
 #'
 #' @export
 semnet <- function(tc, feature, measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA, alpha=2){
-  tc = as.tcorpus(tc)
+  is_tcorpus(tc, T)
+
   feature = match.arg(feature, featurenames(tc))
   measure = match.arg(measure)
   context_level = match.arg(context_level)
@@ -40,7 +41,8 @@ semnet <- function(tc, feature, measure=c('con_prob', 'con_prob_weighted', 'cosi
 #'
 #' @export
 semnet_window <- function(tc, feature, measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=5, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
-  tc = as.tcorpus(tc)
+  is_tcorpus(tc, T)
+
   feature = match.arg(feature, featurenames(tc))
   measure = match.arg(measure)
   set_matrix_mode = match.arg(set_matrix_mode)
@@ -84,6 +86,7 @@ create_semnet <- function(tc, feature, measure, matrix_mode, context_level, dire
     g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'upper', diag = F, weighted = T)
   }
   if(measure == 'chi2'){
+    ## add sign and/or ratio
     ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='dicho', mat_stats=c('sum.x','sum.y','nrow'), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
 
     xtab = data.frame(a = ml$mat@x,                           # x=1, y=1

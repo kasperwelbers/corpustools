@@ -24,7 +24,10 @@
 #'
 #' @return Plots a network, and returns the network object if return_graph is TRUE.
 #' @export
-plot_semnet <- function(g, weight_attr='weight', min_weight=NA, delete_isolates=F, vertexsize_attr='freq', vertexsize_coef=1, vertexcolor_attr=NA, edgewidth_coef=1, max_backbone_alpha=NA, labelsize_coef=1, labelspace_coef=1.1, reduce_labeloverlap=T, redo_layout=F, return_graph=T, vertex.label.dist=0.25, layout_fun=layout_with_fr, ...){
+plot_semnet <- function(g, weight_attr='weight', min_weight=NA, delete_isolates=F, vertexsize_attr='freq', vertexsize_coef=1, vertexcolor_attr=NA, edgewidth_coef=1, max_backbone_alpha=NA, labelsize_coef=1, labelspace_coef=1.1, reduce_labeloverlap=F, redo_layout=F, return_graph=T, vertex.label.dist=0.25, layout_fun=layout_with_fr, ...){
+  ## add: out_r, jpg_file, pdf_file, width, height
+  ## add seed!!  default to random number, save as attribute
+
   E(g)$weight = get.edge.attribute(g, weight_attr)
   if(!is.na(min_weight)) g = delete.edges(g, which(E(g)$weight < min_weight))
   if(delete_isolates) g = delete.vertices(g, which(degree(g) == 0))
@@ -197,6 +200,33 @@ plotWords <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', yla
   wl <- as.data.frame(wordlayout(x, y, words, cex = wordsize))
 
   text(wl$x + 0.5 * wl$width, wl$y + 0.5 * wl$ht, words, cex = wordsize, col = col)
+}
+
+#' Get top features from semnet clusters
+#'
+#' @param g
+#' @param cluster_attr
+#' @param measure
+#' @param top_n
+#'
+#' @return
+#' @export
+#'
+#' @examples
+top_cluster_features <- function(g, cluster_attr, measure=c('degree','freq'), top_n=5){
+  measure = match.arg(measure)
+  d = data.frame(name=V(g)$name,
+                 cluster = get.vertex.attribute(g, cluster_attr))
+  if(measure == 'degree') d$value = degree(g)
+  if(measure == 'freq') d$value = V(g)$freq
+
+  topclusters = table(d$cluster)
+  d = d[order(d$cluster, -d$value),]
+  d$rank = tcorpus:::local_position(1:nrow(d), d$cluster, presorted=T)
+  d = d[d$rank <= top_n,]
+  tab = dcast(d, rank ~ cluster, value.var='name')
+  tab[is.na(tab)] = ''
+  tab[,names(topclusters)[order(-topclusters)]]
 }
 
 

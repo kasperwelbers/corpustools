@@ -5,7 +5,7 @@
 \title{Create a feature index within a tCorpus}
 \usage{
 set_feature_index(tc, feature = "word", context_level = c("document",
-  "sentence"), max_window_size = 100)
+  "sentence"), max_window_size = 100, verbose = F)
 }
 \arguments{
 \item{max_window_size}{}
