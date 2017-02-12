@@ -4,13 +4,13 @@
 \alias{download_resource}
 \title{Download language resources}
 \usage{
-download_resource(resource = c("jrc_names"), local_path = NULL,
-  force_download = F)
+download_resource(resource = c("jrc_names"),
+  local_path = getOption("tcorpus_resources", NULL), force_download = F)
 }
 \arguments{
 \item{resource}{A character string indicating which resource to download}
 
-\item{local_path}{The path (without the filename) where the resource is stored. If NULL, the file will be stored in the location of the tcorpus package. if tempdir(), the file is stored in a directory that is cleaned up when the R session ends.}
+\item{local_path}{The path (without the filename) where the resource is stored. If NULL (default), the file will be stored in the location of the tcorpus package.}
 
 \item{force_download}{If TRUE, the resource will be downloaded even if it is already stored locally. Only usefull if resources have been updated.}
 }
@@ -24,6 +24,6 @@ Currently available resources:
 The resource file is downloaded and stored on disk.
 By default, the file will be saved to the location of the tcorpus package (for which you need write access).
 Alternatively, the file can be saved as the specified local_path.
-local_path can also be tempdir(), in which case the resource is deleted when the R session closes.
+This can also be specified globally by using the set_resources_path function.
 }
 

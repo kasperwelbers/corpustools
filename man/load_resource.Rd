@@ -4,7 +4,8 @@
 \alias{load_resource}
 \title{Load one of the language resources that have been downloaded with download_resource().}
 \usage{
-load_resource(resource = c("jrc_names"), local_path = NULL)
+load_resource(resource = c("jrc_names"),
+  local_path = getOption("tcorpus_resources", NULL))
 }
 \arguments{
 \item{resource}{A character string indicating which resource to download}

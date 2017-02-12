@@ -5,8 +5,8 @@
 \title{Use a language resource to create a feature}
 \usage{
 feature_from_resource(tc, resource = "jrc_names", new_feature = resource,
-  feature = "word", resource_path = NULL, collocation_labels = T,
-  verbose = T, batchsize = "default")
+  feature = "word", resource_path = getOption("tcorpus_resources", NULL),
+  collocation_labels = T, verbose = T, batchsize = "default")
 }
 \arguments{
 \item{tc}{a tCorpus object}

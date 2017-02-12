@@ -7,7 +7,7 @@
 *-Ex.R
 
 # downloaded resources
-inst/*
+#inst/tcorpus_ext_resources/*.rds
 
 # shattered tcorpus test files
 test.tCorpus/*
@@ -19,4 +19,3 @@ test.tCorpus/*
 vignettes/*.html
 vignettes/*.pdf
 .Rproj.user
-
