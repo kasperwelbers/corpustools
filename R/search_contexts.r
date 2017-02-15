@@ -51,4 +51,3 @@ search_contexts <- function(tc, query, code=NULL, feature='word', context_level=
   hits
 }
 
-

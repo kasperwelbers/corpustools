@@ -308,7 +308,7 @@ get_column <- function(tc, name) tc@data[[name]]
 #' @export
 set_column <- function(tc, name, value) {
   if(name %in% c('doc_id', 'sent_i', 'word_i')) stop(sprintf('Cannot manually change %s', name))
-  tc@data[[name]] = value
+  tc@data[[name]] = as.factor(value)
   tc
 }
 

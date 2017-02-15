@@ -4,7 +4,7 @@
 \alias{collocation_strings}
 \title{Features collapsed into collocation strings}
 \usage{
-collocation_strings(tc, colloc_id, feature = "word")
+collocation_strings(tc, colloc_id, feature = "word", pref = NULL)
 }
 \arguments{
 \item{feature}{}

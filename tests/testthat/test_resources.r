@@ -1,6 +1,5 @@
 test_jrcnames <- function(tc){
   capture_output({
-    getOption('tcorpus_resources', NULL)
     download_resource('jrc_names')
     tc = feature_from_resource(tc, verbose=T)
     d = get_data(tc)
@@ -19,6 +18,6 @@ test_that("resources works", {
 
   ## if wanted; disable tests for specific resources, because its not ideal to keep downloading them all the time
   set_resources_path('~/Downloads') ## store locally for repeated use (since building the package removes the resources directory)
-  test_jrcnames(tc)
+  #test_jrcnames(tc)
 })
 

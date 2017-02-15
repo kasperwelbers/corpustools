@@ -11,9 +11,9 @@
 #' @param ngram_context
 #'
 #' @export
-preprocess_feature <- function(tc, column, new_column, language='english', use_stemming=F, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), remove_accented=F){
+preprocess_feature <- function(tc, column, new_column, language='english', use_stemming=F, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), remove_accented=F, remove_punctuation=T){
   is_tcorpus(tc, T)
-  if(is(tc, 'shattered_tCorpus')) return(shard_preprocess_feature(stc=tc, column=column, new_column=new_column, use_stemming=use_stemming, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, remove_accented=remove_accented))
+  if(is(tc, 'shattered_tCorpus')) return(shard_preprocess_feature(stc=tc, column=column, new_column=new_column, use_stemming=use_stemming, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, remove_accented=remove_accented, remove_punctuation=remove_punctuation))
 
   feature = get_column(tc, column)
 
@@ -51,13 +51,15 @@ filter_feature <- function(tc, column, new_column, filter){
 }
 
 #' @export
-preprocess_words <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=T, remove_accented=F){
+preprocess_words <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=T, remove_accented=F, remove_punctuation=T){
   language = match.arg(language, choices=c('danish','dutch','english','finnish','french','german','hungarian','italian','norwegian','porter','portuguese','romanian','russian','spanish','swedish','turkish'))
   if(!is(x, 'factor')) x = as.factor(x)
   if(replace_whitespace) levels(x) = gsub(' ', '_', levels(x), fixed=T)
   if(lowercase) levels(x) = tolower(levels(x))
   if(remove_accented) levels(x) = iconv(levels(x), to='ASCII//TRANSLIT')
   if(use_stemming) levels(x) = quanteda::char_wordstem(levels(x), language=language)
+  if(remove_punctuation) levels(x)[!grepl("[[:alnum:]]", levels(x))] = NA
+
   if(ngrams > 1) {
     if(is.null(context)) stop('For ngrams, the "context" argument has to be specified. If no context is available, "context" can be NA')
     x = grouped_ngrams(x, context, ngrams)
@@ -69,6 +71,7 @@ preprocess_words <- function(x, context=NULL, language='english', use_stemming=F
 ## also compare performance to just using rcpp to create ngrams for all words. For this, give a single vector of words, using global_i to add empty strings.
 ## or combine the two, so that ddply can be used with batches
 grouped_ngrams <- function(words, group, n, filter=rep(T, length(words))){
+  filter = filter & !is.na(words)
   words = words[filter]
   group = if(length(group) == 1) rep(group, length(words)) else group[filter]
 
@@ -83,7 +86,7 @@ grouped_ngrams <- function(words, group, n, filter=rep(T, length(words))){
   }
 
   ngrams = vector('character', length(filter))
-  ngrams[which(filter)] = apply(ngram_mat, 1, paste, collapse='_')
+  ngrams[which(filter)] = apply(ngram_mat, 1, stringi::stri_paste, collapse='_')
   as.factor(ngrams)
 }
 

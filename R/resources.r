@@ -34,7 +34,10 @@ feature_from_resource <- function(tc, resource='jrc_names', new_feature=resource
   f[index$i] = index$id
   tc = set_column(tc, new_feature, f)
 
-  if(collocation_labels) tc = add_collocation_label(tc, new_feature, feature=feature)
+  if(collocation_labels) {
+    if(verbose) message('Adding collocation labels')
+    tc = add_collocation_label(tc, new_feature, feature=feature)
+  }
   tc
 }
 

@@ -6,7 +6,8 @@
 \usage{
 preprocess_feature(tc, column, new_column, language = "english",
   use_stemming = F, lowercase = T, ngrams = 1,
-  ngram_context = c("document", "sentence"), remove_accented = F)
+  ngram_context = c("document", "sentence"), remove_accented = F,
+  remove_punctuation = T)
 }
 \arguments{
 \item{ngram_context}{}

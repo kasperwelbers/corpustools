@@ -5,7 +5,7 @@
 \title{Choose and add collocation strigns based on collocation categories}
 \usage{
 add_collocation_label(tc, colloc_id, feature = "word",
-  new_feature = sprintf("\%s_l", colloc_id))
+  new_feature = sprintf("\%s_l", colloc_id), pref_subset = NULL)
 }
 \arguments{
 \item{tc}{a tcorpus object}

@@ -15,6 +15,9 @@
 #'
 #' @export
 subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index=T, drop_levels=F, window=NULL) {
+  subset = if(is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
+  subset_meta = if(is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
+
   e = if(is(substitute(subset), 'character')) parse(text=subset) else substitute(subset)
   e_meta = if(is(substitute(subset_meta), 'character')) parse(text=subset_meta) else substitute(subset_meta)
 
@@ -66,9 +69,9 @@ subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, keep_feature_index
 #' @param context_level
 #'
 #' @export
-subset_query <- function(tc, query, code=NULL, feature='word', context_level=c('document','sentence')){
+subset_query <- function(tc, query, feature='word', context_level=c('document','sentence')){
   context_level = match.arg(context_level)
-  hits = search_contexts(tc, query, code=code, feature=feature, context_level=context_level)
+  hits = search_contexts(tc, query, feature=feature, context_level=context_level)
   if(is.null(hits)) return(NULL)
   if(context_level == 'document'){
     tc = subset(tc, doc_id %in% unique(hits$doc_id))
@@ -80,6 +83,52 @@ subset_query <- function(tc, query, code=NULL, feature='word', context_level=c('
     tc = subset(tc, rows)
   }
   tc
+}
+
+#' subset a tCorpus to all tokens that occur within the given window of a given set of indices
+#'
+#' @param tc a tCorpus object
+#' @param i the indices
+#' @param window an integer specifying the window size
+#' @param context_level
+#'
+#' @export
+subset_window <- function(tc, i, window, context_level=c('document','sentence')){
+  context_level = match.arg(context_level)
+  subset(tc, i_window(tc, i, window=window, context_level=context_level))
+}
+
+
+
+i_window <- function(tc, i, window, context_level=c('document','sentence')){
+  context_level = match.arg(context_level)
+  gi = get_global_i(tc, context_level, max_window_size = window)
+  gi_i = gi[i]
+  gi_window = rep(gi_i, window*2 + 1) + rep(-window:window, each=length(gi_i))
+  window_i = na.omit(match(gi_window, gi))
+  unique(window_i[order(window_i)])
+}
+
+#' Subset a tcorpus for a window around the results of search_features()
+#'
+#' This function works like the search_features() function, but instead of returning a data.frame with the search results, it returns a subset of the tcorpus with the search results, and a specified window arround the results.
+#'
+#'
+#' @param tc
+#' @param keyword
+#' @param condition
+#' @param queries
+#' @param feature
+#' @param condition_once
+#' @param subset_tokens
+#' @param subset_meta
+#' @param verbose
+#'
+#' @return a tCorpus object
+#' @export
+subset_query_window <- function(tc, window, keyword=NA, condition=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, verbose=F){
+  hits = search_features(tc, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, only_last_mword=F, verbose=verbose)
+  tc = subset_window(tc, i=hits$i, window=window, context_level = context_level)
 }
 
 

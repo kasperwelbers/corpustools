@@ -9,7 +9,7 @@ download_jrc_names <- function(fname){
   temp <- tempfile()
   download.file("http://optima.jrc.it/data/entities.gzip",temp)
   re = readLines(temp)
-  re = stringr::str_split(re, '\t', simplify = T)
+  re = stringi::stri_split(re, regex='\t', simplify = T)
   re = data.frame(string=as.character(re[,4]), id=as.numeric(re[,1]), lang=as.factor(re[,3]), pos=as.factor(re[,2]), stringsAsFactors = F)
   re = data.table(re)
   saveRDS(re, fname)

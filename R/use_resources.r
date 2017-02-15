@@ -3,12 +3,28 @@ use_search_resource <- function(tc, re, batchsize, verbose){
   ## for resources that are best implemented using the current search_ functions.
 }
 
+## !!!!!! check whether iconv is necessary!!!
+
 
 ### most resources work with huge stringmatch tables
 ### therefore, the following functions are optimized for mathing many strings at once, as opposed to the more versatile search_features function.
 
-use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsize=50000, flatten_colloc=T, verbose=F){
+normalize_string <- function(x, lowercase=T, ascii=T, trim=T){
+  if(lowercase) x = tolower(x)
+  if(ascii) x = iconv(x, to='ASCII//TRANSLIT')
+  if(trim) x = stringi::stri_trim(x)
+  x
+}
+
+
+use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsize=50000, flatten_colloc=T, lowercase=F, verbose=F){
   fi = get_feature_index(tc)
+
+  levels(fi$feature) = normalize_string(levels(fi$feature), lowercase=lowercase)
+  setkey(fi, 'feature')
+
+  re$string = normalize_string(re$string, lowercase=lowercase)
+
 
   if(flatten_colloc) {
     is_colloc = grep(' |_', levels(fi$feature))
@@ -30,12 +46,14 @@ use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsiz
   batches = split(re, batch_i)
 
   ## find the candidate matches
+  gf = global_feature_vector(fi)
   candidates = vector('list', length(batches))
   counter = verbose_sum_counter(nrow(re))
   for(i in seq_along(batches)){
-    candidates[[i]] = fast_multiword_stringmatch(batches[[i]], fi=fi, regex_sep=regex_sep, case_sensitive=case_sensitive)
+    candidates[[i]] = fast_multiword_stringmatch(batches[[i]], fi=fi, gf=gf, regex_sep=regex_sep, case_sensitive=case_sensitive)
     if(verbose) counter(nrow(batches[[i]]))
   }
+  if(verbose) message('Binding results')
   candidates = rbindlist(candidates)
 
   ## select candidates (at some point candidate selection could be done better. Perhaps even taking context into account. BUT NOT TODAY!!)
@@ -64,26 +82,24 @@ global_feature_vector <- function(fi){
   global_f
 }
 
-fast_multiword_stringmatch <- function(re, fi, regex_sep, case_sensitive=T){
+fast_multiword_stringmatch <- function(re, fi, gf, regex_sep, case_sensitive=T){
   i = 1:length(re$string)
 
   if(!case_sensitive) {
     string = tolower(re$string)
     levels(fi$feature) = tolower(levels(fi$feature))
   }
-
-  sn = stringr::str_split(re$string, regex_sep)
+  sn = stringi::stri_split(re$string, regex=regex_sep)
   nterms = sapply(sn, length)
   candidates = vector('list', max(nterms))
 
   lt = data.table(feature = sapply(sn, first), id=re$id, nterms=nterms, s_i=i, key='feature')
-  lt = merge(fi, lt, by=.EACHI, allow.cartesian=T)
+  lt = merge(fi, lt, by=data.table::.EACHI, allow.cartesian=T)
 
   is_end = lt$nterms == 1
   candidates[[1]] = lt[is_end, c('i','global_i','id','nterms'), with=F]
   lt = lt[!is_end,]
 
-  gf = global_feature_vector(fi)
   for(i in 1:length(candidates)){
     if(nrow(lt) == 0) break
     hit = sapply(sn[lt$s_i], function(x) x[i+1]) == gf[lt$global_i + i]

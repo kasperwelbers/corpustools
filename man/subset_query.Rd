@@ -4,8 +4,8 @@
 \alias{subset_query}
 \title{Title}
 \usage{
-subset_query(tc, query, code = NULL, feature = "word",
-  context_level = c("document", "sentence"))
+subset_query(tc, query, feature = "word", context_level = c("document",
+  "sentence"))
 }
 \arguments{
 \item{context_level}{}

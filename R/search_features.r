@@ -63,8 +63,13 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   windows = na.omit(get_feature_regex(queries$condition, default_window = NA)$window)
   max_window_size = if(length(windows) > 0) max(windows) else 0
 
+
   fi = get_feature_index(tc, feature=feature, context_level='document', max_window_size = max_window_size)
 
+  search_features_loop(tc, fi=fi, queries=queries, feature=feature, only_last_mword=only_last_mword, keep_false_condition=keep_false_condition, verbose=verbose)
+}
+
+search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep_false_condition, verbose){
   res = list()
   n = nrow(queries)
   for(i in 1:n){
@@ -107,11 +112,10 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
     } else {
       res[[code]] = hit[,c('feature','i','doc_id','condition')]
     }
+
   }
-  ## make proper plyr function to enable verbose
   hits = plyr::ldply(res, function(x) x, .id='code')
   if(nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor())
-
   hits[order(hits$i),]
 }
 

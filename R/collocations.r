@@ -11,19 +11,27 @@
 #' @param feature
 #'
 #' @export
-collocation_strings <- function(tc, colloc_id, feature='word'){
+collocation_strings <- function(tc, colloc_id, feature='word', pref=NULL){
   f = get_data(tc, columns = c(feature, colloc_id))
   colnames(f) = c('feature','id')
+  f$pref = F
+  f$pref[pref] = T
 
   lag_id = shift(f$id, fill=as.factor(NA))
   f$new_id = !f$id == lag_id | (!is.na(f$id) & is.na(lag_id))
   f = f[!is.na(f$id),]
   f$new_id = cumsum(f$new_id)
+  pref_ids = unique(f$id[f$pref])
+  f = f[f$pref | !f$id %in% pref_ids,]
 
-  label = f[, list(label=paste(get('feature'), collapse=' '),
-                   id = unique(get('id'))), by= 'new_id']
-  as.data.frame(label[, list(N = .N), by= 'label,id'])
+  label = unique(f[,c('id','pref','new_id')], with=F)
+  feature = split(as.character(f$feature), f$new_id)
+  label$label = sapply(feature, stringi:::stri_flatten, collapse=' ')
+
+  label[, list(N = .N, label=unique(get('label'))), by= 'pref,id,label']
 }
+
+
 
 #' Choose and add collocation strigns based on collocation categories
 #'
@@ -35,16 +43,20 @@ collocation_strings <- function(tc, colloc_id, feature='word'){
 #' @param new_feature
 #'
 #' @export
-add_collocation_label <- function(tc, colloc_id, feature='word', new_feature=sprintf('%s_l', colloc_id)){
-  label = collocation_strings(tc, colloc_id, feature=feature) ## for shattered_tCorpus, this has to be done for the entire corpus first, or labels will not match across shards
+add_collocation_label <- function(tc, colloc_id, feature='word', new_feature=sprintf('%s_l', colloc_id), pref_subset=NULL){
+  pref_subset = deparse(substitute(pref_subset))
+  if(!pref_subset == 'NULL') pref = subset_i(tc, subset_meta=pref_subset) else pref = NULL
 
-  ## select most frequent labels
-  label = label[order(-label$N),]
-  label = label[!duplicated(label$id),]
+  label = collocation_strings(tc, colloc_id, feature=feature, pref=pref) ## for shattered_tCorpus, this has to be done for the entire corpus first, or labels will not match across shards
+  ## select most frequent labels, prioritzing pref is true
+  setkeyv(label, c('pref','N'))
+  label = as.data.frame(label)[!duplicated(label$id, fromLast = T),]
 
   label$label = as.factor(label$label)
   levels(label$label) = gsub('_', ' ', levels(label$label), fixed=T)
-  set_column(tc, new_feature, value = label$label[match(get_column(tc, colloc_id), label$id)])
+  tc = set_column(tc, new_feature, value = label$label[match(get_column(tc, colloc_id), label$id)])
+
+  tc
 }
 
 
@@ -80,7 +92,7 @@ flatten_collocations <- function(d, feature_col, position_col, sep='_', reset_ke
 
 flatten_collocations_table <- function(feature, position, i=1:length(feature), sep=' |_'){
   colloc = grep('_', feature)
-  colloc_list = stringr::str_split(feature[colloc], '_')
+  colloc_list = stringi::stri_split(feature[colloc], regex = sep)
   colloc = data.frame(i=i[colloc], feature=feature[colloc], position=position[colloc], n=sapply(colloc_list, length))
   flat_colloc = colloc[rep(1:nrow(colloc), colloc$n),]
   flat_colloc$nr = unlist(sapply(colloc$n, function(x) seq(1,x), simplify=F))
