@@ -6,7 +6,7 @@
 #' @param tokens
 #' @param hits
 #' @param tokenfreq
-#' @param keywordIC
+#' @param kwic
 #' @param kwic_nwords
 #' @param kwic_sample
 #' @param random_sample
@@ -14,7 +14,7 @@
 #' @param hitcount
 #'
 #' @export
-reportSummary <- function(tokens, hits=NULL, token_i=NULL, hitcount=T, tokenfreq=T, keywordIC=T, kwic_nwords=10, kwic_sample=10, random_sample=T, doc.col=getOption('doc.col','doc_id'), position.col=getOption('position.col','position'), feature.col=getOption('wor.col','word')){
+reportSummary <- function(tc, hits=NULL, token_i=NULL, hitcount=T, tokenfreq=T, kwic=T, kwic_nwords=10, kwic_sample=10, random_sample=T, doc.col=getOption('doc.col','doc_id'), position.col=getOption('position.col','position'), feature.col=getOption('wor.col','word')){
   if(!is.null(token_i)) hits = droplevels(tokens[token_i,])
   out = list()
 
@@ -29,9 +29,9 @@ reportSummary <- function(tokens, hits=NULL, token_i=NULL, hitcount=T, tokenfreq
   }
 
   ## report keywords in confeature
-  if(keywordIC & nrow(hits) > 0) {
+  if(kwic & nrow(hits) > 0) {
     cat('\n')
-    out[['keywordIC']] = reportKWIC(tokens, hits, nwords=kwic_nwords, nsample=kwic_sample, random_sample=random_sample, doc.col=doc.col, position.col=position.col, feature.col=feature.col)
+    out[['kwic']] = reportKWIC(tokens, hits, nwords=kwic_nwords, nsample=kwic_sample, random_sample=random_sample, doc.col=doc.col, position.col=position.col, feature.col=feature.col)
   }
 
   out

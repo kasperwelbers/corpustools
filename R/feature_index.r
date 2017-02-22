@@ -15,7 +15,7 @@
 #' @param max_window_size
 #'
 #' @export
-get_feature_index <- function(tc, feature='word', context_level='document', max_window_size=100){
+get_feature_index <- function(tc, feature='word', context_level='document', max_window_size=100, as_ascii=F){
   is_tcorpus(tc)
 
   prov = get_provenance(tc)
@@ -38,6 +38,7 @@ get_feature_index <- function(tc, feature='word', context_level='document', max_
       fi = tc@feature_index
     }
   }
+  if(as_ascii) levels(fi$feature) = iconv(levels(fi$feature), to='ASCII//TRANSLIT')
   setkey(fi, 'feature')
   fi
 }

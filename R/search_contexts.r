@@ -16,13 +16,13 @@ search_contexts <- function(tc, query, code=NULL, feature='word', context_level=
 
   windows = na.omit(get_feature_regex(query, default_window = NA)$window)
   max_window_size = if(length(windows) > 0) max(windows) else 0
-  fi = get_feature_index(tc, feature=feature, context_level=context_level, max_window_size = max_window_size)
+  fi = get_feature_index(tc, feature=feature, context_level=context_level, max_window_size = max_window_size, as_ascii = T)
 
   if(!is.null(code)){
     code = if(length(code) == length(query)) code else rep(code, length(query))
   } else code = sprintf('query_%s', 1:length(query))
 
-  context = get_context(tc, context_level)
+  context = get_context(tc, context_level, with_labels = F)
   context_i = as.numeric(context)
   context_label = levels(context)
   queries = parse_queries(query) ## add argument merge_or_groups = T

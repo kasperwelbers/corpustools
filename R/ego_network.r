@@ -68,6 +68,7 @@ build_ego_network <- function(dt, vertex_ids, level, depth, min_weight, top_edge
   new_vertex_ids = new_vertex_ids[!new_vertex_ids %in% vertex_ids]
   if(level < depth) ego = rbind(ego, build_ego_network(dt, vertex_ids=new_vertex_ids,
                                                            level=level+1, depth=depth,
-                                                           min_weight=min_weight, top_edges=top_edges)) ## build ego network recursively
+                                                           min_weight=min_weight, top_edges=top_edges,
+                                                           max_edges_level=max_edges_level)) ## build ego network recursively
   ego
 }

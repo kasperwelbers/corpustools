@@ -13,7 +13,7 @@ tCorpus = setClass("tCorpus",
                              feature_index = 'data.table',
                              p = 'list'),
                    prototype=list(
-                     p = list(feature_index=F, context_level=NA, max_window_size=NA),
+                     p = list(feature_index=F, feature=NA, context_level=NA, max_window_size=NA),
                      feature_index = data.table()
                    ))
 
@@ -160,9 +160,11 @@ create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, s
 #' @param meta Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)
 #' @param meta_cols Alternatively, if there are document meta columns in the tokens data.table, meta_cols can be used to recognized them. Note that these values have to be unique within documents.
 #' @param feature_cols Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)
+#' @param sent_is_local Sentences in the tCorpus must be locally unique within documents. If sent_is_local is FALSE, then sentences are made sure to be locally unique. However,  it is then assumed that the first sentence in a document is sentence 1, which might not be the case if tokens (input) is a subset. If you know for a fact that the sentence column in tokens is already locally unique, you can set sent_is_local to TRUE to keep the original sent_i values.
+#' @param word_is_local Same as sent_is_local, but or word_i
 #'
 #' @export
-tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL) {
+tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=F, word_is_local=F) {
   tokens = as.data.frame(tokens)
   for(cname in c(doc_col, word_i_col, sent_i_col, meta_cols)){
     if(!cname %in% colnames(tokens)) stop(sprintf('"%s" is not an existing columnname in "tokens"', cname))
@@ -172,6 +174,7 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   if(is.null(word_i_col)){
     warning('No word_i column specified. Word order used instead (see documentation).')
     tokens$word_i = 1:nrow(tokens)
+    word_is_local = F
     word_i_col = 'word_i'
   } else {
     if(is.null(sent_i_col)) {
@@ -199,12 +202,24 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
                          sent_i = tokens[,sent_i_col],
                          word_i = tokens[,word_i_col])
 
-  ## make sure that sent_i and doc_id are locally unique within documents
+  ## check whether words and sentences are (likely to be) local
+
+  ## make sure that sent_i and word_i are locally unique within documents
   if(!is.null(sent_i_col)){
-    positions$sent_i = local_position(positions$sent_i, positions$doc_id, presorted = T) ## make sure sentences are locally unique within documents (and not globally)
-    positions$word_i = global_position(positions$word_i, positions$sent_i, presorted=T) ## make word positions globally unique, taking sentence id into account (in case words are locally unique within sentences)
+    if(sent_is_local) {
+      udocsent = unique(positions[,c('doc_id','sent_i')])
+      if(!any(duplicated(udocsent$sent_i))) warning("Sentence positions (sent_i) do not appear to be locally unique within document (no duplicates). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
+      rm(udocsent)
+    }
+    if(!sent_is_local) positions$sent_i = local_position(positions$sent_i, positions$doc_id, presorted = T) ## make sure sentences are locally unique within documents (and not globally)
+    if(!word_is_local) positions$word_i = global_position(positions$word_i, positions$sent_i, presorted=T) ## make word positions globally unique, taking sentence id into account (in case words are locally unique within sentences)
   }
-  positions$word_i = local_position(positions$word_i, positions$doc_id, presorted=T) ## make words locally unique within documents
+  if(word_is_local) {
+    udocword = unique(positions[,c('doc_id','word_i')])
+    if(!any(duplicated(udocword$word_i))) warning("Word positions (word_i) do not appear to be locally unique within document (no duplicates). Unless you are sure they are, set word_is_local to FALSE (and read documentation)")
+    rm(udocword)
+  }
+  if(!word_is_local) positions$word_i = local_position(positions$word_i, positions$doc_id, presorted=T) ## make words locally unique within documents
 
   ## match meta
   docs = unique(positions$doc_id)
@@ -237,47 +252,6 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   tc
 }
 
-tokenize_to_dataframe <- function(x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F){
-  batch_i = get_batch_i(length(doc_id), batchsize=5000, return_list=T)
-  prog = if(verbose) 'text' else 'none'
-  plyr::ldply(batch_i, tokenize_to_dataframe_batch, x=x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, .progress=prog)
-}
-
-tokenize_to_dataframe_batch <- function(batch_i, x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_words=NULL){
-  x = x[batch_i]
-  doc_id = doc_id[batch_i]
-  x = gsub('_', ' ', x, fixed=T)
-  if(split_sentences | !is.null(max_sentences)) {
-    x = quanteda::tokenize(x, what = 'sentence')
-    names(x) = doc_id
-    if(!is.null(max_sentences)) x = sapply(x, head, max_sentences)
-    x = plyr::ldply(x, function(x) unlist_to_df(quanteda::tokenize(x, what='word'), global_position=T))
-    if(!is.null(max_words)) x = x[x$position <= max_words,]
-    colnames(x) = c('doc_id','sent_i','word_i','word')
-  } else {
-    x = quanteda::tokenize(x, what = 'word')
-    if(!is.null(max_words)) x = sapply(x, head, max_words)
-    x = unlist_to_df(x, doc_id)
-    colnames(x) = c('doc_id', 'word_i', 'word')
-  }
-  x$word = as.factor(x$word)
-  x$doc_id = as.factor(x$doc_id)
-  x
-}
-
-unlist_to_df <- function(l, ids=1:length(l), global_position=F){
-  len = sapply(l, length)
-  filter = len > 0
-  if(global_position){
-    position = 1:sum(len)
-  } else {
-    position = unlist(sapply(len[filter], function(l) 1:l, simplify = F))
-  }
-  data.frame(id = rep(ids[filter], len[filter]),
-             position = position,
-             value = unlist(l[filter]))
-}
-
 #### FUNCTIONS FOR CREATING AND CHANGING THE TCORPUS ####
 
 ## manage data
@@ -300,6 +274,7 @@ get_data <- function(tc, columns=NULL, as_data_frame=F) {
   data
 }
 
+#' @export
 n_data <- function(tc) nrow(tc@data)
 
 #' @export
@@ -346,14 +321,24 @@ featurenames <- function(tc) {
 }
 
 #' @export
-get_context <- function(tc, context_level = c('document','sentence')){
+get_context <- function(tc, context_level = c('document','sentence'), with_labels=T){
   is_tcorpus(tc)
 
   context_level = match.arg(context_level)
-  if(context_level == 'document') context = get_column(tc, 'doc_id')
+  if(context_level == 'document') {
+    context = get_column(tc, 'doc_id')
+    if(!with_labels) context = factor(as.numeric(context))
+  }
   if(context_level == 'sentence') {
     if(is.null(get_column(tc, 'sent_i'))) stop('Sentence level not possible, since no sentence information is available. To enable sentence level analysis, use split_sentences = T in "create_tcorpus()" or specify sent_i_col in "tokens_to_tcorpus()"')
-    context = factor(global_position(get_column(tc, 'sent_i'), get_column(tc, 'doc_id'), presorted = T))
+    d = get_data(tc)
+    if(with_labels){
+      ucontext = unique(d[,c('doc_id','sent_i')])
+      ucontext = stringi::stri_paste(ucontext$doc_id, ucontext$sent_i, sep='#')
+      context = factor(global_position(d$sent_i, d$doc_id, presorted = T), labels = ucontext)
+    } else {
+      context = factor(global_position(d$sent_i, d$doc_id, presorted = T))
+    }
   }
   context
 }
@@ -381,6 +366,7 @@ get_meta <- function(tc, columns=NULL, as_data_frame=F, per_token=F) {
   meta
 }
 
+#' @export
 n_meta <- function(tc) {
   is_tcorpus(tc, T)
   if(is(tc, 'shattered_tCorpus')) return(get_info(stc)$n_meta) else return(nrow(tc@meta))

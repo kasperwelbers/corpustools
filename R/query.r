@@ -1,23 +1,32 @@
-REGEX_ALLOW_SYMBOLS = '([+*?.a-z0-9%@$€:;#/~_-]+)'
+REGEX_ALLOW_SYMBOLS = '([\\[\\+*?\\.a-z0-9%@$€:;#/~_-]+)'
+
+## add case sensitive search
+## look for alternative to as_ascii with iconv? Or just allow as_ascii in search for latin languages? (it's nice to not care about accents)
+## make a test function that creates a tCorpus with every possible character as a 1 char word, and then search this corpus with queries for each character to see whether it hits
+
 
 parse_queries <- function(query){
-  query = iconv(query, to='ASCII//TRANSLIT') # if present, try to remove accented characters
+  #query = iconv(query, to='ASCII//TRANSLIT') # remove accented characters
+  query = gsub(' +', ' ', query)
 
   query = gsub(' OR ', ' | ', query)
   query = gsub(' AND ', ' & ', query)
   query = gsub(' NOT ', ' &! ', query)
 
   ## also allow empty space as OR
-  query = gsub('(?<=[+*?.a-zA-Z0-9/~_)-])[ ]+(?=[+*?.a-zA-Z0-9/~_(-])', ' | ', query, perl=T)
+  query = gsub('(?<=[+*?".a-zA-Z0-9/~_)-])[ ]+(?=[+*?".a-zA-Z0-9/~_(-])', ' | ', query, perl=T)
 
   ## parts of the string between quotes are treated as single query terms
   ## if within quotations, spaces stay spaces. Except within parentheses within quotes, spaces are again OR statements
   ## if ~[0-9] after quotes (used to indicate word proximities) take these along as well
-  rematch = regexpr('".*"(~[0-9]+)?', query)
-  for(m in regmatches(query, rematch)) {
-    if(grepl('&', m)) stop('Queries cannot contain &/AND statements within quotes')
+  quotes = regmatches(query, gregexpr('(\").*?(\"(~[0-9]+)?)', query, perl = T))[[1]]
+  for(m in quotes) {
+    #if(grepl('& ', m)) stop('Queries cannot contain &/AND statements within quotes')
+    #m = gsub('&', '\\&', m)
+
     replacewith = sprintf('{%s}', m) ## surround with {} to keep entire string as single term
-    replacewith = gsub(' | ', ' ', replacewith, fixed=T) # replace space with underscore and remove quotes
+    replacewith = gsub(' | ', ' ', replacewith, fixed=T)
+    replacewith = gsub('&', ' & ', replacewith)
     query = gsub(m, replacewith, query, fixed=T)
 
     parmatch = regexpr('\\(.*\\)', query)
@@ -29,8 +38,10 @@ parse_queries <- function(query){
   ## make " * ", as a 'find all' solution, an immediate TRUE
   query = tolower(query) # safety first: for the odd possibility that someone uses T or F as a query term, which would be interpreted as TRUE or FALSE
   query = gsub('(?<= )\\*(?= )|(?<=^)\\*(?= )', 'T', query, perl=T)
+  query = gsub(' +', ' ', query)
 
-  split_regex = paste('(?<={).*(?=})', REGEX_ALLOW_SYMBOLS, sep='|') ##
+  split_regex = paste('(?<={).*?(?=})', REGEX_ALLOW_SYMBOLS, sep='|') ##
+
   query_form = as.list(gsub(split_regex, '%s', query, perl=T)) # note that uppercase is not replaced, to keep the TRUE
   query_terms = regmatches(query, gregexpr(split_regex, query, perl=T))
 
@@ -80,6 +91,8 @@ get_feature_regex <- function(terms, default_window=NA){
   terms$regex = gsub(REGEX_ALLOW_SYMBOLS, '\\\\b\\1\\\\b', terms$regex) ## add word boundaries
   unique(terms)
 }
+
+
 
 qualify_queries <- function(queries){
   boo = c()

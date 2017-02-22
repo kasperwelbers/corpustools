@@ -5,7 +5,7 @@
 \title{Get a data.table for quick lookup of features}
 \usage{
 get_feature_index(tc, feature = "word", context_level = "document",
-  max_window_size = 100)
+  max_window_size = 100, as_ascii = F)
 }
 \arguments{
 \item{max_window_size}{}

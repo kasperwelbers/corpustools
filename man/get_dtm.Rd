@@ -7,7 +7,7 @@
 get_dtm(tc, feature, context_level = c("document", "sentence"),
   weight = c("termfreq", "docfreq", "tfidf", "norm_tfidf"),
   drop_empty_terms = T, form = c("Matrix", "tm_dtm", "quanteda_dfm"),
-  subset_tokens = NULL, subset_meta = NULL)
+  subset_tokens = NULL, subset_meta = NULL, with_labels = T)
 }
 \arguments{
 \item{context_level}{}

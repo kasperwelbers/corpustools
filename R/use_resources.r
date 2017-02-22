@@ -17,13 +17,13 @@ normalize_string <- function(x, lowercase=T, ascii=T, trim=T){
 }
 
 
-use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsize=50000, flatten_colloc=T, lowercase=F, verbose=F){
+use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsize=50000, flatten_colloc=T, lowercase=F, ascii=F, verbose=F){
   fi = get_feature_index(tc)
 
-  levels(fi$feature) = normalize_string(levels(fi$feature), lowercase=lowercase)
+  levels(fi$feature) = normalize_string(levels(fi$feature), lowercase=lowercase, ascii = ascii)
   setkey(fi, 'feature')
 
-  re$string = normalize_string(re$string, lowercase=lowercase)
+  re$string = normalize_string(re$string, lowercase=lowercase, ascii=ascii)
 
 
   if(flatten_colloc) {

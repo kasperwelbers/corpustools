@@ -5,7 +5,8 @@
 \title{Create a tcorpus based on tokens (i.e. preprocessed texts)}
 \usage{
 tokens_to_tcorpus(tokens, doc_col = "doc_id", word_i_col = NULL,
-  sent_i_col = NULL, meta = NULL, meta_cols = NULL, feature_cols = NULL)
+  sent_i_col = NULL, meta = NULL, meta_cols = NULL, feature_cols = NULL,
+  sent_is_local = F, word_is_local = F)
 }
 \arguments{
 \item{tokens}{A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (word_i_col)}
@@ -21,6 +22,10 @@ tokens_to_tcorpus(tokens, doc_col = "doc_id", word_i_col = NULL,
 \item{meta_cols}{Alternatively, if there are document meta columns in the tokens data.table, meta_cols can be used to recognized them. Note that these values have to be unique within documents.}
 
 \item{feature_cols}{Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)}
+
+\item{sent_is_local}{Sentences in the tCorpus must be locally unique within documents. If sent_is_local is FALSE, then sentences are made sure to be locally unique. However,  it is then assumed that the first sentence in a document is sentence 1, which might not be the case if tokens (input) is a subset. If you know for a fact that the sentence column in tokens is already locally unique, you can set sent_is_local to TRUE to keep the original sent_i values.}
+
+\item{word_is_local}{Same as sent_is_local, but or word_i}
 }
 \description{
 Create a tcorpus based on tokens (i.e. preprocessed texts)

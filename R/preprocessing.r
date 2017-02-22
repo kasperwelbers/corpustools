@@ -20,7 +20,7 @@ preprocess_feature <- function(tc, column, new_column, language='english', use_s
   if(ngrams == 1) {
     feature = preprocess_words(feature, context=NA, language=language, use_stemming=use_stemming, lowercase=lowercase)
   } else {
-    context = get_context(tc, context_level=ngram_context)
+    context = get_context(tc, context_level=ngram_context, with_labels = F)
     feature = preprocess_words(feature, context=context, language=language, use_stemming=use_stemming, lowercase=lowercase, ngrams = ngrams, remove_accented=remove_accented)
   }
   set_column(tc, new_column, feature)

@@ -5,9 +5,9 @@
 #' @param context_level
 #'
 #' @export
-get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL){
+get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, with_labels=T){
   is_tcorpus(tc, T)
-  if(is(tc, 'shattered_tCorpus')) return(shard_get_dtm(stc=tc, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form))
+  if(is(tc, 'shattered_tCorpus')) return(shard_get_dtm(stc=tc, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form, with_labels=with_labels))
 
   subset_tokens = if(is(substitute(subset_tokens), 'call')) as.character(deparse(substitute(subset_tokens)))
   subset_meta = if(is(substitute(subset_meta), 'call')) as.character(deparse(substitute(subset_meta)))
@@ -22,7 +22,7 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   if(form == 'tm_dtm') if(!require(tm)) stop('form is set to tm_dtm, but the tm package is not installed.')
   if(form == 'quanteda') if(!require(quanteda)) stop('form is set to quanteda_dtm, but the quanteda package is not installed.')
 
-  i = get_context(tc, context_level)
+  i = get_context(tc, context_level, with_labels = with_labels)
   feature = get_column(tc, feature)
   if(drop_empty_terms) feature = droplevels(feature)
   notNA = !is.na(feature)
@@ -54,4 +54,11 @@ weight_dtm <- function(m, weight){
     m = m > 0
   }
   as(as(m,'dgCMatrix'), 'dgTMatrix')
+}
+
+tm_dtm_to_dgTMatrix <- function(dtm){
+  sm = spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
+  rownames(sm) = rownames(dtm)
+  colnames(sm) = colnames(dtm)
+  sm
 }

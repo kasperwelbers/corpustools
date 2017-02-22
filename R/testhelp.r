@@ -7,7 +7,7 @@ sourceall <- function(){
 
 demo_tc <- function(){
   data(sotu_texts)
-  create_tcorpus(sotu_texts, 'text', doc_column = 'id')
+  create_tcorpus(sotu_texts, 'text', doc_column = 'id', split_sentences = T)
 }
 
 demo_stc <- function(){

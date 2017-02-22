@@ -42,7 +42,7 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
     sent_col = NULL
   }
 
-  tokens_to_tcorpus(data, doc_col='doc_id', sent_i_col=sent_col, word_i_col='word_i', meta=meta)
+  tokens_to_tcorpus(data, doc_col='doc_id', sent_i_col=sent_col, word_i_col='word_i', meta=meta, sent_is_local = T, word_is_local = T)
 }
 
 #' Merge tCorpus shards
@@ -56,9 +56,13 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
 merge_shards <- function(shards){
   tc = tCorpus(data=rbindlist(lapply(shards, get_data)),
                meta=rbindlist(lapply(shards, get_meta)),
-               feature_index=rbindlist(lapply(shards, get_feature_index)),
+               feature_index=data.table(),
                p = get_provenance(shards[[1]]))
   set_keys(tc)
+  p = get_provenance(tc)
+  if(p$feature_index){
+    tc = set_feature_index(tc, feature = p$feature, context_level = p$context_level, max_window_size = p$max_window_size)
+  }
   tc
 }
 

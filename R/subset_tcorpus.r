@@ -127,10 +127,10 @@ i_window <- function(tc, i, window, context_level=c('document','sentence')){
 #' @return a tCorpus object
 #' @export
 subset_query_window <- function(tc, window, keyword=NA, condition=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, verbose=F){
-  hits = search_features(tc, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, only_last_mword=F, verbose=verbose)
-  tc = subset_window(tc, i=hits$i, window=window, context_level = context_level)
+  hits = search_features(tc, keyword=keyword, condition=condition, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, only_last_mword=F, verbose=verbose)
+  tc = subset_window(tc, i=hits$i, window=window, context_level = 'document')
+  tc
 }
-
 
 subset_i <- function(tc, subset=NA, subset_meta=NA){
   ## subset and subset_meta can be either a call or a character vector of length 1

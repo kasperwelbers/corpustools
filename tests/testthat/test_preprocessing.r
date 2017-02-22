@@ -6,7 +6,6 @@ test_that("preprocessing works", {
                       id = 1:18,
                       word = c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte'))
   tc = tokens_to_tcorpus(tokens, doc_col ='document', word_i_col = 'id')
-
   ## test preprocess_feature
   word = get_column(tc, 'word')
 

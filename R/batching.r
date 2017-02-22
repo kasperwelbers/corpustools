@@ -13,15 +13,16 @@ get_batch_i <- function(n, n.batches=NA, batchsize=NA, return_list=F, return_vec
 }
 
 data_batch <- function(tc, context_level, n.batches=10, batchsize=NA, return_list=F, return_vector=F, for_meta=F){
-  con_id = get_context(tc, context_level)
-  if(!is.na(batchsize)) n.batches = ceiling(length(con_id) / batchsize)
-
   if(for_meta) {
     if(!context_level == 'document') stop('for_meta only possible if context is document')
+    con_id = get_context(tc, context_level, with_labels = T)
     match_id = as.character(get_meta_column(tc, 'doc_id'))
   } else {
+    con_id = get_context(tc, context_level, with_labels = F)
     match_id = con_id
   }
+
+  if(!is.na(batchsize)) n.batches = ceiling(length(con_id) / batchsize)
 
   if(!n.batches == 1){
     break_each = floor(length(con_id) / n.batches)

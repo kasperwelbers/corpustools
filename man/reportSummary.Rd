@@ -4,8 +4,8 @@
 \alias{reportSummary}
 \title{Title}
 \usage{
-reportSummary(tokens, hits = NULL, token_i = NULL, hitcount = T,
-  tokenfreq = T, keywordIC = T, kwic_nwords = 10, kwic_sample = 10,
+reportSummary(tc, hits = NULL, token_i = NULL, hitcount = T,
+  tokenfreq = T, kwic = T, kwic_nwords = 10, kwic_sample = 10,
   random_sample = T, doc.col = getOption("doc.col", "doc_id"),
   position.col = getOption("position.col", "position"),
   feature.col = getOption("wor.col", "word"))

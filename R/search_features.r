@@ -63,11 +63,10 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   windows = na.omit(get_feature_regex(queries$condition, default_window = NA)$window)
   max_window_size = if(length(windows) > 0) max(windows) else 0
 
-
-  fi = get_feature_index(tc, feature=feature, context_level='document', max_window_size = max_window_size)
-
+  fi = get_feature_index(tc, feature=feature, context_level='document', max_window_size = max_window_size, as_ascii=T)
   search_features_loop(tc, fi=fi, queries=queries, feature=feature, only_last_mword=only_last_mword, keep_false_condition=keep_false_condition, verbose=verbose)
 }
+
 
 search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep_false_condition, verbose){
   res = list()
@@ -76,7 +75,7 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
     code = queries$code[i]
     if(verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
     kw = queries$keyword[i]
-    hit = search_string(tc, fi, queries$keyword[i], allow_proximity = F, only_last_mword = only_last_mword)
+    hit = search_string(tc, fi, queries$keyword[i], allow_proximity = T, only_last_mword = only_last_mword)
     hit$doc_id = get_column(tc, 'doc_id')[hit$i]
 
     ## take subset into account
@@ -108,15 +107,17 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
     }
 
     if(!keep_false_condition) {
-      res[[code]] = hit[hit$condition, c('feature','i','doc_id')]
+      res[[code]] = hit[hit$condition, c('feature','i','doc_id','hit_id')]
     } else {
-      res[[code]] = hit[,c('feature','i','doc_id','condition')]
+      res[[code]] = hit[,c('feature','i','doc_id','condition','hit_id')]
     }
 
   }
   hits = plyr::ldply(res, function(x) x, .id='code')
-  if(nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor())
-  hits[order(hits$i),]
+  if(nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor(), hit_id=numeric())
+  hits = hits[order(hits$i),]
+  hits$hit_id = match(hits$hit_id, unique(hits$hit_id))
+  hits
 }
 
 evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=NA){
@@ -136,6 +137,7 @@ evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=N
       for(i in which(con_regex$regex == con_regex_term)){
         term = as.character(con_regex$term[i])
         window = con_regex$window[i]
+        ## windowdir = gsub('.*(~[<>]?).*', '\\1', con_regex$term[i])
 
         if(is.na(window)) {
           con_doc = tc@data[con_hit$i,]$doc_id

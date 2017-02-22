@@ -26,7 +26,7 @@ feature_from_resource <- function(tc, resource='jrc_names', new_feature=resource
   re = load_resource(resource, resource_path)
   if(resource == 'jrc_names') {
     if(batchsize == 'default') batchsize = 50000
-    index = use_stringmatch_resource(tc, re[,c('string','id')], regex_sep = '\\+', case_sensitive = T, batchsize = batchsize, flatten_colloc = T, verbose=verbose)
+    index = use_stringmatch_resource(tc, re[,c('string','id')], regex_sep = '\\+', case_sensitive = T, lowercase = F, ascii=F, batchsize = batchsize, flatten_colloc = T, verbose=verbose)
   }
 
   index$id = as.factor(index$id)
@@ -92,7 +92,7 @@ set_resources_path <- function(path=NULL) options(tcorpus_resources=path)
 load_resource <- function(resource=c('jrc_names'), local_path=getOption('tcorpus_resources', NULL)){
   resource = match.arg(resource)
   fname = make_filename(local_path, resource)
-  if(!file.exists(fname)) stop(sprintf('this resource has not yet been downloaded. You can use: download_resource("%s")', resource))
+  if(!file.exists(fname)) stop(sprintf('this resource has not yet been downloaded, or not to this path. You can use: download_resource("%s")', resource))
 
   if(resource == 'jrc_names') message('By using JRC-NAMES you agree to its usage conditions:\nhttps://ec.europa.eu/jrc/en/language-technologies/jrc-names\n')
   readRDS(fname)
