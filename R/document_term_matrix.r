@@ -5,7 +5,7 @@
 #' @param context_level
 #'
 #' @export
-get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, with_labels=T){
+get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, with_labels=T, context=NULL){
   is_tcorpus(tc, T)
   if(is(tc, 'shattered_tCorpus')) return(shard_get_dtm(stc=tc, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form, with_labels=with_labels))
 
@@ -20,9 +20,9 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   form = match.arg(form)
 
   if(form == 'tm_dtm') if(!require(tm)) stop('form is set to tm_dtm, but the tm package is not installed.')
-  if(form == 'quanteda') if(!require(quanteda)) stop('form is set to quanteda_dtm, but the quanteda package is not installed.')
+  if(form == 'quanteda_dfm') if(!require(quanteda)) stop('form is set to quanteda_dfm, but the quanteda package is not installed.')
 
-  i = get_context(tc, context_level, with_labels = with_labels)
+  i = if (!is.null(context)) context else get_context(tc, context_level, with_labels = with_labels)
   feature = get_column(tc, feature)
   if(drop_empty_terms) feature = droplevels(feature)
   notNA = !is.na(feature)
