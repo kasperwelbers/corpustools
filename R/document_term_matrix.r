@@ -58,3 +58,5 @@ tm_dtm_to_dgTMatrix <- function(dtm){
   colnames(sm) = colnames(dtm)
   sm
 }
+
+?tCorpus
