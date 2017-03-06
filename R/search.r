@@ -90,10 +90,11 @@ multiword_grepl <- function(fi, mwords, only_last=T, ignore.case=T, perl=F, useB
       keep = possible_positions_found %in% possible_positions_start ## intersect from start to end to account for multiple words in 1
       hit = list(global_i=possible_positions_found[keep], hit_id=hit_id_exp[keep])
     }
-    hits[['']] = hit
+    if (length(hit$global_i) > 0) hits[['']] = hit
   }
   rbindlist(hits)
 }
+
 
 proximity_grepl <- function(fi, pwords, windows, only_last=T, ignore.case=T, perl=F, useBytes=T){
   hits = list()

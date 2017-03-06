@@ -20,6 +20,8 @@
 #' }
 #'
 #' @name tCorpus
+#' @aliases tcorpus
+#' @export
 NULL
 
 #' Creating a tCorpus
