@@ -11,18 +11,18 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
   keep_meta = match.arg(keep_meta)
 
   tc_list = list(...)
-  if(length(tc_list) == 1 & class(tc_list[[1]]) == 'list') tc_list = tc_list[[1]]
-  for(i in 1:length(tc_list)) if(!is(tc_list[[i]], 'tCorpus')) stop(sprintf('%s is not a tCorpus object', names(tc_list)[i]))
+  if (length(tc_list) == 1 & class(tc_list[[1]]) == 'list') tc_list = tc_list[[1]]
+  for(i in 1:length(tc_list)) if (!is(tc_list[[i]], 'tCorpus')) stop(sprintf('%s is not a tCorpus object', names(tc_list)[i]))
 
-  if(keep_data == 'intersect') {
-    cnames = lapply(tc_list, function(x) colnames(get_data(x)))
+  if (keep_data == 'intersect') {
+    cnames = lapply(tc_list, function(x) colnames(x$data()))
     cnames = Reduce(intersect, cnames)
-    data = plyr::ldply(lapply(tc_list, get_data, columns=cnames), .id = NULL)
+    data = plyr::ldply(lapply(tc_list, function(x) x$data(), columns=cnames), .id = NULL)
   } else {
-    data = plyr::ldply(lapply(tc_list, get_data), .id = NULL)
+    data = plyr::ldply(lapply(tc_list, function(x) x$data()), .id = NULL)
   }
 
-  if(keep_meta == 'intersect') {
+  if (keep_meta == 'intersect') {
     cnames = lapply(tc_list, function(x) colnames(get_meta(x)))
     cnames = Reduce(intersect, cnames)
     meta = plyr::ldply(lapply(tc_list, get_meta, columns=cnames), .id = 'subcorpus')
@@ -30,8 +30,8 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
     meta = plyr::ldply(lapply(tc_list, get_meta), .id = 'subcorpus')
   }
 
-  if('sent_i' %in% colnames(data)){
-    if(any(is.na(data$sent_i))) {
+  if ('sent_i' %in% colnames(data)){
+    if (any(is.na(data$sent_i))) {
       warning('sent_i contains NAs after merging, and is therefore deleted')
       data$sent_i = NULL
       sent_col = NULL
@@ -54,15 +54,10 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
 #' @return a tCorpus object
 #' @export
 merge_shards <- function(shards){
-  tc = tCorpus(data=rbindlist(lapply(shards, get_data)),
-               meta=rbindlist(lapply(shards, get_meta)),
-               feature_index=data.table(),
-               p = get_provenance(shards[[1]]))
-  set_keys(tc)
-  p = get_provenance(tc)
-  if(p$feature_index){
-    tc = set_feature_index(tc, feature = p$feature, context_level = p$context_level, max_window_size = p$max_window_size)
-  }
+  tc = tCorpus$new(data=rbindlist(lapply(shards, function(x) x$data())),
+                   meta=rbindlist(lapply(shards, function(x) x$meta())),
+                   p = shards[[1]]$provenance())
+  tc$set_keys()
   tc
 }
 

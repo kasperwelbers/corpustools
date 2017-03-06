@@ -1,7 +1,7 @@
 verbose_counter <- function(n, i=0, ticks=10){
   function() {
     i <<- i + 1
-    if(i %% ticks == 0) message(cat(i, ' / ', n, '\n'))
+    if (i %% ticks == 0) message(cat(i, ' / ', n, '\n'))
   }
 }
 

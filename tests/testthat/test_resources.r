@@ -1,8 +1,8 @@
 test_jrcnames <- function(tc){
   capture_output({
     download_resource('jrc_names')
-    tc = feature_from_resource(tc, verbose=T)
-    d = get_data(tc)
+    tc = tc$jrc_names(batchsize = 9999999)
+    d = tc$data()
   })
   expect_equal(as.character(na.omit(d$jrc_names)), c('1510','2042','76099', '76099'))
   expect_equal(as.character(na.omit(d$jrc_names_l)), c('Barack Obama','Donald Trump', 'Mark Rutte', 'Mark Rutte'))

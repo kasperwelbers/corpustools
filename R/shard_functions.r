@@ -3,7 +3,10 @@
 ## naturally, this only works for functions where a sharded approach is possible (or at least currently implemented)
 ## so functions that are not possible
 
-parse_mcall <- function(mcall, tc){
+
+## parse_mcall approach does not always work because fuck you match.call() (it won't work when arguments are not explicitly given, e.g. when using mapply)
+## perhaps this isn't worth solving, since mapplying over a shattered tcorpus would be a very rare thing to do
+parse_mcall <- function(mcall){
   mcall = as.list(mcall)
   fun = as.character(mcall[[1]])
   args = mcall[-1][-1] ## remove the function name, and remove the first argument (the tCorpus)
@@ -13,10 +16,10 @@ parse_mcall <- function(mcall, tc){
 shardloop_transform <- function(stc, mcall, verbose){
   ## for any function that only transforms the tCorpus without returning any values
   mcall = parse_mcall(mcall)
-  counter = verbose_sum_counter(n = get_info(stc)$n)
-  for(shard in get_shards(stc)){
+  counter = verbose_sum_counter(n = stc$info()$n)
+  for(shard in stc$shards()){
     tc = readRDS(shard)
-    if(verbose) counter(n_data(shard))
+    if (verbose) counter(shard$n)
     tc = do.call(mcall$fun, c(tc=tc, mcall$args))
     saveRDS(tc, shard)
   }
@@ -25,12 +28,12 @@ shardloop_transform <- function(stc, mcall, verbose){
 shardloop_rbind <- function(stc, mcall, verbose){
   ## for any function of which the results can be row binded
   mcall = parse_mcall(mcall)
-  shards = get_shards(stc)
+  shards = stc$shards()
   r = vector('list', length(shards))
-  counter = verbose_sum_counter(n = get_info(stc)$n)
+  counter = verbose_sum_counter(n = stc$info()$n)
   for(i in seq_along(shards)){
     tc = readRDS(shards[i])
-    if(verbose) counter(n_data(tc))
+    if (verbose) counter(tc$n)
     r[[i]] = do.call(mcall$fun, c(tc=tc, mcall$args))
   }
   rbindlist(r)
@@ -48,36 +51,4 @@ shard_feature_cooccurrence <- function(tc, feature, matrix_mode=c('dtm', 'window
 
   NULL
 }
-
-
-
-
-shard_recode_column <- function(stc, column, new_value, i=NULL, old_value=NULL){
-  NULL
-}
-
-#shard_set_feature_index <- function(stc, feature='word', context_level=c('document','sentence'), max_window_size=100) {
-#  NULL
-#}
-
-shard_reset_feature_index <- function(stc) {
-  NULL
-}
-
-shard_delete_feature_index <- function(stc) {
-  NULL
-}
-
-shard_get_dtm <- function(stc, feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm')){
-  NULL
-}
-
-shard_preprocess_feature <- function(stc, column, new_column, language='english', use_stemming=F, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), remove_accented=F){
-  NULL
-}
-
-shard_filter_feature <- function(stc, column, new_column, filter){
-  NULL
-}
-
 

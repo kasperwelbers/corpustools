@@ -10,15 +10,16 @@ use_search_resource <- function(tc, re, batchsize, verbose){
 ### therefore, the following functions are optimized for mathing many strings at once, as opposed to the more versatile search_features function.
 
 normalize_string <- function(x, lowercase=T, ascii=T, trim=T){
-  if(lowercase) x = tolower(x)
-  if(ascii) x = iconv(x, to='ASCII//TRANSLIT')
-  if(trim) x = stringi::stri_trim(x)
+  if (lowercase) x = tolower(x)
+  if (ascii) x = iconv(x, to='ASCII//TRANSLIT')
+  if (trim) x = stringi::stri_trim(x)
   x
 }
 
 
-use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsize=50000, flatten_colloc=T, lowercase=F, ascii=F, verbose=F){
-  fi = get_feature_index(tc)
+use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsize=50000, flatten_colloc=T, lowercase=F, ascii=F, low_memory=T, verbose=F){
+  if (!'word' %in% tc$names) stop('To use resources that use string matching, the tCorpus must hvae a feature column with clean (not preprocessed) text, labeled "word"')
+  fi = tc$feature_index(feature = 'word')
 
   levels(fi$feature) = normalize_string(levels(fi$feature), lowercase=lowercase, ascii = ascii)
   setkey(fi, 'feature')
@@ -26,9 +27,9 @@ use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsiz
   re$string = normalize_string(re$string, lowercase=lowercase, ascii=ascii)
 
 
-  if(flatten_colloc) {
+  if (flatten_colloc) {
     is_colloc = grep(' |_', levels(fi$feature))
-    if(length(is_colloc) > 0){
+    if (length(is_colloc) > 0){
       fi = flatten_collocations(fi, 'feature', 'global_i')
       message(sprintf('flattened %s collocations', length(is_colloc)))
     } else {
@@ -36,13 +37,16 @@ use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsiz
       flatten_colloc = F ## if there are no collocations, ignore flatten_colloc == T
     }
   }
-  #if(use_regex) re = expand_resource_regex(re, features=levels(fi$features)) ## not yet implemented. expand resource ir use_regex=T: if there are regular expressions in the resource and use_regex==T, then first stringmatch the regex in the vocabulary and expand the resource with all returned strings
+  #if (use_regex) re = expand_resource_regex(re, features=levels(fi$features)) ## not yet implemented. expand resource ir use_regex=T: if there are regular expressions in the resource and use_regex==T, then first stringmatch the regex in the vocabulary and expand the resource with all returned strings
   ## make batches of the resource
 
   n.batches = ceiling(nrow(re) / batchsize)
   re = re[order(re$string),]
-  batch_i = rep(1:n.batches, length.out=nrow(re)) ## distribute evenly over batches (basically UNordered by alphabet) so that frequently occuring names (that lead to huge matches) are more evenly distributed
-  #batch_i = batch_i[order(batch_i)] ## alternatively, ordering by alphabet is probably faster for matching, but my current guess is that memory is more important than speed
+  if (low_memory) {
+    batch_i = rep(1:n.batches, length.out=nrow(re)) ## distribute evenly over batches (basically UNordered by alphabet) so that frequently occuring names (that lead to huge matches) are more evenly distributed
+  } else {
+    batch_i = batch_i[order(batch_i)] ## alternatively, ordering by alphabet is probably faster for matching, but my current guess is that memory is more important than speed
+  }
   batches = split(re, batch_i)
 
   ## find the candidate matches
@@ -51,9 +55,9 @@ use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsiz
   counter = verbose_sum_counter(nrow(re))
   for(i in seq_along(batches)){
     candidates[[i]] = fast_multiword_stringmatch(batches[[i]], fi=fi, gf=gf, regex_sep=regex_sep, case_sensitive=case_sensitive)
-    if(verbose) counter(nrow(batches[[i]]))
+    if (verbose) counter(nrow(batches[[i]]))
   }
-  if(verbose) message('Binding results')
+  if (verbose) message('Binding results')
   candidates = rbindlist(candidates)
 
   ## select candidates (at some point candidate selection could be done better. Perhaps even taking context into account. BUT NOT TODAY!!)
@@ -64,7 +68,7 @@ use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsiz
   index_i = rep(1:nrow(candidates), times=candidates$nterms)
   index_nr = unlist(sapply(candidates$nterms, function(x) seq(1,x), simplify = F))
   index = candidates[index_i, c('global_i','id', 'i')]
-  if(flatten_colloc){
+  if (flatten_colloc){
     ## if collocations have been flattened, the real i in the tcorpus (which is still a collocation) has multiple global_i (which have been flattened)
     index$global_i = index$global_i + (index_nr - 1)
     index$i = fi$i[match(index$global_i, fi$global_i)]
@@ -85,7 +89,7 @@ global_feature_vector <- function(fi){
 fast_multiword_stringmatch <- function(re, fi, gf, regex_sep, case_sensitive=T){
   i = 1:length(re$string)
 
-  if(!case_sensitive) {
+  if (!case_sensitive) {
     string = tolower(re$string)
     levels(fi$feature) = tolower(levels(fi$feature))
   }
@@ -101,7 +105,7 @@ fast_multiword_stringmatch <- function(re, fi, gf, regex_sep, case_sensitive=T){
   lt = lt[!is_end,]
 
   for(i in 1:length(candidates)){
-    if(nrow(lt) == 0) break
+    if (nrow(lt) == 0) break
     hit = sapply(sn[lt$s_i], function(x) x[i+1]) == gf[lt$global_i + i]
     hit[is.na(hit)] = F
     lt = lt[hit,]

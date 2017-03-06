@@ -5,9 +5,9 @@ calc_chi2 <- function(a,b,c,d, correct=T, cochrans_criteria=F){
   n = a+b+c+d
 
   sums = cbind(c1 = a+c, c2 = b+d, r1 = a+b, r2 = c+d)
-  yates_correction = if(correct) rep(T, nrow(sums)) else rep(F, nrow(sums))
+  yates_correction = if (correct) rep(T, nrow(sums)) else rep(F, nrow(sums))
 
-  if(cochrans_criteria){
+  if (cochrans_criteria){
     ## apply Cochrans criteria: no expected values below 1 and less than 20% of cells empty (which means none in a 2x2 design)
     ## only use the yates_correction if these criteria are violated
     ## http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2041889/ (similar use)
@@ -23,9 +23,4 @@ calc_chi2 <- function(a,b,c,d, correct=T, cochrans_criteria=F){
   ifelse(is.na(chi), 0, chi)
 }
 
-
-good_turing <- function(term, freq){
-  ##https://github.com/Bioconductor-mirror/edgeR/blob/master/R/goodTuring.R
-  NULL
-  }
 

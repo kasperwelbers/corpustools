@@ -43,27 +43,26 @@
 #' @param subset_meta A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).
 #' @param verbose
 #'
-#' @export
-search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mword=T, verbose=F){
+search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mword=F, verbose=F){
   is_tcorpus(tc, T)
-  if(is_shattered(tc)) return(shardloop_rbind(stc=tc, mcall=match.call(), verbose=verbose))
+  if (is_shattered(tc)) return(shardloop_rbind(stc=tc, mcall=match.call(), verbose=verbose))
 
-  if(is.null(queries)) queries = data.frame(keyword=keyword)
-  if(!'condition' %in% colnames(queries)) queries$condition = condition
-  if(!'code' %in% colnames(queries)) queries$code = code
-  if(!'condition_once' %in% colnames(queries)) queries$condition_once = condition_once
-  if(!'subset_tokens' %in% colnames(queries)) queries$subset_tokens = if(is(substitute(subset_tokens), 'call')) deparse(substitute(subset_tokens)) else subset_tokens
-  if(!'subset_meta' %in% colnames(queries)) queries$subset_meta = if(is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
+  if (is.null(queries)) queries = data.frame(keyword=keyword)
+  if (!'condition' %in% colnames(queries)) queries$condition = condition
+  if (!'code' %in% colnames(queries)) queries$code = code
+  if (!'condition_once' %in% colnames(queries)) queries$condition_once = condition_once
+  if (!'subset_tokens' %in% colnames(queries)) queries$subset_tokens = if (is(substitute(subset_tokens), 'call')) deparse(substitute(subset_tokens)) else subset_tokens
+  if (!'subset_meta' %in% colnames(queries)) queries$subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
 
-  if(!feature %in% colnames(tc@data)) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(colnames(tc@data)[!colnames(tc@data) %in% c('doc_id','sent_i','word_i','filter')],collapse=', ')))
-  if(any(is.na(queries$keyword))) stop('keyword cannot be NA. Provide either the keyword or queries argument')
+  if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(colnames(tc@data)[!colnames(tc@data) %in% c('doc_id','sent_i','word_i','filter')],collapse=', ')))
+  if (any(is.na(queries$keyword))) stop('keyword cannot be NA. Provide either the keyword or queries argument')
 
   queries$code = as.character(queries$code)
   queries$code = ifelse(is.na(queries$code), sprintf('query_%s', 1:nrow(queries)), queries$code)
   windows = na.omit(get_feature_regex(queries$condition, default_window = NA)$window)
-  max_window_size = if(length(windows) > 0) max(windows) else 0
+  max_window_size = if (length(windows) > 0) max(windows) else 0
 
-  fi = get_feature_index(tc, feature=feature, context_level='document', max_window_size = max_window_size, as_ascii=T)
+  fi = tc$feature_index(feature=feature, context_level='document', max_window_size=max_window_size, as_ascii=T)
   search_features_loop(tc, fi=fi, queries=queries, feature=feature, only_last_mword=only_last_mword, keep_false_condition=keep_false_condition, verbose=verbose)
 }
 
@@ -73,40 +72,40 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
   n = nrow(queries)
   for(i in 1:n){
     code = queries$code[i]
-    if(verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
+    if (verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
     kw = queries$keyword[i]
-    hit = search_string(tc, fi, queries$keyword[i], allow_proximity = T, only_last_mword = only_last_mword)
-    hit$doc_id = get_column(tc, 'doc_id')[hit$i]
+    hit = search_string(fi, queries$keyword[i], allow_proximity = T, only_last_mword = only_last_mword)
+    hit$doc_id = tc$data('doc_id')[hit$i]
 
     ## take subset into account
     subset_tokens = queries$subset_tokens[i]
     subset_meta = queries$subset_meta[i]
-    if(!is.na(subset_tokens) | !is.na(subset_meta)){
-      if(i == 1) {
+    if (!is.na(subset_tokens) | !is.na(subset_meta)){
+      if (i == 1) {
         i_filter = subset_i(tc, subset=subset_tokens, subset_meta=subset_meta)
       } else { # if subset_tokens and subset_meta are identical to previous query, i_filter does not need to be calculated again (this is easily the case, since its convenient to give a subset globally by passing a single value)
 
-        if(!identical(subset_tokens, queries$subset_tokens[i-1]) | !identical(subset_meta, queries$subset_meta[i-1])) {
+        if (!identical(subset_tokens, queries$subset_tokens[i-1]) | !identical(subset_meta, queries$subset_meta[i-1])) {
           i_filter = subset_i(tc, subset=subset_tokens, subset_meta=subset_meta)
         }
       }
       hit = hit[hit$i %in% i_filter,]
     }
 
-    if(nrow(hit) == 0) next
+    if (nrow(hit) == 0) next
 
-    if(!is.na(queries$condition[i]) & !queries$condition[i] == ''){
+    if (!is.na(queries$condition[i]) & !queries$condition[i] == ''){
       hit$condition = evaluate_condition(tc, fi, hit, queries$condition[i], feature=feature, default_window=NA)
     } else {
       hit$condition = T
     }
 
-    if(queries$condition_once[i]){
+    if (queries$condition_once[i]){
       doc_with_condition = unique(hit$doc_id[hit$condition])
       hit$condition[hit$doc_id %in% doc_with_condition] = T
     }
 
-    if(!keep_false_condition) {
+    if (!keep_false_condition) {
       res[[code]] = hit[hit$condition, c('feature','i','doc_id','hit_id')]
     } else {
       res[[code]] = hit[,c('feature','i','doc_id','condition','hit_id')]
@@ -114,7 +113,7 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
 
   }
   hits = plyr::ldply(res, function(x) x, .id='code')
-  if(nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor(), hit_id=numeric())
+  if (nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor(), hit_id=numeric())
   hits = hits[order(hits$i),]
   hits$hit_id = match(hits$hit_id, unique(hits$hit_id))
   hits
@@ -125,11 +124,11 @@ evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=N
   qm = Matrix::spMatrix(nrow(hit),nrow(con_regex), x=logical())
   colnames(qm) = con_regex$term
 
-  if(nrow(con_regex) == 0){
+  if (nrow(con_regex) == 0){
     return(hit)
   } else {
     hit_doc = unique(hit$doc_id)
-    remaining_features = as.character(unique(get_data(tc)[J(hit_doc), feature, with=F][[1]]))
+    remaining_features = as.character(unique(tc$data()[J(hit_doc), feature, with=F][[1]]))
 
     for(con_regex_term in unique(con_regex$regex)){
       con_hit = fi[J(batch_grep(con_regex_term, remaining_features)), c('i','global_i'), with=F]
@@ -139,8 +138,8 @@ evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=N
         window = con_regex$window[i]
         ## windowdir = gsub('.*(~[<>]?).*', '\\1', con_regex$term[i])
 
-        if(is.na(window)) {
-          con_doc = tc@data[con_hit$i,]$doc_id
+        if (is.na(window)) {
+          con_doc = tc$data('doc_id')[con_hit$i]
           qm[,term] = hit$doc_id %in% con_doc
         } else {
           shifts = -window:window
@@ -167,11 +166,12 @@ evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=N
 #' @param condition_once
 #' @param keyword_filter
 #'
-#' @exports
 search_recode <- function(tc, feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA){
   is_tcorpus(tc, T)
-  if(is(tc, 'shattered_tCorpus')) return(shard_search_recode(stc=tc, feature=feature, new_value=new_value, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta))
+  if (is(tc, 'shattered_tCorpus')) return(shard_search_recode(stc=tc, feature=feature, new_value=new_value, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta))
 
   hits = search_features(tc, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta)
-  recode_column(tc, feature, new_value, i=hits$i)
+  x = as.numeric(as.character(hits$i)) ## for one of those inexplicable R reasons, I cannot directly use this numeric vector.... really no clue at all why
+  tc$set_column(feature, new_value, subset = x)
 }
+

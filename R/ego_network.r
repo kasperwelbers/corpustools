@@ -20,20 +20,20 @@ ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_
   directed = match.arg(directed)
 
   missing = vertex_names[!vertex_names %in% V(g)$name]
-  if(length(missing) == length(vertex_names)) stop('None of the given vertex_names exist in g')
-  if(length(missing) > 0) warning(sprintf('Some of the given vertex_names do not exist in g: [%s]', paste(missing, collapse=', ')))
+  if (length(missing) == length(vertex_names)) stop('None of the given vertex_names exist in g')
+  if (length(missing) > 0) warning(sprintf('Some of the given vertex_names do not exist in g: [%s]', paste(missing, collapse=', ')))
 
   delete.edges(g, E(g))
-  if(!is.na(weight_attr)) {
+  if (!is.na(weight_attr)) {
     adj = get.adjacency(g, type='both', attr = weight_attr)
   } else {
     adj = get.adjacency(g, type='both')
     min_weight = NA; top_edges = NA
   }
   adj = as(adj, 'dgTMatrix')
-  if(is.directed(g)){
-    if(directed == 'out') dt = summary(adj)
-    if(directed == 'in') dt = summary(t(adj))
+  if (is.directed(g)){
+    if (directed == 'out') dt = summary(adj)
+    if (directed == 'in') dt = summary(t(adj))
   } else {
     dt = summary(adj)
   }
@@ -42,7 +42,7 @@ ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_
 
   vertex_ids = which(V(g)$name %in% vertex_names)
   ego = build_ego_network(dt, vertex_ids, level=1, depth=depth, min_weight=min_weight, top_edges=top_edges, max_edges_level=max_edges_level)
-  if(only_filter_vertices){
+  if (only_filter_vertices){
     i = unique(c(ego$x, ego$y))
     g = igraph::delete.vertices(g, which(!1:vcount(g) %in% i))
   } else {
@@ -55,18 +55,18 @@ ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_
 
 build_ego_network <- function(dt, vertex_ids, level, depth, min_weight, top_edges, max_edges_level){
   ego = dt[J(vertex_ids),]
-  if(!is.null(min_weight)) ego = ego[ego$weight >= min_weight,]
-  if(!is.null(top_edges)){
-    thres = if(length(top_edges) == depth) top_edges[depth] else top_edges
+  if (!is.null(min_weight)) ego = ego[ego$weight >= min_weight,]
+  if (!is.null(top_edges)){
+    thres = if (length(top_edges) == depth) top_edges[depth] else top_edges
     ego = ego[order(ego$x, -ego$weight)]
     top = local_position(1:nrow(ego), ego$x)
     ego = ego[top <= thres,]
   }
-  if(!is.null(max_edges_level)) ego = head(ego[order(-ego$weight)], max_edges_level)
+  if (!is.null(max_edges_level)) ego = head(ego[order(-ego$weight)], max_edges_level)
 
   new_vertex_ids = unique(ego$y)
   new_vertex_ids = new_vertex_ids[!new_vertex_ids %in% vertex_ids]
-  if(level < depth) ego = rbind(ego, build_ego_network(dt, vertex_ids=new_vertex_ids,
+  if (level < depth) ego = rbind(ego, build_ego_network(dt, vertex_ids=new_vertex_ids,
                                                            level=level+1, depth=depth,
                                                            min_weight=min_weight, top_edges=top_edges,
                                                            max_edges_level=max_edges_level)) ## build ego network recursively

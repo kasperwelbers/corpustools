@@ -1,21 +1,411 @@
-######  TCORPUS CLASS  ######
-#' tCorpus; a corpus for tokenized texts
-#'
-#' @slot data data.table.
-#' @slot meta data.table.
-#' @slot feature_index data.table.
-#' @slot p list.
-#'
+tCorpus <- R6::R6Class("tCorpus",
+   private = list(
+     .data = NULL,
+     .meta = NULL,
+     .feature_index = NULL,
+     .p = list(),
+
+     set_provenance = function(...){
+       p = list(...)
+       for(key in names(p)) private$.p[[key]] = p[[key]]
+     },
+     is_provenance = function(...){
+       p = list(...)
+       for(key in names(p)) {
+         if (!key %in% names(private$.p)) return(FALSE)
+         if (!private$.p[[key]] == p[[key]]) return(FALSE)
+       }
+       return(TRUE)
+     },
+     select_rows = function(selection) {
+       selection = safe_selection(private$.data, selection)
+       private$.data = subset(private$.data, selection)
+       private$.meta = private$.meta[as.character(unique(private$.data$doc_id)),,nomatch=0]
+       self$reset_feature_index()
+       self$set_keys()
+     },
+     select_meta_rows = function(selection) {
+       selection = safe_selection(private$.meta, selection)
+       private$.meta = subset(private$.meta, selection)
+       private$.data = private$.data[as.character(unique(private$.meta$doc_id)),,nomatch=0]
+       self$reset_feature_index()
+       self$set_keys()
+     }
+   ),
+
+   public = list(
+     clone_on_change = T, ## if TRUE, tCorpus works like 'typical' R (modify on copy). If FALSE, all modifications made using methods will be made to the referenced data. Not needing to copy data is a great boon of R6 as a reference class, but we should keep this optional to facilitate the common R workflow
+
+     initialize = function(data, meta, feature_index=NULL, p=NULL) {
+       private$.data = data.table(data)
+       private$.meta = data.table(meta)
+       private$.p = if (!is.null(p)) p else list()
+       private$.feature_index = if (!is.null(feature_index)) feature_index else NULL
+       self$set_keys()
+     },
+
+
+## SHOW/GET DATA METHODS ##
+     data = function(columns=NULL, keep_df=F, as.df=F) {
+       if (is.null(columns)) {
+         d = data.table::copy(private$.data)
+       } else {
+         d = if (length(columns) > 1 | keep_df) data.table::copy(private$.data[,columns,with=F]) else private$.data[[columns]]
+       }
+       if (as.df) d = as.data.frame(d)
+       d
+     },
+
+     meta = function(columns=NULL, keep_df=F, as.df=F, per_token=F) {
+       if (is.null(columns)) {
+         d = data.table::copy(private$.meta)
+       } else {
+         d = if (length(columns) > 1 | keep_df) data.table::copy(private$.meta[,columns,with=F]) else private$.meta[[columns]]
+       }
+       if (as.df) d = as.data.frame(d)
+       if (per_token) {
+         exp_i = match(tc$data('doc_id'), tc$meta('doc_id'))
+         d = if (is(d, 'data.frame')) d[exp_i,,drop=!keep_df & !is.null(columns)] else d[exp_i]
+       }
+       d
+     },
+
+     provenance = function() private$.p,
+
+     feature_index = function(feature='word', context_level='document', max_window_size=100, as_ascii=F){
+       if (max_window_size < 100) max_window_size = 100 ## always use a window of at least 100,
+       prov = private$.p
+       if (is.null(private$.feature_index)){
+         private$.feature_index = create_feature_index(self, feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=as_ascii)
+         private$set_provenance(index_feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=as_ascii)
+         message('Created feature index')
+       } else {
+         if (!private$is_provenance(index_feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=as_ascii)) {
+           private$.feature_index = create_feature_index(self, feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=as_ascii)
+           private$set_provenance(index_feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=as_ascii)
+           message('Created new feature index')
+         }
+       }
+       private$.feature_index
+     },
+
+     context = function(context_level = c('document','sentence'), with_labels=T){
+       get_context(self, context_level = c('document','sentence'), with_labels=T)
+     },
+
+     dtm = function(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context_labels=T, context=NULL) {
+       get_dtm(self, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form, subset_tokens=subset_tokens, subset_meta=subset_meta, context_labels=context_labels, context=context)
+     },
+
+## DATA MODIFICATION METHODS ##
+     transform = function(..., clone=self$clone_on_change, safe=T) {
+       if (clone) {
+         selfclone = self$clone()$transform(..., clone=F, safe=safe)
+         return(selfclone)
+       }
+       en = elip_names(...)
+       if (any(en == '')) stop('Arguments (...) need to have a name')
+       if (safe & any(en %in% c('doc_id','sent_i','word_i'))) stop('The position columns (doc_id, sent_i, word_i) cannot be set or changed (with safe = T)')
+
+       attach(parent.frame(), warn.conflicts = F) ## enable the use of objects from the environment from which the method is called.
+       private$.data = transform(private$.data, ...)
+       if (any(en %in% self$provenance()$index_feature)) self$reset_feature_index # reset feature index if necessary
+       self$set_keys()
+       invisible(self)
+     },
+
+     within = function(expr, clone=self$clone_on_change, safe=T){
+       if (!class(substitute(expr)) == 'name') expr = deparse(substitute(expr)) ## cannot pass on expression, so make character (if not already parsed, which happens if clone is true)
+       if (clone) {
+         selfclone = self$clone()$within(expr, clone=F, safe=safe)
+         return(selfclone)
+       }
+       en = expr_names(expr)
+       if (safe & any(en %in% c('doc_id','sent_i','word_i'))) stop('The position columns (doc_id, sent_i, word_i) cannot be set or changed (with safe = T)')
+
+       attach(parent.frame(), warn.conflicts = F) ## enable the use of objects from the environment from which the method is called.
+       private$.data = within(private$.data, eval(parse(text=expr)))
+
+       if (any(en %in% self$provenance()$index_feature)) self$reset_feature_index # reset feature index if necessary
+       self$set_keys()
+       invisible(self)
+     },
+
+     set_column = function(column, value, subset=NULL, clone=self$clone_on_change, safe=T){
+       subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
+       if (clone) {
+         selfclone = self$clone()$set_column(column=column, value=value, subset=subset, clone=F, safe=safe)
+         return(selfclone)
+       }
+       if (safe & column %in% c('doc_id','sent_i','word_i')) stop('The position columns (doc_id, sent_i, word_i) cannot be set or changed (with safe = T)')
+       if (!is.null(subset)){
+         r = eval_subset(private$.data, subset)
+         if (!column %in% colnames(private$.data)) private$.data[[column]] = NA
+         private$.data[[column]][r] = value
+       } else {
+         private$.data[[column]] = value
+       }
+       if (identical(self$provenance()$index_feature, column)) self$reset_feature_index # reset feature index if necessary
+       self$set_keys()
+       invisible(self)
+     },
+
+     select_columns = function(cnames, clone=self$clone_on_change){
+       protected_cols = intersect(self$names, c('doc_id', 'sent_i', 'word_i'))
+       if (!any(protected_cols %in% cnames)) stop('selection (cnames) must contain the (existing) position columns (doc_id, word_i, sent_i)')
+       if (clone) {
+         selfclone = self$clone()$select_columns(cnames=cnames, clone=F)
+         return(selfclone)
+       }
+       private$.data = private$.data[,cnames,with=F]
+       invisible(self)
+     },
+
+     set_colname = function(oldname, newname) {
+       if (oldname %in% c('doc_id','sent_i','word_i')) stop('The position columns (doc_id, sent_i, word_i) cannot be set or changed (with safe = T)')
+       colnames(private$.data)[colnames(private$.data) == oldname] = newname
+       invisible(self)
+     },
+
+     transform_meta = function(..., clone=self$clone_on_change, safe=T) {
+       if (clone) {
+         selfclone = self$clone()$transform_meta(..., clone=F, safe=safe)
+         return(selfclone)
+       }
+       en = elip_names(...)
+       if (any(en == '')) stop('Arguments (...) need to have a name')
+       if (safe & any(en %in% c('doc_id'))) stop('The doc_id column cannot be set or changed (with safe = T)')
+       attach(parent.frame(), warn.conflicts = F) ## enable the use of objects from the environment from which the method is called.
+       private$.meta = transform(private$.meta, ...)
+       invisible(self)
+     },
+
+     within_meta = function(expr, clone=self$clone_on_change, safe=T){
+       if (!class(substitute(expr)) == 'name') expr = deparse(substitute(expr)) ## cannot pass on expression, so make character (if not already parsed, which happens if clone is true)
+       if (clone) {
+         selfclone = self$clone()$within_meta(expr, clone=F, safe=safe)
+         return(selfclone)
+       }
+       en = expr_names(expr)
+       if (safe & any(en %in% c('doc_id'))) stop('The doc_id column cannot be set or changed (with safe = T)')
+
+       attach(parent.frame(), warn.conflicts = F) ## enable the use of objects from the environment from which the method is called.
+       private$.meta = within(private$.meta, eval(parse(text=expr)))
+       invisible(self)
+     },
+
+     set_meta_column = function(column, value, subset=NULL, clone=self$clone_on_change, safe=T){
+       subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
+       if (clone) {
+         selfclone = self$clone()$set_meta_column(column=column, value=value, subset=subset, clone=F, safe=safe)
+         return(selfclone)
+       }
+       if (safe & column %in% c('doc_id')) stop('The doc_id column cannot be set or changed (with safe = T)')
+       if (!is.null(subset)){
+         r = eval_subset(private$.meta, subset)
+         if (!column %in% colnames(private$.meta)) private$.meta[[column]] = NA
+         private$.meta[[column]][r] = value
+       } else {
+         private$.meta[[column]] = value
+       }
+       invisible(self)
+     },
+
+     select_meta_columns = function(cnames, clone=self$clone_on_change){
+        protected_cols = intersect(self$names, c('doc_id'))
+        if (!any(protected_cols %in% cnames)) stop('selection (cnames) must contain the document id (doc_id)')
+        if (clone) {
+          selfclone = self$clone()$select_meta_columns(cnames=cnames, clone=F)
+          return(selfclone)
+        }
+        private$.meta = private$.meta[,cnames,with=F]
+        invisible(self)
+      },
+
+     set_meta_colname = function(oldname, newname) {
+       if (oldname %in% c('doc_id','sent_i','word_i')) stop('The position columns (doc_id, sent_i, word_i) cannot be set or changed (with safe = T)')
+       colnames(private$.meta)[colnames(private$.meta) == oldname] = newname
+     },
+
+     subset = function(subset=NULL, subset_meta=NULL, drop_levels=F, window=NULL, clone=self$clone_on_change){
+       subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
+       subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
+
+       if (clone) {
+         selfclone = self$clone()$subset(subset=subset, subset_meta=subset_meta, drop_levels=drop_levels, window=window, clone=F)
+         return(selfclone)
+       }
+       e = if (is(substitute(subset), 'character')) parse(text=subset) else substitute(subset)
+       e_meta = if (is(substitute(subset_meta), 'character')) parse(text=subset_meta) else substitute(subset_meta)
+
+       ## Note that in normal subset the parent.frame is used in eval, to also enable the use of objects from the environment from which subset is called. Here we need to go up 2 levels, since subset is called through the R6 class environment
+       r_meta = eval(e_meta, private$.meta, parent.frame(2))
+       if (!is.null(r_meta)) private$select_meta_rows(r_meta) ## also deletes tokens belonging to documents
+
+       r = eval(e, private$.data, parent.frame(2))
+       if (!is.null(r)){
+         if (!is.null(window)){
+           global_i = get_global_i(self, max_window_size=window)
+           global_r = global_i[r]
+           global_window = rep(global_r, window*2 + 1) + rep(-window:window, each=length(global_r)) ## add window
+           r = global_i %in% global_window
+         }
+         private$select_rows(r) ## also deletes meta documents if all tokens of the document have been deleted
+       }
+
+       if (drop_levels) self$droplevels(clone=F)
+       private$.meta$doc_id = as.character(private$.meta$doc_id)
+       invisible(self)
+     },
+
+     reset_feature_index = function(){
+       private$.feature_index = NULL
+       private$set_provenance(index_feature=NA, context_level=NA, max_window_size=NA, as_ascii=NA)
+     },
+
+## FEATURE MANAGEMENT ##
+     preprocess = function(column, new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english', clone=self$clone_on_change) {
+       if (clone) {
+         selfclone = self$clone()$preprocess(column=column, new_column=new_column, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, use_stemming=use_stemming, language=language, clone=F)
+         return(selfclone)
+       }
+       invisible(preprocess_feature(self, column=column, new_column=new_column, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, use_stemming=use_stemming, language=language))
+     },
+
+     filter = function(column, new_column, filter, clone=self$clone_on_change){
+       if (clone) {
+         selfclone = self$clone()$filter(column=column, new_column=new_column, filter=filter, clone=F)
+         return(selfclone)
+       }
+       invisible(filter_feature(self, column=column, new_column=new_column, filter=filter))
+     },
+
+     feature_stats = function(feature, context_level=c('document','sentence')){
+       term.statistics(self, feature=feature, context_level=context_level)
+     },
+
+     top_features = function(feature, n=10, group_by=NULL, group_by_meta=NULL, return_long=F){
+       top_features(self, feature=feature, n=n, group_by=group_by, group_by_meta=group_by_meta, return_long=return_long)
+     },
+
+
+## SEARCHING / QUERYING ##
+     search_features = function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mword=F, verbose=F){
+       subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
+       subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
+       search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=keep_false_condition, only_last_mword=only_last_mword, verbose=verbose)
+     },
+
+     search_recode = function(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA, clone=self$clone_on_change){
+       subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
+       subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
+       if (clone) {
+         selfclone = self$clone()$search_recode(feature=feature, new_value=new_value, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, clone=F)
+         return(selfclone)
+       }
+       hits = self$search_features(keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta)
+       x = as.numeric(as.character(hits$i)) ## for one of those inexplicable R reasons, I cannot directly use this numeric vector.... really no clue at all why
+       self$set_column(feature, new_value, subset = x, clone = F)
+       invisible(self)
+     },
+
+     search_contexts = function(query, code=NULL, feature='word', context_level=c('document','sentence'), verbose=F){
+       search_contexts(self, query, code=code, feature=feature, context_level=context_level, verbose=verbose)
+     },
+
+     subset_query = function(query, feature='word', context_level=c('document','sentence'), clone=self$clone_on_change){
+       if (clone) {
+         selfclone = self$clone()$subset_query(query=query, feature=feature, context_level=context_level, clone=F)
+         return(selfclone)
+       }
+       hits = self$search_contexts(query, feature=feature, context_level=context_level)
+       if (is.null(hits)) return(NULL)
+       if (context_level == 'document'){
+         self$subset(doc_id %in% unique(hits$doc_id), clone = F)
+       }
+       if (context_level == 'sentence'){
+         d = self$data(c('doc_id','sent_i'))
+         d$i = 1:nrow(d)
+         rows = d[list(hits$doc_id, hits$sent_i)]$i
+         self$subset(rows, clone = F)
+       }
+       invisible(self)
+     },
+
+## CO-OCCURRENCE NETWORKS ##
+     semnet = function(feature, measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA){
+       semnet(self, feature=feature, measure=measure, context_level=context_level, backbone=backbone, n.batches=n.batches)
+     },
+
+     semnet_window = function(feature, measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=5, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
+       semnet_window(self, feature=feature, measure=measure, context_level=context_level, window.size=window.size, direction=direction, backbone=backbone, n.batches=n.batches, set_matrix_mode=set_matrix_mode)
+     },
+
+## RESOURCES ##
+
+     jrc_names = function(new_feature='jrc_names', feature='word', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, clone=self$clone_on_change){
+       if (clone) {
+         selfclone = self$clone()$jrc_names(new_feature=new_feature, feature=feature, resource_path=resource_path, collocation_labels=collocation_labels, batchsize=batchsize, low_memory=low_memory, verbose=verbose, clone=F)
+         return(selfclone)
+       }
+       jrc_names(self, new_feature=new_feature, feature=feature, resource_path=resource_path, collocation_labels=collocation_labels, batchsize=batchsize, low_memory=low_memory, verbose=verbose)
+     },
+
+     ## util
+     set_keys = function(){
+       ## ignore clone T or F, since setting keys is always a good thing
+       if ('sent_i' %in% colnames(private$.data)){
+         setkey(private$.data, 'doc_id', 'sent_i', 'word_i')
+       } else {
+         setkey(private$.data, 'doc_id', 'word_i')
+       }
+       setkey(private$.meta, 'doc_id')
+       if (!is.null(private$.feature_index)) setkey(private$.feature_index, 'feature')
+     },
+
+     droplevels = function(clone=self$clone_on_change){
+       if (clone) {
+         selfclone = self$clone()$droplevels(clone=F)
+         return(selfclone)
+       }
+       private$.data = base::droplevels(private$.data)
+       private$.meta = base::droplevels(private$.meta)
+       invisible(self)
+     }
+   ),
+
+   active = list(
+     n = function() nrow(private$.data),
+     n_meta = function() nrow(private$.meta),
+     feature_names = function(e=NULL) {
+       if (!is.null(e)) stop('Cannot change tcorpus$featurenames by assignment. Instead, use the set_colname() function')
+       fnames = colnames(private$.data)[!colnames(private$.data) %in% c('doc_id','sent_i','word_i')]
+     },
+     names = function(e=NULL) {
+       if (!is.null(e)) stop('Cannot change tcorpus$datanames by assignment. Instead, use the set_colname() function')
+       colnames(private$.data)
+     },
+     meta_names = function(e=NULL) {
+       if (!is.null(e)) stop('Cannot change tcorpus$metanames by assignment. Instead, use the set_meta_colname() function')
+       colnames(private$.meta)
+     }
+   )
+)
+
+
 #' @export
-tCorpus = setClass("tCorpus",
-                   slots = c(data = 'data.table',
-                             meta = 'data.table',
-                             feature_index = 'data.table',
-                             p = 'list'),
-                   prototype=list(
-                     p = list(feature_index=F, feature=NA, context_level=NA, max_window_size=NA),
-                     feature_index = data.table()
-                   ))
+print.tCorpus <- function(tc) {
+  sent_info = if ('sent_i' %in% tc$names) paste(' and sentences (n = ', nrow(unique(tc$data()[,c('doc_id','sent_i')])), ')', sep='') else ''
+  cat('tCorpus containing ', tc$n, ' tokens (', format(object.size(tc), 'Mb'), ')',
+      '\nsplit by documents (n = ', tc$n_meta, ')', sent_info,
+      '\ncontains:',
+      '\n  - ', length(tc$names), ' data column', if (length(tc$names) > 1) '(s)', ':\t', paste(tc$names, collapse=', '),
+      '\n  - ', length(tc$meta_names), ' meta column', if (length(tc$meta_names) > 1) '(s)', ': \t', paste(tc$meta_names, collapse=', '),
+      '\n', sep='')
+}
+
+#' @export
+summary.tCorpus <- function(tc) tc
 
 #' @export
 as.tcorpus <- function(x) UseMethod('as.tcorpus')
@@ -28,311 +418,49 @@ as.tcorpus.default <- function(x) stop('x has to be a tCorpus object')
 ## params: preprocess_params=list, filter_params,
 
 is_tcorpus <- function(x, allow_stc=F){
-  if(!class(x) %in% c('tCorpus', 'shattered_tCorpus')) stop('not a tCorpus object')
-  if(is_shattered(x) & !allow_stc) stop('function not implemented for shattered_tCorpus')
+  if (!class(x)[1] %in% c('tCorpus', 'shattered_tCorpus')) stop('not a tCorpus object')
+  if (is_shattered(x) & !allow_stc) stop('function not implemented for shattered_tCorpus')
   TRUE
 }
 
 is_shattered <- function(x) is(x, 'shattered_tCorpus')
 
-summary_data <- function(tc){
-  data = get_data(tc)
-  meta = get_meta(tc)
-  data_colnames = colnames(data)
-  meta_colnames = colnames(meta)
-  mb = format(object.size(tc), 'Mb')
-  sent_info = if('sent_i' %in% data_colnames) paste(' and sentences (n = ', nrow(unique(get_data(tc, columns = c('doc_id','sent_i')))), ')', sep='') else ''
-  list(n=nrow(data), n_meta=nrow(meta), data_colnames=data_colnames, meta_colnames=meta_colnames, sent_info=sent_info, mb=mb)
+###  utility
+
+safe_selection <- function(d, selection){
+  if (any(is.na(selection))) stop('selection cannot contain NA')
+  if (!is(selection, 'numeric') & !is(selection,'logical')) stop('selection has to be either a logical vector or a numerical vector (indices for TRUE values)')
+  if (is(selection, 'numeric')) selection = 1:nrow(d) %in% selection
+  selection
 }
 
-setMethod("show", "tCorpus",
-    function(object) {
-      info = summary_data(object)
-      cat('tCorpus containing ', info$n, ' tokens (', info$mb, ')',
-          '\nsplit by documents (n = ', info$n_meta, ')', info$sent_info,
-          '\ncontains:',
-          '\n  - ', length(info$data_colnames), ' data column', if(length(info$data_colnames) > 1) '(s)', ':\t', paste(info$data_colnames, collapse=', '),
-          '\n  - ', length(info$meta_colnames), ' meta column', if(length(info$meta_colnames) > 1) '(s)', ': \t', paste(info$meta_colnames, collapse=', '),
-          '\n', sep='')
-    }
-)
-
-setMethod("summary", "tCorpus",
-          function(object) {
-            data = get_data(object)
-            meta = get_meta(object)
-
-            sent_info = if('sent_i' %in% colnames(data)) paste(' and sentences (n = ', nrow(unique(get_data(object, columns = c('doc_id','sent_i')))), ')', sep='') else ''
-            cat('tCorpus containing ', nrow(data), ' tokens',
-                '\nsplit by documents (n = ', nrow(meta), ')', sent_info, sep='')
-            cat('\n\n@data\n')
-            print(head(object@data))
-
-            cat('\n@meta\n')
-            print(head(object@meta))
-          }
-)
-
-
-setMethod("print", "tCorpus",
-      function(x) {
-        info = summary_data(x)
-        cat('tCorpus containing ', info$n, ' tokens (', info$mb, ')',
-            '\nsplit by documents (n = ', info$n_meta, ')', info$sent_info,
-            '\ncontains:',
-            '\n  - ', length(info$data_colnames), ' data column', if(length(info$data_colnames) > 1) '(s)', ':\t', paste(info$data_colnames, collapse=', '),
-            '\n  - ', length(info$meta_colnames), ' meta column', if(length(info$meta_colnames) > 1) '(s)', ': \t', paste(info$meta_colnames, collapse=', '),
-            '\n', sep='')
-      }
-)
-
-###### create_tcorpus method ######
-
-#' Create a tCorpus
-#'
-#' @rdname create_tcorpus
-#'
-#' @param x
-#' @param meta A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x
-#' @param split_sentences Logical. If TRUE, the sentence number of tokens is also computed. This is done using the sentence tokenization of quanteda::tokenize, which is noted by the authors to be good (especially for english) but not perfect.
-#' @param max_words An integer. Limits the number of words per document to the specified number
-#' @param max_sentences An integer. Limits the number of sentences per document to the specified number. If set when split_sentences == FALSE, split_sentences will be set to TRUE.
-#'
-#' @export
-#' @name create_tcorpus
-create_tcorpus <- function(x, ...) {
-  UseMethod('create_tcorpus')
+eval_subset <- function(d, subset){
+  subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
+  subset = if (is(substitute(subset), 'character')) parse(text=subset) else substitute(subset)
+  eval(subset, d, parent.frame())
 }
 
-#' @rdname create_tcorpus
-#' @export
-create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F) {
-  if(any(duplicated(doc_id))) stop('doc_id should not contain duplicate values')
-  if(!is.null(meta)){
-      if(!is(meta, 'data.frame')) stop('"meta" is not a data.frame or data.table')
-      if(!nrow(meta) == length(x)) stop('The number of rows in "meta" does not match the number of texts in "x"')
-      if(!'doc_id' %in% colnames(meta)) meta = cbind(doc_id=doc_id, meta)
-      meta = data.table(meta, key = 'doc_id')
-  } else {
-    if(!length(doc_id) == length(x)) stop('"doc_id" is not of the same length as "x"')
-    meta = data.table(doc_id=doc_id, key = 'doc_id')
-  }
-  meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
+elip_names <- function(...) names(as.list(match.call()))[-1]
 
-  tc = tCorpus(data = data.table(tokenize_to_dataframe(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose)),
-               meta = droplevels(meta))
-  set_keys(tc)
-  tc
+expr_names <- function(expr){
+  if (!is(expr, 'character')) expr = deparse(substitute(expr))
+  expr = expr[!expr %in% c('{','}')]
+  expr = stringi::stri_trim(gsub('[<=[].*', '', expr))
+  if (grepl('(', expr, fixed = T)) expr = gsub('.*\\((.*)[,\\)].*', '\\1', expr)
+  expr
 }
 
-#' @rdname create_tcorpus
-#' @export
-create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F) {
-  create_tcorpus(as.character(x), doc_id=doc_id, meta=meta, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose)
-}
-
-
-#' @rdname create_tcorpus
-#' @export
-create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL) {
-  for(cname in text_columns) if(!cname %in% colnames(d)) stop(sprintf('text_column "%s" not in data.frame', cname))
-
-  if(length(text_columns) > 1){
-    text = apply(d[,text_columns], 1, paste, collapse = '\n\n')
-  } else {
-    text = d[[text_columns]]
-  }
-
-  doc_id = if(is.null(doc_column)) 1:nrow(d) else d[[doc_column]]
-
-  create_tcorpus(text,
-                 doc_id = doc_id,
-                 meta = d[,!colnames(d) %in% c(text_columns, doc_column), drop=F],
-                 split_sentences = split_sentences, max_sentences = max_sentences, max_words = max_words)
-}
-
-#' Create a tcorpus based on tokens (i.e. preprocessed texts)
-#'
-#' @param tokens A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (word_i_col)
-#' @param doc_col The name of the column that contains the document ids/names
-#' @param word_i_col The name of the column that contains the positions of words. If NULL, it is assumed that the data.frame is ordered by the order of words and does not contain gaps (e.g., filtered out words)
-#' @param sent_i_col Optionally, the name of the column that indicates the sentences in which tokens occured.
-#' @param meta Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)
-#' @param meta_cols Alternatively, if there are document meta columns in the tokens data.table, meta_cols can be used to recognized them. Note that these values have to be unique within documents.
-#' @param feature_cols Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)
-#' @param sent_is_local Sentences in the tCorpus must be locally unique within documents. If sent_is_local is FALSE, then sentences are made sure to be locally unique. However,  it is then assumed that the first sentence in a document is sentence 1, which might not be the case if tokens (input) is a subset. If you know for a fact that the sentence column in tokens is already locally unique, you can set sent_is_local to TRUE to keep the original sent_i values.
-#' @param word_is_local Same as sent_is_local, but or word_i
-#'
-#' @export
-tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=F, word_is_local=F) {
-  tokens = as.data.frame(tokens)
-  for(cname in c(doc_col, word_i_col, sent_i_col, meta_cols)){
-    if(!cname %in% colnames(tokens)) stop(sprintf('"%s" is not an existing columnname in "tokens"', cname))
-  }
-  tokens = droplevels(tokens)
-
-  if(is.null(word_i_col)){
-    warning('No word_i column specified. Word order used instead (see documentation).')
-    tokens$word_i = 1:nrow(tokens)
-    word_is_local = F
-    word_i_col = 'word_i'
-  } else {
-    if(is.null(sent_i_col)) {
-      if(any(duplicated(tokens[,c(doc_col, word_i_col)]))) stop('tokens should not contain duplicate doubles of documents (doc_col) and word positions (word_i_col)')
-    } else {
-      if(any(duplicated(tokens[,c(doc_col, sent_i_col, word_i_col)]))) stop('tokens should not contain duplicate triples of documents (doc_col), sentences (sent_i_col) and word positions (word_i_col)')
-    }
-  }
-
-  if(!is(tokens[,word_i_col], 'numeric')) stop('word_i_col has to be numeric/integer')
-  if(!is.null(sent_i_col)) if(!is(tokens[,sent_i_col], 'numeric')) stop('sent_i_col has to be numeric/integer')
-
-  if(!is.null(meta)){
-    if(!doc_col %in% colnames(meta)) stop(sprintf('"meta" does not contain the document id column (%s)', doc_col))
-  }
-
-  ## order and index doc_id, sent_i, word_i
-  if(!is.null(sent_i_col)){
-    tokens = tokens[order(tokens[,doc_col], tokens[,sent_i_col], tokens[,word_i_col]),]
-  } else {
-    tokens = tokens[order(tokens[,doc_col], tokens[,word_i_col]),]
-  }
-
-  positions = data.frame(doc_id= as.factor(tokens[,doc_col]),
-                         sent_i = tokens[,sent_i_col],
-                         word_i = tokens[,word_i_col])
-
-  ## check whether words and sentences are (likely to be) local
-
-  ## make sure that sent_i and word_i are locally unique within documents
-  if(!is.null(sent_i_col)){
-    if(sent_is_local) {
-      udocsent = unique(positions[,c('doc_id','sent_i')])
-      if(!any(duplicated(udocsent$sent_i))) warning("Sentence positions (sent_i) do not appear to be locally unique within document (no duplicates). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
-      rm(udocsent)
-    }
-    if(!sent_is_local) positions$sent_i = local_position(positions$sent_i, positions$doc_id, presorted = T) ## make sure sentences are locally unique within documents (and not globally)
-    if(!word_is_local) positions$word_i = global_position(positions$word_i, positions$sent_i, presorted=T) ## make word positions globally unique, taking sentence id into account (in case words are locally unique within sentences)
-  }
-  if(word_is_local) {
-    udocword = unique(positions[,c('doc_id','word_i')])
-    if(!any(duplicated(udocword$word_i))) warning("Word positions (word_i) do not appear to be locally unique within document (no duplicates). Unless you are sure they are, set word_is_local to FALSE (and read documentation)")
-    rm(udocword)
-  }
-  if(!word_is_local) positions$word_i = local_position(positions$word_i, positions$doc_id, presorted=T) ## make words locally unique within documents
-
-  ## match meta
-  docs = unique(positions$doc_id)
-  if(!is.null(meta)) {
-    colnames(meta)[colnames(meta) == doc_col] = 'doc_id'
-    meta$doc_id = as.factor(meta$doc_id)
-    if(!all(docs %in% meta$doc_id)) warning('For some documents in tokens the meta data is missing')
-    if(!all(meta$doc_id %in% docs)) warning('For some documents in the meta data there are no tokens. These documents will not be included in the meta data')
-
-    meta = data.table(meta[match(docs, meta$doc_id),], key='doc_id')
-  } else {
-    meta = data.table(doc_id=docs, key='doc_id')
-  }
-
-  if(!is.null(meta_cols)){
-    add_meta = unique(tokens[,c(doc_col, meta_cols)])
-    if(nrow(add_meta) > nrow(meta)) stop('The document meta columns specified in meta_cols are not unique within documents')
-    meta = cbind(meta, add_meta[,meta_cols])
-  }
-  meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
-
-  if(is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sent_i_col, word_i_col, meta_cols)]
-  for(fcol in feature_cols) {
-    if(class(tokens[,fcol]) %in% c('factor','character')) tokens[,fcol] = as.factor(as.character(tokens[,fcol]))
-  }
-
-  tc = tCorpus(data=data.table(cbind(positions, tokens[,feature_cols,drop=F])),
-               meta = data.table(meta))
-  set_keys(tc)
-  tc
-}
-
-#### FUNCTIONS FOR CREATING AND CHANGING THE TCORPUS ####
-
-## manage data
-
-set_keys <- function(tc){
-  if('sent_i' %in% colnames(tc@data)){
-    setkey(tc@data, 'doc_id', 'sent_i')
-  } else {
-    setkey(tc@data, 'doc_id')
-  }
-  setkey(tc@meta, 'doc_id')
-  if(get_provenance(tc)$feature_index) setkey(tc@feature_index, 'feature')
-}
-
-#' @export
-get_data <- function(tc, columns=NULL, as_data_frame=F) {
-  set_keys(tc)
-  data = if(!is.null(columns)) tc@data[,columns, with=F] else tc@data
-  if(as_data_frame) data = as.data.frame(data)
-  data
-}
-
-#' @export
-n_data <- function(tc) nrow(tc@data)
-
-#' @export
-get_column <- function(tc, name) tc@data[[name]]
-
-#' @export
-set_column <- function(tc, name, value) {
-  if(name %in% c('doc_id', 'sent_i', 'word_i')) stop(sprintf('Cannot manually change %s', name))
-  tc@data[[name]] = as.factor(value)
-  tc
-}
-
-#' Recode a (feature) column in a tCorpus
-#'
-#' @param tc
-#' @param column the name of the (feature) column
-#' @param new_value the new value
-#' @param i an index for which values to replace
-#' @param old_value a vector containing one or more old values to replace
-#'
-#' @export
-recode_column <- function(tc, column, new_value, i=NULL, old_value=NULL){
-  is_tcorpus(tc, T)
-  if(is(tc, 'shattered_tCorpus')) return(shard_recode_column(stc=tc, column=column, new_value=new_value, i=i, old_value=old_value))
-
-  if(!new_value %in% levels(tc@data[[column]])) levels(tc@data[[column]]) = c(levels(tc@data[[column]]), new_value)
-  if(!is.null(i)) tc@data[[column]][i] = new_value
-  if(!is.null(old_value)) tc@data[[column]][tc@data[[column]] %in% old_value] = new_value
-  tc@data[[column]] = tc@data[[column]]
-  tc
-}
-
-#' @export
-datanames <- function(tc) {
-  is_tcorpus(tc, T)
-  if(is(tc, 'shattered_tCorpus')) return(colnames(get_info(stc)$data_head)) else return(colnames(get_data(tc)))
-}
-
-#' @export
-featurenames <- function(tc) {
-  is_tcorpus(tc, T)
-  n = datanames(tc)
-  n[!n %in% c('doc_id','sent_i','word_i')]
-}
-
-#' @export
 get_context <- function(tc, context_level = c('document','sentence'), with_labels=T){
-  is_tcorpus(tc)
-
   context_level = match.arg(context_level)
-  if(context_level == 'document') {
-    context = get_column(tc, 'doc_id')
-    if(!with_labels) context = factor(as.numeric(context))
+
+  if (context_level == 'document') {
+    context = tc$data('doc_id')
+    if (!with_labels) context = factor(as.numeric(context))
   }
-  if(context_level == 'sentence') {
-    if(is.null(get_column(tc, 'sent_i'))) stop('Sentence level not possible, since no sentence information is available. To enable sentence level analysis, use split_sentences = T in "create_tcorpus()" or specify sent_i_col in "tokens_to_tcorpus()"')
-    d = get_data(tc)
-    if(with_labels){
+  if (context_level == 'sentence') {
+    if (!'sent_i' %in% tc$names) stop('Sentence level not possible, since no sentence information is available. To enable sentence level analysis, use split_sentences = T in "create_tcorpus()" or specify sent_i_col in "tokens_to_tcorpus()"')
+    d = tc$data()
+    if (with_labels){
       ucontext = unique(d[,c('doc_id','sent_i')])
       ucontext = stringi::stri_paste(ucontext$doc_id, ucontext$sent_i, sep='#')
       context = factor(global_position(d$sent_i, d$doc_id, presorted = T), labels = ucontext)
@@ -342,133 +470,3 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
   }
   context
 }
-
-#get_feature_i <- function(tc, feature) {
-#  x = get_column(tc, feature)
-#  if(!is(feature, 'factor')) set_column(tc, feature, as.factor(x))
-#  as.numeric(x)
-#}
-
-#get_feature_levels <- function(tc, feature) {
-#  x = get_column(tc, feature)
-#  if(!is(feature, 'factor')) set_column(tc, feature, as.factor(x))
-#  levels(x)
-#}
-
-## manage meta
-
-#' @export
-get_meta <- function(tc, columns=NULL, as_data_frame=F, per_token=F) {
-  set_keys(tc)
-  if(!is.null(columns)) meta = tc@meta[,columns, with=F] else meta = tc@meta
-  if(as_data_frame) meta = as.data.frame(meta)
-  if(per_token) meta = meta[match(get_column(tc, 'doc_id'), get_meta_column(tc, 'doc_id')), ,drop=F]
-  meta
-}
-
-#' @export
-n_meta <- function(tc) {
-  is_tcorpus(tc, T)
-  if(is(tc, 'shattered_tCorpus')) return(get_info(stc)$n_meta) else return(nrow(tc@meta))
-}
-
-#' @export
-get_meta_column <- function(tc, name, per_token=F) {
-  col = tc@meta[[name]]
-  if(per_token) col = col[match(get_column(tc, 'doc_id'), get_meta_column(tc, 'doc_id'))]
-  col
-}
-
-#' @export
-set_meta_column <- function(tc, name, value) {
-  if(name %in% c('doc_id')) stop(sprintf('Cannot manually change %s', name))
-  tc@meta[[name]] = value
-  tc
-}
-
-#' Recode a document meta column in a tCorpus
-#'
-#' @param tc
-#' @param column the name of the document meta column
-#' @param new_value the new value
-#' @param i an index for which values to replace
-#' @param old_value a vector containing one or more old values to replace
-#'
-#' @return
-#' @export
-#'
-#' @examples
-recode_meta_column <- function(tc, column, new_value, i=NULL, old_value=NULL){
-  if(!new_value %in% levels(tc@meta[[column]])) levels(tc@meta[[column]]) = c(levels(tc@meta[[column]]), new_value)
-  if(!is.null(i)) tc@meta[[column]][i] = new_value
-  if(!is.null(old_value)) tc@meta[[column]][tc@meta[[column]] %in% old_value] = new_value
-  tc@data[[column]] = tc@meta[[column]]
-  tc
-}
-
-#' @export
-metanames <- function(tc) colnames(get_meta(tc))
-
-
-## provenance management ##
-set_provenance <- function(tc, ...){
-  p = list(...)
-  for(key in names(p)) tc@p[[key]] = p[[key]]
-  tc
-}
-get_provenance <- function(tc, keys=NULL) {
-  if(is.null(keys)) tc@p else tc@p[keys]
-}
-is_provenance <- function(tc, ...){
-  p = list(...)
-  for(key in names(p)) {
-    p[[key]] = if(!is.na(tc@p[[key]]) & tc@p[[key]] == p[[key]]) T else F
-  }
-  unlist(p)
-}
-
-## setting positions ##
-local_position <- function(position, context, presorted=F){
-  if(!presorted){
-    ord = order(context, position)
-    position = position[ord]
-    context = context[ord]
-  }
-  newcontext = which(!duplicated(context))
-  repeat_add = c(newcontext[-1], length(context)+1) - newcontext
-  context_start = rep(position[newcontext], repeat_add)
-  position = (position - context_start) + 1
-  if(!presorted) position = position[match(1:length(position), ord)]
-  position
-}
-
-global_position <- function(position, context, max_window_size=NA, presorted=F){
-  ## makes the word position counter global with dummy positions between contexts to prevent overlapping windows (so it can be used as an index).
-  ## this way, overlapping word windows can be calculated for multiple documents within a single matrix.
-  ## position and context need to be sorted on order(context,position). If this is already the case, presorted=T can be used for a speed up
-  if(!presorted){
-    ord = order(context, position)
-    position = position[ord]
-    context = context[ord]
-  }
-
-  ## first, make sure position is local and starts at 1 for each context (otherwise the global id can become absurdly high)
-  position = local_position(position, context, presorted=T)
-
-  if(min(position) == 0) position = position + 1 ## position will be treated as an index, so it cannot be zero in r where an index starts at 1 (and some parsers start indexing at zero)
-
-  if(!length(unique(context)) == 1) {
-    newcontext = which(!duplicated(context)) # where does a new context start
-
-    context.max = position[newcontext-1] # the highest value of each context
-    if(!is.na(max_window_size)) context.max = context.max + max_window_size # increase the highest value of each context with max_window_size to make sure windows of different contexts do not overlap.
-    add_scores = cumsum(c(0,context.max)) # the amount that should be added to the position at the start of each context
-
-    repeat_add = c(newcontext[-1], length(position)+1) - newcontext # the number of times the add scores need to be repeated to match the position vector
-    add_vector = rep(add_scores, repeat_add)
-    position = position + add_vector
-  }
-  if(!presorted) position = position[match(1:length(position), ord)]
-  position
-}
-

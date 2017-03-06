@@ -7,12 +7,11 @@ test_that("preprocessing works", {
                       word = c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte'))
   tc = tokens_to_tcorpus(tokens, doc_col ='document', word_i_col = 'id')
   ## test preprocess_feature
-  word = get_column(tc, 'word')
+  word = tc$data('word')
 
   context = get_context(tc, 'document')
   feature = preprocess_words(word, context=context, language='english', lowercase = T, use_stemming = T, ngrams = 3)
 
-  tc = preprocess_feature(tc, 'word', new_column='feature', language='english', lowercase = T, use_stemming = T, ngrams = 3, ngram_context = 'document')
-  expect_equal(get_column(tc, 'feature'), feature)
-
+  tc = tc$preprocess('word', new_column='feature', language='english', lowercase = T, use_stemming = T, ngrams = 3, ngram_context = 'document')
+  expect_equal(tc$data('feature'), feature)
 })

@@ -7,7 +7,7 @@
 search_features(tc, keyword = NA, condition = NA, code = NA,
   queries = NULL, feature = "word", condition_once = F,
   subset_tokens = NA, subset_meta = NA, keep_false_condition = F,
-  only_last_mword = T, verbose = F)
+  only_last_mword = F, verbose = F)
 }
 \arguments{
 \item{tc}{a tCorpus object}

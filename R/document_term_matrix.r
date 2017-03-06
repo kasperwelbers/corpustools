@@ -4,26 +4,22 @@
 #' @param feature
 #' @param context_level
 #'
-#' @export
-get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, with_labels=T, context=NULL){
+get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context_labels=T, context=NULL){
   is_tcorpus(tc, T)
-  if(is(tc, 'shattered_tCorpus')) return(shard_get_dtm(stc=tc, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form, with_labels=with_labels))
-
-  subset_tokens = if(is(substitute(subset_tokens), 'call')) as.character(deparse(substitute(subset_tokens)))
-  subset_meta = if(is(substitute(subset_meta), 'call')) as.character(deparse(substitute(subset_meta)))
-  if(!is.null(subset_tokens) | !is.null(subset_meta)){
-    tc = subset(tc, subset=subset_tokens, subset_meta=subset_meta)
-  }
-
-  #context_level = match.arg(context_level)
+  if(is(tc, 'shattered_tCorpus')) return(shard_get_dtm(stc=tc, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form, context_labels=context_labels))
   weight = match.arg(weight)
+
+  context_levels = match.arg(context_level)
   form = match.arg(form)
 
-  if(form == 'tm_dtm') if(!require(tm)) stop('form is set to tm_dtm, but the tm package is not installed.')
-  if(form == 'quanteda_dfm') if(!require(quanteda)) stop('form is set to quanteda_dfm, but the quanteda package is not installed.')
+  tc = tc$subset(subset_tokens, subset_meta=subset_meta, clone=T)
 
-  i = if (!is.null(context)) context else get_context(tc, context_level, with_labels = with_labels)
-  feature = get_column(tc, feature)
+  if(form == 'tm_dtm') if(!require(tm)) stop('form is set to tm_dtm, but the tm package is not installed.')
+  if(form == 'quanteda_dfm') if(!require(quanteda)) stop('form is set to quanteda_dtm, but the quanteda package is not installed.')
+
+  i = if (!is.null(context)) context else tc$context(context_level, with_labels = context_labels)
+  feature = tc$data(feature)
+  if(!is(feature, 'factor')) feature = factor(feature)
   if(drop_empty_terms) feature = droplevels(feature)
   notNA = !is.na(feature)
   m = Matrix::spMatrix(length(levels(i)), length(levels(feature)),
@@ -34,10 +30,10 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   m = weight_dtm(m, weight)
 
   if(form == 'tm_dtm'){
-      m = tm::as.DocumentTermMatrix(m, weight=tm::weightTf)
-      if(weight == 'tfidf') attributes(dtm)$weighting = c("term frequency - inverse document frequency", "tf-idf")
-      if(weight == 'tfidf_norm') attributes(dtm)$weighting = c("term frequency - inverse document frequency (normalized)", "tf-idf")
-      if(!weight %in% c('termfreq','tfidf', 'tfidf_norm')) attributes(dtm)$weighting = c(weight, weight)
+    m = tm::as.DocumentTermMatrix(m, weight=tm::weightTf)
+    if(weight == 'tfidf') attributes(dtm)$weighting = c("term frequency - inverse document frequency", "tf-idf")
+    if(weight == 'tfidf_norm') attributes(dtm)$weighting = c("term frequency - inverse document frequency (normalized)", "tf-idf")
+    if(!weight %in% c('termfreq','tfidf', 'tfidf_norm')) attributes(dtm)$weighting = c(weight, weight)
   }
   if(form == 'quanteda_dfm') m = new("dfmSparse", as(m, 'dgCMatrix'))
   m

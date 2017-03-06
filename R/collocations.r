@@ -12,7 +12,7 @@
 #'
 #' @export
 collocation_strings <- function(tc, colloc_id, feature='word', pref=NULL){
-  f = get_data(tc, columns = c(feature, colloc_id))
+  f = tc$data(c(feature, colloc_id))
   colnames(f) = c('feature','id')
   f$pref = F
   f$pref[pref] = T
@@ -45,7 +45,7 @@ collocation_strings <- function(tc, colloc_id, feature='word', pref=NULL){
 #' @export
 add_collocation_label <- function(tc, colloc_id, feature='word', new_feature=sprintf('%s_l', colloc_id), pref_subset=NULL){
   pref_subset = deparse(substitute(pref_subset))
-  if(!pref_subset == 'NULL') pref = subset_i(tc, subset_meta=pref_subset) else pref = NULL
+  if (!pref_subset == 'NULL') pref = subset_i(tc, subset_meta=pref_subset) else pref = NULL
 
   label = collocation_strings(tc, colloc_id, feature=feature, pref=pref) ## for shattered_tCorpus, this has to be done for the entire corpus first, or labels will not match across shards
   ## select most frequent labels, prioritzing pref is true
@@ -54,9 +54,8 @@ add_collocation_label <- function(tc, colloc_id, feature='word', new_feature=spr
 
   label$label = as.factor(label$label)
   levels(label$label) = gsub('_', ' ', levels(label$label), fixed=T)
-  tc = set_column(tc, new_feature, value = label$label[match(get_column(tc, colloc_id), label$id)])
 
-  tc
+  tc$set_column(new_feature, value = label$label[match(tc$data(colloc_id), label$id)])
 }
 
 
@@ -64,7 +63,7 @@ add_collocation_label <- function(tc, colloc_id, feature='word', new_feature=spr
 
 flatten_collocations <- function(d, feature_col, position_col, sep='_', reset_key=T){
   ## position needs to be an integer (or at least shouldn not have decimals)
-  if(reset_key) k = key(d)
+  if (reset_key) k = key(d)
   fc = flatten_collocations_table(d[[feature_col]], d[[position_col]])
 
   new_levels = setdiff(unique(fc$feature), levels(d))
@@ -86,7 +85,7 @@ flatten_collocations <- function(d, feature_col, position_col, sep='_', reset_ke
   is_inserted = !int == d[[position_col]]
   d[[position_col]] = int + cumsum(is_inserted)
 
-  if(reset_key) setkeyv(d, k)
+  if (reset_key) setkeyv(d, k)
   d
 }
 

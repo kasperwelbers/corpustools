@@ -4,13 +4,10 @@
 \alias{preprocess_feature}
 \title{Preprocess feature}
 \usage{
-preprocess_feature(tc, column, new_column, language = "english",
-  use_stemming = F, lowercase = T, ngrams = 1,
-  ngram_context = c("document", "sentence"), remove_accented = F,
-  remove_punctuation = T)
-}
-\arguments{
-\item{ngram_context}{}
+preprocess_feature(tc, column, new_column, lowercase = T, ngrams = 1,
+  ngram_context = c("document", "sentence"), as_ascii = F,
+  remove_punctuation = T, remove_stopwords = F, use_stemming = F,
+  language = "english")
 }
 \description{
 Preprocess feature

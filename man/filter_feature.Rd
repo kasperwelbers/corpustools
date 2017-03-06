@@ -10,6 +10,6 @@ filter_feature(tc, column, new_column, filter)
 \item{filter}{}
 }
 \description{
-Similar to subsetting, but keeps data and only sets the . This way the vocabulary can be reduced while still beign able to bring results of analyses back to the full text
+Similar to subsetting, but instead of deleting rows, the rows for the specified column as set to NA. This way the vocabulary can be reduced while still beign able to bring results of analyses back to the full text
 }
 

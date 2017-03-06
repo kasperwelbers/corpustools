@@ -21,7 +21,7 @@ parse_queries <- function(query){
   ## if ~[0-9] after quotes (used to indicate word proximities) take these along as well
   quotes = regmatches(query, gregexpr('(\").*?(\"(~[0-9]+)?)', query, perl = T))[[1]]
   for(m in quotes) {
-    #if(grepl('& ', m)) stop('Queries cannot contain &/AND statements within quotes')
+    #if (grepl('& ', m)) stop('Queries cannot contain &/AND statements within quotes')
     #m = gsub('&', '\\&', m)
 
     replacewith = sprintf('{%s}', m) ## surround with {} to keep entire string as single term
@@ -72,7 +72,7 @@ eval_query_matrix <- function(qm, terms, form){
 get_feature_regex <- function(terms, default_window=NA){
   terms = parse_queries(terms)
 
-  if(length(default_window) == nrow(terms)){
+  if (length(default_window) == nrow(terms)){
     reptimes = sapply(terms[,2], length)
     default_window = rep(default_window, reptimes)
   }
@@ -97,10 +97,10 @@ get_feature_regex <- function(terms, default_window=NA){
 qualify_queries <- function(queries){
   boo = c()
   for(i in 1:nrow(queries)){
-    if(queries$keyword[i] == '') boo = c(boo, sprintf('Code "%s": no keyword', queries$code[i]))
-    if(queries$keyword[i] == '*') boo = c(boo, sprintf('Code "%s": keyword cannot be *', queries$code[i]))
+    if (queries$keyword[i] == '') boo = c(boo, sprintf('Code "%s": no keyword', queries$code[i]))
+    if (queries$keyword[i] == '*') boo = c(boo, sprintf('Code "%s": keyword cannot be *', queries$code[i]))
   }
-  if(length(boo) > 0) stop(paste(boo, collapse='\n'))
+  if (length(boo) > 0) stop(paste(boo, collapse='\n'))
 }
 
 

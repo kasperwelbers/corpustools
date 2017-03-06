@@ -29,15 +29,15 @@ plot_semnet <- function(g, weight_attr='weight', min_weight=NA, delete_isolates=
   ## add seed!!  default to random number, save as attribute
 
   E(g)$weight = get.edge.attribute(g, weight_attr)
-  if(!is.na(min_weight)) g = delete.edges(g, which(E(g)$weight < min_weight))
-  if(delete_isolates) g = delete.vertices(g, which(degree(g) == 0))
-  if(vcount(g) == 0) {
+  if (!is.na(min_weight)) g = delete.edges(g, which(E(g)$weight < min_weight))
+  if (delete_isolates) g = delete.vertices(g, which(degree(g) == 0))
+  if (vcount(g) == 0) {
     plot.igraph(g, ...)
-    if(return_graph) return(g) else return(NULL)
+    if (return_graph) return(g) else return(NULL)
   }
 
-  if(!is.na(max_backbone_alpha)) {
-    if(!'alpha' %in% edge_attr_names(g)) E(g)$alpha = backbone.alpha(g)
+  if (!is.na(max_backbone_alpha)) {
+    if (!'alpha' %in% edge_attr_names(g)) E(g)$alpha = backbone.alpha(g)
     g = delete.edges(g, which(E(g)$alpha > max_alpha))
   }
 
@@ -46,22 +46,22 @@ plot_semnet <- function(g, weight_attr='weight', min_weight=NA, delete_isolates=
   V(g)$label.cex = labelsize_coef * V(g)$label.cex
   V(g)$label.dist = vertex.label.dist
 
-  if(reduce_labeloverlap){
+  if (reduce_labeloverlap){
     g = reduceLabelOverlap(g, labelspace_coef, cex_from_device = T)
   }
   g = plotArgsToAttributes(g, args=list(...))
 
   plot.igraph(g, ...)
-  if(return_graph) return(g)
+  if (return_graph) return(g)
 }
 
 plotArgsToAttributes <- function(g, args){
-  if(length(args) == 0) return(g)
+  if (length(args) == 0) return(g)
   for(i in 1:length(args)){
     name = names(args)[i]
-    if(!grepl('vertex\\.|edge\\.', name)) g = set.graph.attribute(g, name, value=args[[i]])
-    if(grepl('vertex\\.', name)) g = set.vertex.attribute(g, gsub('vertex\\.', '', name), value=args[[i]])
-    if(grepl('edge\\.', name)) g = set.edge.attribute(g, gsub('edge\\.', '', name), value=args[[i]])
+    if (!grepl('vertex\\.|edge\\.', name)) g = set.graph.attribute(g, name, value=args[[i]])
+    if (grepl('vertex\\.', name)) g = set.vertex.attribute(g, gsub('vertex\\.', '', name), value=args[[i]])
+    if (grepl('edge\\.', name)) g = set.edge.attribute(g, gsub('edge\\.', '', name), value=args[[i]])
   }
   g
 }
@@ -78,13 +78,13 @@ plotArgsToAttributes <- function(g, args){
 setNetworkAttributes <- function(g, size_attribute='freq', color_attribute=NA, redo_layout=F, edgewidth_coef=1, layout_fun=layout_with_fr){
   g = setVertexAttributes(g, size_attribute, color_attribute)
   g = setEdgeAttributes(g, edgewidth_coef)
-  if(is.null(g$layout) | redo_layout) g$layout = layout_fun(g)
+  if (is.null(g$layout) | redo_layout) g$layout = layout_fun(g)
   g
 }
 
 setVertexColors <- function(g, color){
-  if(!is.null(color)){
-    if(class(color) == 'numeric'){
+  if (!is.null(color)){
+    if (class(color) == 'numeric'){
       pal = substr(rainbow(length(unique(color)), s=0.6,alpha=0.5), 1,7)
       duplicates = unique(color[duplicated(color)])
       color = match(color, duplicates) # re-index colors, and setting isolates to NA
@@ -101,7 +101,7 @@ setVertexColors <- function(g, color){
 
 setVertexAttributes <- function(g, size, color){
   vattrs = names(vertex.attributes(g))
-  if(is.na(color) | !color %in% vattrs) {
+  if (is.na(color) | !color %in% vattrs) {
     color = fastgreedy.community(as.undirected(g))$membership
     #message('No (valid) color attribute given. Vertex color now based on undirected fastgreedy.community() clustering')
   } else {
@@ -109,7 +109,7 @@ setVertexAttributes <- function(g, size, color){
   }
   g = setVertexColors(g, color)
 
-  if(is.na(size) | !size %in% vattrs) {
+  if (is.na(size) | !size %in% vattrs) {
     size = rep(1, vcount(g))
     message('No (valid) size attribute given. Vertex size now set to 1')
   } else {
@@ -134,7 +134,7 @@ setEdgeAttributes <- function(g, edgewidth_coef){
 
 
 rescale_var <- function(x, new_min=0, new_max=1, x_min=min(x), x_max=max(x)){
-  if(x_min == x_max) return(x)
+  if (x_min == x_max) return(x)
   x = (x - x_min) / (x_max - x_min) # normalize
   x = x * (new_max-new_min)
   return(x + new_min)
@@ -144,13 +144,13 @@ reduceLabelOverlap <- function(g, labelspace_coef=1.1, cex_from_device=F, label.
   layout_matrix = layout.norm(g$layout)
 
   vnames = names(vertex.attributes(g))
-  if(!label.attr %in% vnames) {
+  if (!label.attr %in% vnames) {
     stop('"', label.attr, '" is not a valid vertex attribute)')
   } else {
     label = get.vertex.attribute(g, label.attr)
   }
 
-  if(labelsize.attr %in% vnames){
+  if (labelsize.attr %in% vnames){
     label.cex = get.vertex.attribute(g, labelsize.attr)
   } else {
     message('"', labelsize.attr, '" is not a valid vertex attribute). Labelsize is set to 1')
@@ -217,8 +217,8 @@ top_cluster_features <- function(g, cluster_attr, measure=c('degree','freq'), to
   measure = match.arg(measure)
   d = data.frame(name=V(g)$name,
                  cluster = get.vertex.attribute(g, cluster_attr))
-  if(measure == 'degree') d$value = degree(g)
-  if(measure == 'freq') d$value = V(g)$freq
+  if (measure == 'degree') d$value = degree(g)
+  if (measure == 'freq') d$value = V(g)$freq
 
   topclusters = table(d$cluster)
   d = d[order(d$cluster, -d$value),]

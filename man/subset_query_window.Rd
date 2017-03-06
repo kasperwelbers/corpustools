@@ -8,9 +8,6 @@ subset_query_window(tc, window, keyword = NA, condition = NA,
   queries = NULL, feature = "word", condition_once = F,
   subset_tokens = NA, subset_meta = NA, verbose = F)
 }
-\arguments{
-\item{verbose}{}
-}
 \value{
 a tCorpus object
 }

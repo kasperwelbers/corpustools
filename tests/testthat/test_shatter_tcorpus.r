@@ -12,7 +12,7 @@ test_that("shatter tcorpus works", {
     stc = shatter_tcorpus(more_with_duplicates, 'test', meta_columns=c('party', 'president'), tokens_per_shard=10000, if_exists = 'append', if_duplicates = 'skip')
   })
 
-  info = tcorpus:::get_info(stc)
+  info = stc$info()
   expect_equal(info$n, 90825)
   expect_equal(info$n_meta, 1090)
   expect_equal(info$n_shards, 12)
@@ -20,8 +20,8 @@ test_that("shatter tcorpus works", {
   capture_output({
     redistribute_shards(stc, tokens_per_shard=20000)
   })
-  info = tcorpus:::get_info(stc)
-  ushards = tcorpus:::get_shards(stc, normalize = F)
+  info = stc$info()
+  ushards = stc$shards(normalize = F)
   data_n = regmatches(ushards, gregexpr('(?<=_T=)[0-9]+', ushards, perl = T))
   meta_n = regmatches(ushards, gregexpr('(?<=_M=)[0-9]+', ushards, perl = T))
   data_n = sum(as.numeric(data_n))

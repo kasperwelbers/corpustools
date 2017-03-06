@@ -2,7 +2,7 @@
 % Please edit documentation in R/shatter_tcorpus.r
 \name{shatter_tcorpus}
 \alias{shatter_tcorpus}
-\title{Create a shattered tCorpus from a single (large) tCorpus}
+\title{Shatter a tCorpus to create or append a shattered tCorpus}
 \usage{
 shatter_tcorpus(tc, stc, meta_columns = NULL, tokens_per_shard = 1e+06,
   if_exists = c("stop", "append", "overwrite"), if_duplicates = c("stop",

@@ -1,6 +1,5 @@
 ## not yet updated!!
 
-
 #' Title
 #'
 #' @param tokens
@@ -15,21 +14,21 @@
 #'
 #' @export
 reportSummary <- function(tc, hits=NULL, token_i=NULL, hitcount=T, tokenfreq=T, kwic=T, kwic_nwords=10, kwic_sample=10, random_sample=T, doc.col=getOption('doc.col','doc_id'), position.col=getOption('position.col','position'), feature.col=getOption('wor.col','word')){
-  if(!is.null(token_i)) hits = droplevels(tokens[token_i,])
+  if (!is.null(token_i)) hits = droplevels(tokens[token_i,])
   out = list()
 
   ## report number of hits and articles
-  if(hitcount){
+  if (hitcount){
     out[['hitcount']] = c(hits=nrow(hits), docs=length(unique(hits[,doc.col])))
   }
 
   ## report token frequency
-  if(tokenfreq & nrow(hits) > 0) {
+  if (tokenfreq & nrow(hits) > 0) {
     out[['tokenfreq']] = reportTokenFreq(hits, doc.col=doc.col, feature.col=feature.col)
   }
 
   ## report keywords in confeature
-  if(kwic & nrow(hits) > 0) {
+  if (kwic & nrow(hits) > 0) {
     cat('\n')
     out[['kwic']] = reportKWIC(tokens, hits, nwords=kwic_nwords, nsample=kwic_sample, random_sample=random_sample, doc.col=doc.col, position.col=position.col, feature.col=feature.col)
   }
@@ -44,7 +43,7 @@ reportSummary <- function(tc, hits=NULL, token_i=NULL, hitcount=T, tokenfreq=T, 
 #'
 #' @export
 reportHitcount <- function(tokens, hits=NULL, token_i=NULL, doc.col=getOption('doc.col','doc.id')){
-  if(!is.null(token_i)) hits = droplevels(tokens[token_i,])
+  if (!is.null(token_i)) hits = droplevels(tokens[token_i,])
   nhits = nrow(hits)
   narts = length(unique(hits[,doc.col]))
   sprintf('%s hit%s in %s article%s (N = %s)', nhits, ifelse(nhits==1, '', 's'),
@@ -61,7 +60,7 @@ reportHitcount <- function(tokens, hits=NULL, token_i=NULL, doc.col=getOption('d
 #'
 #' @export
 reportTokenFreq <- function(hits, token_i = NULL, doc.col=getOption('doc.col','doc.col'), feature.col=get.Option('word','word')){
-  if(!is.null(token_i)) hits = droplevels(tokens[token_i,])
+  if (!is.null(token_i)) hits = droplevels(tokens[token_i,])
   termfreq = aggregate(list(hits=hits[,doc.col]), by=list(code=hits$code, word=as.character(hits[,feature.col])), FUN=function(x) cbind(length(x), length(unique(x))))
   termfreq = data.frame(code = termfreq$code, word = termfreq$word, freq = termfreq$hits[,1], doc_freq = termfreq$hits[,2])
   termfreq$doc_pct = round(termfreq$doc_freq / length(unique(hits[,doc.col])) * 100,1)
@@ -80,10 +79,10 @@ reportTokenFreq <- function(hits, token_i = NULL, doc.col=getOption('doc.col','d
 #'
 #' @export
 reportKWIC <- function(tc, hits=NULL, token_i=NULL, nwords=10, nsample=10, random_sample=T, doc.col=getOption('doc.col','doc_id'), position.col=getOption('position.col','position'), feature.col=getOption('wor.col','word')){
-  if(!is.null(token_i)) hits = droplevels(tokens[token_i,])
+  if (!is.null(token_i)) hits = droplevels(tokens[token_i,])
 
-  if(!is.null(nsample)) {
-    if(random_sample) hits = hits[sample(1:nrow(hits), nrow(hits)),]
+  if (!is.null(nsample)) {
+    if (random_sample) hits = hits[sample(1:nrow(hits), nrow(hits)),]
     hits = head(hits, nsample)
   }
   hits$kwic = getKwic(tokens, hits, token_i, nwords = nwords, nsample=nsample, doc.col=doc.col, position.col=position.col, feature.col=feature.col)
@@ -110,17 +109,17 @@ reportKWIC <- function(tc, hits=NULL, token_i=NULL, nwords=10, nsample=10, rando
 #' @return A data.frame with the keyword in confeature
 #' @export
 getKwic <- function(tc, hits=NULL, token_i=NULL, nwords=10, nsample=NA, prettypaste=T){
-  if(class(token_i) == 'logical') token_i = which(token_i)
+  if (class(token_i) == 'logical') token_i = which(token_i)
   ## first filter tokens on document id (to speed up computation)
 
-  if(!is.null(token_i)) {
-    if(!is.na(nsample)) token_i = sample(token_i, nsample)
+  if (!is.null(token_i)) {
+    if (!is.na(nsample)) token_i = sample(token_i, nsample)
     tokens$token_i = F
     tokens$token_i[token_i] = T
     tokens = tokens[tokens[,doc.col] %in% unique(tokens[token_i, doc.col]),]
     token_i = which(tokens$token_i)
   } else {
-    if(!is.na(nsample) & nsample < nrow(hits)) {
+    if (!is.na(nsample) & nsample < nrow(hits)) {
       hits = hits[sample(1:nrow(hits), nsample),]
     }
     tokens = tokens[tokens[,doc.col] %in% unique(hits[,doc.col]),]
@@ -131,7 +130,7 @@ getKwic <- function(tc, hits=NULL, token_i=NULL, nwords=10, nsample=NA, prettypa
     doc_id = doc_ids[i]
 
     sent_i = (i-nwords):(i+nwords)
-    keyword_i = if(min(sent_i) < 0) min(sent_i) + nwords else nwords + 1
+    keyword_i = if (min(sent_i) < 0) min(sent_i) + nwords else nwords + 1
 
     sent_i = sent_i[sent_i >= 0 & sent_i <= length(words)]
     sent = as.character(words[sent_i])
@@ -143,7 +142,7 @@ getKwic <- function(tc, hits=NULL, token_i=NULL, nwords=10, nsample=NA, prettypa
   }
   o = ldply(token_i, kwicldply, doc_ids=tokens[,doc.col], words=tokens[,feature.col], nwords=nwords)
 
-  if(prettypaste) o$kwic = prettyKWIC(o$kwic)
+  if (prettypaste) o$kwic = prettyKWIC(o$kwic)
   o$kwic
 }
 

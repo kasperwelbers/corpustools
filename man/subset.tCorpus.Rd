@@ -5,7 +5,7 @@
 \title{Subset a tCorpus}
 \usage{
 \method{subset}{tCorpus}(tc, subset = NULL, subset_meta = NULL,
-  keep_feature_index = T, drop_levels = F, window = NULL)
+  drop_levels = F, window = NULL)
 }
 \arguments{
 \item{tc}{tCorpus object}
@@ -16,10 +16,5 @@
 }
 \description{
 Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta).
-}
-\details{
-In the logical expression (e.g., sent_i ) for subset and subset_meta can contain the
-
-Note that you can also use objects from your (global) environment. For example, if you have a vector called filter_doc_ids, your logical expression can be: doc_id %in% filter_doc_ids. This is also a good way to filter words, for instance by using
 }
 
