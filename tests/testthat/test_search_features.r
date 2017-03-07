@@ -9,6 +9,7 @@ test_that("Query search works", {
   hits = tc$search_features(keyword = 'fuel')
   expect_equal(as.character(hits$feature), c('fuel','fuel'))
 
+
   ## multiword keywords
   hits = tc$search_features('"a fueled debate"', only_last_mword = T)
   expect_equal(as.character(hits$feature), c('debate'))

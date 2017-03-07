@@ -266,9 +266,11 @@ NULL
 #' \itemize{
 #'    \item{is the actual feature that has to be found in the token}
 #'    \item{can contain multiple words with OR statement (and empty spaces are also considered OR statements)}
-#'    \item{CANNOT contain AND or NOT statements (this is what the condition is for)}
+#'    \item{can contain multiword strings, using quotes. e.g., "united states"}
+#'    \item{can contain word proximities, using quotes plus tilde and a number specifiying the word distance. e.g., "climate chang*"~10}
 #'    \item{accepts the ? wildcard, which means that any single character can be used in this place}
 #'    \item{accepts the * wildcard, which means that any number of characters can be used in this place}
+#'    \item{is be default not case sensitive, but can be made so by adding ~s. e.g., COP~s}
 #'  }
 #'
 #' The condition:
@@ -276,7 +278,9 @@ NULL
 #'    \item{has to be TRUE for the keyword to be accepted. Thus, if a condition is given, the query can be interpreted as: keyword AND condition}
 #'    \item{can contain complex boolean statements, using AND, OR and NOT statements, and using parentheses}
 #'    \item{accepts the ? and * wildcards}
-#'    \item{can be specified for a maximum word distance of the keyword. The terms in the condition are looked up within this word distance. Individual terms can be given a word distance using the ~ symbol, where "word~50" means that "word" is looked up within 50 words of the keyword.}
+#'    \item{can be specified for a maximum word distance of the keyword using the ~ symbol, where "word~50" means that "word" is looked up within 50 words of the keyword.}
+#'    \item{is be default not case sensitive, but can be made so by adding ~s. e.g., COP~s}
+#'    \item{the case sensitive and word distance flags can be used together. e.g., COP~s50 means that all capital COP must be found within 50 words of the keyword}
 #' }
 #'
 #' Parameters:

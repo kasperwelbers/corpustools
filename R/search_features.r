@@ -74,7 +74,7 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
     code = queries$code[i]
     if (verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
     kw = queries$keyword[i]
-    hit = search_string(fi, queries$keyword[i], allow_proximity = T, only_last_mword = only_last_mword)
+    hit = search_string(fi, kw, allow_proximity = T, only_last_mword = only_last_mword)
     hit$doc_id = tc$data('doc_id')[hit$i]
 
     ## take subset into account
@@ -130,8 +130,11 @@ evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=N
     hit_doc = unique(hit$doc_id)
     remaining_features = as.character(unique(tc$data()[J(hit_doc), feature, with=F][[1]]))
 
-    for(con_regex_term in unique(con_regex$regex)){
-      con_hit = fi[J(batch_grep(con_regex_term, remaining_features)), c('i','global_i'), with=F]
+    ucon_regex = unique(con_regex[,c('regex','ignore_case')])
+    for(i in 1:nrow(ucon_regex)){
+      con_regex_term = ucon_regex$regex[i]
+      ign_case = ucon_regex$ignore_case[i]
+      con_hit = fi[J(batch_grep(con_regex_term, remaining_features, ignore.case = ign_case)), c('i','global_i'), with=F]
 
       for(i in which(con_regex$regex == con_regex_term)){
         term = as.character(con_regex$term[i])

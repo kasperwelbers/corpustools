@@ -5,6 +5,8 @@ test_that("Query document search works", {
            'Mark Rutte is simply Rutte. Bos, on the other hand, is not always Wouter')
   tc = create_tcorpus(text, doc_id = c('a','b','c'), split_sentences = T)
 
+
+
   hits = tc$search_contexts('mark AND rutte')
   expect_equal(as.character(hits$doc_id), 'c')
 
@@ -25,17 +27,14 @@ test_that("Query document search works", {
   hits = tc$search_contexts('"bos wouter"~10', context_level = 'sentence') #  bos and wouter within a word distance of 10
   expect_true(!is.null(hits))
 
-  hits = tc$search_contexts('"!bos wouter"~10', context_level = 'sentence') # wouter should not occur within 10 words from bos
+  hits = tc$search_contexts('wouter NOT "bos wouter"~10', context_level = 'sentence') # wouter should not occur within 10 words from bos
   expect_true(is.null(hits))
+
+  hits = tc$search_contexts('wouter NOT "bos wouter"~3', context_level = 'sentence') # wouter should not occur within 10 words from bos
+  expect_true(nrow(hits) == 1)
 
   ## proximity with additional or statements
   hits = tc$search_contexts('"(bos test) wouter"~10', context_level = 'sentence') # finds "bos wouter"~10 OR "test wouter"~10 (but more efficiently than entering these terms manually)
-  expect_true(!is.null(hits))
-
-  hits = tc$search_contexts('"(!bos test) wouter"~10', context_level = 'sentence') # finds "(NOT bos) wouter"~10 OR "test wouter"~10
-  expect_true(is.null(hits))
-
-  hits = tc$search_contexts('"(bos !test) wouter"~10', context_level = 'sentence') # finds "bos wouter"~10 OR "(NOT test) wouter"~10
   expect_true(!is.null(hits))
 
   ## query subsetting
