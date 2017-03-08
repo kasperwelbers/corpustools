@@ -2,10 +2,9 @@ test_that("Query document search works", {
   library(tcorpus)
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
-           'Mark Rutte is simply Rutte. Bos, on the other hand, is not always Wouter')
-  tc = create_tcorpus(text, doc_id = c('a','b','c'), split_sentences = T)
-
-
+           'Mark Rutte is simply Rutte. Bos, on the other hand, is not always Wouter',
+           'Hey, A ~ symbol!! Can I match that?')
+  tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = T)
 
   hits = tc$search_contexts('mark AND rutte')
   expect_equal(as.character(hits$doc_id), 'c')
@@ -33,9 +32,32 @@ test_that("Query document search works", {
   hits = tc$search_contexts('wouter NOT "bos wouter"~3', context_level = 'sentence') # wouter should not occur within 10 words from bos
   expect_true(nrow(hits) == 1)
 
-  ## proximity with additional or statements
-  hits = tc$search_contexts('"(bos test) wouter"~10', context_level = 'sentence') # finds "bos wouter"~10 OR "test wouter"~10 (but more efficiently than entering these terms manually)
-  expect_true(!is.null(hits))
+  ## BOOLEAN
+  hits = tc$search_contexts('wouter AND bos')
+  expect_true(nrow(hits) == 1)
+  hits = tc$search_contexts('wouter NOT bos')
+  expect_true(is.null(hits))
+  hits = tc$search_contexts('wouter NOT (bos OR banaan)') # neither bos nor banaan may occur
+  expect_true(is.null(hits))
+  hits = tc$search_contexts('wouter NOT (bos AND banaan)') # bos and banaan may not occur together
+  expect_true(nrow(hits) == 1)
+
+  ## case sensitive
+  hits = tc$search_contexts('bos~s')
+  expect_true(is.null(hits))
+  hits = tc$search_contexts('Bos~s')
+  expect_true(nrow(hits) == 1)
+  hits = tc$search_contexts('"wouter bos"~10s') ## if flag on quotes, all within quotes needs to be case sensitive
+  expect_true(is.null(hits))
+  hits = tc$search_contexts('"Wouter Bos"~s10')
+  expect_true(nrow(hits) == 1)
+  expect_equal(tc$search_contexts('"Wouter Bos"~10s'), tc$search_contexts('"Wouter Bos"~s10')) ## order of flags is irrelevant
+
+  ## escaping special characters
+  hits = tc$search_contexts('\\~')
+  expect_equal(as.character(hits$doc_id), 'd')
+  hits = tc$search_features('\\?')
+  expect_equal(as.character(hits$doc_id), 'd')
 
   ## query subsetting
   tc_rutte = tc$subset_query('"mark rutte"~2', context_level = 'sentence')

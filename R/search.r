@@ -7,7 +7,6 @@ search_string <- function(fi, string, allow_multiword=T, allow_proximity=T, only
   ## !!! THis function does not manage complex boolean queries (AND, NOT) !!! For this, first run parse_queries, and then use the terms from the output
 
   regex = get_feature_regex(string)
-
   is_multiword = grepl(' ', regex$term)
   is_proximity = !is.na(regex$window)
 

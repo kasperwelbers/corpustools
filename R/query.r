@@ -1,4 +1,4 @@
-FORM_SYMBOLS = '!&\\(\\)| {}"'
+FORM_SYMBOLS = '!&()| {}"'
 FORM_REGEX = sprintf('([^%s]+)', FORM_SYMBOLS)
 
 
@@ -39,9 +39,9 @@ parse_query <- function(query){
 
   ## parts of the string between quotes are treated as single query terms
   ## if within quotations, spaces stay spaces. Except within parentheses within quotes, spaces are again OR statements
-  ## take the ~ and ^ flags after quotes along as well. Keep
+  ## take the flag symbols (~ < > ^) and values ([0-9s])after quotes along as well.
   ## To escape parts within quotes, we use the double curly brackets {}.
-  quotes = regmatches(query, gregexpr('(\").*?(\"([~^][~^0-9s]+)?)', query, perl = T))[[1]]
+  quotes = regmatches(query, gregexpr('(\").*?(\"([<>^~][<>~^0-9s]+)?)', query, perl = T))[[1]]
   for(m in quotes) {
     not_bracketed = gsub('(?<={).*?(?=})', '', m, perl=T)
     if (grepl('&', not_bracketed)) stop('Queries cannot contain AND statements within quotes')
@@ -100,10 +100,15 @@ get_feature_regex <- function(terms, default_window=NA){
   }
 
   terms = unlist(terms[,2])
+
+  esc = get_escaped_table(terms)
+  if(!is.null(esc)) for(i in 1:nrow(esc)) terms = gsub(esc$esc[i], esc$id[i], terms, fixed = T)
+
   terms = data.frame(term = terms,
-                     regex = gsub('[~^].*', '', terms),
+                     regex = gsub('[<>^~].*', '', terms),
                      window = ifelse(grepl('~[s]*[0-9][s]*', terms) == T, gsub('.*~[s]*([0-9]*).*', '\\1', terms), default_window),
-                     condition_window = ifelse(grepl('\\^[0-9]', terms) == T, gsub('.*\\^([0-9]*).*', '\\1', terms), default_window),
+                     direction = get_direction(terms),
+                     condition_window = ifelse(grepl('[<>^][0-9]', terms) == T, gsub('.*[<>^]([0-9]*).*', '\\1', terms), default_window),
                      ignore_case = ifelse(grepl('~[0-9]*[s][0-9]*', terms) == T, F, T)) ## if a case sensitive flag occurs (~s) then do not ignore case. Note that the case_insensitive_flags function takes care of case insensitive words in multiword strings
   terms$window = as.numeric(as.character(terms$window))
   terms$condition_window = as.numeric(as.character(terms$condition_window))
@@ -114,9 +119,32 @@ get_feature_regex <- function(terms, default_window=NA){
   terms$regex = gsub('"', '', terms$regex, fixed=T) # remove quotes
   terms$regex = gsub('\\{|\\}', '', terms$regex)
 
+  #FORM_REGEX
+
+  #print(terms)
   terms$regex = gsub(FORM_REGEX, '\\\\b\\1\\\\b', terms$regex) ## add word boundaries
   terms$regex = ifelse(terms$ignore_case, terms$regex, case_insensitive_flags(terms$term, terms$regex))
+  if(!is.null(esc)) for(i in 1:nrow(esc)) terms$regex = gsub(esc$id[i], esc$esc[i], terms$regex, fixed = T)
+
   unique(terms)
+}
+
+get_escaped_table <- function(x){
+  if(length(x) == 0) return(NULL)
+  esc = stringi::stri_extract_all_regex(x, '\\\\.')
+  if (any(is.na(esc)) | any(is.null(esc))) return(NULL)
+  esc = unique(unlist(esc))
+  data.frame(id=paste0('\\',1:length(esc)), esc=esc)
+}
+
+get_direction <- function(term){
+  if(length(term) == 0) return(NULL)
+  direction = '<>'
+  left = grepl('<[0-9]', term)
+  right = grepl('>[0-9]', term)
+  direction[left &! right] = '<'
+  direction[!left & right] = '>'
+  direction
 }
 
 case_insensitive_flags <- function(term, regex){
@@ -146,6 +174,3 @@ qualify_queries <- function(queries){
   }
   if (length(boo) > 0) stop(paste(boo, collapse='\n'))
 }
-
-#get_feature_regex('test^10~10')
-#print(get_feature_regex('"test~s dit"~10 en dit test~s en~s "test data"~5'))

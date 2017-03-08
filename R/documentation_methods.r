@@ -323,6 +323,19 @@ NULL
 #' @param context_level Select whether the queries should occur within while "documents" or specific "sentences". Returns results at the specified level.
 #' @param verbose
 #'
+#' @details
+#' Brief summary of the query language
+#'
+#' The following operators and modifiers are supported:
+#' \itemize{
+#'    \item{The standaard Boolean operators: AND, OR and NOT. As a shorthand, an empty space can be used as an OR statement, so that "this that those" means "this OR that OR those". NOT statements stricly mean AND NOT, so should only be used between terms. If you want to find \emph{everything except} certain terms, you can use * (wildcard for \emph{anything}) like this: "* NOT (this that those)".}
+#'    \item{For complex queries parentheses can (and should) be used. e.g. '(spam AND eggs) NOT (fish and (chips OR albatros))}
+#'    \item{Wildcards ? and *. The questionmark can be used to match 1 unknown character or no character at all, e.g. "?at" would find "cat", "hat" and "at". The asterisk can be used to match any number of unknown characters. Both the asterisk and questionmark can be used at the start, end and within a term.}
+#'    \item{Multiword strings, or exact strings, can be specified using quotes. e.g. "united states"}
+#'    \item{Words within a given word distance can be found using quotes plus tilde and a number specifiying the word distance. e.g. "climate chang*"~10}
+#'    \item{Queries are not case sensitive, but can be made so by adding the ~s flag. e.g. COP~s only finds "COP" in uppercase. The ~s flag can also be used on quotes to make all terms within quotes case sensitive, and this can be combined with the word proximity flag. e.g. "Marco Polo"~s10}
+#'  }
+#'
 #' @method tCorpus
 #' @name tCorpus$search_contexts
 #' @aliases search_contexts.tCorpus
@@ -367,7 +380,6 @@ NULL
 #' @name tCorpus$semnet
 #' @aliases semnet.tCorpus
 NULL
-
 
 #' Create a semantic network based on the co-occurence of words in word windows
 #'

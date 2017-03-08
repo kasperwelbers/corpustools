@@ -131,16 +131,25 @@ evaluate_condition <- function(tc, fi, hit, condition){
 
     for (j in 1:length(con_query$terms)){
       con_hit = search_string(fi, con_query$terms[j])
-      window = get_feature_regex(con_query$terms[j])$condition_window
-      ## windowdir = gsub('.*(~[<>]?).*', '\\1', con_regex$term[i])
 
+      con_regex = get_feature_regex(con_query$terms[j])
+      direction = con_regex$direction
+      window = con_regex$condition_window
       if (is.na(window)) {
         con_doc = tc$data('doc_id')[con_hit$i]
         qm[,j] = hit$doc_id %in% con_doc
       } else {
-        shifts = -window:window
-        shift = rep(shifts, times=nrow(con_hit))
-        con_window = rep(con_hit$global_i, each = length(shifts)) + shift
+        if(direction == '<') shifts = 0:window
+        if(direction == '>') shifts = -window:0
+        if(direction == '<>') shifts = -window:window
+
+        if (direction == '<>') {
+          shift = rep(shifts, times=nrow(con_hit))
+          con_window = rep(con_hit$global_i, each = length(shifts)) + shift
+        } else {
+          shift = rep(shifts, times=nrow(con_hit))
+          con_window = rep(con_hit$global_i, each = length(shifts)) + shift
+        }
         qm[,j] = hit$global_i %in% unique(con_window)
       }
     }
