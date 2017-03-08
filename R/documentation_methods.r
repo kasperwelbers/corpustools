@@ -102,7 +102,7 @@ NULL
 
 #' Modify the token and meta data.tables of a tCorpus
 #'
-#' Modify the token/meta data.table by setting the values of one (existing or new) column. This is less flexible than within data or transform data, but it has the advantage of allowing columns to be selected as a string, which makes it convenient for modifying the tCorpus from within function. The subset argument can be used to modify only subsets of columns, and can be a logical vector (select TRUE rows), numeric vector (indices of TRUE rows) or logical expression (e.g., pos == 'noun'). If A new column is made whie using a subset, then the rows outside of the selection are set to NA.
+#' Modify the token/meta data.table by setting the values of one (existing or new) column. This is less flexible than within data or transform data, but it has the advantage of allowing columns to be selected as a string, which makes it convenient for modifying the tCorpus from within function. The subset argument can be used to modify only subsets of columns, and can be a logical vector (select TRUE rows), numeric vector (indices of TRUE rows) or logical expression (e.g. pos == 'noun'). If A new column is made whie using a subset, then the rows outside of the selection are set to NA.
 #'
 #' @usage
 #' ## R6 method for class tCorpus
@@ -184,7 +184,7 @@ NULL
 #' Filter feature
 #'
 #' @description
-#' Similar to using \link{tCorpus$subset}, but instead of deleting rows it only sets rows for a specified feature to NA. This can be very convenient, because it enables only a selection of features to be used in an analysis (e.g., a topic model) but maintaining the context of the full article, so that results can be viewed in this context (e.g., a topic browser).
+#' Similar to using \link{tCorpus$subset}, but instead of deleting rows it only sets rows for a specified feature to NA. This can be very convenient, because it enables only a selection of features to be used in an analysis (e.g. a topic model) but maintaining the context of the full article, so that results can be viewed in this context (e.g. a topic browser).
 #'
 #' Just as in subset, it is easy to use objects and functions in the filter, including the special functions for using term frequency statistics (see documentation for \link{tCorpus$subset}).
 #'
@@ -266,21 +266,20 @@ NULL
 #' \itemize{
 #'    \item{is the actual feature that has to be found in the token}
 #'    \item{can contain multiple words with OR statement (and empty spaces are also considered OR statements)}
-#'    \item{can contain multiword strings, using quotes. e.g., "united states"}
-#'    \item{can contain word proximities, using quotes plus tilde and a number specifiying the word distance. e.g., "climate chang*"~10}
+#'    \item{can contain multiword strings, using quotes. e.g. "united states"}
+#'    \item{can contain word proximities, using quotes plus tilde and a number specifiying the word distance. e.g. "climate chang*"~10}
 #'    \item{accepts the ? wildcard, which means that any single character can be used in this place}
 #'    \item{accepts the * wildcard, which means that any number of characters can be used in this place}
-#'    \item{is be default not case sensitive, but can be made so by adding ~s. e.g., COP~s}
+#'    \item{is be default not case sensitive, but can be made so by adding ~s. e.g. COP~s}
 #'  }
 #'
 #' The condition:
 #' \itemize{
 #'    \item{has to be TRUE for the keyword to be accepted. Thus, if a condition is given, the query can be interpreted as: keyword AND condition}
-#'    \item{can contain complex boolean statements, using AND, OR and NOT statements, and using parentheses}
-#'    \item{accepts the ? and * wildcards}
-#'    \item{can be specified for a maximum word distance of the keyword using the ~ symbol, where "word~50" means that "word" is looked up within 50 words of the keyword.}
-#'    \item{is be default not case sensitive, but can be made so by adding ~s. e.g., COP~s}
-#'    \item{the case sensitive and word distance flags can be used together. e.g., COP~s50 means that all capital COP must be found within 50 words of the keyword}
+#'    \item{works identical to the keyword, but with several additional options:}
+#'    \item{- can also contain complex boolean statements, using AND, OR and NOT statements, and using parentheses}
+#'    \item{- can be specified for a maximum word distance of the keyword using the ^ (caret) symbol, where "word^50" means that "word" is looked up within 50 words of the keyword. This can also be used after multiword strings, and in combination with the tilde. e.g. "climate chang*"~5^10 will check if the words climate and change/changing/etc. co-occur within 5 words, and if so, at least on word should occur within 10 words of the keyword}
+#'    \item{- the case sensitive and word distance flags can be used together. e.g. COP~s^50 means that all capital COP must be found within 50 words of the keyword}
 #' }
 #'
 #' Parameters:
@@ -386,7 +385,7 @@ NULL
 #' @param direction Determine whether co-occurrence is assymmetricsl ("<>") or takes the order of words into account. If direction is '<', then the from/x feature needs to occur before the to/y feature. If direction is '>', then after.
 #' @param backbone If True, add an edge attribute for the backbone alpha
 #' @param n.batches If a number, perform the calculation in batches
-#' @param set_matrix_mode Advanced feature. There are two approaches for calculating window co-occurrence. One is to measure how often a feature occurs within a given word window, which can be calculating by calculating the inner product of a matrix that contains the exact position of features and a matrix that contains the occurrence window. We refer to this as the "positionXwindow" mode. Alternatively, we can measure how much the windows of features overlap, for which take the inner product of two window matrices. By default, semnet_window takes the mode that we deem most appropriate for the similarity measure. Substantially, the positionXwindow approach has the advantage of being very easy to interpret (e.g., how likely is feature "Y" to occurr within 10 words from feature "X"?). The windowXwindow mode, on the other hand, has the interesting feature that similarity is stronger if words co-occurr more closely together (since then their windows overlap more). Currently, we only use the windowXwindow mode for cosine similarity. By using the set_matrix_mode parameter you can override this.
+#' @param set_matrix_mode Advanced feature. There are two approaches for calculating window co-occurrence. One is to measure how often a feature occurs within a given word window, which can be calculating by calculating the inner product of a matrix that contains the exact position of features and a matrix that contains the occurrence window. We refer to this as the "positionXwindow" mode. Alternatively, we can measure how much the windows of features overlap, for which take the inner product of two window matrices. By default, semnet_window takes the mode that we deem most appropriate for the similarity measure. Substantially, the positionXwindow approach has the advantage of being very easy to interpret (e.g. how likely is feature "Y" to occurr within 10 words from feature "X"?). The windowXwindow mode, on the other hand, has the interesting feature that similarity is stronger if words co-occurr more closely together (since then their windows overlap more). Currently, we only use the windowXwindow mode for cosine similarity. By using the set_matrix_mode parameter you can override this.
 #'
 #' @method tCorpus
 #' @name tCorpus$semnet_window
@@ -409,7 +408,7 @@ NULL
 #' @param new_feature The column name of the new feature.
 #' @param feature The feature to be used as input. For JRC names regular (unprocessed) words should be used.
 #' @param resource_path The path (without the filename) where the resource is stored. See ?download_resource for more information.
-#' @param collocation_labels if True, then for resources that create an id for subsequent words (e.g., named entities), labels are added (in a separate column) based on the most frequent collocation combinations in 'your' data. Note that this means that the labels can be different if you run the same analysis on a different corpus; this is why the id is always kept.
+#' @param collocation_labels if True, then for resources that create an id for subsequent words (e.g. named entities), labels are added (in a separate column) based on the most frequent collocation combinations in 'your' data. Note that this means that the labels can be different if you run the same analysis on a different corpus; this is why the id is always kept.
 #' @param batchsize The number of named entity string variations per batch. Using bigger batches is faster, but depending on the size of your corpus you might run out of memory (in which case you should use smaller batches). At the time of writing the total number of strings is roughtly 700,000.
 #' @param low_memory if TRUE (default) then data will be sorted in a way that tries to get a roughly equal number of string matches per batch, to prevent huge match tables (costing memory). If FALSE, data will be sorted in a way to get fewer unique words per batch, which can speed up matching, but can lead to a very unequal number of matches per batch.
 #' @param verbose

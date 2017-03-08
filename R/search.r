@@ -1,10 +1,10 @@
 ### search strings
 
-search_string <- function(fi, string, allow_multiword=T, allow_proximity=T, only_last_mword=T){
+search_string <- function(fi, string, allow_multiword=T, allow_proximity=T, only_last_mword=F){
   ## look up a string
   ## multiple strings can be used at once (in which case they are seen as related by OR statements)
   ## supports single word strings, multiword strings demarcated with quotes (e.g., "this string") and word proximities (e.g., "marco polo"~10)
-  #string = 'test "dit eens"~2"'
+  ## !!! THis function does not manage complex boolean queries (AND, NOT) !!! For this, first run parse_queries, and then use the terms from the output
 
   regex = get_feature_regex(string)
 
@@ -15,6 +15,8 @@ search_string <- function(fi, string, allow_multiword=T, allow_proximity=T, only
   multi = regex[is_multiword & !is_proximity,,drop=F]
   proxi = regex[is_multiword & is_proximity,,drop=F]
 
+
+
   if (nrow(single) > 0){
     hit_single = c() # pun intended
     if(sum(single$ignore_case) > 0) hit_single = union(hit_single, batch_grep(single$regex[single$ignore_case], levels(fi$feature)))
@@ -24,7 +26,6 @@ search_string <- function(fi, string, allow_multiword=T, allow_proximity=T, only
   } else {
     hit_single = NULL
   }
-
 
   if (nrow(multi) > 0){
     if (!allow_multiword) stop('Multiword queries ("word1 word2") not allowed here (allow_multiword == F)')
@@ -37,7 +38,7 @@ search_string <- function(fi, string, allow_multiword=T, allow_proximity=T, only
 
   if (nrow(proxi) > 0){
     if (!allow_proximity) stop('Proximity queries ("word1 word2"~5) not allowed here (allow_proximity == F)')
-    hit_proxi_index = proximity_grepl(fi, proxi, proxi$window, only_last=only_last_mword)
+    hit_proxi_index = proximity_grepl(fi, proxi, only_last=only_last_mword)
     hit_proxi = fi[fi$global_i %in% hit_proxi_index$global_i,,nomatch=0]
     hit_proxi$hit_id = paste0('p', hit_proxi_index$hit_id)
   } else {
@@ -58,6 +59,10 @@ batch_grep <- function(patterns, x, ignore.case=T, perl=F, batchsize=25, useByte
     out = out | grepl(pattern, x, ignore.case=ignore.case, perl=perl, useBytes=useBytes)
   }
   x[out]
+}
+
+singleword_grepl <- function(){
+
 }
 
 multiword_grepl <- function(fi, multi, only_last=T, ignore.case=T, perl=F, useBytes=T){
@@ -98,9 +103,9 @@ multiword_grepl <- function(fi, multi, only_last=T, ignore.case=T, perl=F, useBy
 }
 
 
-proximity_grepl <- function(fi, proxi, windows, only_last=T, ignore.case=T, perl=F, useBytes=T){
+proximity_grepl <- function(fi, proxi, only_last=T, ignore.case=T, perl=F, useBytes=T){
   hits = list()
-  if (any(windows < 1)) stop("window cannot be smaller than 1")
+  if (any(proxi$window < 1)) stop("window cannot be smaller than 1")
   hit_id = 1
 
   pword_regex = strsplit(proxi$regex, split=' ')
@@ -108,7 +113,7 @@ proximity_grepl <- function(fi, proxi, windows, only_last=T, ignore.case=T, perl
     q = pword_regex[[i]]
     ign_case = proxi$ignore_case[i]
 
-    window = windows[i]
+    window = proxi$window[i]
     pword_i = data.frame()              # is this specific global i one of the pwords
     pword_window = 1:max(fi$global_i)   # for which global i's do all pwords occur within the given window
     for(j in 1:length(q)){

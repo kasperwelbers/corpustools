@@ -7,6 +7,11 @@ FORM_REGEX = sprintf('([^%s]+)', FORM_SYMBOLS)
 ## perhaps better to use switch to a (shorter) list of REGEX symbols that is not allowed (i.e. the symbols used in the R logical expression).
 
 parse_queries <- function(query){
+  queries = plyr::llply(query, parse_query)
+  do.call(rbind, queries)
+}
+
+parse_query <- function(query){
   query = iconv(query, to='ASCII//TRANSLIT') # remove accented characters
 
   query = gsub('\\{|\\}', '', query) ## drop curly brackets, which are used here for escaping
@@ -25,16 +30,18 @@ parse_queries <- function(query){
   if(any(grepl('\\![ ]*\\!', query))) stop('Query has repeating NOT statemenets (... NOT NOT ...)')
   if(any(grepl('^[ ]*\\&|\\([ ]*\\&', query))) stop('AND cannot be the first term in a query (or within parentheses)')
   if(any(grepl('^[ ]*\\!|\\([ ]*\\!', query))) stop('NOT cannot be the first term in a query (or within parentheses) because it means AND NOT. If you want to find everything except what comes after NOT, this can be done with "* NOT ..."')
-  if(any(grepl('"~s', query, fixed=T))) stop('Case sensitive flag (~i) can only be used for words, not for words beween quotes')
+
+  if(any(grepl('\\^[^0-9]\\b', query, perl=T))) stop('Invalid flag after ^ (caret). This can only be a number (see search_features query details for conditions)')
+  if(any(grepl('\\~[^s0-9]\\b', query, perl=T))) stop('Invalid flag after ~ (tilde). This can only be a number (for multiword proximity) or ~s for (case sensitive)')
 
   ## also allow empty space as OR
   query = gsub('(?<=[+*?".a-zA-Z0-9/~_)-])[ ]+(?=[+*?".a-zA-Z0-9/~_(-])', ' | ', query, perl=T)
 
   ## parts of the string between quotes are treated as single query terms
   ## if within quotations, spaces stay spaces. Except within parentheses within quotes, spaces are again OR statements
-  ## if ~[0-9] after quotes (used to indicate word proximities) take these along as well
+  ## take the ~ and ^ flags after quotes along as well. Keep
   ## To escape parts within quotes, we use the double curly brackets {}.
-  quotes = regmatches(query, gregexpr('(\").*?(\"(~[0-9]+)?)', query, perl = T))[[1]]
+  quotes = regmatches(query, gregexpr('(\").*?(\"([~^][~^0-9s]+)?)', query, perl = T))[[1]]
   for(m in quotes) {
     not_bracketed = gsub('(?<={).*?(?=})', '', m, perl=T)
     if (grepl('&', not_bracketed)) stop('Queries cannot contain AND statements within quotes')
@@ -94,10 +101,12 @@ get_feature_regex <- function(terms, default_window=NA){
 
   terms = unlist(terms[,2])
   terms = data.frame(term = terms,
-                     regex = gsub('~.*', '', terms),
+                     regex = gsub('[~^].*', '', terms),
                      window = ifelse(grepl('~[s]*[0-9][s]*', terms) == T, gsub('.*~[s]*([0-9]*).*', '\\1', terms), default_window),
-                     ignore_case = ifelse(grepl('~[0-9]*[s][0-9]*', terms) == T, F, T)) ## if a case sensitive flag occurs (~s) then do not ignore case. Note that the case_sensitive_flags function takes care of case insensitive words in multiword strings
+                     condition_window = ifelse(grepl('\\^[0-9]', terms) == T, gsub('.*\\^([0-9]*).*', '\\1', terms), default_window),
+                     ignore_case = ifelse(grepl('~[0-9]*[s][0-9]*', terms) == T, F, T)) ## if a case sensitive flag occurs (~s) then do not ignore case. Note that the case_insensitive_flags function takes care of case insensitive words in multiword strings
   terms$window = as.numeric(as.character(terms$window))
+  terms$condition_window = as.numeric(as.character(terms$condition_window))
 
   terms$regex = gsub('([.+])', '\\\\\\1', terms$regex) ## escape special regex characters
   terms$regex = gsub('*', '.*', terms$regex, fixed=T) # wildcard: anything, or nothing
@@ -106,18 +115,28 @@ get_feature_regex <- function(terms, default_window=NA){
   terms$regex = gsub('\\{|\\}', '', terms$regex)
 
   terms$regex = gsub(FORM_REGEX, '\\\\b\\1\\\\b', terms$regex) ## add word boundaries
-  terms$regex = ifelse(terms$ignore_case, terms$regex, case_sensitive_flags(terms$term, terms$regex))
+  terms$regex = ifelse(terms$ignore_case, terms$regex, case_insensitive_flags(terms$term, terms$regex))
   unique(terms)
 }
 
-case_sensitive_flags <- function(term, regex){
-  r = stringi::stri_split(regex, regex=' ')
-  sapply(r, function(r){
-    case_flag = grepl('~[0-9]*s', term)
-    r[!case_flag] = sprintf('(?i)%s(?-i)', r[!case_flag])
-    paste(r, collapse=' ')
-  })
+case_insensitive_flags <- function(term, regex){
+  ## we cannot force case sensitive search within a case insensitive regex. However, we can use the (?i) regex flag to force case insensitive in a case sensitive search.
+  ## so for terms that contains at least one s flag, we use case sensitive search, and for individual words for which the flag is not set we use the (?i) regex flag
+  newr = regex
+  for (i in 1:length(term)){
+    if (grepl('\\"[0-9^]*~[0-9]*s', term[[i]])) {
+      next ## if the s flag is set around the multiword string "Like This"~s, then all words are case sensitive
+    } else {
+      t = stringi::stri_split(term[[i]], regex=' ')[[1]]  # this solution is not pretty, as it assumes that the term and regex strings have the same spaces. This should be the case, but it's still ugly. Fix if we have a better idea
+      r = stringi::stri_split(regex[[i]], regex=' ')[[1]]
+      s_flag = grepl('~[0-9]*s', t)
+      r[!s_flag] = sprintf('(?i)%s(?-i)', r[!s_flag])
+      newr[i] = paste(r[[i]], collapse=' ')
+    }
+  }
+  newr
 }
+
 
 qualify_queries <- function(queries){
   boo = c()
@@ -128,3 +147,5 @@ qualify_queries <- function(queries){
   if (length(boo) > 0) stop(paste(boo, collapse='\n'))
 }
 
+#get_feature_regex('test^10~10')
+#print(get_feature_regex('"test~s dit"~10 en dit test~s en~s "test data"~5'))

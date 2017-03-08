@@ -59,7 +59,9 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
 
   queries$code = as.character(queries$code)
   queries$code = ifelse(is.na(queries$code), sprintf('query_%s', 1:nrow(queries)), queries$code)
-  windows = na.omit(get_feature_regex(queries$condition, default_window = NA)$window)
+
+  windows = get_feature_regex(queries$condition, default_window = NA)
+  windows = na.omit(c(windows$window, windows$condition_window))
   max_window_size = if (length(windows) > 0) max(windows) else 0
 
   fi = tc$feature_index(feature=feature, context_level='document', max_window_size=max_window_size, as_ascii=T)
@@ -70,7 +72,7 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
 search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep_false_condition, verbose){
   res = list()
   n = nrow(queries)
-  for(i in 1:n){
+  for (i in 1:n){
     code = queries$code[i]
     if (verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
     kw = queries$keyword[i]
@@ -95,7 +97,7 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
     if (nrow(hit) == 0) next
 
     if (!is.na(queries$condition[i]) & !queries$condition[i] == ''){
-      hit$condition = evaluate_condition(tc, fi, hit, queries$condition[i], feature=feature, default_window=NA)
+      hit$condition = evaluate_condition(tc, fi, hit, queries$condition[i])
     } else {
       hit$condition = T
     }
@@ -119,43 +121,33 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
   hits
 }
 
-evaluate_condition <- function(tc, fi, hit, condition, feature, default_window=NA){
-  con_regex = get_feature_regex(condition, default_window = default_window)
-  qm = Matrix::spMatrix(nrow(hit),nrow(con_regex), x=logical())
-  colnames(qm) = con_regex$term
-
-  if (nrow(con_regex) == 0){
+evaluate_condition <- function(tc, fi, hit, condition){
+  con_query = parse_queries(condition)[1,] ## can only be 1 query
+  if (length(con_query$terms) == 0){
     return(hit)
   } else {
-    hit_doc = unique(hit$doc_id)
-    remaining_features = as.character(unique(tc$data()[J(hit_doc), feature, with=F][[1]]))
+    qm = Matrix::spMatrix(nrow(hit), length(con_query$terms), x=logical())
+    colnames(qm) = con_query$terms
 
-    ucon_regex = unique(con_regex[,c('regex','ignore_case')])
-    for(i in 1:nrow(ucon_regex)){
-      con_regex_term = ucon_regex$regex[i]
-      ign_case = ucon_regex$ignore_case[i]
-      con_hit = fi[J(batch_grep(con_regex_term, remaining_features, ignore.case = ign_case)), c('i','global_i'), with=F]
+    for (j in 1:length(con_query$terms)){
+      con_hit = search_string(fi, con_query$terms[j])
+      window = get_feature_regex(con_query$terms[j])$condition_window
+      ## windowdir = gsub('.*(~[<>]?).*', '\\1', con_regex$term[i])
 
-      for(i in which(con_regex$regex == con_regex_term)){
-        term = as.character(con_regex$term[i])
-        window = con_regex$window[i]
-        ## windowdir = gsub('.*(~[<>]?).*', '\\1', con_regex$term[i])
-
-        if (is.na(window)) {
-          con_doc = tc$data('doc_id')[con_hit$i]
-          qm[,term] = hit$doc_id %in% con_doc
-        } else {
-          shifts = -window:window
-          shift = rep(shifts, times=nrow(con_hit))
-          con_window = rep(con_hit$global_i, each = length(shifts)) + shift
-          qm[,term] = hit$global_i %in% con_window
-        }
+      if (is.na(window)) {
+        con_doc = tc$data('doc_id')[con_hit$i]
+        qm[,j] = hit$doc_id %in% con_doc
+      } else {
+        shifts = -window:window
+        shift = rep(shifts, times=nrow(con_hit))
+        con_window = rep(con_hit$global_i, each = length(shifts)) + shift
+        qm[,j] = hit$global_i %in% unique(con_window)
       }
     }
   }
-  q = parse_queries(condition)
-  eval_query_matrix(qm, q[1,]$terms, q[1,]$form)
+  eval_query_matrix(qm, con_query$terms, con_query$form)
 }
+
 
 #' Recode features in a tCorpus based on a search string
 #'

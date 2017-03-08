@@ -9,7 +9,6 @@ test_that("Query search works", {
   hits = tc$search_features(keyword = 'fuel')
   expect_equal(as.character(hits$feature), c('fuel','fuel'))
 
-
   ## multiword keywords
   hits = tc$search_features('"a fueled debate"', only_last_mword = T)
   expect_equal(as.character(hits$feature), c('debate'))
@@ -32,15 +31,15 @@ test_that("Query search works", {
 
 
   ## condition once parameter
-  hits_f = tc$search_features(keyword = 'rutte', condition = 'mark~2')
-  hits_t = tc$search_features(keyword = 'rutte', condition = 'mark~2', condition_once = T)
+  hits_f = tc$search_features(keyword = 'rutte', condition = 'mark^2')
+  hits_t = tc$search_features(keyword = 'rutte', condition = 'mark^2', condition_once = T)
   expect_equal(as.character(hits_f$feature), c('Rutte'))
   expect_equal(as.character(hits_t$feature), c('Rutte','Rutte'))
 
   ## multiple queries
   queries = data.frame(code=c('renewable fuel', 'mark rutte', 'debate'),
                        keyword=c('fuel*', 'rutte', 'debate'),
-                       condition = c('renewable green clean', 'mark~2', ''))
+                       condition = c('renewable green clean', 'mark^2', ''))
   hits = tc$search_features(queries=queries, condition_once=c(F,T,F))
   expect_equal(as.character(hits$feature), c('fuel','fuels','debate', 'Rutte', 'Rutte'))
 
