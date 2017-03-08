@@ -1,5 +1,6 @@
-FORM_SYMBOLS = '()!&| {}"'
+FORM_SYMBOLS = '!&\\(\\)| {}"'
 FORM_REGEX = sprintf('([^%s]+)', FORM_SYMBOLS)
+
 
 ## look for alternative to as_ascii with iconv? Or just allow as_ascii in search for latin languages? (it's nice to not care about accents)
 ## make a test function that creates a tCorpus with every possible character as a 1 char word, and then search this corpus with queries for each character to see whether it hits
@@ -10,7 +11,7 @@ parse_queries <- function(query){
 
   query = gsub('\\{|\\}', '', query) ## drop curly brackets, which are used here for escaping
 
-  escape_special = '(\\&\\!)' ## Escape the special characters that R uses for logical expressions
+  escape_special = '\\&\\!' ## Escape the special characters that R uses for logical expressions
   query = gsub(sprintf('([^%s]*[%s][^%s]*)', FORM_SYMBOLS, escape_special, FORM_SYMBOLS),
                '{\\1}', query)
 

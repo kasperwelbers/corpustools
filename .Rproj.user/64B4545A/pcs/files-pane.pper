@@ -1,8 +1,8 @@
 {
-    "path" : "~/Dropbox/tcorpus/tests/testthat",
+    "path" : "~/Dropbox/tcorpus/R",
     "sortOrder" : [
         {
-            "ascending" : false,
+            "ascending" : true,
             "columnIndex" : 2
         },
         {
