@@ -1,4 +1,4 @@
-FORM_SYMBOLS = '!&()| {}"'
+FORM_SYMBOLS = '!&()| {}'
 FORM_REGEX = sprintf('([^%s]+)', FORM_SYMBOLS)
 
 
@@ -52,11 +52,13 @@ parse_query <- function(query){
     replacewith = gsub(' | ', ' ', replacewith, fixed=T)
     query = gsub(m, replacewith, query, fixed=T)
 
-    parmatch = regexpr('\\(.*\\)', query)
-    for(m in regmatches(query, parmatch)) {
+    parmatch = regexpr('\\(.*\\)', m)
+    for(m in regmatches(m, parmatch)) {
+
       query = gsub(m, gsub(' +', '|', m), query, fixed=T)
     }
   }
+
 
   query = gsub('(?<= )\\*(?= )|(?<=^)\\*(?= )', '!!', query, perl=T)   ## make " * ", as a 'find all' solution, an immediate TRUE. As a placeholder, we use !! (not not, which is technically true, right?)
   query = gsub(' +', ' ', query)
@@ -105,11 +107,12 @@ get_feature_regex <- function(terms, default_window=NA){
   if(!is.null(esc)) for(i in 1:nrow(esc)) terms = gsub(esc$esc[i], esc$id[i], terms, fixed = T)
 
   terms = data.frame(term = terms,
-                     regex = gsub('[<>^~].*', '', terms),
+                     regex = gsub('[<>^~][0-9s]*', '', terms),
                      window = ifelse(grepl('~[s]*[0-9][s]*', terms) == T, gsub('.*~[s]*([0-9]*).*', '\\1', terms), default_window),
                      direction = get_direction(terms),
                      condition_window = ifelse(grepl('[<>^][0-9]', terms) == T, gsub('.*[<>^]([0-9]*).*', '\\1', terms), default_window),
                      ignore_case = ifelse(grepl('~[0-9]*[s][0-9]*', terms) == T, F, T)) ## if a case sensitive flag occurs (~s) then do not ignore case. Note that the case_insensitive_flags function takes care of case insensitive words in multiword strings
+
   terms$window = as.numeric(as.character(terms$window))
   terms$condition_window = as.numeric(as.character(terms$condition_window))
 
@@ -150,21 +153,21 @@ get_direction <- function(term){
 case_insensitive_flags <- function(term, regex){
   ## we cannot force case sensitive search within a case insensitive regex. However, we can use the (?i) regex flag to force case insensitive in a case sensitive search.
   ## so for terms that contains at least one s flag, we use case sensitive search, and for individual words for which the flag is not set we use the (?i) regex flag
-  newr = regex
   for (i in 1:length(term)){
     if (grepl('\\"[0-9^]*~[0-9]*s', term[[i]])) {
       next ## if the s flag is set around the multiword string "Like This"~s, then all words are case sensitive
     } else {
-      t = stringi::stri_split(term[[i]], regex=' ')[[1]]  # this solution is not pretty, as it assumes that the term and regex strings have the same spaces. This should be the case, but it's still ugly. Fix if we have a better idea
-      r = stringi::stri_split(regex[[i]], regex=' ')[[1]]
+      t = regmatches(term[[i]], gregexpr(FORM_REGEX, term[i]))[[1]]
+      r = regmatches(regex[[i]], gregexpr(FORM_REGEX, regex[i]))[[1]]
       s_flag = grepl('~[0-9]*s', t)
-      r[!s_flag] = sprintf('(?i)%s(?-i)', r[!s_flag])
-      newr[i] = paste(r[[i]], collapse=' ')
+      for (sreg in r[!s_flag]) {
+        regex[i] = gsub(sreg, sprintf('(?i)%s(?-i)', sreg), regex[i], fixed = T)
+      }
     }
   }
-  newr
+  #print(regex)
+  regex
 }
-
 
 qualify_queries <- function(queries){
   boo = c()

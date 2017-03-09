@@ -5,6 +5,7 @@ test_that("Query search works", {
            'Mark Rutte is simply Rutte')
   tc = create_tcorpus(text, doc_id = c('a','b','c'), split_sentences = T)
 
+
   ## simple keyword only
   hits = tc$search_features(keyword = 'fuel')
   expect_equal(as.character(hits$feature), c('fuel','fuel'))

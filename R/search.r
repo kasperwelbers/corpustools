@@ -101,7 +101,6 @@ multiword_grepl <- function(fi, multi, only_last=T, ignore.case=T, perl=F, useBy
   rbindlist(hits)
 }
 
-
 proximity_grepl <- function(fi, proxi, only_last=T, ignore.case=T, perl=F, useBytes=T){
   hits = list()
   if (any(proxi$window < 1)) stop("window cannot be smaller than 1")

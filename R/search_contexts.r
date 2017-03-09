@@ -3,8 +3,8 @@ search_contexts <- function(tc, query, code=NULL, feature='word', context_level=
   is_tcorpus(tc, T)
   if (is_shattered(tc)) return(shardloop_rbind(stc=tc, mcall=match.call(), verbose=verbose))
 
+  if(query == '') stop('Query cannot be an empty string')
   context_level = match.arg(context_level)
-
   windows = na.omit(get_feature_regex(query, default_window = NA)$window)
   max_window_size = if (length(windows) > 0) max(windows) else 0
 
@@ -42,4 +42,3 @@ search_contexts <- function(tc, query, code=NULL, feature='word', context_level=
   if (nrow(hits) == 0) hits = NULL
   hits
 }
-

@@ -140,7 +140,14 @@ tCorpus <- R6::R6Class("tCorpus",
        if (safe & column %in% c('doc_id','sent_i','word_i')) stop('The position columns (doc_id, sent_i, word_i) cannot be set or changed (with safe = T)')
        if (!is.null(subset)){
          r = eval_subset(private$.data, subset)
-         if (!column %in% colnames(private$.data)) private$.data[[column]] = NA
+         if (!column %in% colnames(private$.data)) {
+           private$.data[[column]] = NA
+           if (is(value, 'factor')) private$.data[[column]] = as.factor(private$.data[[column]])
+         }
+         if (is(private$.data[[column]], 'factor')) {
+           value = as.factor(value)
+           levels(private$.data[[column]]) = c(private$.data[[column]], levels(value))
+         }
          private$.data[[column]][r] = value
        } else {
          private$.data[[column]] = value
@@ -203,7 +210,14 @@ tCorpus <- R6::R6Class("tCorpus",
        if (safe & column %in% c('doc_id')) stop('The doc_id column cannot be set or changed (with safe = T)')
        if (!is.null(subset)){
          r = eval_subset(private$.meta, subset)
-         if (!column %in% colnames(private$.meta)) private$.meta[[column]] = NA
+         if (!column %in% colnames(private$.meta)) {
+           private$.meta[[column]] = NA
+           if (is(value, 'factor')) private$.meta[[column]] = as.factor(private$.meta[[column]])
+         }
+         if (is(private$.meta[[column]], 'factor')) {
+           value = as.factor(value)
+           levels(private$.meta[[column]]) = c(private$.meta[[column]], levels(value))
+         }
          private$.meta[[column]][r] = value
        } else {
          private$.meta[[column]] = value
@@ -296,12 +310,25 @@ tCorpus <- R6::R6Class("tCorpus",
        search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=keep_false_condition, only_last_mword=only_last_mword, verbose=verbose)
      },
 
+     code_features = function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, only_last_mword=F, verbose=F, clone=self$clone_on_change){
+       subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
+       subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
+
+       if(clone){
+         selfclone = self$clone()$code_features(keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, only_last_mword=only_last_mword, verbose=verbose, clone=F)
+         return(selfclone)
+       }
+       hits = search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, only_last_mword=only_last_mword, verbose=verbose)
+
+       invisible(self)
+     },
+
      search_recode = function(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA, clone=self$clone_on_change){
        subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
        subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
        if (clone) {
-         selfclone = self$clone()$search_recode(feature=feature, new_value=new_value, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, clone=F)
-         return(selfclone)
+          selfclone = self$clone()$search_recode(feature=feature, new_value=new_value, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, clone=F)
+          return(selfclone)
        }
        hits = self$search_features(keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta)
        x = as.numeric(as.character(hits$i)) ## for one of those inexplicable R reasons, I cannot directly use this numeric vector.... really no clue at all why
@@ -396,7 +423,7 @@ tCorpus <- R6::R6Class("tCorpus",
 #' @export
 print.tCorpus <- function(tc) {
   sent_info = if ('sent_i' %in% tc$names) paste(' and sentences (n = ', nrow(unique(tc$data()[,c('doc_id','sent_i')])), ')', sep='') else ''
-  cat('tCorpus containing ', tc$n, ' tokens (', format(object.size(tc), 'Mb'), ')',
+  cat('tCorpus containing ', tc$n, ' tokens',
       '\nsplit by documents (n = ', tc$n_meta, ')', sent_info,
       '\ncontains:',
       '\n  - ', length(tc$names), ' data column', if (length(tc$names) > 1) '(s)', ':\t', paste(tc$names, collapse=', '),

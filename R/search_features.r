@@ -77,6 +77,8 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
     if (verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
     kw = queries$keyword[i]
     hit = search_string(fi, kw, allow_proximity = T, only_last_mword = only_last_mword)
+    if(is.null(hit)) next
+
     hit$doc_id = tc$data('doc_id')[hit$i]
 
     ## take subset into account
@@ -91,7 +93,7 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
           i_filter = subset_i(tc, subset=subset_tokens, subset_meta=subset_meta)
         }
       }
-      hit = hit[hit$i %in% i_filter,]
+      hit = hit[hit$i %in% i_filter,,drop=F]
     }
 
     if (nrow(hit) == 0) next
@@ -178,4 +180,5 @@ search_recode <- function(tc, feature, new_value, keyword, condition=NA, conditi
   x = as.numeric(as.character(hits$i)) ## for one of those inexplicable R reasons, I cannot directly use this numeric vector.... really no clue at all why
   tc$set_column(feature, new_value, subset = x)
 }
+
 
