@@ -34,7 +34,7 @@ parse_query <- function(query){
   if(any(grepl('\\^[^0-9]\\b', query, perl=T))) stop('Invalid flag after ^ (caret). This can only be a number (see search_features query details for conditions)')
   if(any(grepl('\\~[^s0-9]\\b', query, perl=T))) stop('Invalid flag after ~ (tilde). This can only be a number (for multiword proximity) or ~s for (case sensitive)')
 
-  ## also allow empty space as OR
+  ## also allow empty space as OR (note that this also adds or statements for adjacent words between quotes. This is WRONG, but will be fixed in the next step)
   query = gsub('(?<=[+*?".a-zA-Z0-9/~_)-])[ ]+(?=[+*?".a-zA-Z0-9/~_(-])', ' | ', query, perl=T)
 
   ## parts of the string between quotes are treated as single query terms
@@ -47,18 +47,19 @@ parse_query <- function(query){
     if (grepl('&', not_bracketed)) stop('Queries cannot contain AND statements within quotes')
     if (grepl('!', not_bracketed)) stop('Queries cannot contain NOT statements within quotes')
 
-    replacewith = gsub('\\{|\\}', '', m) ## drop curly brackets of already escaped strings, since they will already be escaped by being nested in quotes
-    replacewith = sprintf('{%s}', replacewith) ## surround with {} to keep entire string as single term
-    replacewith = gsub(' | ', ' ', replacewith, fixed=T)
-    query = gsub(m, replacewith, query, fixed=T)
+    replacewith = m ## use replacewith to make multiple changes before gsubbing them back into query
+    ## for query parts between quotes, replace all OR statements between words within parenteses with the regex | (without spaces). This way, they will be treated as a singel regex term in search_string()
 
-    parmatch = regexpr('\\(.*\\)', m)
-    for(m in regmatches(m, parmatch)) {
-
-      query = gsub(m, gsub(' +', '|', m), query, fixed=T)
+    parmatch = gregexpr('(?<=\\().*?(?=\\))', replacewith, perl=T)
+    for(pm in regmatches(replacewith, parmatch)[[1]]) {
+      replacewith = gsub(pm, gsub(' +', '', pm), replacewith, fixed=T)
     }
-  }
 
+    replacewith = gsub(' | ', ' ', replacewith, fixed=T) ## there are leftover | statements that should be removed. Note that the | statements within parenthese are kept because they do not have spaces
+    replacewith = gsub('\\{|\\}', '', replacewith) ## drop curly brackets of already escaped strings, since they will already be escaped by being nested in quotes
+    replacewith = sprintf('{%s}', replacewith) ## surround with {} to keep entire string as single term
+    query = gsub(m, replacewith, query, fixed=T)
+  }
 
   query = gsub('(?<= )\\*(?= )|(?<=^)\\*(?= )', '!!', query, perl=T)   ## make " * ", as a 'find all' solution, an immediate TRUE. As a placeholder, we use !! (not not, which is technically true, right?)
   query = gsub(' +', ' ', query)
@@ -165,7 +166,6 @@ case_insensitive_flags <- function(term, regex){
       }
     }
   }
-  #print(regex)
   regex
 }
 

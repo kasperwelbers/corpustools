@@ -16,6 +16,7 @@ test_that("Query document search works", {
   hits = tc$search_contexts('"rutte bos"~5', context_level = 'document') ## should find rutte and bos across sentences
   expect_true(!is.null(hits))
 
+  get_feature_regex('"rutte bos"~5')
   hits = tc$search_contexts('"rutte bos"~5', context_level = 'sentence') ## should not find rutte and bos across sentences
   expect_true(is.null(hits))
 

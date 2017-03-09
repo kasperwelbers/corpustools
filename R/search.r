@@ -14,8 +14,6 @@ search_string <- function(fi, string, allow_multiword=T, allow_proximity=T, only
   multi = regex[is_multiword & !is_proximity,,drop=F]
   proxi = regex[is_multiword & is_proximity,,drop=F]
 
-
-
   if (nrow(single) > 0){
     hit_single = c() # pun intended
     if(sum(single$ignore_case) > 0) hit_single = union(hit_single, batch_grep(single$regex[single$ignore_case], levels(fi$feature)))
@@ -155,5 +153,15 @@ full_set_id <- function(id){
   id[id > nsets] = nsets
   id
 }
+
+
+#load('~/Dropbox/yeheng/backup.rdata')
+#tc = tokens_to_tcorpus(tc$data(as.df = T))
+#text = c('Renewable fuel is better than fossil fuels!',
+#'A fueled debate about fuel',
+#'Mark Rutte is simply Rutte')
+#tc = create_tcorpus(text, doc_id = c('a','b','c'), split_sentences = T)
+#test = tc$search_features('"(not hardly) (doing ambitio*) (enough sufficiently)”~10 "lack (action initiative)”~5')
+#nrow(test)
 
 
