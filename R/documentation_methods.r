@@ -311,6 +311,34 @@ NULL
 #' @aliases search_recode.tCorpus
 NULL
 
+#' Get keyword-in-context (KWIC) strings
+#'
+#' @description
+#' Create a data.frame with keyword-in-context strings for given indices (i), search results (hits) or search strings (keyword).
+#'
+#' @usage
+#' ## R6 method for class tCorpus
+#' \code{tCorpus$kwic(hits=NULL, i=NULL, keyword=NULL, code='', nwords=10, nsample=NA, output_feature='word', context_levels=c('document','sentence'), prettypaste=T, kw_tag=c('<','>'), ...)}
+#'
+#' @param hits results of feature search. see \link{tCorpus$search_features}.
+#' @param i instead of the hits argument, you can give the indices of features directly.
+#' @param keyword instead of using the hits or i arguments, a search string can be given directly. Note that this simply a convenient shorthand for first creating a hits object with \link{tCorpus$search_features}. If a keyword is given, then the ... argument is used to pass other arguments to \link{tCorpus$search_features}.
+#' @param code if 'i' or 'keyword' is used, the code argument can be used to add a code label. Should be a vector of the same length that gives the code for each i or keyword, or a vector of length 1 for a single label.
+#' @param nwords an integers specifying the size of the context, i.e. the number of words left and right of the keyword.
+#' @param nsample optionally, get a random sample of the keywords/features. If multiple codes are used, the sample is drawn for each code individually.
+#' @param output_feature the feature column that is used to make the KWIC.
+#' @param context_level Select the maxium context (document or sentence).
+#' @param prettypaste If TRUE, tries to reconstruct the text in a natural way (e.g. no space before a dot). Otherwise, all features are separated by a whitespace.
+#' @param kw_tag a character vector of length 2, that gives the symbols before (first value) and after (second value) the keyword in the KWIC string. Can for instance be used to prepare KWIC with format tags for highlighting.
+#' @param ... See \link{tCorpus$search_features} for the query parameters
+#'
+#' @method tCorpus
+#' @name tCorpus$kwic
+#' @aliases kwic.tCorpus
+NULL
+
+
+
 #' Search for documents or sentences using Boolean queries
 #'
 #' @usage

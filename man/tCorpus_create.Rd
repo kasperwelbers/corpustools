@@ -9,8 +9,8 @@
 \details{
 \strong{Create a tCorpus}
 \tabular{ll}{
-  \link[=create_tcorpus]{$create_tcorpus()} \tab Create a tCorpus from raw text input \cr
-  \link[=tokens_to_tcorpus]{$tokens_to_tcorpus()} \tab Create a tCorpus from a data.frame of already tokenized texts
+  \link[=create_tcorpus]{create_tcorpus()} \tab Create a tCorpus from raw text input \cr
+  \link[=tokens_to_tcorpus]{tokens_to_tcorpus()} \tab Create a tCorpus from a data.frame of already tokenized texts
 }
 }
 

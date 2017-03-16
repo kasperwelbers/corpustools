@@ -13,7 +13,6 @@
 #' @export
 wordWindowOccurence <- function(tc, feature, context_level=c('document','sentence'), window.size=10, direction='<>', distance_as_value=F, batch_rows=NULL, drop_empty_terms=T){
   is_tcorpus(tc)
-  #tc = subset(tc, !is.na(get_column(tc, feature)))
 
   context_level = match.arg(context_level)
   feature = match.arg(feature, tc$feature_names)

@@ -65,9 +65,10 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   max_window_size = if (length(windows) > 0) max(windows) else 0
 
   fi = tc$feature_index(feature=feature, context_level='document', max_window_size=max_window_size, as_ascii=T)
-  search_features_loop(tc, fi=fi, queries=queries, feature=feature, only_last_mword=only_last_mword, keep_false_condition=keep_false_condition, verbose=verbose)
-}
+  hits = search_features_loop(tc, fi=fi, queries=queries, feature=feature, only_last_mword=only_last_mword, keep_false_condition=keep_false_condition, verbose=verbose)
 
+  featureHits(hits, queries)
+}
 
 search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep_false_condition, verbose){
   res = list()
@@ -110,14 +111,17 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
     }
 
     if (!keep_false_condition) {
-      res[[code]] = hit[hit$condition, c('feature','i','doc_id','hit_id')]
+      res[[code]] = hit[hit$condition, c('feature','i','doc_id', 'hit_id')]
     } else {
-      res[[code]] = hit[,c('feature','i','doc_id','condition','hit_id')]
+      res[[code]] = hit[,c('feature','i','doc_id','condition', 'hit_id')]
     }
-
   }
+
   hits = plyr::ldply(res, function(x) x, .id='code')
-  if (nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor(), hit_id=numeric())
+  position_cols = if ('sent_i' %in% tc$names) c('sent_i', 'word_i') else c('word_i')
+  hits = cbind(hits, tc$data(position_cols, keep_df = T)[hits$i,])
+
+  if (nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor(), sent_i=numeric(), word_i = numeric(), hit_id=numeric())
   hits = hits[order(hits$i),]
   hits$hit_id = match(hits$hit_id, unique(hits$hit_id))
   hits
@@ -177,7 +181,7 @@ search_recode <- function(tc, feature, new_value, keyword, condition=NA, conditi
   if (is(tc, 'shattered_tCorpus')) return(shard_search_recode(stc=tc, feature=feature, new_value=new_value, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta))
 
   hits = search_features(tc, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta)
-  x = as.numeric(as.character(hits$i)) ## for one of those inexplicable R reasons, I cannot directly use this numeric vector.... really no clue at all why
+  x = as.numeric(as.character(hits$hits$i)) ## for one of those inexplicable R reasons, I cannot directly use this numeric vector.... really no clue at all why
   tc$set_column(feature, new_value, subset = x)
 }
 

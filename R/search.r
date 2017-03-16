@@ -4,7 +4,7 @@ search_string <- function(fi, string, allow_multiword=T, allow_proximity=T, only
   ## look up a string
   ## multiple strings can be used at once (in which case they are seen as related by OR statements)
   ## supports single word strings, multiword strings demarcated with quotes (e.g., "this string") and word proximities (e.g., "marco polo"~10)
-  ## !!! THis function does not manage complex boolean queries (AND, NOT) !!! For this, first run parse_queries, and then use the terms from the output
+  ## !!! THis function does not manage complex boolean queries (AND, NOT, parentheses) !!! For this, first run parse_queries, and then use the terms from the output
 
   regex = get_feature_regex(string)
   is_multiword = grepl(' ', regex$term)

@@ -50,7 +50,8 @@ use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsiz
   batches = split(re, batch_i)
 
   ## find the candidate matches
-  gf = global_feature_vector(fi)
+  gf = globalFeatureVector$new(fi$feature, fi$global_i)
+
   candidates = vector('list', length(batches))
   counter = verbose_sum_counter(nrow(re))
   for(i in seq_along(batches)){
@@ -79,13 +80,6 @@ use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsiz
   index
 }
 
-global_feature_vector <- function(fi){
-  global_f = rep(as.factor(''), nrow(fi))
-  levels(global_f) = c('', levels(fi$feature))
-  global_f[fi$global_i] = fi$feature
-  global_f
-}
-
 fast_multiword_stringmatch <- function(re, fi, gf, regex_sep, case_sensitive=T){
   i = 1:length(re$string)
 
@@ -106,7 +100,7 @@ fast_multiword_stringmatch <- function(re, fi, gf, regex_sep, case_sensitive=T){
 
   for(i in 1:length(candidates)){
     if (nrow(lt) == 0) break
-    hit = sapply(sn[lt$s_i], function(x) x[i+1]) == gf[lt$global_i + i]
+    hit = sapply(sn[lt$s_i], function(x) x[i+1]) == gf[lt$global_i + i, allow_na=T]
     hit[is.na(hit)] = F
     lt = lt[hit,]
 

@@ -27,7 +27,7 @@
 \item{safe}{If TRUE, you are unable to modify the position columns (doc_id, sent_i, word_i), which is very likely to break the tCorpus. Only set to FALSE if you know exactly what you're doing.}
 }
 \description{
-Modify the token/meta data.table by setting the values of one (existing or new) column. This is less flexible than within data or transform data, but it has the advantage of allowing columns to be selected as a string, which makes it convenient for modifying the tCorpus from within function. The subset argument can be used to modify only subsets of columns, and can be a logical vector (select TRUE rows), numeric vector (indices of TRUE rows) or logical expression (e.g., pos == 'noun'). If A new column is made whie using a subset, then the rows outside of the selection are set to NA.
+Modify the token/meta data.table by setting the values of one (existing or new) column. This is less flexible than within data or transform data, but it has the advantage of allowing columns to be selected as a string, which makes it convenient for modifying the tCorpus from within function. The subset argument can be used to modify only subsets of columns, and can be a logical vector (select TRUE rows), numeric vector (indices of TRUE rows) or logical expression (e.g. pos == 'noun'). If A new column is made whie using a subset, then the rows outside of the selection are set to NA.
 
 Change column names in tCorpus data
 }

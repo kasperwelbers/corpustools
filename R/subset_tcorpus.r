@@ -1,71 +1,7 @@
-#' Subset a tCorpus
-#'
-#' Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta).
-#'
-#' @param tc tCorpus object
-#' @param subset logical expression indicating elements or rows to keep in the tokens data.
-#' @param subset_meta
-#' @param drop_levels
-#' @param window If not NULL, an integer specifiying the window to be used to return the subset. For instance, if the subset contains word 10 in a document and window is 5, the subset will contain word 5 to 15. Naturally, this does not apply to subset_meta.
-subset.tCorpus <- function(tc, subset=NULL, subset_meta=NULL, drop_levels=F, window=NULL) {
-  subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
-  subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
-
-  e = if (is(substitute(subset), 'character')) parse(text=subset) else substitute(subset)
-  e_meta = if (is(substitute(subset_meta), 'character')) parse(text=subset_meta) else substitute(subset_meta)
-
-  r_meta = eval(e_meta, tc$meta(), parent.frame())
-  if (!is.null(r_meta)) tc = tc$select_meta_rows(r_meta)
-
-  r = eval(e, tc$data(), parent.frame())
-  if (!is.null(r)){
-    if (!is.null(window)){
-      global_i = get_global_i(tc, max_window_size=window)
-      global_r = global_i[r]
-      global_window = rep(global_r, window*2 + 1) + rep(-window:window, each=length(global_r)) ## add window
-      r = global_i %in% global_window
-    }
-    tc = tc$select_rows(r)
-  }
-
-  if (drop_levels) tc = tc$droplevels()
-  tc$transform_meta(doc_id = as.character(doc_id), safe = F)
-
-  suppressWarnings(tc$set_keys())
-  tc
-}
-
-
-#' Title
-#'
-#' @param tc
-#' @param query
-#' @param code
-#' @param feature
-#' @param context_level
-#'
-subset_query <- function(tc, query, feature='word', context_level=c('document','sentence')){
-  context_level = match.arg(context_level)
-  hits = search_contexts(tc, query, feature=feature, context_level=context_level)
-  if (is.null(hits)) return(NULL)
-  if (context_level == 'document'){
-    tc = subset(tc, doc_id %in% unique(hits$doc_id))
-  }
-  if (context_level == 'sentence'){
-    d = tc$data()[,c('doc_id','sent_i')]
-    d$i = 1:nrow(d)
-    rows = d[list(hits$doc_id, hits$sent_i)]$i
-    tc = subset(tc, rows)
-  }
-  tc
-}
-
 subset_window <- function(tc, i, window, context_level=c('document','sentence')){
   context_level = match.arg(context_level)
   subset(tc, i_window(tc, i, window=window, context_level=context_level))
 }
-
-
 
 i_window <- function(tc, i, window, context_level=c('document','sentence')){
   context_level = match.arg(context_level)

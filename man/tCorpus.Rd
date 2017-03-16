@@ -2,6 +2,7 @@
 % Please edit documentation in R/documentation_overview.r
 \name{tCorpus}
 \alias{tCorpus}
+\alias{tcorpus}
 \title{tCorpus: a corpus class for tokenized texts}
 \description{
 tCorpus: a corpus class for tokenized texts

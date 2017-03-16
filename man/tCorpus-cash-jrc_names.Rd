@@ -15,7 +15,7 @@
 
 \item{resource_path}{The path (without the filename) where the resource is stored. See ?download_resource for more information.}
 
-\item{collocation_labels}{if True, then for resources that create an id for subsequent words (e.g., named entities), labels are added (in a separate column) based on the most frequent collocation combinations in 'your' data. Note that this means that the labels can be different if you run the same analysis on a different corpus; this is why the id is always kept.}
+\item{collocation_labels}{if True, then for resources that create an id for subsequent words (e.g. named entities), labels are added (in a separate column) based on the most frequent collocation combinations in 'your' data. Note that this means that the labels can be different if you run the same analysis on a different corpus; this is why the id is always kept.}
 
 \item{batchsize}{The number of named entity string variations per batch. Using bigger batches is faster, but depending on the size of your corpus you might run out of memory (in which case you should use smaller batches). At the time of writing the total number of strings is roughtly 700,000.}
 

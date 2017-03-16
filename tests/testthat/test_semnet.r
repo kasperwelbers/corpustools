@@ -40,6 +40,7 @@ test_that("Semnet works", {
   gb = backbone_filter(g, alpha=0.5)
   expect_equal(ecount(gb), 43)
 
+  tc$search_features('Rutte OR Renewable')
   ## also works with NA's (which are ignored)
   tc_withNA = tc$search_recode('word', NA, 'Rutte OR Renewable')
   tc_withNA$data()

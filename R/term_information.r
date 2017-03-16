@@ -136,7 +136,7 @@ top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, r
   }
 
   break_cols = colnames(group_df)
-  group_df[[feature]] = get_column(tc, feature)
+  group_df[[feature]] = tc$data(feature)
   scores = ddply(group_df, break_cols, .fun = get_top_freq, n=n, feature=feature)
 
   if (!return_long) {

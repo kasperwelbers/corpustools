@@ -346,6 +346,7 @@ tCorpus <- R6::R6Class("tCorpus",
          return(selfclone)
        }
        hits = self$search_contexts(query, feature=feature, context_level=context_level)
+       hits = hits$hits
        if (is.null(hits)) return(NULL)
        if (context_level == 'document'){
          self$subset(doc_id %in% unique(hits$doc_id), clone = F)
@@ -357,6 +358,11 @@ tCorpus <- R6::R6Class("tCorpus",
          self$subset(rows, clone = F)
        }
        invisible(self)
+     },
+
+     kwic = function(hits=NULL, i=NULL, keyword=NULL, code='', nwords=10, nsample=NA, output_feature='word', context_level=c('document','sentence'), prettypaste=T, kw_tag=c('<','>'), ...){
+       if (!is.null(keyword)) hits = self$search_features(keyword=keyword, code=code, ...)
+       keyword_in_context(self, hits=hits, i=i, code=code, nwords=nwords, nsample=nsample, output_feature=output_feature, context_level=context_level, prettypaste=prettypaste, kw_tag=kw_tag)
      },
 
 ## CO-OCCURRENCE NETWORKS ##
@@ -429,6 +435,11 @@ print.tCorpus <- function(tc) {
       '\n  - ', length(tc$names), ' data column', if (length(tc$names) > 1) '(s)', ':\t', paste(tc$names, collapse=', '),
       '\n  - ', length(tc$meta_names), ' meta column', if (length(tc$meta_names) > 1) '(s)', ': \t', paste(tc$meta_names, collapse=', '),
       '\n', sep='')
+}
+
+#' @export
+summary.tCorpus <- function(tc) {
+  tc
 }
 
 #' @export

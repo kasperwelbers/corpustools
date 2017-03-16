@@ -40,5 +40,6 @@ search_contexts <- function(tc, query, code=NULL, feature='word', context_level=
   }
   hits = plyr::ldply(res, function(x) x, .id='code')
   if (nrow(hits) == 0) hits = NULL
-  hits
+
+  contextHits(hits, data.frame(code=code, query=query))
 }
