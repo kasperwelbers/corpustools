@@ -197,7 +197,7 @@ plotWords <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', yla
   if (is.null(ylim)) ylim = c(min(y) - ymargin, max(y) + ymargin)
 
   plot(x, y, type = "n", xlim = xlim, ylim = ylim, frame.plot = F, yaxt = yaxt, ylab = ylab, xlab = xlab, ...)
-  wl <- as.data.frame(wordlayout(x, y, words, cex = wordsize))
+  wl <- as.data.frame(wordcloud::wordlayout(x, y, words, cex = wordsize))
 
   text(wl$x + 0.5 * wl$width, wl$y + 0.5 * wl$ht, words, cex = wordsize, col = col)
 }

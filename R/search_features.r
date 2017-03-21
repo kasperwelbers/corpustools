@@ -163,27 +163,3 @@ evaluate_condition <- function(tc, fi, hit, condition){
   eval_query_matrix(qm, con_query$terms, con_query$form)
 }
 
-
-#' Recode features in a tCorpus based on a search string
-#'
-#' Search features (see documentation for search_features function for instructions) and replace features with a new value
-#'
-#' @param tc
-#' @param feature
-#' @param new_value
-#' @param keyword
-#' @param condition
-#' @param condition_once
-#' @param keyword_filter
-#'
-search_recode <- function(tc, feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA){
-  is_tcorpus(tc, T)
-  if (is(tc, 'shattered_tCorpus')) return(shard_search_recode(stc=tc, feature=feature, new_value=new_value, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta))
-
-  hits = search_features(tc, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta)
-  x = as.numeric(as.character(hits$hits$i)) ## for one of those inexplicable R reasons, I cannot directly use this numeric vector.... really no clue at all why
-  tc$set_column(feature, new_value, subset = x)
-}
-
-
-

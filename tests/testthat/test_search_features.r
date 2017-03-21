@@ -101,7 +101,14 @@ test_that("Query search works", {
   kw = tc$kwic(keyword = 'better', nwords=2)
   expect_true(kw$kwic == '...fuel is <better> than fossil...')
 
+  ## kwic with multiword queries
+  kw = tc$kwic(keyword = c('"renewable fuels"~10')) ## without gap
+  expect_equal(kw$feature, 'Renewable & fuels')
+  kw = tc$kwic(keyword = c('"renewable fuels"~10'), nwords = 2) ## without gap
+  expect_true(grepl('[...]', kw$kwic))
+
   ## code queries
+  #tc$search_code(tc, queries=queries)
   ##code = code_features(tc, queries, condition_once=c(F,T,F))
   ##expect_equal(as.numeric(table(code)), c(12,1,2,2))
 })

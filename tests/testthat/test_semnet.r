@@ -43,9 +43,11 @@ test_that("Semnet works", {
   tc$search_features('Rutte OR Renewable')
   ## also works with NA's (which are ignored)
   tc_withNA = tc$search_recode('word', NA, 'Rutte OR Renewable')
+
   tc_withNA$data()
   g = tc_withNA$semnet('word', measure = 'count_undirected')
   expect_true(!'Rutte' %in% V(g)$name)
   g = tc_withNA$semnet_window('word', window.size = 10, n.batches = NA)
   expect_true(!'Rutte' %in% V(g)$name)
 })
+

@@ -35,6 +35,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
    public = list(
      clone_on_change = T, ## if TRUE, tCorpus works like 'typical' R (modify on copy). If FALSE, all modifications made using methods will be made to the referenced data. Not needing to copy data is a great boon of R6 as a reference class, but we should keep this optional to facilitate the common R workflow
+     help = function() ?tCorpus,
 
      initialize = function(data, meta, feature_index=NULL, p=NULL) {
        private$.data = data.table(data)
@@ -93,8 +94,8 @@ tCorpus <- R6::R6Class("tCorpus",
        get_context(self, context_level = context_level, with_labels=with_labels)
      },
 
-     dtm = function(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context_labels=T, context=NULL) {
-       get_dtm(self, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form, subset_tokens=subset_tokens, subset_meta=subset_meta, context_labels=context_labels, context=context)
+     dtm = function(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NA, subset_meta=NA, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F) {
+       get_dtm(self, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form, subset_tokens=subset_tokens, subset_meta=subset_meta, context=context, context_labels=context_labels, feature_labels=feature_labels, ngrams=ngrams, ngram_before_subset=ngram_before_subset)
      },
 
 ## DATA MODIFICATION METHODS ##
@@ -146,7 +147,7 @@ tCorpus <- R6::R6Class("tCorpus",
          }
          if (is(private$.data[[column]], 'factor')) {
            value = as.factor(value)
-           levels(private$.data[[column]]) = c(private$.data[[column]], levels(value))
+           levels(private$.data[[column]]) = c(levels(private$.data[[column]]), levels(value))
          }
          private$.data[[column]][r] = value
        } else {
@@ -216,7 +217,7 @@ tCorpus <- R6::R6Class("tCorpus",
          }
          if (is(private$.meta[[column]], 'factor')) {
            value = as.factor(value)
-           levels(private$.meta[[column]]) = c(private$.meta[[column]], levels(value))
+           levels(private$.meta[[column]]) = c(levels(private$.meta[[column]]), levels(value))
          }
          private$.meta[[column]][r] = value
        } else {
@@ -330,8 +331,9 @@ tCorpus <- R6::R6Class("tCorpus",
           selfclone = self$clone()$search_recode(feature=feature, new_value=new_value, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, clone=F)
           return(selfclone)
        }
+
        hits = self$search_features(keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta)
-       x = as.numeric(as.character(hits$i)) ## for one of those inexplicable R reasons, I cannot directly use this numeric vector.... really no clue at all why
+       x = as.numeric(as.character(hits$hits$i)) ## for one of those inexplicable R reasons, I cannot directly use this numeric vector.... really no clue at all why
        self$set_column(feature, new_value, subset = x, clone = F)
        invisible(self)
      },
@@ -345,17 +347,18 @@ tCorpus <- R6::R6Class("tCorpus",
          selfclone = self$clone()$subset_query(query=query, feature=feature, context_level=context_level, clone=F)
          return(selfclone)
        }
+       context_level = match.arg(context_level)
        hits = self$search_contexts(query, feature=feature, context_level=context_level)
        hits = hits$hits
        if (is.null(hits)) return(NULL)
        if (context_level == 'document'){
-         self$subset(doc_id %in% unique(hits$doc_id), clone = F)
+         private$select_meta_rows(self$meta('doc_id') %in% hits$doc_id)
        }
        if (context_level == 'sentence'){
          d = self$data(c('doc_id','sent_i'))
          d$i = 1:nrow(d)
          rows = d[list(hits$doc_id, hits$sent_i)]$i
-         self$subset(rows, clone = F)
+         private$select_rows(rows)
        }
        invisible(self)
      },
@@ -372,6 +375,43 @@ tCorpus <- R6::R6Class("tCorpus",
 
      semnet_window = function(feature, measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=5, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
        semnet_window(self, feature=feature, measure=measure, context_level=context_level, window.size=window.size, direction=direction, backbone=backbone, n.batches=n.batches, set_matrix_mode=set_matrix_mode)
+     },
+
+## CORPUS COMPARISON ##
+
+     compare_corpus = function(tc_y, feature, smooth=0.1, min_over=NULL, min_chi2=NULL, is_subset=F, yates_cor=c('auto','yes','no')){
+       if (is_subset & self$n > tc_y$n) stop('tCorpus x (the one calling the method) cannot be a subset of tCorpus y, because it has more tokens')
+       tcorpus_compare(self, tc_y, feature, smooth=smooth, min_over=min_over, min_chi2=min_chi2, yates_cor=yates_cor, x_is_subset=is_subset)
+     },
+
+     compare_subset = function(feature, subset_x=NA, subset_meta_x=NA, query_x=NULL, query_feature='word', smooth=0.1, min_over=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no')){
+       subset_x = if (is(substitute(subset_x), 'call')) deparse(substitute(subset_x)) else subset_x
+       subset_meta_x = if (is(substitute(subset_meta_x), 'call')) deparse(substitute(subset_meta_x)) else subset_meta_x
+
+       if(is.na(subset_x) & is.na(subset_meta_x) & is.null(query_x)) stop("at least one of subset_x, subset_meta_x or query_x has to be specified")
+       tc_x = self$clone()
+       if(!is.na(subset_x) | !is.na(subset_meta_x)) tc_x = tc_x$subset(subset=subset_x, subset_meta=subset_meta_x, clone=T)
+       if(!is.null(query_x)) tc_x = tc_x$subset_query(query_x, feature=query_feature)
+
+       tc_x$compare_corpus(self, feature=feature, smooth=smooth, min_over=min_over, min_chi2=min_chi2, yates_cor=yates_cor, is_subset=T)
+     },
+
+## DOCUMENT COMPARISON ##
+
+     compare_documents = function(feature='word', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, from_subset=NA, to_subset=NA) {
+        from_subset = if (is(substitute(from_subset), 'call')) deparse(substitute(from_subset)) else from_subset
+        to_subset = if (is(substitute(to_subset), 'call')) deparse(substitute(to_subset)) else to_subset
+
+        compare_documents_fun(self, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=min_similarity, weight=weight, ngrams=ngrams, from_subset=from_subset, to_subset=to_subset)
+     },
+
+     deduplicate = function(feature='word', date_col=NULL, meta_cols=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=ngrams, print_duplicates=F, clone=self$clone_on_change){
+       if (clone) {
+         selfclone = self$clone()$deduplicate(feature=feature, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, ngrams=ngrams, print_duplicates=print_duplicates, clone=F)
+         return(selfclone)
+       }
+       self = delete_duplicates(self, feature=feature, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
+       invisible(self)
      },
 
 ## RESOURCES ##

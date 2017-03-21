@@ -2,7 +2,6 @@
 keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsample=NA, output_feature='word', context_level=c('document', 'sentence'), prettypaste=T, kw_tag=c('<','>')){
   if (class(i) == 'logical') i = which(i)
   ## first filter tokens on document id (to speed up computation)
-
   gi = get_global_i(tc, context_level=context_level, max_window_size = nwords)
   gfv = globalFeatureVector$new(tc$data(output_feature), gi)
 
@@ -13,12 +12,17 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsampl
     setkeyv(d, c('doc_id', 'word_i'))
     i = d[hits$hits[,c('doc_id', 'word_i')]]$i
     code = hits$hits$code
+    hit_id = hits$hits$hit_id
   }
   global_i = gi[i]
-  if(length(code) == 1) code = rep(code, length(i))
+  if(length(code) == 1) {
+    code = rep(code, length(i))
+    hit_id = 1:length(i)
+  }
 
   if(!is.na(nsample)) {
     samp = unlist(tapply(1:length(code), code, function(x) head(sample(x), nsample)))
+    hit_id = hit_id[samp]
     code = code[samp]
     i = i[samp]
     global_i = global_i[samp]
@@ -26,20 +30,37 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsampl
 
   shifts = -nwords:nwords
   d = data.frame(global_i = rep(global_i, each=length(shifts)) + shifts,
-                 kwic_i = rep(1:length(global_i), each=length(shifts)),
+                 hit_id = rep(hit_id, each=length(shifts)),
                  is_kw = rep(shifts == 0, length(global_i)))
   d = d[d$global_i > 0 & d$global_i <= max(gi),]
+
+  ## kwic's of the same hit_id should be merged.
+  d = d[order(d$hit_id, d$global_i, -d$is_kw),]
+  d = d[!duplicated(d[,c('hit_id','global_i')]),]
+
   d$feature = gfv[d$global_i, ignore_empty = F]
   d$feature[d$is_kw] = sprintf('%s%s%s', kw_tag[1], d$feature[d$is_kw], kw_tag[2])
 
-  kwic = split(as.character(d$feature), d$kwic_i)
+  ## add tag for gap between kwic of merged hit_ids that are not adjacent
+  same_hit_id = d$hit_id == shift(d$hit_id, 1, fill = -1)
+  not_adjacent = d$global_i - (shift(d$global_i, 1, fill=-1)) > 1
+  gap = same_hit_id & not_adjacent
+  d$feature[gap] = sprintf('[...] %s', d$feature[gap])
+
+  d = d[!d$feature == '',]
+  kwic = split(as.character(d$feature), d$hit_id)
   kwic = sapply(kwic, stringi:::stri_flatten, collapse=' ')
 
-  data.frame(doc_id = tc$data('doc_id')[i],
-             i=i,
-             code = code,
-             feature = tc$data(output_feature)[i],
-             kwic = pretty_kwic(kwic))
+  kwic = data.frame(hit_id = as.numeric(names(kwic)),
+                    kwic = pretty_kwic(kwic))
+
+  add = data.frame(hit_id = hit_id, doc_id = tc$data('doc_id')[i], code=code)
+  add = add[!duplicated(add$hit_id),]
+  feature = split(tc$data(output_feature)[i], hit_id)
+  add$feature = sapply(feature, stringi::stri_flatten, collapse=' & ')
+
+  kwic = merge(kwic, add, by='hit_id', all.x=T)
+  kwic[,c('doc_id','code','hit_id','feature','kwic')]
 }
 
 pretty_kwic <- function(x){

@@ -70,27 +70,64 @@ preprocess_words <- function(x, context=NULL, language='english', use_stemming=F
   x
 }
 
-## try to make an ngram function using ddply and rcpp, where ddply loops over contexts and rcpp
-## also compare performance to just using rcpp to create ngrams for all words. For this, give a single vector of words, using global_i to add empty strings.
-## or combine the two, so that ddply can be used with batches
-grouped_ngrams <- function(words, group, n, filter=rep(T, length(words))){
-  filter = filter & !is.na(words)
-  words = words[filter]
-  group = if (length(group) == 1) rep(group, length(words)) else group[filter]
-
-  ngram_mat = matrix(ncol=n, nrow=length(words))
-  for(i in 1:n) ngram_mat[,n-i+1] = c(rep('', i-1), as.character(words[1:(length(words)-i+1)]))
+create_ngrams <- function(words, group, n, label=T, hash=F) {
+  ngrams = matrix(ncol=n, nrow=length(words))
+  for(i in 1:n) ngrams[,n-i+1] = shift(words, n=i-1, fill = '')
 
   newart = which(!duplicated(group))
   for(i in 1:(n-1)) {
     replace_i = newart+i-1
-    replace_i = replace_i[replace_i <= nrow(ngram_mat)]
-    if (length(replace_i) > 0) ngram_mat[replace_i, 1:(n-i)] = ''
+    replace_i = replace_i[replace_i <= nrow(ngrams)]
+    if (length(replace_i) > 0) ngrams[replace_i, 1:(n-i)] = ''
   }
+  if (is(words, 'factor')) {
+    ngrams = split(as.numeric(t(ngrams)), rep(1:nrow(ngrams), each = ncol(ngrams)))
+  } else {
+    ngrams = split(t(ngrams), rep(1:nrow(ngrams), each = ncol(ngrams)))
+  }
+  ungrams = unique(ngrams) ## only perform string binding and hashing on unique ngrams (never keep all ngrams in memory as string)
+  ngrams_i = match(ngrams, ungrams)
 
-  ngrams = vector('character', length(filter))
-  ngrams[which(filter)] = apply(ngram_mat, 1, stringi::stri_paste, collapse='_')
-  as.factor(ngrams)
+  if(hash) {
+    require(digest)
+    ashash <- function(x) readBin(digest::digest(x, 'sha1', raw=T), what='integer')
+    hash = as.integer(sapply(ungrams, ashash))
+    return(hash[ngrams_i])
+  } else {
+    if (is(words, 'factor') & label) {
+      ungrams = sapply(ungrams, function(x) ifelse(is.na(x), '', levels(words)[x]), simplify = F)
+    }
+    ungrams = if (label) as.factor(stringi::stri_paste_list(ungrams, sep='/')) else 1:length(ungrams)
+    return(ungrams[ngrams_i])
+  }
 }
 
+grouped_ngrams <- function(words, group, n, filter=rep(T, length(words)), label=T, hash=F){
+  filter = filter & !is.na(words)
+  words = words[filter]
+  group = if (length(group) == 1) rep(group, length(words)) else group[filter]
 
+  if (label &! hash) {
+    ngrams = as.factor(rep(NA, length(filter)))
+    ng = create_ngrams(words, group, n, label=label, hash=hash)
+    levels(ngrams) = levels(ng)
+    ngrams[which(filter)] = ng
+  } else {
+    ngrams = vector('numeric', length(filter))
+    ngrams[which(filter)] = create_ngrams(words, group, n, label=label, hash=hash)
+  }
+  ngrams
+}
+
+function(){
+  ## for quick testing
+words = c('this','is','a','test','this','is','a','glorious','test','ok')
+words = as.factor(words)
+group = c(1,1,1,1,2,2,2,2,2,2)
+filter = c(T,F,T,T,T,T,T,F,T,T)
+n=3
+
+grouped_ngrams(words,group,n, label=F)
+grouped_ngrams(words,group,n, label=T)
+grouped_ngrams(words,group,n, hash=T)
+}
