@@ -1,5 +1,5 @@
 library(testthat)
-library(tcorpus)
+library(corpustools)
 
 test_check('tcorpus', reporter = 'stop')
 

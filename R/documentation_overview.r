@@ -10,7 +10,7 @@
 #' \tabular{ll}{
 #'   \link[=tCorpus_create]{Create a tCorpus} \tab Functions for creating a tCorpus object \cr
 #'   \link[=tCorpus_data]{Manage tCorpus data} \tab Methods for viewing, modifying and subsetting tCorpus data \cr
-#'   \link[=tCorpus_features]{Features} \tab Preprocessing, filtering and analyzing features \cr
+#'   \link[=tCorpus_features]{Features} \tab Preprocessing, subsetting and analyzing features \cr
 #'   \link[=tCorpus_querying]{Using search strings} \tab Use Boolean queries to analyze the tCorpus \cr
 #'   \link[=tCorpus_semnet]{Co-occurrence networks}  \tab Feature co-occurrence based semantic network analysis \cr
 #'   \link[=tCorpus_compare]{Corpus comparison} \tab Compare corpora \cr
@@ -83,14 +83,14 @@ NULL
 #' @name tCorpus_data
 NULL
 
-#' Preprocessing, filtering and analyzing features
+#' Preprocessing, subsetting and analyzing features
 #'
 #' \link[=tCorpus]{(back to overview)}
 #'
 #' \strong{Pre-process features}
 #' \tabular{ll}{
 #'   \link[=tCorpus$preprocess]{$preprocess()} \tab Create or modify a feature by preprocessing an existing feature \cr
-#'   \link[=tCorpus$filter]{$filter()} \tab Similar to using subset, but instead of deleting rows it only sets rows for a specified feature to NA.
+#'   \link[=tCorpus$feature_subset]{$filter()} \tab Similar to using subset, but instead of deleting rows it only sets rows for a specified feature to NA.
 #' }
 #' \strong{Inspect features}
 #' \tabular{ll}{

@@ -1,5 +1,5 @@
 test_that("tCorpus class works", {
-  library(tcorpus)
+  library(corpustools)
 
   ### create from data.frame
   tokens = data.frame(document = c(rep(1, 8), rep(2, 5), rep(3, 5)),

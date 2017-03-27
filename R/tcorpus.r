@@ -287,12 +287,13 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(preprocess_feature(self, column=column, new_column=new_column, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, use_stemming=use_stemming, language=language))
      },
 
-     filter = function(column, new_column, filter, clone=self$clone_on_change){
+     feature_subset = function(column, subset, new_column=column, inverse=F, clone=self$clone_on_change){
+       subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
        if (clone) {
-         selfclone = self$clone()$filter(column=column, new_column=new_column, filter=filter, clone=F)
+         selfclone = self$clone()$feature_subset(column=column, subset=subset, new_column=new_column, inverse=inverse, clone=F)
          return(selfclone)
        }
-       invisible(filter_feature(self, column=column, new_column=new_column, filter=filter))
+       invisible(subset_feature_fun(self, column=column, new_column=new_column, subset=subset, inverse=inverse))
      },
 
      feature_stats = function(feature, context_level=c('document','sentence')){
@@ -416,9 +417,21 @@ tCorpus <- R6::R6Class("tCorpus",
 
 ## TOPIC MODELING ##
 
-      lda_fit = function(feature, K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250, ...) {
-        dtm = self$dtm(feature=feature, ...)
-        lda.fit(feature=feature, method='Gibbs', K=K, num.iterations=num.iterations, alpha=alpha, eta=eta, burnin=burnin)
+      lda_fit = function(feature, create_feature=NULL, K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250, context_level=c('document','sentence'), ...) {
+        dtm = self$dtm(feature=feature, context_level=context_level, ...)
+        m = lda_fit(dtm=dtm, method='Gibbs', K=K, num.iterations=num.iterations, alpha=alpha, eta=eta, burnin=burnin)
+        if (!is.null(create_feature)) self$lda_topic_features(m=m, feature=feature, new_feature=create_feature, context_level=context_level, clone=F)
+        m
+      },
+
+      lda_topic_features = function(m, feature, new_feature='LDA_topic', context_level=c('document','sentence'), clone=self$clone_on_change){
+        if (clone) {
+          selfclone = self$clone()$lda_topic_features(m=m, feature=feature, new_feature=new_feature, context_level=context_level, clone=F)
+          return(selfclone)
+        }
+        d = lda_features(tc=self, m=m, feature=feature, new_feature=new_feature, context_level=context_level)
+        self$set_column(new_feature, d$v[order(d$i)], clone=F)
+        invisible(self)
       },
 
 ## RESOURCES ##

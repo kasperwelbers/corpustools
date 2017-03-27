@@ -1,6 +1,6 @@
 test_that("Semnet works", {
   #devtools::install_github('kasperwelbers/tcorpus')
-  library(tcorpus)
+  library(corpustools)
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte')

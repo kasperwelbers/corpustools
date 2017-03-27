@@ -37,11 +37,8 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
 #' @param filter
 #'
 #' @return
-filter_feature <- function(tc, column, new_column, filter){
-  is_tcorpus(tc, T)
-  if (is(tc, 'shattered_tCorpus')) return(shard_filter_feature(stc=tc, column=column, new_column=new_column, filter=filter))
-
-  i = subset_i(tc, subset)
+subset_feature_fun <- function(tc, column, new_column, subset, inverse=F){
+  i = subset_i(tc, subset, inverse=!inverse) ## double inverse, because inverse in subset_i means "give me i for the rows for which condition is not true", and here we use i to set the NA.
   if (column == new_column) {
     tc = tc$set_column(new_column, NA, subset = i)
   } else {

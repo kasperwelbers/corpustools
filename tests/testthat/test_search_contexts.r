@@ -1,5 +1,5 @@
 test_that("Query document search works", {
-  library(tcorpus)
+  library(corpustools)
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte. Bos, on the other hand, is not always Wouter',

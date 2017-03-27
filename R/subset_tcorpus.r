@@ -23,7 +23,7 @@ subset_query_window <- function(tc, window, keyword=NA, condition=NA, queries=NU
   tc
 }
 
-subset_i <- function(tc, subset=NA, subset_meta=NA){
+subset_i <- function(tc, subset=NA, subset_meta=NA, inverse=F){
   ## subset and subset_meta can be either a call or a character vector of length 1
   subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
   subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
@@ -34,7 +34,8 @@ subset_i <- function(tc, subset=NA, subset_meta=NA){
   } else {
     e = parse(text=as.character(subset))
     r = eval(e, tc$data(), parent.frame())
-    r = (1:n)[r]
+    if (inverse) r=!r
+    r = which(r)
   }
 
   n_meta = nrow(tc$meta())
@@ -46,14 +47,16 @@ subset_i <- function(tc, subset=NA, subset_meta=NA){
     if (length(r_meta) > 0) {
       r_meta = 1:n_meta %in% r_meta
       r_meta = r_meta[match(tc$data('doc_id'), tc$meta('doc_id'))] ## extend to length()
+      if (inverse) r_meta=!r_meta
       r_meta = which(r_meta)
     }
   }
 
-  if (!is.null(r) & !is.null(r_meta)) return(intersect(r, r_meta))
-  if (is.null(r) & is.null(r_meta)) return(1:n)
-  if (!is.null(r) & is.null(r_meta)) return(r)
-  if (is.null(r) & !is.null(r_meta)) return(r_meta)
+  if (!is.null(r) & !is.null(r_meta)) r = intersect(r, r_meta)
+  if (is.null(r) & is.null(r_meta)) r = 1:n
+  if (!is.null(r) & is.null(r_meta)) r = r
+  if (is.null(r) & !is.null(r_meta)) r = r_meta
+  as.numeric(na.omit(r))
 }
 
 

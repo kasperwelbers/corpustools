@@ -1,5 +1,5 @@
 #test_that("shattered tcorpus functions", {
-  #library(tcorpus)
+  #library(corpustools)
   #data(sotu_texts)
 
   #tc = create_tcorpus(sotu_texts, 'text', doc_column = 'id')

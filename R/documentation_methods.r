@@ -125,9 +125,15 @@ NULL
 #' @description
 #' Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta). The subset arguments work according to the \link{subset.data.table} function.
 #'
-#' ## add documentation for freq(), docfreq() etc!!!
+#' Subset can also be used to select rows based on word/feature frequences. This is a common step in corpus analysis, where it often makes sense to ignore very rare and/or very frequent words.
+#' To do so, there are functions that can be used in the subset call to get frequency scores for a given feature column.
+#' The freq(feature) and docfreq(feature) functions get the total frequency of a feature and the document frequency, respectively. The docfreq_pct(feature) function gets the document frequency as a percentage (between 0 and 100).
+#' For example, if there is a feature called word, then the subset can be "freq(word) > 5 & docfreq_pct(word) < 90". This will select all rows for which the word is a word that occured at least 5 times, and did not occur in more dan 90% of all documents.
 #'
-#' A minor difference with the subset.data.table function is that here it is also allowed to select a subset based on row indices, by only providing a numerical vector as argument.
+#' In addition, you can use freq_top(feature, n=100) and docfreq_top(feature, n=100) to get the top n features. This is given as a logical vector.
+#' For example, to select only the rows in which a word occurs that is in the top 100 most frequent words, subset can be "freq_top(word, 100)".
+#'
+#' Note that you can also use the \link{tCorpus$feature_subset} method if you want to filter out low/high frequency words, but do not want to delete the rows in the tCorpus.
 #'
 #' @usage
 #' ## R6 method for class tCorpus
@@ -190,16 +196,16 @@ NULL
 #'
 #' @usage
 #' ## R6 method for class tCorpus
-#' \code{tCorpus$filter(column, new_column, filter, clone=self$clone_on_change)}
+#' \code{tCorpus$feature_subset(column, new_column, subset, clone=self$clone_on_change)}
 #'
 #' @param column the column containing the feature to be used as the input
 #' @param new_column the column to save the filtered feature. Can be a new column or overwrite an existing one.
-#' @param filter logical expression indicating rows to keep in the tokens data. i.e. rows for which the logical expression is FALSE will be set to NA.
+#' @param subset logical expression indicating rows to keep in the tokens data. i.e. rows for which the logical expression is FALSE will be set to NA.
 #' @param clone If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @method tCorpus
-#' @name tCorpus$filter
-#' @aliases filter.tCorpus
+#' @name tCorpus$feature_subset
+#' @aliases feature_subset.tCorpus
 NULL
 
 #' Feature statistics

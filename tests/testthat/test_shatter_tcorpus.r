@@ -1,5 +1,5 @@
 test_that("shatter tcorpus works", {
-  library(tcorpus)
+  library(corpustools)
   data(sotu_texts)
 
   first = create_tcorpus(sotu_texts[1:500,], 'text', doc_column = 'id')
