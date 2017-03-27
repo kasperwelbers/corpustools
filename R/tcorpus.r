@@ -414,6 +414,13 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
+## TOPIC MODELING ##
+
+      lda_fit = function(feature, K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250, ...) {
+        dtm = self$dtm(feature=feature, ...)
+        lda.fit(feature=feature, method='Gibbs', K=K, num.iterations=num.iterations, alpha=alpha, eta=eta, burnin=burnin)
+      },
+
 ## RESOURCES ##
 
      jrc_names = function(new_feature='jrc_names', feature='word', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, clone=self$clone_on_change){
