@@ -115,7 +115,7 @@ globalFeatureVector <- R6::R6Class("globalFeatureVector",
     public = list(.v = NULL,
                   .levels = NULL,
                   initialize = function(feature, global_i, empty_str=''){
-                    feature = as.factor(feature)
+                    feature = fast_factor(feature)
                     self$.levels = c(empty_str, levels(feature))
                     self$.v = Matrix::sparseVector(as.numeric(feature), global_i, max(global_i))
                   },
@@ -146,10 +146,3 @@ globalFeatureVector <- R6::R6Class("globalFeatureVector",
 #' @export
 length.globalFeatureVector = function(x) length(x$.v)
 
-#global_feature_vector <- function(feature, global_i){
-## not sparse enough ;)
-#  global_f = rep(as.factor(''), length(global_i))
-#  levels(global_f) = c('', levels(feature))
-#  global_f[global_i] = feature
-#  global_f
-#}

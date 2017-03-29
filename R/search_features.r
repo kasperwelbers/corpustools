@@ -123,6 +123,7 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
 
   if (nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor(), sent_i=numeric(), word_i = numeric(), hit_id=numeric())
   hits = hits[order(hits$i),]
+
   hits$hit_id = match(hits$hit_id, unique(hits$hit_id))
   hits
 }

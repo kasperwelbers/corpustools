@@ -11,7 +11,7 @@ test_that("tCorpus class works", {
   doc_id = tc$data('doc_id')
   expect_equal(doc_id, as.factor(c(rep('1', 8), rep('2', 5), rep('3', 5))))
   word = tc$data('word')
-  expect_equal(word, as.factor(c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte')))
+  expect_equal(word, fast_factor(c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte')))
 
   ### create from text
   text = c('Renewable fuel is better than fossil fuels!',
@@ -53,7 +53,7 @@ test_that("tCorpus class works", {
 
   ## change data
   word = tc$data('word')
-  newword = as.factor(tolower(word))
+  newword =fast_factor(tolower(word))
   tc = tc$set_column('word', newword)
   expect_equal(tc$data('word'), newword)
 

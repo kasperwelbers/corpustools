@@ -17,7 +17,7 @@ jrc_names <- function(tc, new_feature='jrc_names', feature='word', resource_path
 
   index = use_stringmatch_resource(tc, re[,c('string','id')], regex_sep = '\\+', case_sensitive = T, lowercase = F, ascii=F, batchsize = batchsize, flatten_colloc = T, verbose=verbose)
 
-  index$id = as.factor(index$id)
+  index$id = fast_factor(index$id)
   f = factor(rep(NA, tc$n), 1:length(levels(index$id)), levels(index$id))
   f[index$i] = index$id
   tc = tc$set_column(column=new_feature, value = f)
@@ -37,7 +37,7 @@ download_jrc_names <- function(fname){
   download.file("http://optima.jrc.it/data/entities.gzip",temp)
   re = readLines(temp)
   re = stringi::stri_split(re, regex='\t', simplify = T)
-  re = data.frame(string=as.character(re[,4]), id=as.numeric(re[,1]), lang=as.factor(re[,3]), pos=as.factor(re[,2]), stringsAsFactors = F)
+  re = data.frame(string=as.character(re[,4]), id=as.numeric(re[,1]), lang=fast_factor(re[,3]), pos=fast_factor(re[,2]), stringsAsFactors = F)
   re = data.table(re)
   saveRDS(re, fname)
   unlink(temp)

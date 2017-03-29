@@ -59,7 +59,6 @@ subset_i <- function(tc, subset=NA, subset_meta=NA, inverse=F){
   as.numeric(na.omit(r))
 }
 
-
 ## subset functions ##
 
 #' @export

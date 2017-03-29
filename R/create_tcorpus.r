@@ -107,7 +107,7 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
     tokens = tokens[order(tokens[,doc_col], tokens[,word_i_col]),]
   }
 
-  positions = data.frame(doc_id= as.factor(tokens[,doc_col]),
+  positions = data.frame(doc_id= fast_factor(tokens[,doc_col]),
                          sent_i = tokens[,sent_i_col],
                          word_i = tokens[,word_i_col])
 
@@ -134,7 +134,7 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   docs = unique(positions$doc_id)
   if (!is.null(meta)) {
     colnames(meta)[colnames(meta) == doc_col] = 'doc_id'
-    meta$doc_id = as.factor(meta$doc_id)
+    meta$doc_id = fast_factor(meta$doc_id)
     if (!all(docs %in% meta$doc_id)) warning('For some documents in tokens the meta data is missing')
     if (!all(meta$doc_id %in% docs)) warning('For some documents in the meta data there are no tokens. These documents will not be included in the meta data')
 
@@ -152,7 +152,7 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
 
   if (is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sent_i_col, word_i_col, meta_cols)]
   for(fcol in feature_cols) {
-    if (class(tokens[,fcol]) %in% c('factor','character')) tokens[,fcol] = as.factor(as.character(tokens[,fcol]))
+    if (class(tokens[,fcol]) %in% c('factor','character')) tokens[,fcol] = fast_factor(as.character(tokens[,fcol]))
   }
 
   tCorpus$new(data=data.table(cbind(positions, tokens[,feature_cols,drop=F])),

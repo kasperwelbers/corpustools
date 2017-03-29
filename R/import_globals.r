@@ -1,8 +1,9 @@
-## This is a dummy function to let roxygen2 @import the tm, igraph and Matrix package
-## This way, roxygen2 will add them to NAMESPACE when building the package via devtools
+## This is a dummy function to let roxygen2 create the NAMESPACE but include additional stuff
 
 #' @import Matrix
 #' @import igraph
 #' @import data.table
 #' @import plyr
+#' @importFrom Rcpp evalCpp
+#' @useDynLib corpustools
 importglobals <- function(x) NULL

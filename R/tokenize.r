@@ -24,8 +24,9 @@ tokenize_to_dataframe_batch <- function(batch_i, x, doc_id=1:length(x), split_se
     x = unlist_to_df(x, doc_id)
     colnames(x) = c('doc_id', 'word_i', 'word')
   }
-  x$word = as.factor(x$word)
-  x$doc_id = as.factor(x$doc_id)
+
+  x$word = fast_factor(x$word)
+  x$doc_id = fast_factor(x$doc_id)
   x
 }
 

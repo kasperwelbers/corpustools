@@ -132,7 +132,7 @@ aggCoOc <- function(x, position.mat, window.mat){
 calculateAdjacencyPerContext <- function(position.mat, window.mat) {
   adj = plyr::ldply(1:ncol(position.mat), function(x) aggCoOc(x, position.mat, window.mat))
   adj$context = rownames(position.mat)[adj$context]
-  adj$x = as.factor(colnames(position.mat)[adj$x])
-  adj$y = as.factor(colnames(position.mat)[adj$y])
+  adj$x = fast_factor(colnames(position.mat))[adj$x]
+  adj$y = fast_factor(colnames(position.mat))[adj$y]
   adj
 }

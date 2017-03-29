@@ -143,10 +143,10 @@ tCorpus <- R6::R6Class("tCorpus",
          r = eval_subset(private$.data, subset)
          if (!column %in% colnames(private$.data)) {
            private$.data[[column]] = NA
-           if (is(value, 'factor')) private$.data[[column]] = as.factor(private$.data[[column]])
+           if (is(value, 'factor')) private$.data[[column]] = fast_factor(private$.data[[column]])
          }
          if (is(private$.data[[column]], 'factor')) {
-           value = as.factor(value)
+           value = fast_factor(value)
            levels(private$.data[[column]]) = c(levels(private$.data[[column]]), levels(value))
          }
          private$.data[[column]][r] = value
@@ -213,10 +213,10 @@ tCorpus <- R6::R6Class("tCorpus",
          r = eval_subset(private$.meta, subset)
          if (!column %in% colnames(private$.meta)) {
            private$.meta[[column]] = NA
-           if (is(value, 'factor')) private$.meta[[column]] = as.factor(private$.meta[[column]])
+           if (is(value, 'factor')) private$.meta[[column]] = fast_factor(private$.meta[[column]])
          }
          if (is(private$.meta[[column]], 'factor')) {
-           value = as.factor(value)
+           value = fast_factor(value)
            levels(private$.meta[[column]]) = c(levels(private$.meta[[column]]), levels(value))
          }
          private$.meta[[column]][r] = value
@@ -553,7 +553,7 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
 
   if (context_level == 'document') {
     context = tc$data('doc_id')
-    if (!with_labels) context = factor(as.numeric(context))
+    if (!with_labels) levels(context) = 1:length(levels(context))
   }
   if (context_level == 'sentence') {
     if (!'sent_i' %in% tc$names) stop('Sentence level not possible, since no sentence information is available. To enable sentence level analysis, use split_sentences = T in "create_tcorpus()" or specify sent_i_col in "tokens_to_tcorpus()"')
@@ -563,7 +563,7 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
       ucontext = stringi::stri_paste(ucontext$doc_id, ucontext$sent_i, sep='#')
       context = factor(global_position(d$sent_i, d$doc_id, presorted = T), labels = ucontext)
     } else {
-      context = factor(global_position(d$sent_i, d$doc_id, presorted = T))
+      context = fast_dummy_factor(global_position(d$sent_i, d$doc_id, presorted = T))
     }
   }
   context

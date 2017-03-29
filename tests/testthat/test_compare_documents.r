@@ -6,6 +6,7 @@ test_that("comparing documents works", {
                  date = c('2010-01-01','2010-01-01','2012-01-01'))
   tc = create_tcorpus(d)
 
+
   g = tc$compare_documents()
   expect_equal(round(E(g)$weight,3), round(c(0.1581139, 0.1336306, 0.1581139, 0.1336306),3))
 

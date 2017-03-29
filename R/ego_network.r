@@ -37,7 +37,7 @@ ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_
   } else {
     dt = summary(adj)
   }
-  vnames = as.factor(colnames(adj))
+  vnames = fast_factor(colnames(adj))
   dt = data.table(x=dt$i, y=dt$j, weight=dt$x, key='x') ## as data.table
 
   vertex_ids = which(V(g)$name %in% vertex_names)

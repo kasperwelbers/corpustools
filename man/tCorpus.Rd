@@ -13,7 +13,7 @@ The primary goal of the tCorpus is to facilitate various corpus analysis techniq
 \tabular{ll}{
   \link[=tCorpus_create]{Create a tCorpus} \tab Functions for creating a tCorpus object \cr
   \link[=tCorpus_data]{Manage tCorpus data} \tab Methods for viewing, modifying and subsetting tCorpus data \cr
-  \link[=tCorpus_features]{Features} \tab Preprocessing, filtering and analyzing features \cr
+  \link[=tCorpus_features]{Features} \tab Preprocessing, subsetting and analyzing features \cr
   \link[=tCorpus_querying]{Using search strings} \tab Use Boolean queries to analyze the tCorpus \cr
   \link[=tCorpus_semnet]{Co-occurrence networks}  \tab Feature co-occurrence based semantic network analysis \cr
   \link[=tCorpus_compare]{Corpus comparison} \tab Compare corpora \cr
