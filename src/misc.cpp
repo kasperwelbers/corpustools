@@ -16,7 +16,7 @@ std::map<String, int> count(SEXP x) {
   return t;
 }
 
-// get table keys
+// get map keys
 CharacterVector keys( std::map<String, int> t) {
   CharacterVector k(t.size());
   int i = 0;
@@ -27,7 +27,7 @@ CharacterVector keys( std::map<String, int> t) {
   return k;
 }
 
-// get table values
+// get map values
 IntegerVector values( std::map<String, int> t) {
   IntegerVector v(t.size());
   int i = 0;
@@ -60,6 +60,5 @@ IntegerVector full_set_ids( SEXP x) {
   }
   return out;
 }
-
 
 

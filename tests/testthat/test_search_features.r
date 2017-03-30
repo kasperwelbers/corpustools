@@ -103,7 +103,7 @@ test_that("Query search works", {
 
   ## kwic with multiword queries
   kw = tc$kwic(keyword = c('"renewable fuels"~10')) ## without gap
-  expect_equal(kw$feature, 'Renewable & fuels')
+  expect_equal(kw$feature, 'Renewable -> fuels')
   kw = tc$kwic(keyword = c('"renewable fuels"~10'), nwords = 2) ## without gap
   expect_true(grepl('[...]', kw$kwic))
 

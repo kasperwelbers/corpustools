@@ -16,6 +16,7 @@ tokenize_to_dataframe_batch <- function(batch_i, x, doc_id=1:length(x), split_se
     names(x) = doc_id
   if (!is.null(max_sentences)) x = sapply(x, head, max_sentences)
     x = plyr::ldply(x, function(x) unlist_to_df(quanteda::tokenize(x, what='word'), global_position=T))
+
     if (!is.null(max_words)) x = x[x$position <= max_words,]
     colnames(x) = c('doc_id','sent_i','word_i','word')
   } else {
@@ -25,8 +26,8 @@ tokenize_to_dataframe_batch <- function(batch_i, x, doc_id=1:length(x), split_se
     colnames(x) = c('doc_id', 'word_i', 'word')
   }
 
-  x$word = fast_factor(x$word)
-  x$doc_id = fast_factor(x$doc_id)
+  x$word = as.factor(x$word)
+  x$doc_id = as.factor(x$doc_id)
   x
 }
 

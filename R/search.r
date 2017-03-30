@@ -130,8 +130,7 @@ proximity_grepl <- function(fi, proxi, only_last=T, ignore.case=T, perl=F, useBy
         pword_window = intersect(pword_window, i_window)
     }
 
-    ## for the hit_id, first use the gaps in the pword_window (n)
-
+    ## for the hit_id, use the gaps in the pword_window (n)
     if (length(pword_window) > 0){
       isgap = pword_window - shift(pword_window, 1, 0) > 1
       hit_id_index = data.frame(global_i = pword_window,
@@ -139,8 +138,14 @@ proximity_grepl <- function(fi, proxi, only_last=T, ignore.case=T, perl=F, useBy
 
       hit = pword_i[pword_i$global_i %in% pword_window,]
       hit$hit_id = hit_id_index$hit_id[match(hit$global_i, hit_id_index$global_i)]
-      hit = hit[order(hit$global_i),]
 
+      ## There can still be positions where not all of the words occur (e.g., if for two words only the windows overlap, and the third words lies in the overlap)
+      ## We delete these words but only keeping hit_ids where all words occur.
+      full_hits = table(unique(hit[,c('hit_id','j'),drop=F])$hit_id)
+      full_hits = names(full_hits[full_hits == length(q)])
+      hit = hit[hit$hit_id %in% full_hits,]
+
+      hit = hit[order(hit$global_i),]
       sub_hit = unlist(tapply(hit$j, hit$hit_id, full_set_ids)) ## make more specific hit_ids within windows if there are multiple occurence of each word
 
       hit$hit_id = stringi::stri_paste(i, hit$hit_id, sub_hit, sep='#')
@@ -150,6 +155,7 @@ proximity_grepl <- function(fi, proxi, only_last=T, ignore.case=T, perl=F, useBy
   }
   rbindlist(hits)
 }
+
 
 full_set_ids <- function(id){
   .Call('corpustools_full_set_ids', PACKAGE = 'corpustools', id)

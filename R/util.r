@@ -33,3 +33,7 @@ fast_factor <- function(x, levels=NULL) {
   }
   x
 }
+
+fast_table <- function(x) {
+  .Call('corpustools_tableC', PACKAGE = 'corpustools', x)
+}

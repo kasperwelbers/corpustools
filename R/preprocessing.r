@@ -16,7 +16,7 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
   if (is(tc, 'shattered_tCorpus')) return(shard_preprocess_feature(stc=tc, column=column, new_column=new_column, use_stemming=use_stemming, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords))
 
   feature = tc$data(column)
-  if (!is(feature, 'factor')) feature = fast_factor(feature)
+  if (!is(feature, 'factor')) feature = factor(feature)
 
   if (ngrams == 1) {
     feature = preprocess_words(feature, context=NA, language=language, use_stemming=use_stemming, lowercase=lowercase, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords)
@@ -94,7 +94,7 @@ create_ngrams <- function(words, group, n, label=T, hash=F) {
     if (is(words, 'factor') & label) {
       ungrams = sapply(ungrams, function(x) ifelse(is.na(x), '', levels(words)[x]), simplify = F)
     }
-    ungrams = if (label) fast_factor(stringi::stri_paste_list(ungrams, sep='/')) else 1:length(ungrams)
+    ungrams = if (label) as.factor(stringi::stri_paste_list(ungrams, sep='/')) else 1:length(ungrams)
     return(ungrams[ngrams_i])
   }
 }
@@ -105,7 +105,7 @@ grouped_ngrams <- function(words, group, n, filter=rep(T, length(words)), label=
   group = if (length(group) == 1) rep(group, length(words)) else group[filter]
 
   if (label &! hash) {
-    ngrams = fast_factor(rep(NA, length(filter)))
+    ngrams = as.factor(rep(NA, length(filter)))
     ng = create_ngrams(words, group, n, label=label, hash=hash)
     levels(ngrams) = levels(ng)
     ngrams[which(filter)] = ng

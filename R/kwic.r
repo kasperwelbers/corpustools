@@ -57,7 +57,7 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsampl
   add = data.frame(hit_id = hit_id, doc_id = tc$data('doc_id')[i], code=code)
   add = add[!duplicated(add$hit_id),]
   feature = split(tc$data(output_feature)[i], hit_id)
-  add$feature = sapply(feature, stringi::stri_flatten, collapse=' & ')
+  add$feature = sapply(feature, stringi::stri_flatten, collapse=' -> ')
 
   kwic = merge(kwic, add, by='hit_id', all.x=T)
   kwic[,c('doc_id','code','hit_id','feature','kwic')]
