@@ -20,3 +20,4 @@ test_that("Corpus comparison works!", {
   expect_equal(round(sum(comp$chi2),3), 5.646)
   plot(comp)
 })
+

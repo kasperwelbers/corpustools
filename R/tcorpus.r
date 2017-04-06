@@ -142,16 +142,18 @@ tCorpus <- R6::R6Class("tCorpus",
        if (!is.null(subset)){
          r = eval_subset(private$.data, subset)
          if (!column %in% colnames(private$.data)) {
-           private$.data[[column]] = NA
-           if (is(value, 'factor')) private$.data[[column]] = fast_factor(private$.data[[column]])
+           private$.data[,(column) := NA]
+           if (is(value, 'factor')) private$.data[,(column) := fast_factor(private$.data[[column]])]
          }
          if (is(private$.data[[column]], 'factor')) {
            value = fast_factor(value)
            levels(private$.data[[column]]) = c(levels(private$.data[[column]]), levels(value))
          }
-         private$.data[[column]][r] = value
+         private$.data[r, (column) := value]
+
        } else {
-         private$.data[[column]] = value
+         ## ugly suppress. Should look into why data.table give the (seemingly harmless) internal.selfref warning
+         suppressWarnings(private$.data[,(column) := value])
        }
        if (identical(self$provenance()$index_feature, column)) self$reset_feature_index # reset feature index if necessary
        self$set_keys()
@@ -275,7 +277,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
      reset_feature_index = function(){
        private$.feature_index = NULL
-       private$set_provenance(index_feature=NA, context_level=NA, max_window_size=NA, as_ascii=NA)
+       private$set_provenance(index_feature=NULL, context_level=NULL, max_window_size=NULL, as_ascii=NULL)
      },
 
 ## FEATURE MANAGEMENT ##
@@ -481,6 +483,49 @@ tCorpus <- R6::R6Class("tCorpus",
      meta_names = function(e=NULL) {
        if (!is.null(e)) stop('Cannot change tcorpus$metanames by assignment. Instead, use the set_meta_colname() function')
        colnames(private$.meta)
+     },
+
+     doc_id_labels = function(mod=NULL) {
+       if (!is.null(mod)){
+         if (identical(levels(self$data('doc_id')), levels(self$meta('doc_id')))){
+           levels(private$.data$doc_id) = mod
+           levels(private$.meta$doc_id) = mod
+         } else { ## should never happen, but to be sure
+           levels(private$.meta$doc_id) = mod[match(levels(private$.meta$doc_id), levels(private$.data$doc_id))]
+           levels(private$.data$doc_id) = mod
+         }
+       }
+       levels(self$data('doc_id'))
+     },
+
+     d = function(mod=NULL) {
+       ## experimental: access data directly, but with checks to protect structure.
+       positioncols = intersect(c('doc_id','sent_i','word_i'), self$names)
+       if (!is.null(mod)) {
+         if ('sent_i' %in% colnames(mod)) setkeyv(mod, c('doc_id','sent_i','word_i')) else setkeyv(mod, c('doc_id','word_i'))
+
+         if (!identical(private$.data[,positioncols,with=F], mod[,positioncols,with=F])) {
+           message('changed positions')
+           if (!identical(private$.data$doc_id, mod$doc_id)) {
+             stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_labels.')
+           }
+           if (nrow(unique(mod[,c('doc_id','word_i')])) < nrow(mod)) stop('After transformation, word_i is not unique within documents')
+           if (nrow(mod) < self$n) stop('Replacement cannot have fewer rows. For subsetting, please use the $subset method')
+           if (nrow(mod) > self$n) stop('Replacement cannot have more rows. For adding more data, please use the merge_tcorpora function or the $add_data method')
+           self$reset_feature_index()
+         }
+
+         indexcol = self$provenance()$index_feature
+         if (!is.null(indexcol)){
+           if (!identical(private$.data[[indexcol]], mod[[indexcol]])) {
+             self$reset_feature_index()
+           }
+         }
+         private$.data = mod
+         self$set_keys()
+       }
+       #cbind(.TOKEN_ID=1:self$n, data.table::copy(private$.data)) ## alternative: keep token id, and allow user more flexibility (subsetting, adding data, changing doc_id)
+       data.table::copy(private$.data)
      }
    )
 )
@@ -560,7 +605,7 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
     d = tc$data()
     if (with_labels){
       ucontext = unique(d[,c('doc_id','sent_i')])
-      ucontext = stringi::stri_paste(ucontext$doc_id, ucontext$sent_i, sep='#')
+      ucontext = stringi::stri_paste(ucontext$doc_id, ucontext$sent_i, sep=' #')
       context = factor(global_position(d$sent_i, d$doc_id, presorted = T, position_is_local=T), labels = ucontext)
     } else {
       context = fast_dummy_factor(global_position(d$sent_i, d$doc_id, presorted = T, position_is_local=T))

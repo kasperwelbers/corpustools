@@ -5,7 +5,8 @@ test_that("preprocessing works", {
                       sentence = c(rep(1, 8), rep(2, 5), rep(3, 5)),
                       id = 1:18,
                       word = c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte'))
-  tc = tokens_to_tcorpus(tokens, doc_col ='document', word_i_col = 'id')
+  meta = data.frame(document = c(1,2,3), medium=c('a','b','c'))
+  tc = tokens_to_tcorpus(tokens, doc_col ='document', word_i_col = 'id', meta=meta)
   ## test preprocess_feature
   word = tc$data('word')
 

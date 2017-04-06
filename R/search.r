@@ -58,7 +58,6 @@ batch_grep <- function(patterns, x, ignore.case=T, perl=F, batchsize=25, useByte
   x[out]
 }
 
-
 grep_global_i <- function(fi, regex, ...) {
   exact_feature = levels(fi$feature)[grepl(regex, levels(fi$feature), ...)]
   fi[J(exact_feature),,nomatch=0]$global_i

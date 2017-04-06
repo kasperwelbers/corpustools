@@ -34,6 +34,9 @@ fast_factor <- function(x, levels=NULL) {
   x
 }
 
-fast_table <- function(x) {
-  .Call('corpustools_tableC', PACKAGE = 'corpustools', x)
+col_to_hsv <- function(col, alpha=1) {
+  ## make mapped to enable vectorization
+  hsv_col = rgb2hsv(col2rgb('red'))
+  hsv(hsv_col[1], hsv_col[2], hsv_col[3], alpha=alpha)
 }
+

@@ -74,87 +74,86 @@ create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, s
 #'
 #' @export
 tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=F, word_is_local=F) {
-  tokens = as.data.frame(tokens)
+  tokens = as.data.table(tokens)
+
+  ## check whether the columns specified in the arguments exist
   for(cname in c(doc_col, word_i_col, sent_i_col, meta_cols)){
     if (!cname %in% colnames(tokens)) stop(sprintf('"%s" is not an existing columnname in "tokens"', cname))
   }
-  tokens = droplevels(tokens)
-
-  if (is.null(word_i_col)){
-    warning('No word_i column specified. Word order used instead (see documentation).')
-    tokens$word_i = 1:nrow(tokens)
-    word_is_local = F
-    word_i_col = 'word_i'
-  } else {
-    if (is.null(sent_i_col)) {
-      if (any(duplicated(tokens[,c(doc_col, word_i_col)]))) stop('tokens should not contain duplicate doubles of documents (doc_col) and word positions (word_i_col)')
-    } else {
-      if (any(duplicated(tokens[,c(doc_col, sent_i_col, word_i_col)]))) stop('tokens should not contain duplicate triples of documents (doc_col), sentences (sent_i_col) and word positions (word_i_col)')
-    }
-  }
-
-  if (!is(tokens[,word_i_col], 'numeric')) stop('word_i_col has to be numeric/integer')
-  if (!is.null(sent_i_col)) if (!is(tokens[,sent_i_col], 'numeric')) stop('sent_i_col has to be numeric/integer')
-
   if (!is.null(meta)){
     if (!doc_col %in% colnames(meta)) stop(sprintf('"meta" does not contain the document id column (%s)', doc_col))
   }
 
-  ## order and index doc_id, sent_i, word_i
-  if (!is.null(sent_i_col)){
-    tokens = tokens[order(tokens[,doc_col], tokens[,sent_i_col], tokens[,word_i_col]),]
+  ## change column names, make doc_id factor (both in reference, for efficiency) and check whether the right types are used
+  data.table::setnames(tokens, which(colnames(tokens) == doc_col), 'doc_id')
+  tokens[,'doc_id' := fast_factor(tokens$doc_id)]
+  if (!is.null(sent_i_col)) {
+    data.table::setnames(tokens, which(colnames(tokens) == sent_i_col), 'sent_i')
+    if (!is(tokens$sent_i, 'numeric')) stop('sent_i_col has to be numeric/integer')
+  }
+  if (!is.null(word_i_col)) {
+    data.table::setnames(tokens, which(colnames(tokens) == word_i_col), 'word_i')
+    if (!is(tokens$word_i, 'numeric')) stop('word_i_col has to be numeric/integer')
   } else {
-    tokens = tokens[order(tokens[,doc_col], tokens[,word_i_col]),]
+    warning('No word_i column specified. Word order used instead (see documentation).')
+    tokens$word_i = 1:nrow(tokens)
+    word_is_local = F
   }
 
-  positions = data.frame(doc_id= fast_factor(tokens[,doc_col]),
-                         sent_i = tokens[,sent_i_col],
-                         word_i = tokens[,word_i_col])
+  ## delete unused columns
+  if (is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sent_i_col, word_i_col, meta_cols)]
+  used_columns = c('doc_id','sent_i','word_i', meta_cols, feature_cols)
+  unused_columns = setdiff(colnames(tokens), used_columns)
+  if(length(unused_columns) > 0) tokens[, (unused_columns) := NULL]
 
-  ## check whether words and sentences are (likely to be) local
+  for(fcol in feature_cols) {
+    if (class(tokens[[fcol]]) %in% c('factor','character')) tokens[,(fcol) := fast_factor(tokens[[fcol]])]
+  }
+
+  ## set data.table keys (sorting the data) and verify that there are no duplicates
+  if (!is.null(sent_i_col)) {
+    setkeyv(tokens, c('doc_id','sent_i','word_i'))
+    if (!anyDuplicated(tokens, by=c('doc_id','sent_i','word_i')) == 0) stop('tokens should not contain duplicate triples of documents (doc_col), sentences (sent_i_col) and word positions (word_i_col)')
+  } else {
+    setkeyv(tokens, c('doc_id','word_i'))
+    if (!anyDuplicated(tokens, by=c('doc_id','word_i')) == 0) stop('tokens should not contain duplicate doubles of documents (doc_col) and word positions (word_i_col)')
+  }
 
   ## make sure that sent_i and word_i are locally unique within documents
   if (!is.null(sent_i_col)){
     if (sent_is_local) {
-      udocsent = unique(positions[,c('doc_id','sent_i')])
-      if (!any(duplicated(udocsent$sent_i))) warning("Sentence positions (sent_i) do not appear to be locally unique within document (no duplicates). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
-      rm(udocsent)
+      if (!anyDuplicated(tokens, by=c('doc_id','sent_i')) == 0) warning("Sentence positions (sent_i) do not appear to be locally unique within document (no duplicates). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
     }
-    if (!sent_is_local) positions$sent_i = local_position(positions$sent_i, positions$doc_id, presorted = T) ## make sure sentences are locally unique within documents (and not globally)
-    if (!word_is_local) positions$word_i = global_position(positions$word_i, positions$sent_i, presorted=T) ## make word positions globally unique, taking sentence id into account (in case words are locally unique within sentences)
+    if (!sent_is_local) tokens[,'sent_i' := local_position(tokens$sent_i, tokens$doc_id, presorted = T)] ## make sure sentences are locally unique within documents (and not globally)
+    if (!word_is_local) tokens[,'word_i' := global_position(tokens$word_i, tokens$sent_i, presorted = T)]  ## make word positions globally unique, taking sentence id into account (in case words are locally unique within sentences)
   }
   if (word_is_local) {
-    udocword = unique(positions[,c('doc_id','word_i')])
-    if (!any(duplicated(udocword$word_i))) warning("Word positions (word_i) do not appear to be locally unique within document (no duplicates). Unless you are sure they are, set word_is_local to FALSE (and read documentation)")
-    rm(udocword)
-  }
-  if (!word_is_local) positions$word_i = local_position(positions$word_i, positions$doc_id, presorted=T) ## make words locally unique within documents
-
-  ## match meta
-  docs = unique(positions$doc_id)
-  if (!is.null(meta)) {
-    colnames(meta)[colnames(meta) == doc_col] = 'doc_id'
-    meta$doc_id = fast_factor(meta$doc_id)
-    if (!all(docs %in% meta$doc_id)) warning('For some documents in tokens the meta data is missing')
-    if (!all(meta$doc_id %in% docs)) warning('For some documents in the meta data there are no tokens. These documents will not be included in the meta data')
-
-    meta = data.table(meta[match(docs, meta$doc_id),], key='doc_id')
+    if (!anyDuplicated(tokens, by=c('doc_id','word_i')) == 0) warning("Word positions (word_i) do not appear to be locally unique within document (no duplicates). Unless you are sure they are, set word_is_local to FALSE (and read documentation)")
   } else {
-    meta = data.table(doc_id=docs, key='doc_id')
+    tokens[,'word_i' := local_position(tokens$word_i, tokens$doc_id, presorted=T)] ## make words locally unique within documents
+  }
+
+  ## arrange the meta data
+  if (!is.null(meta)) {
+    meta = as.data.table(meta)
+    data.table::setnames(meta, which(colnames(meta) == doc_col), 'doc_id')
+    meta[,'doc_id' := as.character(meta$doc_id)]
+    setkeyv(meta, 'doc_id')
+
+    if (!all(levels(tokens$doc_id) %in% meta$doc_id)) warning('For some documents in tokens the meta data is missing')
+    if (!all(meta$doc_id %in% levels(tokens$doc_id))) warning('For some documents in the meta data there are no tokens. These documents will not be included in the meta data')
+    meta = meta[list(levels(tokens$doc_id)),]
+  } else {
+    meta = data.table(doc_id=as.character(levels(tokens$doc_id)), key='doc_id')
   }
 
   if (!is.null(meta_cols)){
-    add_meta = unique(tokens[,c(doc_col, meta_cols)])
+    add_meta = unique(tokens[,c('doc_id', meta_cols)])
     if (nrow(add_meta) > nrow(meta)) stop('The document meta columns specified in meta_cols are not unique within documents')
-    meta = cbind(meta, add_meta[,meta_cols])
+    meta = cbind(meta, add_meta[,meta_cols,with=F])
   }
   meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
 
-  if (is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sent_i_col, word_i_col, meta_cols)]
-  for(fcol in feature_cols) {
-    if (class(tokens[,fcol]) %in% c('factor','character')) tokens[,fcol] = fast_factor(as.character(tokens[,fcol]))
-  }
-
-  tCorpus$new(data=data.table(cbind(positions, tokens[,feature_cols,drop=F])),
-              meta = data.table(meta))
+  tCorpus$new(data=tokens, meta = meta)
 }
+

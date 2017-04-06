@@ -33,10 +33,10 @@ global_position <- function(position, context, max_window_size=NA, presorted=F, 
     context.max = position[newcontext-1] # the highest value of each context
     if (!is.na(max_window_size)) context.max = context.max + max_window_size # increase the highest value of each context with max_window_size to make sure windows of different contexts do not overlap.
     add_scores = cumsum(c(0,context.max)) # the amount that should be added to the position at the start of each context
+    rm(context.max)
 
     repeat_add = c(newcontext[-1], length(position)+1) - newcontext # the number of times the add scores need to be repeated to match the position vector
-    add_vector = rep(add_scores, repeat_add)
-    position = position + add_vector
+    position = position + rep(add_scores, repeat_add)
   }
   if (!presorted) position = position[match(1:length(position), ord)]
   position
