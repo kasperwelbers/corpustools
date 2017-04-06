@@ -6,9 +6,8 @@ test_that("comparing documents works", {
                  date = c('2010-01-01','2010-01-01','2012-01-01'))
   tc = create_tcorpus(d)
 
-
   g = tc$compare_documents()
-  expect_equal(round(E(g)$weight,3), round(c(0.1581139, 0.1336306, 0.1581139, 0.1336306),3))
+  expect_equal(round(E(g)$weight,3), round(c(0.027, 0.022, 0.027, 0.022),3))
 
   g = tc$compare_documents(to_subset = doc_id == '1')
   expect_true(ecount(g) == 2)
@@ -22,7 +21,7 @@ test_that("comparing documents works", {
   expect_true(ecount(g) == 2)
 
   ## due to random selection of which duplicate to delete, chains can lead to varying number of duplicates. Think of something more smart, or order by id/name instead of random
-  dedup = tc$deduplicate(feature='word', similarity = 0.1)
+  dedup = tc$deduplicate(feature='word', similarity = 0.025)
   #expect_true(dedup$n_meta == 1)
 })
 

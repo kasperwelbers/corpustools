@@ -10,7 +10,7 @@ backbone_alpha(g, k.is.Nvertices = F)
 \item{g}{A graph in the `Igraph` format.}
 }
 \value{
-A vector of alpha values, which matches the edges. Can thus easily be made an edge attribute: E(g)$alpha = backbone_alpha(g)
+A vector of alpha values, which matches the edges. Can thus easily be made an edge attribute: E(g)$alpha = backbone.alpha(g)
 }
 \description{
 Based on the following paper: Serrano, M. Á., Boguñá, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.

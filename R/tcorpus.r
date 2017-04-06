@@ -244,7 +244,7 @@ tCorpus <- R6::R6Class("tCorpus",
        colnames(private$.meta)[colnames(private$.meta) == oldname] = newname
      },
 
-     subset = function(subset=NULL, subset_meta=NULL, drop_levels=F, window=NULL, clone=self$clone_on_change){
+     subset = function(subset=NULL, subset_meta=NULL, drop_levels=T, window=NULL, clone=self$clone_on_change){
        subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
        subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
 
@@ -401,14 +401,17 @@ tCorpus <- R6::R6Class("tCorpus",
 
 ## DOCUMENT COMPARISON ##
 
-     compare_documents = function(feature='word', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, from_subset=NA, to_subset=NA) {
+     compare_documents = function(feature='word', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NA, to_subset=NA) {
+        weight = match.arg(weight)
+
         from_subset = if (is(substitute(from_subset), 'call')) deparse(substitute(from_subset)) else from_subset
         to_subset = if (is(substitute(to_subset), 'call')) deparse(substitute(to_subset)) else to_subset
 
         compare_documents_fun(self, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=min_similarity, weight=weight, ngrams=ngrams, from_subset=from_subset, to_subset=to_subset)
      },
 
-     deduplicate = function(feature='word', date_col=NULL, meta_cols=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=ngrams, print_duplicates=F, clone=self$clone_on_change){
+     deduplicate = function(feature='word', date_col=NULL, meta_cols=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=ngrams, print_duplicates=F, clone=self$clone_on_change){
+       weight = match.arg(weight)
        if (clone) {
          selfclone = self$clone()$deduplicate(feature=feature, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, ngrams=ngrams, print_duplicates=print_duplicates, clone=F)
          return(selfclone)
@@ -466,7 +469,17 @@ tCorpus <- R6::R6Class("tCorpus",
        private$.data = base::droplevels(private$.data)
        private$.meta = base::droplevels(private$.meta)
        invisible(self)
-     }
+     },
+
+## tCORPUS MANAGEMENT ##
+      refresh = function(clone=self$clone_on_change){
+        if (clone) {
+          selfclone = self$clone()$droplevels(clone=F)
+          return(selfclone)
+        }
+        tc = tCorpus$new(data=private$.data, meta=private$.meta, feature_index=private$.feature_index, p=private$.p)
+        invisible(tc)
+      }
    ),
 
    active = list(
@@ -529,7 +542,6 @@ tCorpus <- R6::R6Class("tCorpus",
      }
    )
 )
-
 
 #' @export
 print.tCorpus <- function(tc) {

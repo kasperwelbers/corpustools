@@ -36,19 +36,26 @@ calcAlpha <- function(mat, weightsum, k){
 #' Based on the following paper: Serrano, M. Á., Boguñá, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.
 #'
 #' @param g A graph in the `Igraph` format.
-#' @return A vector of alpha values, which matches the edges. Can thus easily be made an edge attribute: E(g)$alpha = backbone_alpha(g)
+#' @return A vector of alpha values, which matches the edges. Can thus easily be made an edge attribute: E(g)$alpha = backbone.alpha(g)
 #' @export
 backbone_alpha <- function(g, k.is.Nvertices=F){
-  mat = if (is.directed(g)) get.adjacency(g, attr='weight') else get.adjacency(g, attr='weight', type='upper') # prevents counting edges double in symmetric matrix (undirected graph)
-  weightsum = Matrix::rowSums(mat) + Matrix::colSums(mat)
-  k = if (k.is.Nvertices) nrow(mat) else Matrix::rowSums(mat>0) + Matrix::colSums(mat>0)
-  if (is.directed(g) & k.is.Nvertices) k = k + ncol(mat)
-
+  mat = get.adjacency(g, attr='weight')
   edgelist_ids = get.edgelist(g, names=F)
-  alpha_ij = calcAlpha(mat, weightsum, k)[edgelist_ids] # alpha from the perspective of the 'from' node.
-  alpha_ji = Matrix::t(calcAlpha(Matrix::t(mat), weightsum, k))[edgelist_ids] # alpha from the perspective of the 'to' node.
-  alpha_ij[alpha_ji < alpha_ij] = alpha_ji[alpha_ji < alpha_ij] # select lowest alpha, because an edge can be 'significant' from the perspective of both the 'from' and 'to' node.
-  alpha_ij
+
+  if(!is.directed(g)) {
+    mat[lower.tri(mat)] = 0 # prevents counting edges double in symmetric matrix (undirected graph)
+    weightsum_ij = weightsum_ji = Matrix::rowSums(mat) + Matrix::colSums(mat)
+    k_ij = k_ji = if(k.is.Nvertices) nrow(mat) else Matrix::rowSums(mat>0) + Matrix::colSums(mat>0)
+  } else {
+    weightsum_ij = Matrix::rowSums(mat)
+    weightsum_ji = Matrix::colSums(mat)
+    k_ij = if(k.is.Nvertices) nrow(mat) else Matrix::rowSums(mat>0)
+    k_ji = if(k.is.Nvertices) ncol(mat) else Matrix::colSums(mat>0)
+  }
+  alpha_ij = calcAlpha(mat, weightsum_ij, k_ij)[edgelist_ids] # alpha from the perspective of the 'from' node.
+  alpha_ji = Matrix::t(calcAlpha(Matrix::t(mat), weightsum_ji, k_ji))[edgelist_ids] # alpha from the perspective of the 'to' node.
+  ifelse(alpha_ij < alpha_ji, alpha_ij, alpha_ji) # select lowest alpha, because an edge can be 'significant' from the perspective of both the 'from' and 'to' node.
+
 }
 
 #' Calculate the alpha values that can be used to extract the backbone of a network, for only the out.degree

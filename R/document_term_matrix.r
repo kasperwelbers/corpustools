@@ -11,6 +11,7 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
 
   is_tcorpus(tc, T)
   if(is(tc, 'shattered_tCorpus')) return(shard_get_dtm(stc=tc, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form, context_labels=context_labels))
+
   weight = match.arg(weight)
   context_levels = match.arg(context_level)
 
@@ -40,9 +41,9 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
 
   if (form == 'tm_dtm'){
     m = tm::as.DocumentTermMatrix(m, weight=tm::weightTf)
-    if(weight == 'tfidf') attributes(dtm)$weighting = c("term frequency - inverse document frequency", "tf-idf")
-    if(weight == 'tfidf_norm') attributes(dtm)$weighting = c("term frequency - inverse document frequency (normalized)", "tf-idf")
-    if(!weight %in% c('termfreq','tfidf', 'tfidf_norm')) attributes(dtm)$weighting = c(weight, weight)
+    if(weight == 'tfidf') attributes(m)$weighting = c("term frequency - inverse document frequency", "tf-idf")
+    if(weight == 'tfidf_norm') attributes(m)$weighting = c("term frequency - inverse document frequency (normalized)", "tf-idf")
+    if(!weight %in% c('termfreq','tfidf', 'tfidf_norm')) attributes(m)$weighting = c(weight, weight)
   }
   if (form == 'quanteda_dfm') m = new("dfmSparse", as(m, 'dgCMatrix'))
 
