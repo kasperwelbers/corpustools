@@ -606,10 +606,14 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
     if (with_labels){
       ucontext = unique(d[,c('doc_id','sent_i')])
       ucontext = stringi::stri_paste(ucontext$doc_id, ucontext$sent_i, sep=' #')
-      context = factor(global_position(d$sent_i, d$doc_id, presorted = T, position_is_local=T), labels = ucontext)
+      context = fast_factor(global_position(d$sent_i, d$doc_id, presorted = T, position_is_local=T), levels = ucontext)
     } else {
       context = fast_dummy_factor(global_position(d$sent_i, d$doc_id, presorted = T, position_is_local=T))
     }
   }
   context
 }
+
+
+
+

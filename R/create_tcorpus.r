@@ -125,7 +125,9 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
       if (!anyDuplicated(tokens, by=c('doc_id','sent_i')) == 0) warning("Sentence positions (sent_i) do not appear to be locally unique within document (no duplicates). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
     }
     if (!sent_is_local) tokens[,'sent_i' := local_position(tokens$sent_i, tokens$doc_id, presorted = T)] ## make sure sentences are locally unique within documents (and not globally)
-    if (!word_is_local) tokens[,'word_i' := global_position(tokens$word_i, tokens$sent_i, presorted = T)]  ## make word positions globally unique, taking sentence id into account (in case words are locally unique within sentences)
+    if (!word_is_local) tokens[,'word_i' := global_position(tokens$word_i,
+                                                            global_position(tokens$sent_i, tokens$doc_id, presorted = T, position_is_local=T),
+                                                            presorted = T)]  ## make word positions globally unique, taking sentence id into account (in case words are locally unique within sentences)
   }
   if (word_is_local) {
     if (!anyDuplicated(tokens, by=c('doc_id','word_i')) == 0) warning("Word positions (word_i) do not appear to be locally unique within document (no duplicates). Unless you are sure they are, set word_is_local to FALSE (and read documentation)")

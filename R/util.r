@@ -24,7 +24,7 @@ fast_factor <- function(x, levels=NULL) {
   if (!is(x, 'factor')) {
     if (!all(is.na(x))) {
       if (is.null(levels)) levels = vector(class(x), 0)
-      x = .Call('corpustools_fast_factor', PACKAGE = 'corpustools', x, levels)
+      x = .Call('corpustools_fast_factor', PACKAGE = 'corpustools', as.character(x), levels)
     } else {
       x = fast_dummy_factor(x)
     }
