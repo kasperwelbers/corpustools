@@ -38,7 +38,7 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
 #'
 #' @return
 subset_feature_fun <- function(tc, column, new_column, subset, inverse=F){
-  i = subset_i(tc, subset, inverse=!inverse) ## double inverse, because inverse in subset_i means "give me i for the rows for which condition is not true", and here we use i to set the NA.
+  i = tc$subset_i(subset, inverse=!inverse) ## double inverse, because inverse in subset_i means "give me i for the rows for which condition is not true", and here we use i to set the NA.
   if (column == new_column) {
     tc = tc$set_column(new_column, NA, subset = i)
   } else {

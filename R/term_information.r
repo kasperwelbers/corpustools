@@ -1,3 +1,4 @@
+
 #' Compute some useful corpus statistics for a dtm
 #'
 #' Compute a number of useful statistics for filtering words: term frequency, idf, etc.

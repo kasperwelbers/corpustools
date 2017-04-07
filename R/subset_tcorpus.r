@@ -23,78 +23,34 @@ subset_query_window <- function(tc, window, keyword=NA, condition=NA, queries=NU
   tc
 }
 
-subset_i <- function(tc, subset=NA, subset_meta=NA, inverse=F){
-  ## subset and subset_meta can be either a call or a character vector of length 1
-  subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
-  subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
-
-  n = nrow(tc$data())
-  if (is.na(subset)){
-    r = NULL
-  } else {
-    e = parse(text=as.character(subset))
-    r = eval(e, tc$data(), parent.frame())
-    if (inverse) r=!r
-    r = which(r)
-  }
-
-  n_meta = nrow(tc$meta())
-  if (is.na(subset_meta)){
-    r_meta = NULL
-  } else {
-    e_meta = parse(text=as.character(subset_meta))
-    r_meta = (1:n_meta)[eval(e_meta, tc$meta(), parent.frame())]
-    if (length(r_meta) > 0) {
-      r_meta = 1:n_meta %in% r_meta
-      r_meta = r_meta[match(tc$data('doc_id'), tc$meta('doc_id'))] ## extend to length()
-      if (inverse) r_meta=!r_meta
-      r_meta = which(r_meta)
-    }
-  }
-
-  if (!is.null(r) & !is.null(r_meta)) r = intersect(r, r_meta)
-  if (is.null(r) & is.null(r_meta)) r = 1:n
-  if (!is.null(r) & is.null(r_meta)) r = r
-  if (is.null(r) & !is.null(r_meta)) r = r_meta
-  as.numeric(na.omit(r))
-}
-
 ## subset functions ##
 
-#' @export
-freq <- function(x) {
-  d = as.data.frame(table(x))
-  d$Freq[match(x, d$x)]
+x_filter <- function(t, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
+  select = names(t[t >= min & t <= max])
+  if (!is.null(top)) {
+    top = names(head(t[order(-t)], top))
+    select = intersect(select, top)
+  }
+  if (!is.null(bottom)) {
+    bottom = names(head(t[order(t)], bottom))
+    select = intersect(select, bottom)
+  }
+  select
 }
 
 #' @export
-freq_top <- function(x, n=100) {
-  d = as.data.frame(table(x))
-  top = head(d[order(-d$Freq),], n)
-  d$top = ifelse(d$x %in% top$x, T, F)
-  d$top[match(x, d$x)]
+freq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
+  if (is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
+  freq_table = table(x)
+  x %in% x_filter(freq_table, min=min, max=max, top=top, bottom=bottom)
 }
 
-#' @export
-docfreq <- function(x, doc_id=parent.frame()$doc_id) {
-  d = unique(data.frame(id=doc_id, term=x))
-  d = as.data.frame(table(d$term))
-  d$Freq[match(x, d$Var1)]
-}
 
 #' @export
-docfreq_top <- function(x, n=100, doc_id=parent.frame()$doc_id) {
-  d = unique(data.frame(id=doc_id, term=x))
-  d = as.data.frame(table(d$term))
-  top = head(d[order(-d$Freq),], n)
-  d$top = ifelse(d$Var1 %in% top$Var1, T, F)
-  d$top[match(x, d$Var1)]
+docfreq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL, doc_id=parent.frame()$doc_id) {
+  if (is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
+  freq_table = unique(data.frame(doc_id=doc_id, x=x))
+  freq_table = table(freq_table$x)
+  x %in% x_filter(freq_table, min=min, max=max, top=top, bottom=bottom)
 }
 
-#' @export
-docfreq_pct <- function(x, doc_id=parent.frame()$doc_id) {
-  d = unique(data.frame(id=doc_id, term=x))
-  d = as.data.frame(table(d$term))
-  d$Freq = (d$Freq / length(unique(doc_id))) * 100
-  d$Freq[match(x, d$Var1)]
-}

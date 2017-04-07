@@ -1,5 +1,6 @@
 test_that("Query document search works", {
   library(corpustools)
+
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte. Bos, on the other hand, is not always Wouter',
@@ -16,7 +17,6 @@ test_that("Query document search works", {
   hits = tc$search_contexts('"rutte bos"~5', context_level = 'document') ## should find rutte and bos across sentences
   expect_true(nrow(hits$hits) > 0)
 
-  get_feature_regex('"rutte bos"~5')
   hits = tc$search_contexts('"rutte bos"~5', context_level = 'sentence') ## should not find rutte and bos across sentences
   expect_true(nrow(hits$hits) == 0)
 

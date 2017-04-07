@@ -199,6 +199,7 @@ shatter_loop <- function(tc, meta_columns=c(), tokens_per_shard=1000000, n_shard
       uval_path = if (save_path=='') uval else paste(save_path, uval, sep='/')
       if (!dir.exists(uval_path)) dir.create(uval_path)
       i = which(val == uval)
+
       shard_index[i] = shatter_loop(tc$subset(subset_meta=i), next_columns,
                                     tokens_per_shard=tokens_per_shard, n_shards=n_shards, save_path=uval_path, compress=compress,
                                     verbose_string=paste(verbose_string,'---', sep=''))

@@ -23,12 +23,13 @@
 Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta). The subset arguments work according to the \link{subset.data.table} function.
 
 Subset can also be used to select rows based on word/feature frequences. This is a common step in corpus analysis, where it often makes sense to ignore very rare and/or very frequent words.
-To do so, there are functions that can be used in the subset call to get frequency scores for a given feature column.
-The freq(feature) and docfreq(feature) functions get the total frequency of a feature and the document frequency, respectively. The docfreq_pct(feature) function gets the document frequency as a percentage (between 0 and 100).
-For example, if there is a feature called word, then the subset can be "freq(word) > 5 & docfreq_pct(word) < 90". This will select all rows for which the word is a word that occured at least 5 times, and did not occur in more dan 90% of all documents.
-
-In addition, you can use freq_top(feature, n=100) and docfreq_top(feature, n=100) to get the top n features. This is given as a logical vector.
-For example, to select only the rows in which a word occurs that is in the top 100 most frequent words, subset can be "freq_top(word, 100)".
+To do so, there are several special functions that can be used within a subset call.
+The freq_filter() and docfreq_filter() can be used to filter terms based on term frequency and document frequency, respectively.
+The first argument to these functions is the name of the feature, e.g., freq_filter(word).
+To filter this feature you can specify: min (minimum frequency), max (maximum frequency), top (n most frequent words) and bottom (n least frequent words).
+For example, tc$freq_filter(word, min=10) filters out all rows in which the specified feature occures at least 10 times in the entire corpus.
+tc$freq_filter(word, top=100) keeps only the rolws in which the feature is in the top 100 most frequent features.
+tc$docfreq_filter(word, max = 0.9 * tc$n) deletes all rows with features that occured in more than 90% of all documents.
 
 Note that you can also use the \link{tCorpus$feature_subset} method if you want to filter out low/high frequency words, but do not want to delete the rows in the tCorpus.
 }

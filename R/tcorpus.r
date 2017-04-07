@@ -21,12 +21,14 @@ tCorpus <- R6::R6Class("tCorpus",
        selection = safe_selection(private$.data, selection)
        private$.data = subset(private$.data, selection)
        private$.meta = private$.meta[as.character(unique(private$.data$doc_id)),,nomatch=0]
+       private$.meta$doc_id = as.character(private$.meta$doc_id)
        self$reset_feature_index()
        self$set_keys()
      },
      select_meta_rows = function(selection) {
        selection = safe_selection(private$.meta, selection)
        private$.meta = subset(private$.meta, selection)
+       private$.meta$doc_id = as.character(private$.meta$doc_id)
        private$.data = private$.data[as.character(unique(private$.meta$doc_id)),,nomatch=0]
        self$reset_feature_index()
        self$set_keys()
@@ -94,7 +96,10 @@ tCorpus <- R6::R6Class("tCorpus",
        get_context(self, context_level = context_level, with_labels=with_labels)
      },
 
-     dtm = function(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NA, subset_meta=NA, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F) {
+     dtm = function(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F) {
+       subset_tokens = if (is(substitute(subset_tokens), 'call')) deparse(substitute(subset_tokens)) else subset_tokens
+       subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
+
        get_dtm(self, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form, subset_tokens=subset_tokens, subset_meta=subset_meta, context=context, context_labels=context_labels, feature_labels=feature_labels, ngrams=ngrams, ngram_before_subset=ngram_before_subset)
      },
 
@@ -257,10 +262,14 @@ tCorpus <- R6::R6Class("tCorpus",
 
        ## Note that in normal subset the parent.frame is used in eval, to also enable the use of objects from the environment from which subset is called. Here we need to go up 2 levels, since subset is called through the R6 class environment
        r_meta = eval(e_meta, private$.meta, parent.frame(2))
-       if (!is.null(r_meta)) private$select_meta_rows(r_meta) ## also deletes tokens belonging to documents
+       if (!is.null(r_meta)) {
+         r_meta[is.na(r_meta)] = F
+         private$select_meta_rows(r_meta) ## also deletes tokens belonging to documents
+       }
 
        r = eval(e, private$.data, parent.frame(2))
        if (!is.null(r)){
+         r[is.na(r)] = F
          if (!is.null(window)){
            global_i = get_global_i(self, max_window_size=window)
            global_r = global_i[r]
@@ -271,9 +280,18 @@ tCorpus <- R6::R6Class("tCorpus",
        }
 
        if (drop_levels) self$droplevels(clone=F)
-       private$.meta$doc_id = as.character(private$.meta$doc_id)
        invisible(self)
      },
+
+      subset_i = function(subset=NULL, subset_meta=NULL, window=NULL, inverse=F){
+        subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
+        subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
+
+        tc = self$set_column('i', 1:self$n)
+        i = tc$subset(subset=subset, subset_meta=subset_meta, window=window, clone=F)$data('i')
+
+        if (!inverse) i else !1:self$n %in% i
+      },
 
      reset_feature_index = function(){
        private$.feature_index = NULL
@@ -387,13 +405,13 @@ tCorpus <- R6::R6Class("tCorpus",
        tcorpus_compare(self, tc_y, feature, smooth=smooth, min_over=min_over, min_chi2=min_chi2, yates_cor=yates_cor, x_is_subset=is_subset)
      },
 
-     compare_subset = function(feature, subset_x=NA, subset_meta_x=NA, query_x=NULL, query_feature='word', smooth=0.1, min_over=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no')){
+     compare_subset = function(feature, subset_x=NULL, subset_meta_x=NULL, query_x=NULL, query_feature='word', smooth=0.1, min_over=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no')){
        subset_x = if (is(substitute(subset_x), 'call')) deparse(substitute(subset_x)) else subset_x
        subset_meta_x = if (is(substitute(subset_meta_x), 'call')) deparse(substitute(subset_meta_x)) else subset_meta_x
 
-       if(is.na(subset_x) & is.na(subset_meta_x) & is.null(query_x)) stop("at least one of subset_x, subset_meta_x or query_x has to be specified")
+       if(is.null(subset_x) & is.null(subset_meta_x) & is.null(query_x)) stop("at least one of subset_x, subset_meta_x or query_x has to be specified")
        tc_x = self$clone()
-       if(!is.na(subset_x) | !is.na(subset_meta_x)) tc_x = tc_x$subset(subset=subset_x, subset_meta=subset_meta_x, clone=T)
+       if(!is.null(subset_x) | !is.null(subset_meta_x)) tc_x = tc_x$subset(subset=subset_x, subset_meta=subset_meta_x, clone=T)
        if(!is.null(query_x)) tc_x = tc_x$subset_query(query_x, feature=query_feature)
 
        tc_x$compare_corpus(self, feature=feature, smooth=smooth, min_over=min_over, min_chi2=min_chi2, yates_cor=yates_cor, is_subset=T)
@@ -401,7 +419,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
 ## DOCUMENT COMPARISON ##
 
-     compare_documents = function(feature='word', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NA, to_subset=NA) {
+     compare_documents = function(feature='word', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
         weight = match.arg(weight)
 
         from_subset = if (is(substitute(from_subset), 'call')) deparse(substitute(from_subset)) else from_subset
@@ -469,17 +487,8 @@ tCorpus <- R6::R6Class("tCorpus",
        private$.data = base::droplevels(private$.data)
        private$.meta = base::droplevels(private$.meta)
        invisible(self)
-     },
+     }
 
-## tCORPUS MANAGEMENT ##
-      refresh = function(clone=self$clone_on_change){
-        if (clone) {
-          selfclone = self$clone()$droplevels(clone=F)
-          return(selfclone)
-        }
-        tc = tCorpus$new(data=private$.data, meta=private$.meta, feature_index=private$.feature_index, p=private$.p)
-        invisible(tc)
-      }
    ),
 
    active = list(
@@ -552,6 +561,29 @@ print.tCorpus <- function(tc) {
       '\n  - ', length(tc$names), ' data column', if (length(tc$names) > 1) '(s)', ':\t', paste(tc$names, collapse=', '),
       '\n  - ', length(tc$meta_names), ' meta column', if (length(tc$meta_names) > 1) '(s)', ': \t', paste(tc$meta_names, collapse=', '),
       '\n', sep='')
+}
+
+#' Refresh a tCorpus object using the current version of corpustools
+#'
+#' As an R6 class, tCorpus contains its methods within the class object (i.e. itself). Therefore, if you use a new version of corpustools with an older tCorpus object (e.g., stored as a .rds. file), then the methods are not automatically updated. You can then use refresh_tcorpus() to reinitialize the tCorpus object with the current version of corpustools.
+#'
+#' @param tc a tCorpus object
+#'
+#' @return a tCorpus object
+#' @export
+refresh_tcorpus <- function(tc){
+  tCorpus$new(data=tc$.__enclos_env__$private$.data,
+              meta=tc$.__enclos_env__$private$.meta,
+              p = tc$.__enclos_env__$private$.p,
+              feature_index = tc$.__enclos_env__$private$.feature_index)
+}
+
+rebuild_tcorpus <- function(tc) {
+  tokens_to_tcorpus(tokens = tc$data(),
+                    doc_col = 'doc_id',
+                    sent_i_col = ifelse('sent_i' %in% tc$names, T, F),
+                    word_i_col = 'word_i',
+                    meta = tc$meta())
 }
 
 #' @export

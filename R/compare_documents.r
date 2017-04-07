@@ -4,7 +4,7 @@ to_POSIXct <- function(x){
            error = function(e) stop(sprintf('Date column cannot be interpreted as POSIXct: \n\t-> %s', e)))
 }
 
-compare_documents_fun <- function(tc, feature='word', date_col=NULL, hour_window=c(-24,24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, from_subset=NA, to_subset=NA) {
+compare_documents_fun <- function(tc, feature='word', date_col=NULL, hour_window=c(-24,24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
   from_subset = if (is(substitute(from_subset), 'call')) deparse(substitute(from_subset)) else from_subset
   to_subset = if (is(substitute(to_subset), 'call')) deparse(substitute(to_subset)) else to_subset
 
@@ -23,8 +23,8 @@ compare_documents_fun <- function(tc, feature='word', date_col=NULL, hour_window
     }
   } else {
     ## if the compare.newsflow function is used, the full DTM is given, and the only_from and only_to arguments are used
-    only_from = if (!is.na(from_subset)) tc$subset(subset_meta = from_subset)$meta('doc_id') else NULL
-    only_to = if (!is.na(to_subset)) tc$subset(subset_meta = to_subset)$meta('doc_id') else NULL
+    only_from = if (!is.null(from_subset)) tc$subset(subset_meta = from_subset)$meta('doc_id') else NULL
+    only_to = if (!is.null(to_subset)) tc$subset(subset_meta = to_subset)$meta('doc_id') else NULL
     dtm = tc$dtm(feature=feature, weight = weight, drop_empty_terms = T, context_labels = T, feature_labels=F, ngrams=ngrams, form = 'tm_dtm')
   }
 

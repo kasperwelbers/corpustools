@@ -4,7 +4,7 @@
 #' @param feature
 #' @param context_level
 #'
-get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NA, subset_meta=NA, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F){
+get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F){
   form = match.arg(form)
   if(form == 'tm_dtm') if(!require(tm)) stop('form is set to tm_dtm, but the tm package is not installed.')
   if(form == 'quanteda_dfm') if(!require(quanteda)) stop('form is set to quanteda_dtm, but the quanteda package is not installed.')
@@ -15,12 +15,14 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   weight = match.arg(weight)
   context_levels = match.arg(context_level)
 
-  #tc = tc$subset(subset_tokens, subset_meta=subset_meta, clone=T)
-  sub_i = subset_i(tc, subset = subset_tokens, subset_meta = subset_meta)
-
   i = if (!is.null(context)) context else tc$context(context_level, with_labels = context_labels)
-  i = i[sub_i]
-  if (!is(i, 'factor')) i = factor(i)
+  if (!is.null(subset_tokens) | !is.null(subset_meta)) {
+    sub_i = tc$subset_i(subset = subset_tokens, subset_meta = subset_meta)
+    i = i[sub_i]
+  } else {
+    sub_i = 1:tc$n
+  }
+  if (!is(i, 'factor')) i = fast_factor(i)
 
   feature = tc$data(feature)
   if(!is(feature, 'factor')) feature = factor(feature)
@@ -49,6 +51,8 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
 
   m
 }
+
+
 
 weight_dtm <- function(m, weight){
   m = as(m, 'dgTMatrix')
