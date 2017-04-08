@@ -37,16 +37,15 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
 #' @param filter
 #'
 #' @return
-subset_feature_fun <- function(tc, column, new_column, subset, inverse=F){
-  i = tc$subset_i(subset, inverse=!inverse) ## double inverse, because inverse in subset_i means "give me i for the rows for which condition is not true", and here we use i to set the NA.
+subset_feature_fun <- function(tc, i, column, new_column, subset, inverse=F){
   if (column == new_column) {
-    tc = tc$set_column(new_column, NA, subset = i)
+    tc$set_column(new_column, NA, subset = i, clone=F)
   } else {
     feature = tc$data(column)
     feature[i] = NA
-    tc = tc$set_column(new_column, feature)
+    tc$set_column(new_column, feature, clone=F)
   }
-  tc
+  invisible(tc)
 }
 
 #' @export
@@ -115,3 +114,4 @@ grouped_ngrams <- function(words, group, n, filter=rep(T, length(words)), label=
   }
   ngrams
 }
+

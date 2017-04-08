@@ -55,7 +55,7 @@ compare_documents_fun <- function(tc, feature='word', date_col=NULL, hour_window
   g
 }
 
-delete_duplicates <- function(tc, feature='word', date_col=NULL, meta_cols=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, print_duplicates=F) {
+delete_duplicates <- function(tc, feature='word', date_col=NULL, meta_cols=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, print_duplicates=F, env=environment()) {
   keep = match.arg(keep)
   for (mvar in meta_cols) if (!mvar %in% tc$meta_names) stop(sprintf('Meta column (%s) not in corpus', mvar))
 
@@ -97,5 +97,5 @@ delete_duplicates <- function(tc, feature='word', date_col=NULL, meta_cols=NULL,
   message('Deleting ', length(duplicates), ' duplicates')
   if (print_duplicates) sprintf('c(%s)', print(paste(sprintf('"%s"', duplicates), collapse=', ')))
 
-  if (length(duplicates) > 0) tc$subset(subset_meta = !doc_id %in% duplicates) else tc
+  if (length(duplicates) > 0) tc$subset(subset_meta = !doc_id %in% duplicates, env=environment(), clone = F) else tc
 }
