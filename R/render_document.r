@@ -15,7 +15,7 @@
 html_tagged_text <- function(tc, context_level='document', text_col='word', meta_columns=NULL, highlight=NULL, scale=NULL, index=NULL, highlight_col='yellow', scale_col=c('red','blue')) {
   context_level = match.arg(context_level)
 
-  d = tc$data(c('doc_id', 'word_i', text_col,highlight,scale,index), keep_df = T)
+  d = tc$data[,c('doc_id', 'word_i', text_col,highlight,scale,index),with=F]
   d$context = tc$context(context_level)
   colnames(d)[colnames(d) == text_col] = 'text'
   colnames(d)[colnames(d) == highlight] = 'highlight'
@@ -27,7 +27,7 @@ html_tagged_text <- function(tc, context_level='document', text_col='word', meta
 
   ## add meta
   html$header = stringi::stri_paste(html$header, '\n<table>', sep='')
-  if (is.null(meta_columns)) meta = tc$meta() else tc$meta(meta_columns)
+  if (is.null(meta_columns)) meta = tc$meta else tc$meta[,meta_columns,with=F]
   meta = meta[list(html$doc_id),]
   for (name in colnames(meta)) {
     if (name == 'doc_id') next

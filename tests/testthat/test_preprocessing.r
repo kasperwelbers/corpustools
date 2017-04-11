@@ -1,4 +1,7 @@
 test_that("preprocessing works", {
+  cat('\n', '-> Testing: Preprocessing', '\n')
+  start_time = Sys.time()
+
   library(corpustools)
 
   tokens = data.frame(document = c(rep(1, 8), rep(2, 5), rep(3, 5)),
@@ -9,11 +12,14 @@ test_that("preprocessing works", {
 
   tc = tokens_to_tcorpus(tokens, doc_col ='document', word_i_col = 'id', meta=meta)
   ## test preprocess_feature
-  word = tc$data('word')
+  word = tc$data$word
 
   context = get_context(tc, 'document')
   feature = preprocess_words(word, context=context, language='english', lowercase = T, use_stemming = T, ngrams = 3)
 
   tc = tc$preprocess('word', new_column='feature', language='english', lowercase = T, use_stemming = T, ngrams = 3, ngram_context = 'document')
-  expect_equal(tc$data('feature'), feature)
+  expect_equal(tc$data$feature, feature)
+
+  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
+
 })

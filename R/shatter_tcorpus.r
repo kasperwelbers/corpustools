@@ -51,13 +51,13 @@ shatter_tcorpus <- function(tc, stc, meta_columns=NULL, tokens_per_shard=1000000
   new_index = cbind(.PATH=gsub('shard_[0-9]+_T=.*', '', shard_index),
                     .SHARD=shard_index,
                     .N = ntokens_index(tc),
-                    tc$meta())
+                    tc$meta)
 
   index = rbindlist(list(index, new_index))
   setkeyv(index, c('.PATH', '.SHARD'))
   stc$set_index(index)
 
-  info = shard_index_info(stc, head(tc$data()), head(tc$meta()), meta_columns)
+  info = shard_index_info(stc, head(tc$data), head(tc$meta), meta_columns)
   stc$set_info(info)
 
   stc$set_feature_levels(feature_levels_list(tc))## note that for appending, the feature levels in tc have already been matched with the previous data, and thus contain all levels
@@ -67,7 +67,7 @@ shatter_tcorpus <- function(tc, stc, meta_columns=NULL, tokens_per_shard=1000000
 }
 
 manage_duplicates <- function(tc, index, if_duplicates){
-  duplicate = tc$meta('doc_id') %in% index$doc_id
+  duplicate = tc$meta$doc_id %in% index$doc_id
   if (sum(duplicate) > 0){
     if (if_duplicates == 'stop') stop('DUPLICATES. The new tcorpus contains doc_ids that are already in the shattered_tCorpus. If you know why, you can use the if_duplicates parameter to "skip" the duplicates or automatically "rename" them')
     if (if_duplicates == 'skip') {
@@ -76,24 +76,24 @@ manage_duplicates <- function(tc, index, if_duplicates){
     }
     if (if_duplicates == 'rename') {
       cat('## Renaming ', sum(duplicate), ' duplicate(s)\n')
-      docnames = tc$meta('doc_id')
+      docnames = tc$meta$doc_id
       i = 0
       while(sum(duplicate) > 0){
         i = i + 1
         oldname = docnames[duplicate]
         newname = sprintf('%s_D%s', oldname, i)
 
-        match_i = match(tc$meta('doc_id')[duplicate], levels(tc$data('doc_id')))
+        match_i = match(tc$meta$doc_id[duplicate], levels(tc$data$doc_id))
         tc$within({
           levels(doc_id)[match_i] = newname
         }, clone=F, safe=F)
-        #levels(tc$data('doc_id'))[match(tc$meta('doc_id')[duplicate], levels(tc$data('doc_id')))] = newname
+        #levels(tc$data$doc_id)[match(tc$meta$doc_id[duplicate], levels(tc$data$doc_id))] = newname
         tc$within_meta({
           doc_id[duplicate] = newname
         }, clone=F, safe=F)
-        #tc$meta('doc_id')[duplicate] = newname
+        #tc$meta$doc_id[duplicate] = newname
 
-        duplicate = tc$meta('doc_id') %in% index$doc_id | duplicated(tc$meta('doc_id')) ## also check whether there are duplicates within tc after changing names (very unlikely, but still)
+        duplicate = tc$meta$doc_id %in% index$doc_id | duplicated(tc$meta$doc_id) ## also check whether there are duplicates within tc after changing names (very unlikely, but still)
       }
     }
   }
@@ -114,9 +114,9 @@ shard_index_info <- function(stc, data_head, meta_head, shard_folders) {
 }
 
 ntokens_index <- function(tc){
-  data = tc$data()
+  data = tc$data
   freq = data[,.N,by='doc_id']
-  meta_id = tc$meta('doc_id')
+  meta_id = tc$meta$doc_id
   freq$N[match(meta_id, freq$doc_id)]
 }
 
@@ -151,7 +151,7 @@ fit_columns_to_index <- function(tc, stc){
 ## manage factors
 
 feature_levels_list <- function(tc){
-  d = tc$data()
+  d = tc$data
   factors = colnames(d)[lapply(d, class) == 'factor']
   feature_levels = list()
   for(f in factors) feature_levels[[f]] = levels(d[[f]])
@@ -162,13 +162,13 @@ reindex_features <- function(tc, stc){
   feature_levels = stc$feature_levels()
   features = tc$feature_names
   for(feature in features){
-    if (!is(tc$data('feature'), 'factor')) {
+    if (!is(tc$data$feature, 'factor')) {
       if (feature %in% names(feature_levels)) {
-        tc$set_column(feature, as.factor(tc$data(feature)), clone=F)
+        tc$set_column(feature, as.factor(tc$data[[feature]]), clone=F)
       } else next
     }
     fl = feature_levels[[feature]]
-    tc$set_column(feature, match_factor_labels(tc$data(feature), fl), clone=F)
+    tc$set_column(feature, match_factor_labels(tc$data[[feature]], fl), clone=F)
   }
   tc$set_keys()
   tc
@@ -193,7 +193,7 @@ shatter_loop <- function(tc, meta_columns=c(), tokens_per_shard=1000000, n_shard
     if (verbose) cat(verbose_string, column, '\n')
     verbose_string = paste(verbose_string, '---', sep='')
 
-    val = as.character(tc$meta(column))
+    val = as.character(tc$meta[[column]])
     for(uval in unique(val)){
       if (verbose) cat(verbose_string, uval, '\n')
       uval_path = if (save_path=='') uval else paste(save_path, uval, sep='/')

@@ -11,9 +11,9 @@ calc_chi2 <- function(a,b,c,d, correct=T, cochrans_criteria=F){
   ## http://www.ncbi.nlm.nih.gov/pmc/articles/PMC2041889/ (similar use)
   if (cochrans_criteria) yates_correction = test_cochran(a,b,c,d)
 
-  x = a*d - b*c
+  x = as.numeric(a)*as.numeric(d) - as.numeric(b)*as.numeric(c) ## as.numeric to prevent integer overflow
   x = ifelse(yates_correction, abs(x) - n/2, x)
-  chi = n*x^2 / (as.numeric(sums[,'c1']) * as.numeric(sums[,'c2']) * as.numeric(sums[,'r1']) * as.numeric(sums[,'r2'])) ## as.numeric to prevent integer overflow
+  chi = n*x^2 / (as.numeric(sums[,'c1']) * as.numeric(sums[,'c2']) * as.numeric(sums[,'r1']) * as.numeric(sums[,'r2']))
   ifelse(is.na(chi), 0, chi)
 }
 
@@ -26,5 +26,4 @@ test_cochran <- function(a,b,c,d){
   c2 = rowSums(sums < 5) > 0       # at least one cell with value below 5
   c1 | c2
 }
-
 

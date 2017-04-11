@@ -15,7 +15,7 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
   is_tcorpus(tc, T)
   if (is(tc, 'shattered_tCorpus')) return(shard_preprocess_feature(stc=tc, column=column, new_column=new_column, use_stemming=use_stemming, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords))
 
-  feature = tc$data(column)
+  feature = tc$data[[column]]
   if (!is(feature, 'factor')) feature = factor(feature)
 
   if (ngrams == 1) {
@@ -41,7 +41,7 @@ subset_feature_fun <- function(tc, i, column, new_column, subset, inverse=F){
   if (column == new_column) {
     tc$set_column(new_column, NA, subset = i, clone=F)
   } else {
-    feature = tc$data(column)
+    feature = tc$data[[column]]
     feature[i] = NA
     tc$set_column(new_column, feature, clone=F)
   }

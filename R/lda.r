@@ -3,7 +3,7 @@ lda_features <- function(tc, m, feature, new_feature='LDA_topic', context_level=
   if (!is(m, 'LDA_Gibbs')) stop('An LDA model of class LDA_Gibbs (topicmodels::LDA with method = "Gibbs") is required')
 
   d = data.table(context = tc$context(context_level),
-                 feature = fast_factor(tc$data(feature)),
+                 feature = fast_factor(tc$data[[feature]]),
                  i = 1:tc$n)
   wa = data.table(context=factor(m@documents[m@wordassignments$i]),
                   feature=factor(m@terms[m@wordassignments$j]),

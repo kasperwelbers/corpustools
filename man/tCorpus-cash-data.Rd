@@ -5,22 +5,15 @@
 \alias{meta.tCorpus}
 \alias{tCorpus$data}
 \alias{tCorpus$meta}
-\title{Extract the data from a tCorpus}
+\title{Access the data from a tCorpus}
 \usage{
 ## R6 method for class tCorpus.
-\code{tCorpus$data(columns=NULL, keep_df=F, as.df=F)}
-\code{tCorpus$meta(columns=NULL, keep_df=F, as.df=F, per_token)}
-}
-\arguments{
-\item{columns}{A character string indicating which columns to return. NULL means all columns.}
-
-\item{keep_df}{Keep the data.table/data.frame if only one column is selected.}
-
-\item{as.df}{Return a regular data.frame instead of a data.table}
-
-\item{per_token}{Repeat rows in the document meta data so that it matches with the token data}
+\code{tCorpus$data}
+\code{tCorpus$meta}
 }
 \description{
-Extract the data from a tCorpus
+Several limitations:
+- subsetting or appending the data is not possible. (use the subset function and merge_tcorpua)
+- data.table operations that change the data.table by reference. Note that the set_column and set_meta_column functions do use assignment by reference.
 }
 

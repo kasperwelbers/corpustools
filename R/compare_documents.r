@@ -11,7 +11,7 @@ compare_documents_fun <- function(tc, feature='word', date_col=NULL, hour_window
   measure = match.arg(measure)
   if (!is.null(date_col)) date_col = match.arg(date_col, choices = tc$meta_names)
 
-  meta = tc$meta(keep_df = T, as.df = T)
+  meta = as.data.frame(tc$meta)
 
   ## construct dtm's based on subsets, but not if date_col and hour_window are given, because then this needs to be done differently for the newsflow.compare function
   if (is.null(date_col) | is.null(hour_window)){
@@ -23,8 +23,8 @@ compare_documents_fun <- function(tc, feature='word', date_col=NULL, hour_window
     }
   } else {
     ## if the compare.newsflow function is used, the full DTM is given, and the only_from and only_to arguments are used
-    only_from = if (!is.null(from_subset)) tc$subset(subset_meta = from_subset)$meta('doc_id') else NULL
-    only_to = if (!is.null(to_subset)) tc$subset(subset_meta = to_subset)$meta('doc_id') else NULL
+    only_from = if (!is.null(from_subset)) tc$subset(subset_meta = from_subset)$meta$doc_id else NULL
+    only_to = if (!is.null(to_subset)) tc$subset(subset_meta = to_subset)$meta$doc_id else NULL
     dtm = tc$dtm(feature=feature, weight = weight, drop_empty_terms = T, context_labels = T, feature_labels=F, ngrams=ngrams, form = 'tm_dtm')
   }
 
@@ -68,8 +68,8 @@ delete_duplicates <- function(tc, feature='word', date_col=NULL, meta_cols=NULL,
   e = igraph::get.edges(g, igraph::E(g)) ## edges by indices
   d = igraph::get.data.frame(g, 'edges') ## edges by name and with weigth
   if (!is.null(meta_cols)) {
-    mx = tc$meta(meta_cols, keep_df = T)[e[,1],]
-    my = tc$meta(meta_cols, keep_df = T)[e[,2],]
+    mx = tc$meta[,meta_cols, with = F][e[,1],]
+    my = tc$meta[,meta_cols, with = F][e[,2],]
     allmatch = rowSums(mx == my) == ncol(mx)
     d = d[allmatch,]
   }
@@ -97,5 +97,5 @@ delete_duplicates <- function(tc, feature='word', date_col=NULL, meta_cols=NULL,
   message('Deleting ', length(duplicates), ' duplicates')
   if (print_duplicates) sprintf('c(%s)', print(paste(sprintf('"%s"', duplicates), collapse=', ')))
 
-  if (length(duplicates) > 0) tc$subset(subset_meta = !doc_id %in% duplicates, env=environment(), clone = F) else tc
+  if (length(duplicates) > 0) tc$subset(subset_meta = !doc_id %in% duplicates, env=environment(), clone = F)
 }

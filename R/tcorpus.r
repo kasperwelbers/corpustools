@@ -37,6 +37,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
    public = list(
      clone_on_change = T, ## if TRUE, tCorpus works like 'typical' R (modify on copy). If FALSE, all modifications made using methods will be made to the referenced data. Not needing to copy data is a great boon of R6 as a reference class, but we should keep this optional to facilitate the common R workflow
+     auto_gc = T, ## if TRUE, automatically perform gc() within functions that create large copies. R seems to handle the cleaning of R6 environments poorly (which can be huge for a tCorpus). It appears (but needs more testing) that R sometimes goes for the swap memory even though RAM has already been freed.
      help = function() ?tCorpus,
 
      initialize = function(data, meta, feature_index=NULL, p=NULL) {
@@ -49,30 +50,6 @@ tCorpus <- R6::R6Class("tCorpus",
 
 
 ## SHOW/GET DATA METHODS ##
-     data = function(columns=NULL, keep_df=F, as.df=F) {
-       if (is.null(columns)) {
-         d = data.table::copy(private$.data)
-       } else {
-         d = if (length(columns) > 1 | keep_df) data.table::copy(private$.data[,columns,with=F]) else private$.data[[columns]]
-       }
-       if (as.df) d = as.data.frame(d)
-       d
-     },
-
-     meta = function(columns=NULL, keep_df=F, as.df=F, per_token=F) {
-       if (is.null(columns)) {
-         d = data.table::copy(private$.meta)
-       } else {
-         d = if (length(columns) > 1 | keep_df) data.table::copy(private$.meta[,columns,with=F]) else private$.meta[[columns]]
-       }
-       if (as.df) d = as.data.frame(d)
-       if (per_token) {
-         exp_i = match(tc$data('doc_id'), tc$meta('doc_id'))
-         d = if (is(d, 'data.frame')) d[exp_i,,drop=!keep_df & !is.null(columns)] else d[exp_i]
-       }
-       d
-     },
-
      provenance = function() private$.p,
 
      feature_index = function(feature='word', context_level='document', max_window_size=100, as_ascii=F){
@@ -139,7 +116,9 @@ tCorpus <- R6::R6Class("tCorpus",
 
      copy_clone = function(){
        selfclone = self$clone()
-       selfclone$d = data.table::copy(selfclone$d)
+       selfclone$data = data.table::copy(private$.data)
+       selfclone$meta = data.table::copy(private$.meta)
+       if (self$auto_gc) gc()
        selfclone
      },
 
@@ -297,8 +276,19 @@ tCorpus <- R6::R6Class("tCorpus",
         subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
         subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
 
+        ## use own subsetting:
+        ## if meta is given:
+        ## - first make a copy of .data
+        ## - add row_id column to this copy
+        ## - subset it by meta doc_id
+        ## - subset it by token subset, and return i
+        ## if meta subset is not given
+        ## - simply evaluate the subset and return which
+
+        ## perhaps env can then also be removed
+
         tc = self$set_column('i', 1:self$n)
-        i = tc$subset(subset=subset, subset_meta=subset_meta, window=window, env=env, clone=F)$data('i')
+        i = tc$subset(subset=subset, subset_meta=subset_meta, window=window, env=env, clone=F)$data$i
 
         if (!inverse) i else !1:self$n %in% i
       },
@@ -307,6 +297,47 @@ tCorpus <- R6::R6Class("tCorpus",
        private$.feature_index = NULL
        private$set_provenance(index_feature=NULL, context_level=NULL, max_window_size=NULL, as_ascii=NULL)
      },
+
+     cast = function(meta_cols=NULL, hits=NULL, feature=NULL, doc_count=T){
+        meta = data.table::copy(private$.meta)
+        if (is.null(meta_cols)) {
+          meta[,group := 'total']
+          meta_cols = 'group'
+        }
+
+        d = meta[, list(N=.N), by=meta_cols]
+
+        if (!is.null(hits) | !is.null(feature)){
+          if (!is.null(hits) & !is.null(feature)) stop('Cannot specify both hits and feature')
+          if (!is.null(hits)) {
+            if (!is(hits, c('featureHits', 'contextHits'))) stop('hits must be a featureHits or contextHits object (see the $search_features and $search_contexts methods)')
+            if (is(hits, 'featureHits')) {
+              coldata = hits$hits[!duplicated(hits$hits$hit_id),]
+            } else {
+              coldata = hits$hits
+            }
+          }
+
+          if (!is.null(feature)) {
+            coldata = data.frame(doc_id = private$.data$doc_id, code = private$.data[[feature]])
+            coldata = coldata[!is.na(coldata$code),]
+          }
+
+          if (doc_count) coldata = coldata[!duplicated(coldata[,c('doc_id','code')]),]
+
+          count_d = meta[list(coldata$doc_id), meta_cols, with=F]
+
+          count_d$code = coldata$code
+          agg_cols = c(meta_cols, 'code')
+
+          count_d = count_d[, list(count=.N), by = agg_cols]
+          d = merge(d, count_d, meta_cols)
+          d$count[is.na(d$count)] = 0
+          d = dcast(d, ... ~ code, value.var='count')
+        }
+        as.data.frame(d)
+      },
+
 
 ## FEATURE MANAGEMENT ##
      preprocess = function(column, new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english', clone=self$clone_on_change) {
@@ -317,14 +348,11 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(preprocess_feature(self, column=column, new_column=new_column, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, use_stemming=use_stemming, language=language))
      },
 
-     feature_subset = function(column, subset, new_column=column, inverse=F, env=environment(), clone=self$clone_on_change){
+     feature_subset = function(column, new_column, subset, inverse=F, env=environment(), clone=self$clone_on_change){
        subset = if (is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
-       #for(n in ls(parent.frame())) {
-      #   if(!n %in% ls(environment()))
-      #     assign(n, get(n, parent.frame()))
-      # } ## possible to import previous environment?
+
        if (clone) {
-         selfclone = self$copy_clone()$feature_subset(column=column, subset=subset, new_column=new_column, inverse=inverse, env=env, clone=F)
+         selfclone = self$copy_clone()$feature_subset(column=column, new_column=new_column, subset=subset, inverse=inverse, env=env, clone=F)
          return(selfclone)
        }
 
@@ -389,10 +417,10 @@ tCorpus <- R6::R6Class("tCorpus",
        hits = hits$hits
        if (is.null(hits)) return(NULL)
        if (context_level == 'document'){
-         private$select_meta_rows(self$meta('doc_id') %in% hits$doc_id)
+         private$select_meta_rows(self$meta$doc_id %in% hits$doc_id)
        }
        if (context_level == 'sentence'){
-         d = self$data(c('doc_id','sent_i'))
+         d = self$data[,c('doc_id','sent_i')]
          d$i = 1:nrow(d)
          rows = d[list(hits$doc_id, hits$sent_i)]$i
          private$select_rows(rows)
@@ -426,11 +454,13 @@ tCorpus <- R6::R6Class("tCorpus",
        subset_meta_x = if (is(substitute(subset_meta_x), 'call')) deparse(substitute(subset_meta_x)) else subset_meta_x
 
        if(is.null(subset_x) & is.null(subset_meta_x) & is.null(query_x)) stop("at least one of subset_x, subset_meta_x or query_x has to be specified")
-       tc_x = self$copy_clone()
-       if(!is.null(subset_x) | !is.null(subset_meta_x)) tc_x = tc_x$subset(subset=subset_x, subset_meta=subset_meta_x, clone=T)
-       if(!is.null(query_x)) tc_x = tc_x$subset_query(query_x, feature=query_feature)
+       #tc_x = self$copy_clone()
+       if(!is.null(subset_x) | !is.null(subset_meta_x)) tc_x = self$subset(subset=subset_x, subset_meta=subset_meta_x, clone=T)
+       if(!is.null(query_x)) tc_x = self$subset_query(query_x, feature=query_feature, clone=T)
 
-       tc_x$compare_corpus(self, feature=feature, smooth=smooth, min_over=min_over, min_chi2=min_chi2, yates_cor=yates_cor, is_subset=T)
+       comp = tc_x$compare_corpus(self, feature=feature, smooth=smooth, min_over=min_over, min_chi2=min_chi2, yates_cor=yates_cor, is_subset=T)
+       if (self$auto_gc) rm(tc_x); gc()
+       comp
      },
 
 ## DOCUMENT COMPARISON ##
@@ -446,16 +476,18 @@ tCorpus <- R6::R6Class("tCorpus",
 
      deduplicate = function(feature='word', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, env=environment(), clone=self$clone_on_change){
        weight = match.arg(weight)
+       match.arg(feature, self$feature_names)
        if (clone) {
          selfclone = self$copy_clone()$deduplicate(feature=feature, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, min_docfreq=min_docfreq, max_docfreq_pct=max_docfreq_pct, measure=measure, similarity=similarity, keep=keep, weight=weight, ngrams=ngrams, print_duplicates=print_duplicates, env=env, clone=F)
          return(selfclone)
        }
 
-       self$set_column('DEDUPLICATE_FEATURE', self$data(feature), clone = F)
-       self$feature_subset('DEDUPLICATE_FEATURE', subset = docfreq_filter('DEDUPLICATE_FEATURE', min=min_docfreq, max=self$n * max_docfreq_pct), env=env, clone=F)
+       self$set_column('DEDUPLICATE_FEATURE', self$data[[feature]], clone = F)
+       self$feature_subset('DEDUPLICATE_FEATURE', 'DEDUPLICATE_FEATURE', subset = docfreq_filter('DEDUPLICATE_FEATURE', min=min_docfreq, max=self$n * max_docfreq_pct), env=env, clone=F)
+       ## delete duplicates modifies tc by reference
+       delete_duplicates(self, feature=feature, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
 
-       self = delete_duplicates(self, feature=feature, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
-       self$set_column('DEDUPLICATE_FEATURE', NULL, clone=T)
+       self$set_column('DEDUPLICATE_FEATURE', NULL, clone=F)
        invisible(self)
      },
 
@@ -530,7 +562,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
      doc_id_labels = function(mod=NULL) {
        if (!is.null(mod)){
-         if (identical(levels(self$data('doc_id')), levels(self$meta('doc_id')))){
+         if (identical(levels(self$data$doc_id), levels(self$meta$doc_id))){
            levels(private$.data$doc_id) = mod
            levels(private$.meta$doc_id) = mod
          } else { ## should never happen, but to be sure
@@ -538,12 +570,13 @@ tCorpus <- R6::R6Class("tCorpus",
            levels(private$.data$doc_id) = mod
          }
        }
-       levels(self$data('doc_id'))
+       levels(self$data$doc_id)
      },
 
-     d = function(mod=NULL) {
+     data = function(mod=NULL) {
        ## access data directly, but with checks to protect structure.
        positioncols = intersect(c('doc_id','sent_i','word_i'), self$names)
+
        if (!is.null(mod)) {
          if ('sent_i' %in% colnames(mod)) setkeyv(mod, c('doc_id','sent_i','word_i')) else setkeyv(mod, c('doc_id','word_i'))
 
@@ -569,7 +602,7 @@ tCorpus <- R6::R6Class("tCorpus",
        data.table::copy(private$.data)
      },
 
-     m = function(mod=NULL) {
+     meta = function(mod=NULL) {
        ## access data directly, but with checks to protect structure.
        if (!is.null(mod)) {
          setkey(mod, 'doc_id')
@@ -584,12 +617,13 @@ tCorpus <- R6::R6Class("tCorpus",
        }
        data.table::copy(private$.meta)
      }
+
    )
 )
 
 #' @export
 print.tCorpus <- function(tc) {
-  sent_info = if ('sent_i' %in% tc$names) paste(' and sentences (n = ', nrow(unique(tc$data()[,c('doc_id','sent_i')])), ')', sep='') else ''
+  sent_info = if ('sent_i' %in% tc$names) paste(' and sentences (n = ', nrow(unique(tc$data[,c('doc_id','sent_i')])), ')', sep='') else ''
   cat('tCorpus containing ', tc$n, ' tokens',
       '\nsplit by documents (n = ', tc$n_meta, ')', sent_info,
       '\ncontains:',
@@ -614,11 +648,11 @@ refresh_tcorpus <- function(tc){
 }
 
 rebuild_tcorpus <- function(tc) {
-  tokens_to_tcorpus(tokens = tc$data(),
+  tokens_to_tcorpus(tokens = tc$data,
                     doc_col = 'doc_id',
                     sent_i_col = ifelse('sent_i' %in% tc$names, T, F),
                     word_i_col = 'word_i',
-                    meta = tc$meta())
+                    meta = tc$meta)
 }
 
 #' @export
@@ -676,12 +710,12 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
   context_level = match.arg(context_level)
 
   if (context_level == 'document') {
-    context = tc$data('doc_id')
+    context = tc$data$doc_id
     if (!with_labels) levels(context) = 1:length(levels(context))
   }
   if (context_level == 'sentence') {
     if (!'sent_i' %in% tc$names) stop('Sentence level not possible, since no sentence information is available. To enable sentence level analysis, use split_sentences = T in "create_tcorpus()" or specify sent_i_col in "tokens_to_tcorpus()"')
-    d = tc$data()
+    d = tc$data
     if (with_labels){
       ucontext = unique(d[,c('doc_id','sent_i')])
       ucontext = stringi::stri_paste(ucontext$doc_id, ucontext$sent_i, sep=' #')
@@ -691,4 +725,13 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
     }
   }
   context
+}
+
+function(){
+tokens = data.frame(document = c(rep(1, 8), rep(2, 5), rep(3, 5)),
+                    sentence = c(rep(1,4), rep(2,4), rep(1,5), rep(1,5)),
+                    id = 1:18,
+                    word = c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte'))
+tc = tokens_to_tcorpus(tokens, doc_col ='document', sent_i_col = 'sentence', word_i_col = 'id')
+tc$data
 }

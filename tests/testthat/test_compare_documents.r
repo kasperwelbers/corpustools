@@ -1,4 +1,7 @@
 test_that("comparing documents works", {
+  cat('\n', '-> Testing: Compare documents', '\n')
+  start_time = Sys.time()
+
   library(corpustools)
   d = data.frame(text = c('Renewable fuel is better than fossil fuels!',
                           'A fueled debate about fuel',
@@ -23,5 +26,7 @@ test_that("comparing documents works", {
   ## due to random selection of which duplicate to delete, chains can lead to varying number of duplicates. Think of something more smart, or order by id/name instead of random
   dedup = tc$deduplicate(feature='word', similarity = 0.025)
   #expect_true(dedup$n_meta == 1)
+  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
+
 })
 

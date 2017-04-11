@@ -1,13 +1,21 @@
 test_that("Query search works", {
+  cat('\n', '-> Testing: Search features', '\n')
+  start_time = Sys.time()
+
   library(corpustools)
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte')
   tc = create_tcorpus(text, doc_id = c('a','b','c'), split_sentences = T)
+  corpustools:::sourceall()
 
   ## simple keyword only
   hits = tc$search_features(keyword = 'fuel')
   expect_equal(as.character(hits$hits$feature), c('fuel','fuel'))
+
+  ## casting results
+  res = tc$cast(hits=hits)
+  expect_equal(colnames(res), c('group','N','query_1'))
 
   ## multiword keywords
   hits = tc$search_features('"a fueled debate"', only_last_mword = T)
@@ -111,5 +119,8 @@ test_that("Query search works", {
   #tc$search_code(tc, queries=queries)
   ##code = code_features(tc, queries, condition_once=c(F,T,F))
   ##expect_equal(as.numeric(table(code)), c(12,1,2,2))
+
+  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
+
 })
 

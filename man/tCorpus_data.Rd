@@ -17,15 +17,19 @@
 
 \strong{Get data}
 \tabular{ll}{
-  \link[=tCorpus$data]{$data()} \tab Get a copy of the token data. Cannot be used to modify data (see Modify data section) \cr
-  \link[=tCorpus$meta]{$meta()} \tab Get a copy of the document meta data \cr
+  \link[=tCorpus$data]{$data} \tab Get the token data (in \link{data.table} format). Can also be used to modify data using regular assignment, but with some restrictions (see Modify data section) \cr
+  \link[=tCorpus$meta]{$meta} \tab Get the document meta data \cr
   \link[=tCorpus$dtm]{$dtm()} \tab Create a document term matrix \cr
   \link[=tCorpus$feature_index]{$feature_index()} \tab Create or load a feature index. Used for creating functions/methods that require fast lookup of features. \cr
   \link[=tCorpus$context]{$context()} \tab Get a context vector: documents or globally unique sentences)
 }
 \strong{Modify}
 
-the tCorpus data objects cannot be accessed directly, in order to protect the structure that many methods assume. The following methods can be used to modify the data while keeping this structure intact.
+The data and meta data in tCorpus can be modified by assignment (e.g., tc$data$word[tc$data$word == 'ni'] = 'NIII!!'), but this is restricted in certain ways to ensure that the data always meets the assumptions required for tCorpus methods.
+If direct assignment is used, tCorpus automatically tests whether assumptions are violated, so you don't have to think about this yourself.
+The most important limitations are that you cannot subset or append the data this way, and you cannot change the document ids.
+For this, you can use the appropriate methods, such as subset. These are often also more efficient, especially if you work in \link[=tCorpus_reference_mode]{Reference mode}.
+The following methods for data manipulation are avaiable:
 \tabular{ll}{
   \link[=tCorpus$transform]{$transform()} \tab Modify the token data using the \link{transform.data.table} function. \cr
   \link[=tCorpus$within]{$within()} \tab Modify the token data using the \link{within.data.table} function. \cr

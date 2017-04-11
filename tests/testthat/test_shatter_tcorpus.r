@@ -1,4 +1,7 @@
 test_that("shatter tcorpus works", {
+  cat('\n', '-> Testing: Shatter tCorpus', '\n')
+  start_time = Sys.time()
+
   library(corpustools)
   data(sotu_texts)
 
@@ -37,5 +40,8 @@ test_that("shatter tcorpus works", {
   })
 
   unlink('test.tCorpus', recursive = T) ## remove the tCorpus directory (happens automatically in test_that it seems?)
+
+  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
+
 })
 

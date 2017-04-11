@@ -21,7 +21,7 @@ wordWindowOccurence <- function(tc, feature, context_level=c('document','sentenc
   if (direction == '<>') shifts = -window.size:window.size
   if (direction == '>') shifts = 0:window.size
 
-  feature = tc$data(feature)
+  feature = tc$data[[feature]]
   if (!is(feature,'factor')) feature = factor(feature)
   if (drop_empty_terms) feature = base::droplevels(feature)
   term_index = as.numeric(feature)

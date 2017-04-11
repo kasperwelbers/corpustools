@@ -12,7 +12,7 @@
 #'
 #' @export
 collocation_strings <- function(tc, colloc_id, feature='word', pref=NULL){
-  f = tc$data(c(feature, colloc_id))
+  f = tc$data[,c(feature, colloc_id)]
   colnames(f) = c('feature','id')
   f$pref = F
   f$pref[pref] = T
@@ -55,7 +55,7 @@ add_collocation_label <- function(tc, colloc_id, feature='word', new_feature=spr
   label$label = as.factor(label$label)
   levels(label$label) = gsub('_', ' ', levels(label$label), fixed=T)
 
-  tc$set_column(new_feature, value = label$label[match(tc$data(colloc_id), label$id)])
+  tc$set_column(new_feature, value = label$label[match(tc$data[[colloc_id]], label$id)])
 }
 
 

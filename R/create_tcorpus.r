@@ -120,9 +120,10 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   }
 
   ## make sure that sent_i and word_i are locally unique within documents
+  ndoc = nrow(unique(tokens, by='doc_id'))
   if (!is.null(sent_i_col)){
     if (sent_is_local) {
-      if (!anyDuplicated(tokens, by=c('doc_id','sent_i')) == 0) warning("Sentence positions (sent_i) do not appear to be locally unique within document (no duplicates). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
+        if (ndoc > 1) if (!anyDuplicated(unique(tokens, by=c('doc_id','sent_i')), by='sent_i') == 0) warning("Sentence positions (sent_i) do not appear to be locally unique within documents (no duplicates). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
     }
     if (!sent_is_local) tokens[,'sent_i' := local_position(tokens$sent_i, tokens$doc_id, presorted = T)] ## make sure sentences are locally unique within documents (and not globally)
     if (!word_is_local) tokens[,'word_i' := global_position(tokens$word_i,
@@ -130,7 +131,7 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
                                                             presorted = T)]  ## make word positions globally unique, taking sentence id into account (in case words are locally unique within sentences)
   }
   if (word_is_local) {
-    if (!anyDuplicated(tokens, by=c('doc_id','word_i')) == 0) warning("Word positions (word_i) do not appear to be locally unique within document (no duplicates). Unless you are sure they are, set word_is_local to FALSE (and read documentation)")
+    if (ndoc > 1) if (!anyDuplicated(tokens, by=c('doc_id','word_i')) == 0) warning("Word positions (word_i) do not appear to be locally unique within documents (no duplicates). Unless you are sure they are, set word_is_local to FALSE (and read documentation)")
   } else {
     tokens[,'word_i' := local_position(tokens$word_i, tokens$doc_id, presorted=T)] ## make words locally unique within documents
   }
@@ -158,4 +159,6 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
 
   tCorpus$new(data=tokens, meta = meta)
 }
+
+## alternative:: add formal data check and correction methods, and then simply create the tcorpus from the data and then perform the checks and corrections
 

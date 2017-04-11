@@ -36,7 +36,7 @@ search_contexts <- function(tc, query, code=NULL, feature='word', context_level=
     if (context_level == 'document') context_columns = c('doc_id')
     if (context_level == 'sentence') context_columns = c('doc_id', 'sent_i')
     code_label = code[[i]]
-    res[[code_label]] = unique(tc$data()[first_context_row, context_columns, with=F])
+    res[[code_label]] = unique(tc$data[first_context_row, context_columns, with=F])
   }
   hits = plyr::ldply(res, function(x) x, .id='code')
   if (nrow(hits) == 0) hits = NULL

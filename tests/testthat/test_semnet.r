@@ -1,4 +1,7 @@
 test_that("Semnet works", {
+  cat('\n', '-> Testing: Semnet', '\n')
+  start_time = Sys.time()
+
   #devtools::install_github('kasperwelbers/tcorpus')
   library(corpustools)
   text = c('Renewable fuel is better than fossil fuels!',
@@ -44,10 +47,13 @@ test_that("Semnet works", {
   ## also works with NA's (which are ignored)
   tc_withNA = tc$search_recode('word', NA, 'Rutte OR Renewable')
 
-  tc_withNA$data()
+  tc_withNA$data
   g = tc_withNA$semnet('word', measure = 'count_undirected')
   expect_true(!'Rutte' %in% V(g)$name)
   g = tc_withNA$semnet_window('word', window.size = 10, n.batches = NA)
   expect_true(!'Rutte' %in% V(g)$name)
+
+  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
+
 })
 

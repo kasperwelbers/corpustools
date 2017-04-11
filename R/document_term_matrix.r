@@ -24,7 +24,7 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   }
   if (!is(i, 'factor')) i = fast_factor(i)
 
-  feature = tc$data(feature)
+  feature = tc$data[[feature]]
   if(!is(feature, 'factor')) feature = factor(feature)
   if (!is.na(ngrams)) {
     filter = if (ngram_before_subset) NULL else sub_i

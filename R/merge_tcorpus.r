@@ -15,11 +15,11 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
   for(i in 1:length(tc_list)) if (!is(tc_list[[i]], 'tCorpus')) stop(sprintf('%s is not a tCorpus object', names(tc_list)[i]))
 
   if (keep_data == 'intersect') {
-    cnames = lapply(tc_list, function(x) colnames(x$data()))
+    cnames = lapply(tc_list, function(x) x$names)
     cnames = Reduce(intersect, cnames)
-    data = plyr::ldply(lapply(tc_list, function(x) x$data(), columns=cnames), .id = NULL)
+    data = plyr::ldply(lapply(tc_list, function(x) x$data[,cnames,with=F]), .id = NULL)
   } else {
-    data = plyr::ldply(lapply(tc_list, function(x) x$data()), .id = NULL)
+    data = plyr::ldply(lapply(tc_list, function(x) x$data), .id = NULL)
   }
 
   if (keep_meta == 'intersect') {
@@ -54,8 +54,8 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
 #' @return a tCorpus object
 #' @export
 merge_shards <- function(shards){
-  tc = tCorpus$new(data=rbindlist(lapply(shards, function(x) x$data())),
-                   meta=rbindlist(lapply(shards, function(x) x$meta())),
+  tc = tCorpus$new(data=rbindlist(lapply(shards, function(x) x$data)),
+                   meta=rbindlist(lapply(shards, function(x) x$meta)),
                    p = shards[[1]]$provenance())
   tc$set_keys()
   tc

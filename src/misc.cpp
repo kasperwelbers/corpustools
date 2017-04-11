@@ -54,6 +54,7 @@ IntegerVector full_set_ids( SEXP x) {
     counter[v[i]]++;
     if ( counter[v[i]] >= nsets ) {
       out[i] = nsets;
+      // alternatively, output NA, so that values that do not form a full set are ignored (currently they are added to the last set)
     } else {
     out[i] = counter[v[i]];
     }

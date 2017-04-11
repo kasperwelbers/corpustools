@@ -2,17 +2,21 @@
 #### Separate documentation for each method
 #### Names for each class take the form tCorpus$method(...), with as additional alias method.tCorpus (S3 style)
 
-#' Extract the data from a tCorpus
+#' Access the data from a tCorpus
+#'
+#' @description
+#'
+#'
+#'
+#'
+#' Several limitations:
+#' - subsetting or appending the data is not possible. (use the subset function and merge_tcorpua)
+#' - data.table operations that change the data.table by reference. Note that the set_column and set_meta_column functions do use assignment by reference.
 #'
 #' @usage
 #' ## R6 method for class tCorpus.
-#' \code{tCorpus$data(columns=NULL, keep_df=F, as.df=F)}
-#' \code{tCorpus$meta(columns=NULL, keep_df=F, as.df=F, per_token)}
-#'
-#' @param columns A character string indicating which columns to return. NULL means all columns.
-#' @param keep_df Keep the data.table/data.frame if only one column is selected.
-#' @param as.df Return a regular data.frame instead of a data.table
-#' @param per_token Repeat rows in the document meta data so that it matches with the token data
+#' \code{tCorpus$data}
+#' \code{tCorpus$meta}
 #'
 #' @method tCorpus
 #' @name tCorpus$data

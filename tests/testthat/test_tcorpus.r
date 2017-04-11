@@ -1,4 +1,7 @@
 test_that("tCorpus class works", {
+  cat('\n', '-> Testing: tCorpus', '\n')
+  start_time = Sys.time()
+
   library(corpustools)
 
   ### create from data.frame
@@ -8,9 +11,9 @@ test_that("tCorpus class works", {
                  word = c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte'))
   tc = tokens_to_tcorpus(tokens, doc_col ='document', sent_i_col = 'sentence', word_i_col = 'id')
 
-  doc_id = tc$data('doc_id')
+  doc_id = tc$data$doc_id
   expect_equal(doc_id, as.factor(c(rep('1', 8), rep('2', 5), rep('3', 5))))
-  word = tc$data('word')
+  word = tc$data$word
   expect_equal(as.character(word), c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte'))
 
   ### create from text
@@ -19,9 +22,9 @@ test_that("tCorpus class works", {
            'Mark Rutte is simply Rutte')
   tc = create_tcorpus(text, doc_id = c('a','b','c'))
 
-  doc_id = tc$data('doc_id')
+  doc_id = tc$data$doc_id
   expect_equal(doc_id, as.factor(c(rep('a', 8), rep('b', 5), rep('c', 5))))
-  word = tc$data('word')
+  word = tc$data$word
   expect_equal(word, as.factor(c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte')))
 
   ### create from text with sentences
@@ -43,23 +46,25 @@ test_that("tCorpus class works", {
                  date = c('2010-01-01','2010-01-02','2010-01-01'))
   tc = create_tcorpus(d, text_columns='text', doc_column = 'document')
 
-  doc_id = tc$data('doc_id')
+  doc_id = tc$data$doc_id
   expect_equal(doc_id, as.factor(c(rep('a', 8), rep('b', 5), rep('c', 5))))
-  word = tc$data('word')
+  word = tc$data$word
   expect_equal(word, as.factor(c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte')))
 
-  meta_medium = tc$meta('medium')
+  meta_medium = tc$meta$medium
   expect_equal(meta_medium, as.factor(c('a','a','b')))
 
   ## change data
-  word = tc$data('word')
+  word = tc$data$word
   newword =fast_factor(tolower(word))
   tc = tc$set_column('word', newword)
-  expect_equal(tc$data('word'), newword)
+  expect_equal(tc$data$word, newword)
 
-  medium = tc$meta('medium')
+  medium = tc$meta$medium
   newmedium = as.factor(paste('source', medium))
   tc = tc$set_meta_column('medium', newmedium)
-  expect_equal(tc$meta('medium'), newmedium)
+  expect_equal(tc$meta$medium, newmedium)
+
+  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 
 })
