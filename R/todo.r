@@ -1,5 +1,5 @@
 
-### all functions within methods that have the clone parameter MUST work by reference only!!
+### all functions within methods that have the copy parameter MUST work by reference only!!
 ### check this thoroughly!!
 
 ## add the add_data and add_tokens method. This can simply be a combination of create_tcorpus/tokens_to_tcorpus and merge_tcorpua

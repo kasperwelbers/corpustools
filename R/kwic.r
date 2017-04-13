@@ -3,11 +3,11 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsampl
   if (class(i) == 'logical') i = which(i)
   ## first filter tokens on document id (to speed up computation)
   gi = get_global_i(tc, context_level=context_level, max_window_size = nwords)
-  gfv = globalFeatureVector$new(tc$data[[output_feature]], gi)
+  gfv = globalFeatureVector$new(tc$get(output_feature), gi)
 
   if (!is.null(hits)) {
     if(!is.featureHits(hits)) stop('hits must be a featureHits object (created with the $search_features() method')
-    d = tc$data[,c('doc_id', 'word_i')]
+    d = tc$get(c('doc_id', 'word_i'))
     d$i = 1:nrow(d)
     setkeyv(d, c('doc_id', 'word_i'))
     i = d[hits$hits[,c('doc_id', 'word_i')]]$i
@@ -19,6 +19,8 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsampl
     code = rep(code, length(i))
     hit_id = 1:length(i)
   }
+
+  if (length(code) == 0) return(NULL)
 
   if(!is.na(nsample)) {
     samp = unlist(tapply(1:length(code), code, function(x) head(sample(x), nsample)))
@@ -54,9 +56,9 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsampl
   kwic = data.frame(hit_id = as.numeric(names(kwic)),
                     kwic = pretty_kwic(kwic))
 
-  add = data.frame(hit_id = hit_id, doc_id = tc$data$doc_id[i], code=code)
+  add = data.frame(hit_id = hit_id, doc_id = tc$get('doc_id')[i], code=code)
   add = add[!duplicated(add$hit_id),]
-  feature = split(tc$data[[output_feature]][i], hit_id)
+  feature = split(tc$get(output_feature)[i], hit_id)
   add$feature = sapply(feature, stringi::stri_flatten, collapse=' -> ')
 
   kwic = merge(kwic, add, by='hit_id', all.x=T)

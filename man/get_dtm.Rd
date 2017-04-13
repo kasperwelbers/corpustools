@@ -9,7 +9,7 @@ get_dtm(tc, feature, context_level = c("document", "sentence"),
   drop_empty_terms = T, form = c("Matrix", "tm_dtm", "quanteda_dfm"),
   subset_tokens = NULL, subset_meta = NULL, context = NULL,
   context_labels = T, feature_labels = T, ngrams = NA,
-  ngram_before_subset = F, env = environment())
+  ngram_before_subset = F)
 }
 \arguments{
 \item{context_level}{}

@@ -1,10 +1,11 @@
 shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
+     cloneable=FALSE,
      private = list(
        .path = 'vector'
      ),
 
      public = list(
-       clone_on_change = T, ## if TRUE, tCorpus works like 'typical' R (modify on copy). If FALSE, all modifications made using methods will be made to the referenced data. Not needing to copy data is a great boon of R6 as a reference class, but we should keep this optional to facilitate the common R workflow
+       copy_on_modify = T, ## if TRUE, tCorpus works like 'typical' R (modify on copy). If FALSE, all modifications made using methods will be made to the referenced data. Not needing to copy data is a great boon of R6 as a reference class, but we should keep this optional to facilitate the common R workflow
 
        initialize = function(path=path) {
          private$.path = path
@@ -76,15 +77,15 @@ shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
        },
 
        ## DATA MODIFICATION METHODS ##
-       transform = function(..., clone=self$clone_on_change, safe=T) {
+       transform = function(..., copy=self$copy_on_modify, safe=T) {
          stop('not yet implemented')
        },
 
-       within = function(expr, clone=self$clone_on_change, safe=T){
+       within = function(expr, copy=self$copy_on_modify, safe=T){
          stop('not yet implemented')
        },
 
-       set_column = function(column, value, subset=NULL, clone=self$clone_on_change, safe=T){
+       set = function(column, value, subset=NULL, copy=self$copy_on_modify, safe=T){
          stop('not yet implemented')
        },
 
@@ -92,15 +93,15 @@ shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
          stop('not yet implemented')
        },
 
-       transform_meta = function(..., clone=self$clone_on_change, safe=T) {
+       transform_meta = function(..., copy=self$copy_on_modify, safe=T) {
          stop('not yet implemented')
        },
 
-       within_meta = function(expr, clone=self$clone_on_change, safe=T){
+       within_meta = function(expr, copy=self$copy_on_modify, safe=T){
          stop('not yet implemented')
        },
 
-       set_meta_column = function(column, value, subset=NULL, clone=self$clone_on_change, safe=T){
+       set_meta = function(column, value, subset=NULL, copy=self$copy_on_modify, safe=T){
          stop('not yet implemented')
        },
 
@@ -108,7 +109,7 @@ shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
          stop('not yet implemented')
        },
 
-       subset = function(subset=NULL, subset_meta=NULL, drop_levels=F, window=NULL, clone=self$clone_on_change){
+       subset = function(subset=NULL, subset_meta=NULL, drop_levels=F, window=NULL, copy=self$copy_on_modify){
          stop('not yet implemented')
        },
 
@@ -132,7 +133,7 @@ shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
          stop('not yet implemented')
        },
 
-       search_recode = function(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA, clone=self$clone_on_change){
+       search_recode = function(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA, copy=self$copy_on_modify){
          stop('not yet implemented')
        },
 
@@ -140,7 +141,7 @@ shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
          stop('not yet implemented')
        },
 
-       subset_query = function(query, feature='word', context_level=c('document','sentence'), clone=self$clone_on_change){
+       subset_query = function(query, feature='word', context_level=c('document','sentence'), copy=self$copy_on_modify){
          stop('not yet implemented')
        },
 
@@ -155,7 +156,7 @@ shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
 
        ## RESOURCES ##
 
-       jrc_names = function(new_feature='jrc_names', feature='word', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, clone=self$clone_on_change){
+       jrc_names = function(new_feature='jrc_names', feature='word', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, copy=self$copy_on_modify){
          stop('not yet implemented')
        },
 
@@ -168,7 +169,7 @@ shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
          stop('not yet implemented')
        },
 
-       droplevels = function(clone=self$clone_on_change){
+       droplevels = function(copy=self$copy_on_modify){
          stop('not yet implemented')
        }
      ),

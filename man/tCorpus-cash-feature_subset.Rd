@@ -6,7 +6,7 @@
 \title{Filter feature}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$feature_subset(column, new_column, subset, clone=self$clone_on_change)}
+\code{tCorpus$feature_subset(column, new_column, subset, copy=self$copy_on_modify)}
 }
 \arguments{
 \item{column}{the column containing the feature to be used as the input}
@@ -15,7 +15,7 @@
 
 \item{subset}{logical expression indicating rows to keep in the tokens data. i.e. rows for which the logical expression is FALSE will be set to NA.}
 
-\item{clone}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
+\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
 }
 \description{
 Similar to using \link{tCorpus$subset}, but instead of deleting rows it only sets rows for a specified feature to NA. This can be very convenient, because it enables only a selection of features to be used in an analysis (e.g. a topic model) but maintaining the context of the full article, so that results can be viewed in this context (e.g. a topic browser).

@@ -90,10 +90,13 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   if (!is.null(sent_i_col)) {
     data.table::setnames(tokens, which(colnames(tokens) == sent_i_col), 'sent_i')
     if (!is(tokens$sent_i, 'numeric')) stop('sent_i_col has to be numeric/integer')
+    if (!is(tokens$sent_i, 'integer')) tokens[,sent_i := as.integer(sent_i)]
   }
+
   if (!is.null(word_i_col)) {
     data.table::setnames(tokens, which(colnames(tokens) == word_i_col), 'word_i')
     if (!is(tokens$word_i, 'numeric')) stop('word_i_col has to be numeric/integer')
+    if (!is(tokens$word_i, 'integer')) tokens[,word_i := as.integer(word_i)]
   } else {
     warning('No word_i column specified. Word order used instead (see documentation).')
     tokens$word_i = 1:nrow(tokens)

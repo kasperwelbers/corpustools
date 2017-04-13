@@ -5,13 +5,13 @@
 #' Access the data from a tCorpus
 #'
 #' @description
-#'
+#' The $data and $meta fields can be used to access and modify the token data and meta data.
 #'
 #'
 #'
 #' Several limitations:
 #' - subsetting or appending the data is not possible. (use the subset function and merge_tcorpua)
-#' - data.table operations that change the data.table by reference. Note that the set_column and set_meta_column functions do use assignment by reference.
+#' - data.table operations that change the data.table by reference. Note that the set and set_meta functions do use assignment by reference.
 #'
 #' @usage
 #' ## R6 method for class tCorpus.
@@ -74,11 +74,11 @@ NULL
 #'
 #' @usage
 #' ## R6 method for class tCorpus
-#' \code{tCorpus$transform(..., clone=self$clone_on_change, safe=T)}
-#' \code{tCorpus$transform_meta(..., clone=self$clone_on_change, safe=T)}
+#' \code{tCorpus$transform(..., copy=self$copy_on_modify, safe=T)}
+#' \code{tCorpus$transform_meta(..., copy=self$copy_on_modify, safe=T)}
 #'
 #' @param ... name-value pairs where the name indicates a new or existing column in the token data, to which the value is set.
-#' @param clone If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
+#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #' @param safe If TRUE, you are unable to modify the position columns (doc_id, sent_i, word_i), which is very likely to break the tCorpus. Only set to FALSE if you know exactly what you're doing.
 #'
 #' @method tCorpus
@@ -92,11 +92,11 @@ NULL
 #'
 #' @usage
 #' ## R6 method for class tCorpus
-#' \code{tCorpus$within(expr, clone=self$clone_on_change, safe=T)}
-#' \code{tCorpus$within_meta(expr, clone=self$clone_on_change, safe=T)}
+#' \code{tCorpus$within(expr, copy=self$copy_on_modify, safe=T)}
+#' \code{tCorpus$within_meta(expr, copy=self$copy_on_modify, safe=T)}
 #'
 #' @param expr expression to be evaluated within the data.table.
-#' @param clone If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
+#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #' @param safe If TRUE, you are unable to modify the position columns (doc_id, sent_i, word_i), which is very likely to break the tCorpus. Only set to FALSE if you know exactly what you're doing.
 #'
 #' @method tCorpus
@@ -110,18 +110,18 @@ NULL
 #'
 #' @usage
 #' ## R6 method for class tCorpus
-#' \code{tCorpus$set_column(column, value, subset, clone=self$clone_on_change, safe=T)}
-#' \code{tCorpus$set_meta_column(column, value, subset, clone=self$clone_on_change, safe=T)}
+#' \code{tCorpus$set(column, value, subset, copy=self$copy_on_modify, safe=T)}
+#' \code{tCorpus$set_meta(column, value, subset, copy=self$copy_on_modify, safe=T)}
 #'
 #' @param column Name of a new column (to create) or existing column (to transform)
 #' @param value A vector of the same length as the number of rows in the data. Note that if a subset is used, the length of value should be the same as the length of the subset (the TRUE cases of the subset expression) or a single value.
 #' @param subset logical expression indicating rows to keep in the tokens data or meta data
-#' @param clone If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
+#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #' @param safe If TRUE, you are unable to modify the position columns (doc_id, sent_i, word_i), which is very likely to break the tCorpus. Only set to FALSE if you know exactly what you're doing.
 #'
 #' @method tCorpus
-#' @name tCorpus$set_column
-#' @aliases set_column.tCorpus tCorpus$set_meta_column set_meta_column.tCorpus
+#' @name tCorpus$set
+#' @aliases set.tCorpus tCorpus$set_meta set_meta.tCorpus
 NULL
 
 #' Subset a tCorpus
@@ -148,7 +148,7 @@ NULL
 #' @param subset_meta logical expression indicating rows to keep in the document meta data.
 #' @param drop_levels if TRUE, drop all unused factor levels after subsetting
 #' @param window If not NULL, an integer specifiying the window to be used to return the subset. For instance, if the subset contains word 10 in a document and window is 5, the subset will contain word 5 to 15. Naturally, this does not apply to subset_meta.
-#' @param clone If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
+#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @method tCorpus
 #' @name tCorpus$subset
@@ -159,12 +159,12 @@ NULL
 #'
 #' @usage
 #' ## R6 method for class tCorpus.
-#' \code{tCorpus$set_column(oldname, newname)}
-#' \code{tCorpus$set_meta_column(oldname, newname)}
+#' \code{tCorpus$set(oldname, newname)}
+#' \code{tCorpus$set_meta(oldname, newname)}
 #'
 #' @method tCorpus
-#' @name tCorpus$set_column
-#' @aliases set_column.tCorpus tCorpus$set_meta_column set_meta_column.tCorpus
+#' @name tCorpus$set
+#' @aliases set.tCorpus tCorpus$set_meta set_meta.tCorpus
 NULL
 
 #### preprocessing
@@ -173,7 +173,7 @@ NULL
 #'
 #' @usage
 #' ## R6 method for class tCorpus
-#' \code{tCorpus$preprocess(column, new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english', clone=self$clone_on_change)}
+#' \code{tCorpus$preprocess(column, new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english', copy=self$copy_on_modify)}
 #'
 #' @param column the column containing the feature to be used as the input
 #' @param new_column the column to save the preprocessed feature. Can be a new column or overwrite an existing one.
@@ -185,7 +185,7 @@ NULL
 #' @param remove_stopwords remove (i.e. make NA) stopwords. (!) Make sure to set the language argument correctly.
 #' @param use_stemming reduce features (words) to their stem
 #' @param language The language used for stopwords and stemming
-#' @param clone If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
+#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @method tCorpus
 #' @name tCorpus$preprocess
@@ -201,12 +201,12 @@ NULL
 #'
 #' @usage
 #' ## R6 method for class tCorpus
-#' \code{tCorpus$feature_subset(column, new_column, subset, clone=self$clone_on_change)}
+#' \code{tCorpus$feature_subset(column, new_column, subset, copy=self$copy_on_modify)}
 #'
 #' @param column the column containing the feature to be used as the input
 #' @param new_column the column to save the filtered feature. Can be a new column or overwrite an existing one.
 #' @param subset logical expression indicating rows to keep in the tokens data. i.e. rows for which the logical expression is FALSE will be set to NA.
-#' @param clone If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
+#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @method tCorpus
 #' @name tCorpus$feature_subset
@@ -310,12 +310,12 @@ NULL
 #'
 #' @usage
 #' ## R6 method for class tCorpus
-#' \code{tCorpus$search_recode(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA, clone=self$clone_on_change)}
+#' \code{tCorpus$search_recode(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA, copy=self$copy_on_modify)}
 #'
 #' @param feature The feature in which to search
 #' @param new_value the character string with which all features that are found are replaced
 #' @param ... See \link{tCorpus$search_features} for the query parameters
-#' @param clone If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
+#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @method tCorpus
 #' @name tCorpus$search_recode
@@ -389,9 +389,9 @@ NULL
 #'
 #' @usage
 #' ## R6 method for class tCorpus
-#' \code{tCorpus$subset_query(query, feature='word', context_level=c('document','sentence'), clone=self$clone_on_change)}
+#' \code{tCorpus$subset_query(query, feature='word', context_level=c('document','sentence'), copy=self$copy_on_modify)}
 #'
-#' @param clone If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
+#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @method tCorpus
 #' @name tCorpus$subset_query
@@ -454,7 +454,7 @@ NULL
 #'
 #' @usage
 #' ## R6 method for class tCorpus
-#' \code{tCorpus$jrc_names(new_feature='jrc_names', feature='word', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, clone=self$clone_on_change)}
+#' \code{tCorpus$jrc_names(new_feature='jrc_names', feature='word', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, copy=self$copy_on_modify)}
 #'
 #' @param new_feature The column name of the new feature.
 #' @param feature The feature to be used as input. For JRC names regular (unprocessed) words should be used.
@@ -463,7 +463,7 @@ NULL
 #' @param batchsize The number of named entity string variations per batch. Using bigger batches is faster, but depending on the size of your corpus you might run out of memory (in which case you should use smaller batches). At the time of writing the total number of strings is roughtly 700,000.
 #' @param low_memory if TRUE (default) then data will be sorted in a way that tries to get a roughly equal number of string matches per batch, to prevent huge match tables (costing memory). If FALSE, data will be sorted in a way to get fewer unique words per batch, which can speed up matching, but can lead to a very unequal number of matches per batch.
 #' @param verbose
-#' @param clone If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
+#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @method tCorpus
 #' @name tCorpus$jrc_names

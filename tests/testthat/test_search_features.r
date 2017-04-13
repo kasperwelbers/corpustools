@@ -7,7 +7,7 @@ test_that("Query search works", {
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte')
   tc = create_tcorpus(text, doc_id = c('a','b','c'), split_sentences = T)
-  corpustools:::sourceall()
+  #corpustools:::sourceall()
 
   ## simple keyword only
   hits = tc$search_features(keyword = 'fuel')
@@ -110,7 +110,7 @@ test_that("Query search works", {
   expect_true(kw$kwic == '...fuel is <better> than fossil...')
 
   ## kwic with multiword queries
-  kw = tc$kwic(keyword = c('"renewable fuels"~10')) ## without gap
+  kw = tc$kwic(keyword = c('"renewable fuels"~10'), nsample = NA) ## without gap
   expect_equal(kw$feature, 'Renewable -> fuels')
   kw = tc$kwic(keyword = c('"renewable fuels"~10'), nwords = 2) ## without gap
   expect_true(grepl('[...]', kw$kwic))

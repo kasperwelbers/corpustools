@@ -62,15 +62,15 @@ top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, r
   if (!is.null(group_by)) group_by_meta = match.arg(group_by_meta, tc$meta_names, several.ok = T)
 
   group_df = NULL
-  if (!is.null(group_by)) group_df = as.data.frame(tc$data[,group_by,with=F])
+  if (!is.null(group_by)) group_df = as.data.frame(tc$get(group_by, keep_df = T))
   if (!is.null(group_by_meta)){
     if (is.null(group_df)) {
-      group_df = tc$meta[,group_by_meta, with=F]
-      group_df = as.data.frame(group_df[match(tc$data$doc_id, tc$meta$doc_id),])
+      group_df = tc$get_meta(group_by_meta, keep_df=T)
+      group_df = as.data.frame(group_df[match(tc$get('doc_id'), tc$get_meta('doc_id')),])
     } else {
-      match_i = match(tc$data$doc_id, tc$meta$doc_id)
+      match_i = match(tc$get('doc_id'), tc$get_meta('doc_id'))
       cbind(group_df,
-            as.data.frame(tc$meta[match_i,group_by_meta,with=F]))
+            as.data.frame(tc$get_meta(group_by_meta,keep_df=T)[match_i,]))
       rm(match_i)
     }
   }
@@ -89,7 +89,7 @@ top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, r
   }
 
   break_cols = colnames(group_df)
-  group_df[[feature]] = tc$data[[feature]]
+  group_df[[feature]] = tc$get(feature)
   scores = ddply(group_df, break_cols, .fun = get_top_freq, n=n, feature=feature)
 
   if (!return_long) {

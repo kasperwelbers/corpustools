@@ -8,13 +8,13 @@
 \title{Modify the token and meta data.tables of a tCorpus}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$within(expr, clone=self$clone_on_change, safe=T)}
-\code{tCorpus$within_meta(expr, clone=self$clone_on_change, safe=T)}
+\code{tCorpus$within(expr, copy=self$copy_on_modify, safe=T)}
+\code{tCorpus$within_meta(expr, copy=self$copy_on_modify, safe=T)}
 }
 \arguments{
 \item{expr}{expression to be evaluated within the data.table.}
 
-\item{clone}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
+\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
 
 \item{safe}{If TRUE, you are unable to modify the position columns (doc_id, sent_i, word_i), which is very likely to break the tCorpus. Only set to FALSE if you know exactly what you're doing.}
 }

@@ -16,12 +16,12 @@ test_that("Corpus comparison works!", {
 
   comp = tc$compare_corpus(tc_y, 'word')
   expect_equal(round(sum(comp$chi2),3), 2.215)
-  plot(comp)
-  plot(comp, mode = 'both')
+  #plot(comp)
+  #plot(comp, mode = 'both')
 
   comp = tc$compare_subset('word', query_x = 'rutte')
   expect_equal(round(sum(comp$chi2),3), 5.646)
-  plot(comp)
+  #plot(comp)
 
   cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 

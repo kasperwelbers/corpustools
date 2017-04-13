@@ -9,6 +9,9 @@ test_that("comparing documents works", {
                  date = c('2010-01-01','2010-01-01','2012-01-01'))
   tc = create_tcorpus(d)
 
+  #tc$dtm('word', subset_meta = doc_id == 1, weight = 'norm_tfidf')
+  #m = tc$dtm('word', subset_meta = doc_id == 1)
+
   g = tc$compare_documents()
   expect_equal(round(E(g)$weight,3), round(c(0.027, 0.022, 0.027, 0.022),3))
 
@@ -19,7 +22,10 @@ test_that("comparing documents works", {
   expect_true(is.directed(g))
   expect_true(ecount(g) == 4)
 
+  capture_output({ ## ignores print verbose
   g = tc$compare_documents(date_col = 'date', hour_window = c(0,36))
+  })
+
   expect_true(is.directed(g))
   expect_true(ecount(g) == 2)
 

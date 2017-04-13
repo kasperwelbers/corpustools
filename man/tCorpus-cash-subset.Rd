@@ -17,7 +17,7 @@
 
 \item{window}{If not NULL, an integer specifiying the window to be used to return the subset. For instance, if the subset contains word 10 in a document and window is 5, the subset will contain word 5 to 15. Naturally, this does not apply to subset_meta.}
 
-\item{clone}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
+\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
 }
 \description{
 Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta). The subset arguments work according to the \link{subset.data.table} function.

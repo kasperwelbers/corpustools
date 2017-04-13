@@ -11,6 +11,7 @@ test_that("preprocessing works", {
   meta = data.frame(document = c(1,2,3), medium=c('a','b','c'))
 
   tc = tokens_to_tcorpus(tokens, doc_col ='document', word_i_col = 'id', meta=meta)
+
   ## test preprocess_feature
   word = tc$data$word
 

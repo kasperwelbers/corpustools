@@ -15,7 +15,7 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
   is_tcorpus(tc, T)
   if (is(tc, 'shattered_tCorpus')) return(shard_preprocess_feature(stc=tc, column=column, new_column=new_column, use_stemming=use_stemming, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords))
 
-  feature = tc$data[[column]]
+  feature = tc$get(column)
   if (!is(feature, 'factor')) feature = factor(feature)
 
   if (ngrams == 1) {
@@ -24,7 +24,7 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
     context = tc$context(context_level=ngram_context, with_labels = F)
     feature = preprocess_words(feature, context=context, language=language, use_stemming=use_stemming, lowercase=lowercase, ngrams = ngrams, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords)
   }
-  tc$set_column(column = new_column, value = feature)
+  tc$set(column = new_column, value = feature)
 }
 
 #' Filter features
@@ -37,13 +37,13 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
 #' @param filter
 #'
 #' @return
-subset_feature_fun <- function(tc, i, column, new_column, subset, inverse=F){
+subset_feature_fun <- function(tc, i, column, new_column, inverse=F){
   if (column == new_column) {
-    tc$set_column(new_column, NA, subset = i, clone=F)
+    tc$set(new_column, NA, subset = i, copy=F)
   } else {
-    feature = tc$data[[column]]
+    feature = tc$get(column)
     feature[i] = NA
-    tc$set_column(new_column, feature, clone=F)
+    tc$set(new_column, feature, copy=F)
   }
   invisible(tc)
 }

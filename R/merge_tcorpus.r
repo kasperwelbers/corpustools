@@ -17,7 +17,7 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
   if (keep_data == 'intersect') {
     cnames = lapply(tc_list, function(x) x$names)
     cnames = Reduce(intersect, cnames)
-    data = plyr::ldply(lapply(tc_list, function(x) x$data[,cnames,with=F]), .id = NULL)
+    data = plyr::ldply(lapply(tc_list, function(x) x$get(cnames, keep_df=T)), .id = NULL)
   } else {
     data = plyr::ldply(lapply(tc_list, function(x) x$data), .id = NULL)
   }

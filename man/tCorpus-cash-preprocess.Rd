@@ -6,7 +6,7 @@
 \title{Preprocess feature}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$preprocess(column, new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english', clone=self$clone_on_change)}
+\code{tCorpus$preprocess(column, new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english', copy=self$copy_on_modify)}
 }
 \arguments{
 \item{column}{the column containing the feature to be used as the input}
@@ -29,7 +29,7 @@
 
 \item{language}{The language used for stopwords and stemming}
 
-\item{clone}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
+\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
 }
 \description{
 Preprocess feature

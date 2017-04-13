@@ -3,7 +3,7 @@ test_that("Query document search works", {
   start_time = Sys.time()
 
   library(corpustools)
-corpustools:::sourceall()
+
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte. Bos, on the other hand, is not always Wouter',

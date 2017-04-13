@@ -1,7 +1,6 @@
 FORM_SYMBOLS = '!&()| {}'
 FORM_REGEX = sprintf('([^%s]+)', FORM_SYMBOLS)
 
-
 ## look for alternative to as_ascii with iconv? Or just allow as_ascii in search for latin languages? (it's nice to not care about accents)
 ## make a test function that creates a tCorpus with every possible character as a 1 char word, and then search this corpus with queries for each character to see whether it hits
 ## perhaps better to use switch to a (shorter) list of REGEX symbols that is not allowed (i.e. the symbols used in the R logical expression).
@@ -34,7 +33,7 @@ parse_query <- function(query){
   if(any(grepl('\\^[^0-9]\\b', query, perl=T))) stop('Invalid flag after ^ (caret). This can only be a number (see search_features query details for conditions)')
   if(any(grepl('\\~[^s0-9]\\b', query, perl=T))) stop('Invalid flag after ~ (tilde). This can only be a number (for multiword proximity) or ~s for (case sensitive)')
 
-  ## also allow empty space as OR (note that this also adds or statements for adjacent words between quotes. This is WRONG, but will be fixed in the next step)
+  ## also allow empty space as OR (note that this also adds OR statements for adjacent words between quotes. This is WRONG, but will be fixed in the next step)
   query = gsub('(?<=[+*?".a-zA-Z0-9/~_)-])[ ]+(?=[+*?".a-zA-Z0-9/~_(-])', ' | ', query, perl=T)
 
   ## parts of the string between quotes are treated as single query terms
@@ -48,14 +47,14 @@ parse_query <- function(query){
     if (grepl('!', not_bracketed)) stop('Queries cannot contain NOT statements within quotes')
 
     replacewith = m ## use replacewith to make multiple changes before gsubbing them back into query
-    ## for query parts between quotes, replace all OR statements between words within parenteses with the regex | (without spaces). This way, they will be treated as a singel regex term in search_string()
 
+    ## for query parts between quotes, replace all OR statements between words within parenteses with the regex | (without spaces). This way, they will be treated as a singel regex term in search_string()
     parmatch = gregexpr('(?<=\\().*?(?=\\))', replacewith, perl=T)
     for(pm in regmatches(replacewith, parmatch)[[1]]) {
       replacewith = gsub(pm, gsub(' +', '', pm), replacewith, fixed=T)
     }
 
-    replacewith = gsub(' | ', ' ', replacewith, fixed=T) ## there are leftover | statements that should be removed. Note that the | statements within parenthese are kept because they do not have spaces
+    replacewith = gsub(' | ', ' ', replacewith, fixed=T) ## there are leftover | statements (inserted above) that should be removed. Note that the | statements within parenthese are kept because they do not have spaces
     replacewith = gsub('\\{|\\}', '', replacewith) ## drop curly brackets of already escaped strings, since they will already be escaped by being nested in quotes
     replacewith = sprintf('{%s}', replacewith) ## surround with {} to keep entire string as single term
     query = gsub(m, replacewith, query, fixed=T)
@@ -82,9 +81,16 @@ eval_query <- function(query_values, query_form){
   eval(parse(text=fill_query(query_values, query_form)))
 }
 
+sparse_matrix_rowid <- function(m){
+  id = vector('character', nrow(m))
+  idlist = with(summary(drop0(m)), split(j, i)) ## create lists for each row that contain indices for j if j == T
+  id[as.numeric(names(idlist))] = stringi::stri_paste_list(idlist, sep = ',')
+  id
+}
+
 eval_query_matrix <- function(qm, terms, form){
   ## only evaluate unique rows of the query matrix, and then match to return the results for each row
-  combination = apply(qm[,terms,drop=F], 1, function(x) paste(as.numeric(x), collapse=''))
+  combination = sparse_matrix_rowid(qm)
 
   isunique = !duplicated(combination)
   ucombination = combination[isunique]
@@ -93,6 +99,7 @@ eval_query_matrix <- function(qm, terms, form){
   res = apply(uqm[,terms, drop=F], 1, eval_query, query_form=form)
   res[match(combination, ucombination)]
 }
+
 
 get_feature_regex <- function(terms, default_window=NA){
   terms = parse_queries(terms)

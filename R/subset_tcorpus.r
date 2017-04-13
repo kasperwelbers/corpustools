@@ -25,14 +25,14 @@ subset_query_window <- function(tc, window, keyword=NA, condition=NA, queries=NU
 
 ## subset functions ##
 
-x_filter <- function(t, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
-  select = names(t[t >= min & t <= max])
+x_filter <- function(ft, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
+  select = names(ft[ft >= min & ft <= max])
   if (!is.null(top)) {
-    top = names(head(t[order(-t)], top))
+    top = names(head(ft[order(-ft)], top))
     select = intersect(select, top)
   }
   if (!is.null(bottom)) {
-    bottom = names(head(t[order(t)], bottom))
+    bottom = names(head(ft[order(ft)], bottom))
     select = intersect(select, bottom)
   }
   select
@@ -50,7 +50,7 @@ freq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
 docfreq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL, doc_id=parent.frame()$doc_id) {
   if (is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
   freq_table = unique(data.frame(doc_id=doc_id, x=x))
-  freq_table = table(freq_table$x)
+  freq_table = force(table(freq_table$x))
   x %in% x_filter(freq_table, min=min, max=max, top=top, bottom=bottom)
 }
 

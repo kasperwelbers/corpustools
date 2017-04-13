@@ -4,7 +4,7 @@
 \alias{subset_feature_fun}
 \title{Filter features}
 \usage{
-subset_feature_fun(tc, i, column, new_column, subset, inverse = F)
+subset_feature_fun(tc, i, column, new_column, inverse = F)
 }
 \arguments{
 \item{filter}{}

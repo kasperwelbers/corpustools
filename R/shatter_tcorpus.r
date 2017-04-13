@@ -72,7 +72,7 @@ manage_duplicates <- function(tc, index, if_duplicates){
     if (if_duplicates == 'stop') stop('DUPLICATES. The new tcorpus contains doc_ids that are already in the shattered_tCorpus. If you know why, you can use the if_duplicates parameter to "skip" the duplicates or automatically "rename" them')
     if (if_duplicates == 'skip') {
       cat('## Skipping ', sum(duplicate), ' duplicate(s)\n')
-      tc = tc$subset(subset_meta = !duplicate)
+      tc = tc$subset(subset_meta = !duplicate, copy=T)
     }
     if (if_duplicates == 'rename') {
       cat('## Renaming ', sum(duplicate), ' duplicate(s)\n')
@@ -83,17 +83,11 @@ manage_duplicates <- function(tc, index, if_duplicates){
         oldname = docnames[duplicate]
         newname = sprintf('%s_D%s', oldname, i)
 
-        match_i = match(tc$meta$doc_id[duplicate], levels(tc$data$doc_id))
-        tc$within({
-          levels(doc_id)[match_i] = newname
-        }, clone=F, safe=F)
-        #levels(tc$data$doc_id)[match(tc$meta$doc_id[duplicate], levels(tc$data$doc_id))] = newname
-        tc$within_meta({
-          doc_id[duplicate] = newname
-        }, clone=F, safe=F)
-        #tc$meta$doc_id[duplicate] = newname
+        match_i = match(tc$get_meta('doc_id')[duplicate], levels(tc$get('doc_id')))
 
-        duplicate = tc$meta$doc_id %in% index$doc_id | duplicated(tc$meta$doc_id) ## also check whether there are duplicates within tc after changing names (very unlikely, but still)
+        tc$doc_id_levels[match_i] = newname
+
+        duplicate = tc$get_meta('doc_id') %in% index$doc_id | duplicated(tc$get_meta('doc_id')) ## also check whether there are duplicates within tc after changing names (very unlikely, but still)
       }
     }
   }
@@ -134,14 +128,14 @@ fit_columns_to_index <- function(tc, stc){
     if (length(missing_data) > 0) stop(sprintf('Cannot append. the following columns in %s are not in the new batch: %s', name, paste(missing_data, collapse=', ')))
     extra_data = cnames[!cnames %in% cnames_index]
     if (length(extra_data) > 0) warning(sprintf('New batch contains columns that are not in %s [%s]. These columns have not been added', name, paste(extra_data, collapse=', ')))
-    tc$select_columns(cnames_index, clone = F)
+    tc$select_columns(cnames_index, copy = F)
   }
   if (!identical(meta_cnames, meta_cnames_index)){
     missing_meta = meta_cnames_index[!meta_cnames_index %in% meta_cnames]
     if (length(missing_meta) > 0) stop(sprintf('Cannot append. the following META columns in %s are not in the new batch: %s', name, paste(missing_meta, collapse=', ')))
     extra_meta = meta_cnames[!meta_cnames %in% meta_cnames_index]
     if (length(extra_meta) > 0) warning(sprintf('New batch contains META columns that are not in %s [%s]. These columns have not been added', name, paste(extra_meta, collapse=', ')))
-    tc$select_meta_columns(meta_cnames, clone = F)
+    tc$select_meta_columns(meta_cnames, copy = F)
   }
   tc$set_keys()
   tc
@@ -162,13 +156,13 @@ reindex_features <- function(tc, stc){
   feature_levels = stc$feature_levels()
   features = tc$feature_names
   for(feature in features){
-    if (!is(tc$data$feature, 'factor')) {
+    if (!is(tc$get('feature'), 'factor')) {
       if (feature %in% names(feature_levels)) {
-        tc$set_column(feature, as.factor(tc$data[[feature]]), clone=F)
+        tc$set(feature, as.factor(tc$get(feature)), copy=F)
       } else next
     }
     fl = feature_levels[[feature]]
-    tc$set_column(feature, match_factor_labels(tc$data[[feature]], fl), clone=F)
+    tc$set(feature, match_factor_labels(tc$get(feature), fl), copy=F)
   }
   tc$set_keys()
   tc
@@ -193,14 +187,14 @@ shatter_loop <- function(tc, meta_columns=c(), tokens_per_shard=1000000, n_shard
     if (verbose) cat(verbose_string, column, '\n')
     verbose_string = paste(verbose_string, '---', sep='')
 
-    val = as.character(tc$meta[[column]])
+    val = as.character(tc$get_meta(column))
     for(uval in unique(val)){
       if (verbose) cat(verbose_string, uval, '\n')
       uval_path = if (save_path=='') uval else paste(save_path, uval, sep='/')
       if (!dir.exists(uval_path)) dir.create(uval_path)
       i = which(val == uval)
 
-      shard_index[i] = shatter_loop(tc$subset(subset_meta=i), next_columns,
+      shard_index[i] = shatter_loop(tc$subset(subset_meta=i, copy = T), next_columns,
                                     tokens_per_shard=tokens_per_shard, n_shards=n_shards, save_path=uval_path, compress=compress,
                                     verbose_string=paste(verbose_string,'---', sep=''))
     }
@@ -222,7 +216,7 @@ save_shards <- function(tc, tokens_per_shard=1000000, n_shards=NA, save_path='',
 
   for(i in 1:nrow(batch_i)){
     meta_i = (batch_i$start[i]):(batch_i$end[i])
-    shard = tc$subset(subset_meta = meta_i)
+    shard = tc$subset(subset_meta = meta_i, copy=T)
     shard$set_keys()
     if (shard$n_meta > 0){
       fname = sprintf('shard_%s_T=%s_M=%s.rds', i+n_existing_shards, shard$n, shard$n_meta)
@@ -255,7 +249,7 @@ equal_groups <- function(index, tokens_per_shard){
 
 collect_shards <- function(shard_names, doc_ids=NULL) {
   shard = merge_shards(sapply(shard_names, readRDS))
-  if (!is.null(doc_ids)) shard = shard$subset(subset_meta = doc_id %in% as.character(doc_ids))
+  if (!is.null(doc_ids)) shard = shard$subset(subset_meta = doc_id %in% as.character(doc_ids), copy=T)
   shard
 }
 

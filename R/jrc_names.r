@@ -20,7 +20,7 @@ jrc_names <- function(tc, new_feature='jrc_names', feature='word', resource_path
   index$id = fast_factor(index$id)
   f = factor(rep(NA, tc$n), 1:length(levels(index$id)), levels(index$id))
   f[index$i] = index$id
-  tc = tc$set_column(column=new_feature, value = f)
+  tc = tc$set(column=new_feature, value = f)
 
   if (collocation_labels) {
     if (verbose) message('Adding collocation labels')

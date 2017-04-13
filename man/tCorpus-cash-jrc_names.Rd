@@ -6,7 +6,7 @@
 \title{Multilingual named entity recognition using the JRC-NAMES resource}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$jrc_names(new_feature='jrc_names', feature='word', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, clone=self$clone_on_change)}
+\code{tCorpus$jrc_names(new_feature='jrc_names', feature='word', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, copy=self$copy_on_modify)}
 }
 \arguments{
 \item{new_feature}{The column name of the new feature.}
@@ -21,6 +21,6 @@
 
 \item{low_memory}{if TRUE (default) then data will be sorted in a way that tries to get a roughly equal number of string matches per batch, to prevent huge match tables (costing memory). If FALSE, data will be sorted in a way to get fewer unique words per batch, which can speed up matching, but can lead to a very unequal number of matches per batch.}
 
-\item{clone}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting clone to FALSE, or setting tCorpus$clone_on_change to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
+\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
 }
 

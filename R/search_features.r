@@ -80,7 +80,7 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
     hit = search_string(fi, kw, allow_proximity = T, only_last_mword = only_last_mword)
     if(is.null(hit)) next
 
-    hit$doc_id = tc$data$doc_id[hit$i]
+    hit$doc_id = tc$get('doc_id')[hit$i]
 
     ## take subset into account
     subset_tokens = queries$subset_tokens[i]
@@ -122,7 +122,7 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
 
   hits = plyr::ldply(res, function(x) x, .id='code')
   position_cols = if ('sent_i' %in% tc$names) c('sent_i', 'word_i') else c('word_i')
-  hits = cbind(hits, tc$data[,position_cols,with=F][hits$i,])
+  hits = cbind(hits, tc$get(position_cols, keep_df = T)[hits$i,])
 
   if (nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor(), sent_i=numeric(), word_i = numeric(), hit_id=numeric())
   hits = hits[order(hits$i),]
@@ -146,7 +146,7 @@ evaluate_condition <- function(tc, fi, hit, condition){
       direction = con_regex$direction
       window = con_regex$condition_window
       if (is.na(window)) {
-        con_doc = tc$data$doc_id[con_hit$i]
+        con_doc = tc$get('doc_id')[con_hit$i]
         qm[,j] = hit$doc_id %in% con_doc
       } else {
         if(direction == '<') shifts = 0:window

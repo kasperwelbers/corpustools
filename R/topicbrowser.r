@@ -179,7 +179,7 @@ render_topic <- function(topic_id, info, nmaxdoc=10) {
            width=500, height=200)
   for (var in setdiff(colnames(info$meta), c("id", "date"))) {
     cat("<h2>Per",var,"</h2>")
-    cat_plot(topics.plot.category(info$topics_per_doc, topic_id, info$meta[[var]]),
+    cat_plot(topics.plot.category(info$topics_per_doc, topic_id, info$get_meta(var)),
              width=500, height=200)
   }
 
