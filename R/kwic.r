@@ -13,14 +13,15 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsampl
     i = d[hits$hits[,c('doc_id', 'word_i')]]$i
     code = hits$hits$code
     hit_id = hits$hits$hit_id
+  } else {
+    if(length(code) == 1) {
+      code = rep(code, length(i))
+      hit_id = 1:length(i)
+    } else {
+      hit_id = match(code, unique(code))
+    }
   }
   global_i = gi[i]
-  if(length(code) == 1) {
-    code = rep(code, length(i))
-    hit_id = 1:length(i)
-  } else {
-    hit_id = match(code, unique(code))
-  }
 
   if (length(code) == 0) return(NULL)
 
