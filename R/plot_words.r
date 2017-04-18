@@ -60,14 +60,15 @@ dtm.wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs
 }
 
 #' @export
-plot.vocabularyComparison <- function(x, n=25, mode=c('over_x','over_y','both'), ...){
+plot.vocabularyComparison <- function(x, n=25, mode=c('both', 'over_x','over_y'), ...){
   mode = match.arg(mode)
   if (!all(c('feature', 'over', 'chi2') %in% colnames(x)))
   if(mode == 'over_y') x = x[x$over < 1,]
   if(mode == 'over_x') x = x[x$over > 1,]
   x = x[order(-x$chi2),]
   x = head(x, n)
+  relfreqmean = ((x$freq.x / sum(x$freq.x)) + (x$freq.y / sum(x$freq.y))) / 2
   if (mode %in% c('over_x','over_y')) dtm.wordcloud(terms=x$feature, freqs=log(x$over), ...)
-  if (mode == 'both') plotWords(x = log(x$over), words=x$feature, wordfreq = x$chi2, ...)
+  if (mode == 'both') plotWords(x = log(x$over), words=x$feature, wordfreq = relfreqmean, ...)
 }
 

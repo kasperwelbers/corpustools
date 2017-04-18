@@ -4,7 +4,7 @@
 \alias{backbone_filter}
 \title{Extract the backbone of a network.}
 \usage{
-backbone_filter(g, alpha = 0.05, direction = "none", delete.isolates = T,
+backbone_filter(g, alpha = 0.05, direction = "none", delete_isolates = T,
   max.vertices = NULL, use.original.alpha = T, k.is.Nvertices = F)
 }
 \arguments{
@@ -14,7 +14,7 @@ backbone_filter(g, alpha = 0.05, direction = "none", delete.isolates = T,
 
 \item{direction}{direction = 'none' can be used for both directed and undirected networks, and is (supposed to be) the disparity filter proposed in Serrano et al. (2009) is used. By setting to 'in' or 'out', the alpha is only calculated for out or in edges. This is an experimental use of the backbone extraction (so beware!) but it seems a logical application.}
 
-\item{delete.isolates}{If TRUE, vertices with degree 0 (i.e. no edges) are deleted.}
+\item{delete_isolates}{If TRUE, vertices with degree 0 (i.e. no edges) are deleted.}
 
 \item{max.vertices}{Optional. Set a maximum number of vertices for the network to be produced. The alpha is then automatically lowered to the point that only the given number of vertices remains connected (degree > 0). This can be usefull if the purpose is to make an interpretation friendly network. See e.g., http://jcom.sissa.it/archive/14/01/JCOM_1401_2015_A01}
 

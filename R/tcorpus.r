@@ -80,6 +80,7 @@ tCorpus <- R6::R6Class("tCorpus",
          }
        }
        private$.data = mod
+       if (self$auto_gc) gc()
        self$set_keys()
      },
 
@@ -93,6 +94,7 @@ tCorpus <- R6::R6Class("tCorpus",
          stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
        }
        private$.meta = mod
+       if (self$auto_gc) gc()
        self$set_keys()
      }
 
@@ -390,7 +392,7 @@ tCorpus <- R6::R6Class("tCorpus",
        private$set_provenance(index_feature=NULL, context_level=NULL, max_window_size=NULL, as_ascii=NULL)
      },
 
-     cast = function(meta_cols=NULL, hits=NULL, feature=NULL, doc_count=T){
+     aggregate = function(meta_cols=NULL, hits=NULL, feature=NULL, doc_count=T){
         meta = data.table::copy(private$.meta)
         if (is.null(meta_cols)) {
           meta[,group := 'total']

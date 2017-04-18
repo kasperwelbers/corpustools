@@ -13,8 +13,8 @@ test_that("Query search works", {
   hits = tc$search_features(keyword = 'fuel')
   expect_equal(as.character(hits$hits$feature), c('fuel','fuel'))
 
-  ## casting results
-  res = tc$cast(hits=hits)
+  ## aggregating results
+  res = tc$aggregate(hits=hits)
   expect_equal(colnames(res), c('group','N','query_1'))
 
   ## multiword keywords
@@ -112,7 +112,7 @@ test_that("Query search works", {
   ## kwic with multiword queries
   kw = tc$kwic(keyword = c('"renewable fuels"~10'), nsample = NA) ## without gap
   expect_equal(kw$feature, 'Renewable -> fuels')
-  kw = tc$kwic(keyword = c('"renewable fuels"~10'), nwords = 2) ## without gap
+  kw = tc$kwic(keyword = c('"renewable fuels"~10'), nwords = 2) ## with gap
   expect_true(grepl('[...]', kw$kwic))
 
   ## code queries

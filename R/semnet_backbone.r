@@ -5,18 +5,18 @@
 #' @param g A graph in the `Igraph` format.
 #' @param alpha The threshold for the alpha. Can be interpreted similar to a p value (see paper for clarrification).
 #' @param direction direction = 'none' can be used for both directed and undirected networks, and is (supposed to be) the disparity filter proposed in Serrano et al. (2009) is used. By setting to 'in' or 'out', the alpha is only calculated for out or in edges. This is an experimental use of the backbone extraction (so beware!) but it seems a logical application.
-#' @param delete.isolates If TRUE, vertices with degree 0 (i.e. no edges) are deleted.
+#' @param delete_isolates If TRUE, vertices with degree 0 (i.e. no edges) are deleted.
 #' @param max.vertices Optional. Set a maximum number of vertices for the network to be produced. The alpha is then automatically lowered to the point that only the given number of vertices remains connected (degree > 0). This can be usefull if the purpose is to make an interpretation friendly network. See e.g., http://jcom.sissa.it/archive/14/01/JCOM_1401_2015_A01
 #' @param use.original.alpha if max.vertices is not NULL, this determines whether the lower alpha for selecting the top vertices is also used as a threshold for the edges, or whether the original value given in the alpha parameter is used.
 #' @return A graph in the Igraph format
 #' @export
-backbone_filter <- function(g, alpha=0.05, direction='none', delete.isolates=T, max.vertices=NULL, use.original.alpha=T, k.is.Nvertices=F){
+backbone_filter <- function(g, alpha=0.05, direction='none', delete_isolates=T, max.vertices=NULL, use.original.alpha=T, k.is.Nvertices=F){
   if (direction == 'none') E(g)$alpha = backbone_alpha(g, k.is.Nvertices)
   if (direction == 'in') E(g)$alpha = backbone_indegree_alpha(g, k.is.Nvertices)
   if (direction == 'out') E(g)$alpha = backbone_outdegree_alpha(g, k.is.Nvertices)
   g = delete.edges(g, which(E(g)$alpha >= alpha))
-  if (!is.null(max.vertices) & ecount(g) > 0) g = filter_vertices_by_alpha(g, 'alpha', max.vertices, use.original.alpha)
-  if (delete.isolates) g = delete.vertices(g, which(degree(g) == 0))
+  if (!is.null(max.vertices) & ecount(g) > 0) g = filter_vertices_by_edgeweight(g, 'alpha', max.vertices, use.original.alpha)
+  if (delete_isolates) g = delete.vertices(g, which(degree(g) == 0))
   if (ecount(g) == 0) {
     warning("No significant edges (backbone) remain!! Accept it (or lower the backbone_alpha)")
     return(g)
@@ -117,6 +117,6 @@ filter_vertices_by_edgeweight <- function(g, weight_attr, max.vertices, keep.ori
       g = delete.edges(g, which(get.edge.attribute(g, weight_attr) >= filters$max.weight))
     }
   }
-  if (delete.isolates) g = delete.vertices(g, which(degree(g) == 0))
+  if (delete_isolates) g = delete.vertices(g, which(degree(g) == 0))
   g
 }

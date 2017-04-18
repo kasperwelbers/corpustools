@@ -18,12 +18,15 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsampl
   if(length(code) == 1) {
     code = rep(code, length(i))
     hit_id = 1:length(i)
+  } else {
+    hit_id = match(code, unique(code))
   }
 
   if (length(code) == 0) return(NULL)
 
   if(!is.na(nsample)) {
-    samp = unlist(tapply(1:length(code), code, function(x) head(sample(x), nsample)))
+    hit_id_samp = head(sample(unique(hit_id)), nsample)
+    samp = hit_id %in% hit_id_samp
     hit_id = hit_id[samp]
     code = code[samp]
     i = i[samp]
