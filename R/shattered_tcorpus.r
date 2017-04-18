@@ -217,12 +217,9 @@ summary.shattered_tCorpus <- function(stc) stc
 #' For the sake of reference: a shattered_tCorpus is nothing more than an object that refers to a folder containing the tCorpus shards and index.
 #' To create a shattered_tCorpus, consult the documentation ?shattered_tCorpus.
 #'
-#' @param path
+#' @param path a path to a .tCorpus folder
 #'
-#' @return
 #' @export
-#'
-#' @examples
 open_shattered_tc <- function(path) {
   shattered_tCorpus$new(path=path)
 }
@@ -231,10 +228,7 @@ open_shattered_tc <- function(path) {
 #'
 #' @param stc A shattered_tCorpus object
 #'
-#' @return
 #' @export
-#'
-#' @examples
 delete_shattered_tc <- function(stc) {
   path = stc$path()
   if (!grepl('\\.tCorpus$', path)) stop(sprintf('Cannot delete %s. Not a legit shattered_tCorpus folder'))

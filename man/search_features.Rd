@@ -20,6 +20,8 @@ search_features(tc, keyword = NA, condition = NA, code = NA,
 
 \item{queries}{Alternatively, a data.frame can be given that contains a "keyword" column, and optionally columns for the "condition", "code" and "condition_once" paramters.}
 
+\item{feature}{The feature column in which to search}
+
 \item{condition_once}{logical. If TRUE, then if an keyword satisfies its conditions once in an article, all keywords within that article are coded.}
 
 \item{subset_tokens}{A call (or character string of a call) as one would normally pass to subset.tCorpus. If given, the keyword has to occur within the subset. This is for instance usefull to only look in named entity POS tags when searching for people or organization. Note that the condition does not have to occur within the subset.}

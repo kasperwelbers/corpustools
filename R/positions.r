@@ -48,8 +48,6 @@ global_position <- function(position, context, max_window_size=NA, presorted=F, 
 #' This way, the distance of features can be calculated across multiple contexts using a single vector
 #'
 #' @param tc tCorpus object
-#' @param context_level
-#' @param max_window_size
 #'
 #' @return a tCorpus object
 #' @export

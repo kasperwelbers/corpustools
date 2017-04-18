@@ -9,7 +9,7 @@ i_window <- function(tc, i, window, context_level=c('document','sentence')){
   gi_i = gi[i]
   gi_window = rep(gi_i, window*2 + 1) + rep(-window:window, each=length(gi_i))
   window_i = na.omit(match(gi_window, gi))
-  unique(window_i[order(window_i)])
+  data.table::fsort(unique(window_i))
 }
 
 #' Subset a tcorpus for a window around the results of search_features()
@@ -38,10 +38,11 @@ x_filter <- function(ft, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
   select
 }
 
+
 #' @export
 freq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
   if (is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
-  freq_table = table(x)
+  freq_table = table(droplevels(x))
   x %in% x_filter(freq_table, min=min, max=max, top=top, bottom=bottom)
 }
 
@@ -50,7 +51,7 @@ freq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
 docfreq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL, doc_id=parent.frame()$doc_id) {
   if (is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
   freq_table = unique(data.frame(doc_id=doc_id, x=x))
-  freq_table = force(table(freq_table$x))
+  freq_table = table(droplevels(freq_table$x))
   x %in% x_filter(freq_table, min=min, max=max, top=top, bottom=bottom)
 }
 

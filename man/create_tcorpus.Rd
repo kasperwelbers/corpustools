@@ -24,7 +24,7 @@ create_tcorpus(x, ...)
 \arguments{
 \item{meta}{A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x}
 
-\item{split_sentences}{Logical. If TRUE, the sentence number of tokens is also computed. This is done using the sentence tokenization of quanteda::tokenize, which is noted by the authors to be good (especially for english) but not perfect.}
+\item{split_sentences}{Logical. If TRUE, the sentence number of tokens is also computed.}
 
 \item{max_sentences}{An integer. Limits the number of sentences per document to the specified number. If set when split_sentences == FALSE, split_sentences will be set to TRUE.}
 

@@ -2,7 +2,14 @@
 keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsample=NA, output_feature='word', context_level=c('document', 'sentence'), prettypaste=T, kw_tag=c('<','>')){
   if (class(i) == 'logical') i = which(i)
   ## first filter tokens on document id (to speed up computation)
-  gi = get_global_i(tc, context_level=context_level, max_window_size = nwords)
+
+  if (is.null(tc$provenance('index_feature'))){
+    gi = tc$feature_index(feature=output_feature, context_level=context_level, max_window_size = nwords)$global_i
+  } else {
+    gi = tc$feature_index(feature=tc$provenance('index_feature'), context_level=context_level, max_window_size = nwords, as_ascii = tc$provenance('as_ascii'))$global_i
+  }
+  gi = data.table::fsort(gi)
+
   gfv = globalFeatureVector$new(tc$get(output_feature), gi)
 
   if (!is.null(hits)) {

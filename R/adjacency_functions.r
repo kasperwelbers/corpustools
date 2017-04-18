@@ -3,10 +3,6 @@
 #' This function returns the occurence of words (position.matrix) and the window of occurence (window.matrix). This format enables the co-occurence of words within sliding windows (i.e. word distance) to be calculated by multiplying position.matrix with window.matrix.
 #'
 #' @param window.size The distance within which words should occur from each other to be counted as a co-occurence.
-#' @param tokenlist
-#' @param distance.as.value
-#' @param feature.col
-#' @param filter
 #' @param direction a string indicating whether only the left ('<') or right ('>') side of the window, or both ('<>'), should be used.
 #'
 #' @return A list with two matrices. position.mat gives the specific position of a term, and window.mat gives the window in which each word occured. The rows represent the position of a term, and matches the input of this function (position, term and context). The columns represents terms.

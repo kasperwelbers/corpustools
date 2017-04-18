@@ -9,9 +9,6 @@ semnet_window(tc, feature, measure = c("con_prob", "cosine", "count_directed",
   window.size = 10, direction = "<>", backbone = F, n.batches = 5,
   set_matrix_mode = c(NA, "windowXwindow", "positionXwindow"))
 }
-\arguments{
-\item{backbone}{}
-}
 \description{
 A sliding window approach to calculate the co-occurence of words
 }

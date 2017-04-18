@@ -31,8 +31,6 @@ plotWords(x, y = NULL, words, wordfreq = rep(1, length(x)), xlab = "",
 }
 \value{
 nothing
-
-nothing
 }
 \description{
 Plot a wordcloud with words ordered and coloured according to a dimension (x)

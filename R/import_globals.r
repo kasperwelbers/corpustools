@@ -3,7 +3,6 @@
 #' @import Matrix
 #' @import igraph
 #' @import data.table
-#' @import plyr
 #' @importFrom Rcpp evalCpp
 #' @useDynLib corpustools
 importglobals <- function(x) NULL

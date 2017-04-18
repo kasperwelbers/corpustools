@@ -9,8 +9,6 @@ get_global_i(tc, context_level = c("document", "sentence"),
 }
 \arguments{
 \item{tc}{tCorpus object}
-
-\item{max_window_size}{}
 }
 \value{
 a tCorpus object

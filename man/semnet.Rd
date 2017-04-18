@@ -8,11 +8,6 @@ semnet(tc, feature, measure = c("con_prob", "con_prob_weighted", "cosine",
   "count_directed", "count_undirected", "chi2"), context_level = c("document",
   "sentence"), backbone = F, n.batches = NA, alpha = 2)
 }
-\arguments{
-\item{tc}{}
-
-\item{alpha}{}
-}
 \description{
 This function calculates the co-occurence of words and returns a network/graph where nodes are words and edges represent the similarity/adjacency of words. Co-occurence is calcuated based on how often two words occured within the same document (e.g., news article, chapter, paragraph, sentence). Note that the cooc_window() function can be used to calculate co-occurrence of words within a given word distance.
 }

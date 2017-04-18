@@ -28,8 +28,6 @@ plot_semnet(g, weight_attr = "weight", min_weight = NA,
 
 \item{return_graph}{if TRUE, plot_semnet() also returns the graph object with the attributes and layout as shown in the plot.}
 
-\item{layout_fun}{}
-
 \item{...}{additional arguments are passed on to plot.igraph()}
 }
 \value{

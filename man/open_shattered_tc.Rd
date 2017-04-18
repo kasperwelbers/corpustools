@@ -7,7 +7,7 @@
 open_shattered_tc(path)
 }
 \arguments{
-\item{path}{}
+\item{path}{a path to a .tCorpus folder}
 }
 \description{
 If a shattered_tCorpus has been created, this function can be used to read/open/load it by

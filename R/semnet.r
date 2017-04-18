@@ -4,13 +4,6 @@
 #'
 #' This function calculates the co-occurence of words and returns a network/graph where nodes are words and edges represent the similarity/adjacency of words. Co-occurence is calcuated based on how often two words occured within the same document (e.g., news article, chapter, paragraph, sentence). Note that the cooc_window() function can be used to calculate co-occurrence of words within a given word distance.
 #'
-#' @param tc
-#'
-#' @param feature
-#' @param measure
-#' @param context_level
-#' @param chi2
-#' @param alpha
 #'
 semnet <- function(tc, feature, measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA, alpha=2){
   is_tcorpus(tc, T)
@@ -30,15 +23,6 @@ semnet <- function(tc, feature, measure=c('con_prob', 'con_prob_weighted', 'cosi
 
 #' A sliding window approach to calculate the co-occurence of words
 #'
-#'
-#' @param tc
-#' @param feature
-#' @param measure
-#' @param context_level
-#' @param window.size
-#' @param direction
-#' @param chi2
-#' @param backbone
 #'
 semnet_window <- function(tc, feature, measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=5, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
   is_tcorpus(tc, T)
@@ -115,9 +99,6 @@ DocumentTermMatrix_to_dgTMatrix <- function(dtm){
   colnames(sm) = colnames(dtm)
   as(sm, 'dgTMatrix')
 }
-
-## usefull?
-##merge_semnet_edges <- function()
 
 #####
 aggCoOc <- function(x, position.mat, window.mat){

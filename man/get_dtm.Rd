@@ -11,9 +11,6 @@ get_dtm(tc, feature, context_level = c("document", "sentence"),
   context_labels = T, feature_labels = T, ngrams = NA,
   ngram_before_subset = F)
 }
-\arguments{
-\item{context_level}{}
-}
 \description{
 Create a document term matrix from a tCorpus
 }

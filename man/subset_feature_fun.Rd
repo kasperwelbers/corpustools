@@ -6,9 +6,6 @@
 \usage{
 subset_feature_fun(tc, i, column, new_column, inverse = F)
 }
-\arguments{
-\item{filter}{}
-}
 \description{
 Similar to subsetting, but instead of deleting rows, the rows for the specified column as set to NA. This way the vocabulary can be reduced while still beign able to bring results of analyses back to the full text
 }

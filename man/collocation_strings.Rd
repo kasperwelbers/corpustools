@@ -6,9 +6,6 @@
 \usage{
 collocation_strings(tc, colloc_id, feature = "word", pref = NULL)
 }
-\arguments{
-\item{feature}{}
-}
 \description{
 Some features can be grouped in categories that span over multiple rows. For instance, unique ids for named entities. This function groups these collocation categories, and collapses the features into collocation strings.
 This can be used to count how often each collocation string occurs. Also, it is used in the add_collocation_label function to choosse labels for collocation categories based on the most frequent occurring string

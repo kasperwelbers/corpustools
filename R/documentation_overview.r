@@ -53,8 +53,8 @@ NULL
 #' \tabular{ll}{
 #'   \link[=tCorpus$data]{$data} \tab Get the token data (in \link{data.table} format). Can also be used to modify data using regular assignment, but with some restrictions (see Modify data section) \cr
 #'   \link[=tCorpus$meta]{$meta} \tab Get the document meta data \cr
-#'   \link[=tCorpus$get]{$get} \ \tab Get specific columns (faster and more efficient than $data, which first copies the whole data.table)  \cr
-#'   \link[=tCorpus$get]{$get_meta} \ \tab Get specific meta data columns  \cr
+#'   \link[=tCorpus$get]{$get} \tab Get specific columns (faster and more efficient than $data, which first copies the whole data.table)  \cr
+#'   \link[=tCorpus$get]{$get_meta} \tab Get specific meta data columns  \cr
 #'   \link[=tCorpus$dtm]{$dtm()} \tab Create a document term matrix \cr
 #'   \link[=tCorpus$feature_index]{$feature_index()} \tab Create or load a feature index. Used for fast lookup of features. \cr
 #'   \link[=tCorpus$context]{$context()} \tab Get a context vector. Currently supports documents or globally unique sentences.
@@ -73,7 +73,7 @@ NULL
 #'
 #' \tabular{ll}{
 #'   \link[=tCorpus$set]{$set()} \tab Modify the token data by setting the values of one (existing or new) column. \cr
-#'   \link[=tCorpus$set]{$set_meta()} \tab The set method for the document meta data
+#'   \link[=tCorpus$set]{$set_meta()} \tab The set method for the document meta data \cr
 #'   \link[=tCorpus$subset]{$subset()} \tab Modify the token and/or meta data using the \link{subset.tCorpus} function. A subset expression can be specified for both the token data (subset) and the document meta data (subset_meta). \cr
 #'   \link[=tCorpus$subset_query]{$subset_query()} \tab to be added
 #' }

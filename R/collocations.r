@@ -6,10 +6,6 @@
 #' Some features can be grouped in categories that span over multiple rows. For instance, unique ids for named entities. This function groups these collocation categories, and collapses the features into collocation strings.
 #' This can be used to count how often each collocation string occurs. Also, it is used in the add_collocation_label function to choosse labels for collocation categories based on the most frequent occurring string
 #'
-#' @param tc
-#' @param colloc_id
-#' @param feature
-#'
 #' @export
 collocation_strings <- function(tc, colloc_id, feature='word', pref=NULL){
   f = tc$get(c(feature, colloc_id))
@@ -39,8 +35,6 @@ collocation_strings <- function(tc, colloc_id, feature='word', pref=NULL){
 #'
 #' @param tc a tcorpus object
 #' @param colloc_id the data column containing the unique id for collocation words
-#' @param feature
-#' @param new_feature
 #'
 #' @export
 add_collocation_label <- function(tc, colloc_id, feature='word', new_feature=sprintf('%s_l', colloc_id), pref_subset=NULL){

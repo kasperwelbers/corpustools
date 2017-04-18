@@ -152,9 +152,10 @@ tCorpus <- R6::R6Class("tCorpus",
       levels(private$.meta[[column]])
     },
 
-     provenance = function() private$.p,
+     provenance = function(name=NULL) if (is.null(name)) private$.p else private$.p[[name]],
 
-     feature_index = function(feature='word', context_level='document', max_window_size=100, as_ascii=F){
+     feature_index = function(feature='word', context_level=c('document','sentence'), max_window_size=100, as_ascii=F){
+       context_level = match.arg(context_level)
        if (max_window_size < 100) max_window_size = 100 ## always use a window of at least 100,
        prov = private$.p
        if (is.null(private$.feature_index)){
@@ -522,17 +523,19 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
-     kwic = function(hits=NULL, i=NULL, keyword=NULL, code='', nwords=10, nsample=10, output_feature='word', context_level=c('document','sentence'), prettypaste=T, kw_tag=c('<','>'), ...){
+     kwic = function(hits=NULL, i=NULL, keyword=NULL, code='', nwords=10, nsample=NA, output_feature='word', context_level=c('document','sentence'), prettypaste=T, kw_tag=c('<','>'), ...){
        if (!is.null(keyword)) hits = self$search_features(keyword=keyword, code=code, ...)
        keyword_in_context(self, hits=hits, i=i, code=code, nwords=nwords, nsample=nsample, output_feature=output_feature, context_level=context_level, prettypaste=prettypaste, kw_tag=kw_tag)
      },
 
 ## CO-OCCURRENCE NETWORKS ##
      semnet = function(feature, measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA){
+       if (!require(igraph)) stop('igraph package needs to be installed in order to use semnet methods')
        semnet(self, feature=feature, measure=measure, context_level=context_level, backbone=backbone, n.batches=n.batches)
      },
 
      semnet_window = function(feature, measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=5, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
+       if (!require(igraph)) stop('igraph package needs to be installed in order to use semnet methods')
        semnet_window(self, feature=feature, measure=measure, context_level=context_level, window.size=window.size, direction=direction, backbone=backbone, n.batches=n.batches, set_matrix_mode=set_matrix_mode)
      },
 
@@ -559,6 +562,7 @@ tCorpus <- R6::R6Class("tCorpus",
 ## DOCUMENT COMPARISON ##
 
      compare_documents = function(feature='word', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
+       if (!require(RNewsflow)) stop('RNewsflow package needs to be installed in order to use document comparison methods')
         weight = match.arg(weight)
         from_subset = eval(substitute(from_subset), private$.meta, parent.frame(2))
         to_subset = eval(substitute(to_subset), private$.meta, parent.frame(2))
@@ -566,6 +570,8 @@ tCorpus <- R6::R6Class("tCorpus",
      },
 
      deduplicate = function(feature='word', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=self$copy_on_modify){
+       if (!require(RNewsflow)) stop('RNewsflow package needs to be installed in order to use document comparison methods')
+
        weight = match.arg(weight)
        match.arg(feature, self$feature_names)
        if (copy) {
@@ -585,6 +591,8 @@ tCorpus <- R6::R6Class("tCorpus",
 ## TOPIC MODELING ##
 
       lda_fit = function(feature, create_feature=NULL, K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250, context_level=c('document','sentence'), ...) {
+        if (!require(topicmodels)) stop('topicmodels package needs to be installed in order to use LDA')
+
         dtm = self$dtm(feature=feature, context_level=context_level, ...)
         m = lda_fit(dtm=dtm, method='Gibbs', K=K, num.iterations=num.iterations, alpha=alpha, eta=eta, burnin=burnin)
         if (!is.null(create_feature)) self$lda_topic_features(m=m, feature=feature, new_feature=create_feature, context_level=context_level, copy=F)

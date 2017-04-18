@@ -311,14 +311,9 @@ redistribute_shards <- function(stc, tokens_per_shard=100000) {
 #'
 #' @param stc A shattered_tCorpus object
 #' @param new_stc Either a shattered_tCorpus object or a character string giving the name (or path) for a new shattered_tCorpus.
-#' @param meta_columns
 #' @param tokens_per_shard The number of tokens per shard. This is an approximation, since a tCorpus should not be broken within documents. Also, given the number of shards that is required, tokens will be evently distributed (for instance, if tokens_per_shard is 1,000,000, and there are 1,500,000 tokens, you'll get 2 tokens of 750,000 shards)
-#' @param compress
 #'
-#' @return
 #' @export
-#'
-#' @examples
 reindex_shards <- function(stc, new_stc=stc, meta_columns=NULL, tokens_per_shard=1000000, compress=TRUE){
   if (!is.null(meta_columns)){
     mcols = colnames(stc$info()$meta_head)

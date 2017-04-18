@@ -23,4 +23,9 @@
 
 \item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
 }
+\description{
+``JRC-Names is a highly multilingual named entity resource for person and organisation names. [...] JRC-Names is a by-product of the analysis of about 220,000 news reports per day by the Europe Media Monitor (EMM) family of applications.'' (https://ec.europa.eu/jrc/en/language-technologies/jrc-names)
+
+The resource needs to be downloaded first. For this you can use the download_resource() function, which will (by default) download the resource into the tcorpus package folder.
+}
 

@@ -7,8 +7,6 @@
 #' @description
 #' The $data and $meta fields can be used to access and modify the token data and meta data.
 #'
-#'
-#'
 #' Several limitations:
 #' - subsetting or appending the data is not possible. (use the subset function and merge_tcorpua)
 #' - data.table operations that change the data.table by reference. Note that the set and set_meta functions do use assignment by reference.
@@ -18,7 +16,6 @@
 #' \code{tCorpus$data}
 #' \code{tCorpus$meta}
 #'
-#' @method tCorpus
 #' @name tCorpus$data
 #' @aliases data.tCorpus tCorpus$meta meta.tCorpus
 NULL
@@ -45,7 +42,6 @@ NULL
 #' @param max_window_size Determines the size of the global_i gaps between concepts. If lower than 100, a window size of 100 is still used (you may consider this a very strong recommendation).
 #' @param as_ascii use the ascii version of the feature. Use with care (i.e. make sure to also use ascii when looking up features)
 #'
-#' @method tCorpus
 #' @name tCorpus$feature_index
 #' @aliases feature_index.tCorpus tCorpus$reset_feature_index reset_feature_index.tCorpus
 NULL
@@ -61,7 +57,6 @@ NULL
 #' @param context_level Select whether the context is document or sentence level
 #' @param with_labels Return context as only ids (numeric, starting at 1) or with labels (factor)
 #'
-#' @method tCorpus
 #' @name tCorpus$context
 #' @aliases context.tCorpus
 NULL
@@ -81,7 +76,6 @@ NULL
 #' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #' @param safe If TRUE, you are unable to modify the position columns (doc_id, sent_i, word_i), which is very likely to break the tCorpus. Only set to FALSE if you know exactly what you're doing.
 #'
-#' @method tCorpus
 #' @name tCorpus$transform
 #' @aliases transform.tCOrpus tCorpus$transform_meta transform_meta.tCorpus
 NULL
@@ -99,7 +93,6 @@ NULL
 #' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #' @param safe If TRUE, you are unable to modify the position columns (doc_id, sent_i, word_i), which is very likely to break the tCorpus. Only set to FALSE if you know exactly what you're doing.
 #'
-#' @method tCorpus
 #' @name tCorpus$within
 #' @aliases within.tCorpus tCorpus$within_meta within_meta.tCorpus
 NULL
@@ -119,7 +112,6 @@ NULL
 #' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #' @param safe If TRUE, you are unable to modify the position columns (doc_id, sent_i, word_i), which is very likely to break the tCorpus. Only set to FALSE if you know exactly what you're doing.
 #'
-#' @method tCorpus
 #' @name tCorpus$set
 #' @aliases set.tCorpus tCorpus$set_meta set_meta.tCorpus
 NULL
@@ -150,7 +142,6 @@ NULL
 #' @param window If not NULL, an integer specifiying the window to be used to return the subset. For instance, if the subset contains word 10 in a document and window is 5, the subset will contain word 5 to 15. Naturally, this does not apply to subset_meta.
 #' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
-#' @method tCorpus
 #' @name tCorpus$subset
 #' @aliases subset.tCorpus
 NULL
@@ -162,7 +153,6 @@ NULL
 #' \code{tCorpus$set(oldname, newname)}
 #' \code{tCorpus$set_meta(oldname, newname)}
 #'
-#' @method tCorpus
 #' @name tCorpus$set
 #' @aliases set.tCorpus tCorpus$set_meta set_meta.tCorpus
 NULL
@@ -187,7 +177,6 @@ NULL
 #' @param language The language used for stopwords and stemming
 #' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
-#' @method tCorpus
 #' @name tCorpus$preprocess
 #' @aliases preprocess.tCorpus
 NULL
@@ -208,7 +197,6 @@ NULL
 #' @param subset logical expression indicating rows to keep in the tokens data. i.e. rows for which the logical expression is FALSE will be set to NA.
 #' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
-#' @method tCorpus
 #' @name tCorpus$feature_subset
 #' @aliases feature_subset.tCorpus
 NULL
@@ -225,7 +213,6 @@ NULL
 #' @param feature The name of the feature
 #' @param sent_freq If True, include sentence frequency (only if sentence information is available).
 #'
-#' @method tCorpus
 #' @name tCorpus$feature_stats
 #' @aliases feature_stats.tCorpus
 NULL
@@ -242,7 +229,6 @@ NULL
 #' @param group_by_meta A column in the meta data to group the top features by.
 #' @param return_long if True, results will be returned in a long format. Default is a table, but this can be inconvenient if there are many grouping variables.
 #'
-#' @method tCorpus
 #' @name tCorpus$top_features
 #' @aliases top_features.tCorpus
 NULL
@@ -298,7 +284,6 @@ NULL
 #'    \item{condition_once -> if TRUE, then if the condition is satisfied at least once in an article, all occurences of the keyword are accepted. }
 #' }
 #'
-#' @method tCorpus
 #' @name tCorpus$search_features
 #' @aliases search_features.tCorpus
 NULL
@@ -317,7 +302,6 @@ NULL
 #' @param ... See \link{tCorpus$search_features} for the query parameters
 #' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
-#' @method tCorpus
 #' @name tCorpus$search_recode
 #' @aliases search_recode.tCorpus
 NULL
@@ -343,7 +327,6 @@ NULL
 #' @param kw_tag a character vector of length 2, that gives the symbols before (first value) and after (second value) the keyword in the KWIC string. Can for instance be used to prepare KWIC with format tags for highlighting.
 #' @param ... See \link{tCorpus$search_features} for the query parameters
 #'
-#' @method tCorpus
 #' @name tCorpus$kwic
 #' @aliases kwic.tCorpus
 NULL
@@ -375,7 +358,6 @@ NULL
 #'    \item{Queries are not case sensitive, but can be made so by adding the ~s flag. e.g. COP~s only finds "COP" in uppercase. The ~s flag can also be used on quotes to make all terms within quotes case sensitive, and this can be combined with the word proximity flag. e.g. "Marco Polo"~s10}
 #'  }
 #'
-#' @method tCorpus
 #' @name tCorpus$search_contexts
 #' @aliases search_contexts.tCorpus
 NULL
@@ -393,7 +375,6 @@ NULL
 #'
 #' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
-#' @method tCorpus
 #' @name tCorpus$subset_query
 #' @aliases subset_query.tCorpus
 NULL
@@ -415,7 +396,6 @@ NULL
 #' @param backbone If True, add an edge attribute for the backbone alpha
 #' @param n.batches If a number, perform the calculation in batches
 #'
-#' @method tCorpus
 #' @name tCorpus$semnet
 #' @aliases semnet.tCorpus
 NULL
@@ -438,7 +418,6 @@ NULL
 #' @param n.batches If a number, perform the calculation in batches
 #' @param set_matrix_mode Advanced feature. There are two approaches for calculating window co-occurrence. One is to measure how often a feature occurs within a given word window, which can be calculating by calculating the inner product of a matrix that contains the exact position of features and a matrix that contains the occurrence window. We refer to this as the "positionXwindow" mode. Alternatively, we can measure how much the windows of features overlap, for which take the inner product of two window matrices. By default, semnet_window takes the mode that we deem most appropriate for the similarity measure. Substantially, the positionXwindow approach has the advantage of being very easy to interpret (e.g. how likely is feature "Y" to occurr within 10 words from feature "X"?). The windowXwindow mode, on the other hand, has the interesting feature that similarity is stronger if words co-occurr more closely together (since then their windows overlap more). Currently, we only use the windowXwindow mode for cosine similarity. By using the set_matrix_mode parameter you can override this.
 #'
-#' @method tCorpus
 #' @name tCorpus$semnet_window
 #' @aliases semnet_window.tCorpus
 NULL
@@ -448,7 +427,7 @@ NULL
 #' Multilingual named entity recognition using the JRC-NAMES resource
 #'
 #' @description
-#' "JRC-Names is a highly multilingual named entity resource for person and organisation names. [...] JRC-Names is a by-product of the analysis of about 220,000 news reports per day by the Europe Media Monitor (EMM) family of applications." (https://ec.europa.eu/jrc/en/language-technologies/jrc-names)}
+#' ``JRC-Names is a highly multilingual named entity resource for person and organisation names. [...] JRC-Names is a by-product of the analysis of about 220,000 news reports per day by the Europe Media Monitor (EMM) family of applications.'' (https://ec.europa.eu/jrc/en/language-technologies/jrc-names)
 #'
 #' The resource needs to be downloaded first. For this you can use the download_resource() function, which will (by default) download the resource into the tcorpus package folder.
 #'
@@ -462,10 +441,8 @@ NULL
 #' @param collocation_labels if True, then for resources that create an id for subsequent words (e.g. named entities), labels are added (in a separate column) based on the most frequent collocation combinations in 'your' data. Note that this means that the labels can be different if you run the same analysis on a different corpus; this is why the id is always kept.
 #' @param batchsize The number of named entity string variations per batch. Using bigger batches is faster, but depending on the size of your corpus you might run out of memory (in which case you should use smaller batches). At the time of writing the total number of strings is roughtly 700,000.
 #' @param low_memory if TRUE (default) then data will be sorted in a way that tries to get a roughly equal number of string matches per batch, to prevent huge match tables (costing memory). If FALSE, data will be sorted in a way to get fewer unique words per batch, which can speed up matching, but can lead to a very unequal number of matches per batch.
-#' @param verbose
 #' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
-#' @method tCorpus
 #' @name tCorpus$jrc_names
 #' @aliases jrc_names.tCorpus
 NULL

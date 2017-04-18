@@ -1,16 +1,3 @@
-
-#' Preprocess feature
-#'
-#' @param tc
-#' @param language
-#' @param use_stemming
-#' @param lowercase
-#' @param ngrams
-#' @param ngram_context
-#' @param column
-#' @param new_column
-#' @param as_ascii
-#' @param remove_punctuation
 preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english'){
   is_tcorpus(tc, T)
   if (is(tc, 'shattered_tCorpus')) return(shard_preprocess_feature(stc=tc, column=column, new_column=new_column, use_stemming=use_stemming, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords))
@@ -31,12 +18,6 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
 #'
 #' Similar to subsetting, but instead of deleting rows, the rows for the specified column as set to NA. This way the vocabulary can be reduced while still beign able to bring results of analyses back to the full text
 #'
-#' @param tc
-#' @param column
-#' @param new_column
-#' @param filter
-#'
-#' @return
 subset_feature_fun <- function(tc, i, column, new_column, inverse=F){
   if (column == new_column) {
     tc$set(new_column, NA, subset = i, copy=F)
@@ -85,7 +66,7 @@ create_ngrams <- function(words, group, n, label=T, hash=F) {
   ngrams_i = match(ngrams, ungrams)
 
   if(hash) {
-    require(digest)
+    if (!require(digest)) stop('"digest" package needs to be installed')
     ashash <- function(x) readBin(digest::digest(x, 'sha1', raw=T), what='integer')
     hash = as.integer(sapply(ungrams, ashash))
     return(hash[ngrams_i])

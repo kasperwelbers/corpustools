@@ -14,7 +14,6 @@
 #' @param max_edges_level the maximum number of edges to be added at each level of depth.
 #' @param directed if the network is directed, specify whether 'out' degrees or 'in' degrees are used
 #'
-#' @return
 #' @export
 ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_attr='weight', min_weight=NULL, top_edges=NULL, max_edges_level=NULL, directed=c('out','in')){
   directed = match.arg(directed)

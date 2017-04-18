@@ -13,8 +13,6 @@ reindex_shards(stc, new_stc = stc, meta_columns = NULL,
 \item{new_stc}{Either a shattered_tCorpus object or a character string giving the name (or path) for a new shattered_tCorpus.}
 
 \item{tokens_per_shard}{The number of tokens per shard. This is an approximation, since a tCorpus should not be broken within documents. Also, given the number of shards that is required, tokens will be evently distributed (for instance, if tokens_per_shard is 1,000,000, and there are 1,500,000 tokens, you'll get 2 tokens of 750,000 shards)}
-
-\item{compress}{}
 }
 \description{
 Note that depending on the size of the shattered_tCorpus this can take quite a while.

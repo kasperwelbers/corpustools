@@ -14,8 +14,6 @@
 \description{
 The $data and $meta fields can be used to access and modify the token data and meta data.
 
-
-
 Several limitations:
 - subsetting or appending the data is not possible. (use the subset function and merge_tcorpua)
 - data.table operations that change the data.table by reference. Note that the set and set_meta functions do use assignment by reference.
