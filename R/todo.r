@@ -1,6 +1,12 @@
 
 ## add support for spacyr
 
+## perhaps DO make .data and .meta public, (possibly rename as .DATA and .META) and just very clearly note in the documentation that using these is a your own risk
+## the main reason is that it is much faster and memory efficient to use this data directly.
+## Then, also add a test method that check whether assumptions have been violated.
+
+## when creating a tCorpus, keep all settings as provenance. When appending data, use provenance as default settings
+
 ### all functions within methods that have the copy parameter MUST work by reference only!!
 ### check this thoroughly!!
 

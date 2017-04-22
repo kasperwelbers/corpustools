@@ -128,14 +128,16 @@ fit_columns_to_index <- function(tc, stc){
     if (length(missing_data) > 0) stop(sprintf('Cannot append. the following columns in %s are not in the new batch: %s', name, paste(missing_data, collapse=', ')))
     extra_data = cnames[!cnames %in% cnames_index]
     if (length(extra_data) > 0) warning(sprintf('New batch contains columns that are not in %s [%s]. These columns have not been added', name, paste(extra_data, collapse=', ')))
-    tc$select_columns(cnames_index, copy = F)
+    delete_columns = setdiff(tc$names, cnames)
+    tc$delete_columns(delete_columns, copy = F)
   }
   if (!identical(meta_cnames, meta_cnames_index)){
     missing_meta = meta_cnames_index[!meta_cnames_index %in% meta_cnames]
     if (length(missing_meta) > 0) stop(sprintf('Cannot append. the following META columns in %s are not in the new batch: %s', name, paste(missing_meta, collapse=', ')))
     extra_meta = meta_cnames[!meta_cnames %in% meta_cnames_index]
     if (length(extra_meta) > 0) warning(sprintf('New batch contains META columns that are not in %s [%s]. These columns have not been added', name, paste(extra_meta, collapse=', ')))
-    tc$select_meta_columns(meta_cnames, copy = F)
+    delete_columns = setdiff(tc$meta_names, meta_cnames)
+    tc$delete_meta_columns(delete_columns, copy = F)
   }
   tc$set_keys()
   tc

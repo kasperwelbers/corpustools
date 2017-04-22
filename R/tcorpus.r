@@ -102,7 +102,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
    public = list(
 
-     copy_on_modify = T, ## if TRUE, tCorpus works like 'typical' R (modify on copy). If FALSE, all modifications made using methods will be made to the referenced data. Not needing to copy data is a great boon of R6 as a reference class, but we should keep this optional to facilitate the common R workflow
+     copy_on_modify = F, ## if TRUE, tCorpus works like 'typical' R (modify on copy). If FALSE, all modifications made using methods will be made to the referenced data. Not needing to copy data is a great boon of R6 as a reference class, but we should keep this optional to facilitate the common R workflow
      ## (set to F every once in a while to run unit tests in reference mode)
 
      auto_gc = T, ## if TRUE, automatically perform gc() within functions that create large copies. R seems to handle the cleaning of R6 environments poorly (which can be huge for a tCorpus). It appears (but needs more testing) that R sometimes goes for the swap memory even though RAM has already been freed.
@@ -130,7 +130,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
     get_levels = function(column){
       if (!is(private$.data[[column]], 'factor')) stop(sprintf('"%s" is not a factor', column))
-      levels(private$.data[[column]])
+      data.table::copy(levels(private$.data[[column]]))
     },
 
     get_meta = function(columns=NULL, keep_df=F, as.df=F, per_token=F) {
@@ -149,7 +149,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
     get_meta_levels = function(column){
       if (!is(private$.meta[[column]], 'factor')) stop(sprintf('"%s" is not a factor', column))
-      levels(private$.meta[[column]])
+      data.table::copy(levels(private$.meta[[column]]))
     },
 
      provenance = function(name=NULL) if (is.null(name)) private$.p else private$.p[[name]],
@@ -250,14 +250,14 @@ tCorpus <- R6::R6Class("tCorpus",
        data.table::setattr(private$.data[[column]], 'levels', levels)
      },
 
-     select_columns = function(cnames, copy=self$copy_on_modify){
-       protected_cols = intersect(self$names, c('doc_id', 'sent_i', 'word_i'))
-       if (!any(protected_cols %in% cnames)) stop('selection (cnames) must contain the (existing) position columns (doc_id, word_i, sent_i)')
+     delete_columns = function(cnames, copy=self$copy_on_modify){
+       protected_cols = intersect(self$names, c('doc_id', 'word_i'))
+       if (any(protected_cols %in% cnames)) stop("The position columns doc_id and word_i cannot be deleted")
        if (copy) {
-         selfcopy = self$copy()$select_columns(cnames=cnames, copy=F)
+         selfcopy = self$copy()$delete_columns(cnames=cnames, copy=F)
          return(selfcopy)
        }
-       private$.data = private$.data[,cnames,with=F]
+       for (col in cnames) private$.data[,(col) := NULL]
        invisible(self)
      },
 
@@ -304,14 +304,14 @@ tCorpus <- R6::R6Class("tCorpus",
         data.table::setattr(private$.meta[[column]], 'levels', levels)
       },
 
-     select_meta_columns = function(cnames, copy=self$copy_on_modify){
+     delete_meta_columns = function(cnames, copy=self$copy_on_modify){
         protected_cols = intersect(self$names, c('doc_id'))
-        if (!any(protected_cols %in% cnames)) stop('selection (cnames) must contain the document id (doc_id)')
+        if (any(protected_cols %in% cnames)) stop('doc_id cannot be deleted')
         if (copy) {
-          selfcopy = self$copy()$select_meta_columns(cnames=cnames, copy=F)
+          selfcopy = self$copy()$delete_meta_columns(cnames=cnames, copy=F)
           return(selfcopy)
         }
-        private$.meta = private$.meta[,cnames,with=F]
+        for (col in cnames) private$.meta[,(col) := NULL]
         invisible(self)
       },
 
@@ -359,6 +359,11 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
+      subset_meta = function(subset=NULL, drop_levels=T, copy=self$copy_on_modify){
+        ## subset also has a subset_meta argument, but we add this for consistency with other _meta methods
+        self$subset(subset_meta = subset, drop_levels=drop_levels, copy=copy)
+      },
+
       subset_i = function(subset=NULL, subset_meta=NULL, window=NULL, inverse=F){
         if(is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.data, parent.frame())
         if(is(substitute(subset_meta), 'call')) subset_meta = eval(substitute(subset_meta), private$.meta, parent.frame())
@@ -381,7 +386,6 @@ tCorpus <- R6::R6Class("tCorpus",
           keyval = as.character(private$.meta$doc_id[subset_meta])
           d[list(keyval), subset_meta := T]
         } else d[, subset_meta := T]
-
 
         i = which(d$subset & d$subset_meta)
 
@@ -647,15 +651,15 @@ tCorpus <- R6::R6Class("tCorpus",
      n = function() nrow(private$.data),
      n_meta = function() nrow(private$.meta),
      feature_names = function(e=NULL) {
-       if (!is.null(e)) stop('Cannot change tcorpus$featurenames by assignment. Instead, use the set_colname() function')
+       if (!is.null(e)) stop('Cannot change tcorpus$feature_names by assignment. Instead, use the set_colname() function')
        fnames = colnames(private$.data)[!colnames(private$.data) %in% c('doc_id','sent_i','word_i')]
      },
      names = function(e=NULL) {
-       if (!is.null(e)) stop('Cannot change tcorpus$datanames by assignment. Instead, use the set_colname() function')
+       if (!is.null(e)) stop('Cannot change tcorpus$names by assignment. Instead, use the set_colname() function')
        colnames(private$.data)
      },
      meta_names = function(e=NULL) {
-       if (!is.null(e)) stop('Cannot change tcorpus$metanames by assignment. Instead, use the set_meta_colname() function')
+       if (!is.null(e)) stop('Cannot change tcorpus$meta_names by assignment. Instead, use the set_meta_colname() function')
        colnames(private$.meta)
      },
 
@@ -681,9 +685,6 @@ tCorpus <- R6::R6Class("tCorpus",
    )
 )
 
-#tc = refresh_tcorpus(tc)
-#hits = tc$search_features(keyword = 'fuel', subset_meta = doc_id == 'a')
-#print(hits)
 
 #' @export
 print.tCorpus <- function(tc) {
