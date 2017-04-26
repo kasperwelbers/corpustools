@@ -1,3 +1,7 @@
+cat('
+[![Travis-CI Build Status](https://travis-ci.org/kasperwelbers/corpustools.svg?branch=master)](https://travis-ci.org/kasperwelbers/corpustools)
+', file='README.md', append=T)
+
 About this package
 ============
 
