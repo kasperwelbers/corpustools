@@ -47,11 +47,8 @@ transform_count <- function(m, count_mode=c('normal','dicho','prob'), alpha=2){
   m
 }
 
-
-
 feature_cooccurrence <- function(tc, feature, matrix_mode=c('dtm', 'windowXwindow', 'positionXwindow'), count_mode=c('normal','dicho','prob'), mat_stats=c('sum.x','sum.y','magnitude.x','magnitude.y', 'nrow'), context_level=c('document','sentence'), direction='<>', window.size=10, n.batches=1, alpha=2){
   is_tcorpus(tc, allow_stc = T)
-  if (is(tc, 'shattered_tCorpus')) return(shard_feature_cooccurrence(stc=tc, feature, matrix_mode=matrix_mode, count_mode=count_mode, mat_stats=mat_stats, context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha))
 
   matrix_mode = match.arg(matrix_mode)
   count_mode = match.arg(count_mode)
@@ -148,18 +145,17 @@ cooccurrence_matrix_window <- function(tc, feature, matrix_mode='position_to_win
   ml # a list containing an adjacency matrix, with additional statistics
 }
 
-
 cooccurrence_graph_freq <- function(g, m1, m2){
   if (is.null(m2)) {
-    V(g)$sum = Matrix::colSums(m1)
-    V(g)$doc_freq = Matrix::colSums(m1 > 0)
+    igraph::V(g)$sum = Matrix::colSums(m1)
+    igraph::V(g)$doc_freq = Matrix::colSums(m1 > 0)
   } else {
-    m1freq = data.frame(name=colnames(m1), sum=colSums(m1), doc_freq=colSums(m1 > 0))
-    m2freq = data.frame(name=colnames(m2), sum=colSums(m2), doc_freq=colSums(m2 > 0))
+    m1freq = data.frame(name=colnames(m1), sum=Matrix::colSums(m1), doc_freq=Matrix::colSums(m1 > 0))
+    m2freq = data.frame(name=colnames(m2), sum=Matrix::colSums(m2), doc_freq=Matrix::colSums(m2 > 0))
     freq = unique(rbind(m1freq,m2freq))
-    i = match(V(g)$name, freq$name)
-    V(g)$sum = freq$sum[i]
-    V(g)$doc_freq = freq$doc_freq[i]
+    i = match(igraph::V(g)$name, freq$name)
+    igraph::V(g)$sum = freq$sum[i]
+    igraph::V(g)$doc_freq = freq$doc_freq[i]
   }
   g
 }
@@ -184,10 +180,9 @@ squarify_matrix <- function(mat){
   mat
 }
 
-
 cooc_chi2 <- function(g, x_sum, y_sum=x_sum, autocorrect=T){
-  cooc = get.edgelist(g, names = F)
-  cooc = data.frame(x=cooc[,1], y=cooc[,2], cooc=E(g)$weight)
+  cooc = igraph::get.edgelist(g, names = F)
+  cooc = data.frame(x = cooc[,1], y = cooc[,2], cooc = igraph::E(g)$weight)
 
   cooc$chi2 = calc_chi2(a = cooc$cooc,                                                   # x=1, y=1
                         b = y_sum[cooc$y] - cooc$cooc,                                   # x=0, y=1

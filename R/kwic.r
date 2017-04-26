@@ -62,7 +62,7 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsampl
 
   d = d[!d$feature == '',]
   kwic = split(as.character(d$feature), d$hit_id)
-  kwic = sapply(kwic, stringi:::stri_flatten, collapse=' ')
+  kwic = sapply(kwic, stringi::stri_flatten, collapse=' ')
 
   kwic = data.frame(hit_id = as.numeric(names(kwic)),
                     kwic = pretty_kwic(kwic))

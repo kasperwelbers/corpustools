@@ -1,6 +1,7 @@
 ################## create collocations
 
 ################## collocation labels
+
 #' Features collapsed into collocation strings
 #'
 #' Some features can be grouped in categories that span over multiple rows. For instance, unique ids for named entities. This function groups these collocation categories, and collapses the features into collocation strings.
@@ -22,10 +23,11 @@ collocation_strings <- function(tc, colloc_id, feature='word', pref=NULL){
 
   label = unique(f[,c('id','pref','new_id')], with=F)
   feature = split(as.character(f$feature), f$new_id)
-  label$label = sapply(feature, stringi:::stri_flatten, collapse=' ')
+  label$label = sapply(feature, stringi::stri_flatten, collapse=' ')
 
-  label[, list(N = .N, label=unique(get('label'))), by= 'pref,id,label']
+  label[, list(N = data.table::.N, label=unique(get('label'))), by= 'pref,id,label']
 }
+
 
 
 

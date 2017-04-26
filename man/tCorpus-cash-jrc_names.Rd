@@ -6,7 +6,6 @@
 \title{Multilingual named entity recognition using the JRC-NAMES resource}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$jrc_names(new_feature='jrc_names', feature='word', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, copy=self$copy_on_modify)}
 }
 \arguments{
 \item{new_feature}{The column name of the new feature.}

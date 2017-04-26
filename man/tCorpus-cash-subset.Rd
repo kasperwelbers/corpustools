@@ -6,7 +6,6 @@
 \title{Subset a tCorpus}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$subset(subset=NULL, subset_meta=NULL, drop_levels=F, window=NULL)}
 }
 \arguments{
 \item{subset}{logical expression indicating rows to keep in the tokens data.}

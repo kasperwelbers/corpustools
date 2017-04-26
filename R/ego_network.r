@@ -18,19 +18,19 @@
 ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_attr='weight', min_weight=NULL, top_edges=NULL, max_edges_level=NULL, directed=c('out','in')){
   directed = match.arg(directed)
 
-  missing = vertex_names[!vertex_names %in% V(g)$name]
+  missing = vertex_names[!vertex_names %in% igraph::V(g)$name]
   if (length(missing) == length(vertex_names)) stop('None of the given vertex_names exist in g')
   if (length(missing) > 0) warning(sprintf('Some of the given vertex_names do not exist in g: [%s]', paste(missing, collapse=', ')))
 
-  delete.edges(g, E(g))
+  delete.edges(g, igraph::E(g))
   if (!is.na(weight_attr)) {
-    adj = get.adjacency(g, type='both', attr = weight_attr)
+    adj = igraph::get.adjacency(g, type='both', attr = weight_attr)
   } else {
-    adj = get.adjacency(g, type='both')
+    adj = igraph::get.adjacency(g, type='both')
     min_weight = NA; top_edges = NA
   }
   adj = as(adj, 'dgTMatrix')
-  if (is.directed(g)){
+  if (igraph::is.directed(g)){
     if (directed == 'out') dt = summary(adj)
     if (directed == 'in') dt = summary(t(adj))
   } else {
@@ -39,15 +39,15 @@ ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_
   vnames = fast_factor(colnames(adj))
   dt = data.table(x=dt$i, y=dt$j, weight=dt$x, key='x') ## as data.table
 
-  vertex_ids = which(V(g)$name %in% vertex_names)
+  vertex_ids = which(igraph::V(g)$name %in% vertex_names)
   ego = build_ego_network(dt, vertex_ids, level=1, depth=depth, min_weight=min_weight, top_edges=top_edges, max_edges_level=max_edges_level)
   if (only_filter_vertices){
     i = unique(c(ego$x, ego$y))
-    g = igraph::delete.vertices(g, which(!1:vcount(g) %in% i))
+    g = igraph::delete.vertices(g, which(!1:igraph::vcount(g) %in% i))
   } else {
-    i = get.edge.ids(g, vp=rbind(ego$x, ego$y))
-    g = igraph::delete_edges(g, which(!1:ecount(g) %in% i))
-    g = igraph::delete_vertices(g, which(degree(g) == 0))
+    i = igraph::get.edge.ids(g, vp=rbind(ego$x, ego$y))
+    g = igraph::delete_edges(g, which(!1:igraph::ecount(g) %in% i))
+    g = igraph::delete_vertices(g, which(igraph::degree(g) == 0))
   }
   g
 }

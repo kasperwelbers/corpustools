@@ -6,7 +6,6 @@
 \title{Search for documents or sentences using Boolean queries}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$search_contexts(query, code=NULL, feature='word', context_level=c('document','sentence'), verbose=F)}
 }
 \arguments{
 \item{query}{A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.}

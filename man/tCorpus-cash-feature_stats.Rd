@@ -6,7 +6,6 @@
 \title{Feature statistics}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$feature_stats(feature, sent_freq=F)}
 }
 \arguments{
 \item{feature}{The name of the feature}

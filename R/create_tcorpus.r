@@ -16,33 +16,33 @@ create_tcorpus <- function(x, ...) {
 
 #' @rdname create_tcorpus
 #' @export
-create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F) {
+create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F, ...) {
   if (any(duplicated(doc_id))) stop('doc_id should not contain duplicate values')
   if (!is.null(meta)){
     if (!is(meta, 'data.frame')) stop('"meta" is not a data.frame or data.table')
     if (!nrow(meta) == length(x)) stop('The number of rows in "meta" does not match the number of texts in "x"')
     if (!'doc_id' %in% colnames(meta)) meta = cbind(doc_id=doc_id, meta)
-    meta = data.table(meta, key = 'doc_id')
+    meta = data.table::data.table(meta, key = 'doc_id')
   } else {
     if (!length(doc_id) == length(x)) stop('"doc_id" is not of the same length as "x"')
-    meta = data.table(doc_id=doc_id, key = 'doc_id')
+    meta = data.table::data.table(doc_id=doc_id, key = 'doc_id')
   }
   meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
 
-  tCorpus$new(data = data.table(tokenize_to_dataframe(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose)),
+  tCorpus$new(data = data.table::data.table(tokenize_to_dataframe(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose)),
               meta = base::droplevels(meta))
 }
 
 #' @rdname create_tcorpus
 #' @export
-create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F) {
+create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F, ...) {
   create_tcorpus(as.character(x), doc_id=doc_id, meta=meta, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose)
 }
 
 
 #' @rdname create_tcorpus
 #' @export
-create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL) {
+create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, ...) {
   for(cname in text_columns) if (!cname %in% colnames(d)) stop(sprintf('text_column "%s" not in data.frame', cname))
 
   if (length(text_columns) > 1){
@@ -73,7 +73,7 @@ create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, s
 #'
 #' @export
 tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=F, word_is_local=F) {
-  tokens = as.data.table(tokens)
+  tokens = data.table::as.data.table(tokens)
 
   ## check whether the columns specified in the arguments exist
   for(cname in c(doc_col, word_i_col, sent_i_col, meta_cols)){
@@ -114,10 +114,10 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
 
   ## set data.table keys (sorting the data) and verify that there are no duplicates
   if (!is.null(sent_i_col)) {
-    setkeyv(tokens, c('doc_id','sent_i','word_i'))
+    data.table::setkeyv(tokens, c('doc_id','sent_i','word_i'))
     if (!anyDuplicated(tokens, by=c('doc_id','sent_i','word_i')) == 0) stop('tokens should not contain duplicate triples of documents (doc_col), sentences (sent_i_col) and word positions (word_i_col)')
   } else {
-    setkeyv(tokens, c('doc_id','word_i'))
+    data.table::setkeyv(tokens, c('doc_id','word_i'))
     if (!anyDuplicated(tokens, by=c('doc_id','word_i')) == 0) stop('tokens should not contain duplicate doubles of documents (doc_col) and word positions (word_i_col)')
   }
 
@@ -140,16 +140,16 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
 
   ## arrange the meta data
   if (!is.null(meta)) {
-    meta = as.data.table(meta)
+    meta = data.table::as.data.table(meta)
     data.table::setnames(meta, which(colnames(meta) == doc_col), 'doc_id')
     meta[,'doc_id' := as.character(meta$doc_id)]
-    setkeyv(meta, 'doc_id')
+    data.table::setkeyv(meta, 'doc_id')
 
     if (!all(levels(tokens$doc_id) %in% meta$doc_id)) warning('For some documents in tokens the meta data is missing')
     if (!all(meta$doc_id %in% levels(tokens$doc_id))) warning('For some documents in the meta data there are no tokens. These documents will not be included in the meta data')
     meta = meta[list(levels(tokens$doc_id)),]
   } else {
-    meta = data.table(doc_id=as.character(levels(tokens$doc_id)), key='doc_id')
+    meta = data.table::data.table(doc_id=as.character(levels(tokens$doc_id)), key='doc_id')
   }
 
   if (!is.null(meta_cols)){

@@ -8,8 +8,6 @@
 \title{Access the data from a tCorpus}
 \usage{
 ## R6 method for class tCorpus.
-\code{tCorpus$data}
-\code{tCorpus$meta}
 }
 \description{
 The $data and $meta fields can be used to access and modify the token data and meta data.

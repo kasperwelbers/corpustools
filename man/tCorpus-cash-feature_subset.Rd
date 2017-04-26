@@ -6,7 +6,6 @@
 \title{Filter feature}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$feature_subset(column, new_column, subset, copy=self$copy_on_modify)}
 }
 \arguments{
 \item{column}{the column containing the feature to be used as the input}

@@ -8,8 +8,6 @@
 \title{Modify the token and meta data.tables of a tCorpus}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$transform(..., copy=self$copy_on_modify, safe=T)}
-\code{tCorpus$transform_meta(..., copy=self$copy_on_modify, safe=T)}
 }
 \arguments{
 \item{...}{name-value pairs where the name indicates a new or existing column in the token data, to which the value is set.}

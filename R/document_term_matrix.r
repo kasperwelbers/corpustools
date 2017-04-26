@@ -80,7 +80,7 @@ weight_dtm <- function(m, weight, idf=NULL){
 }
 
 tm_dtm_to_dgTMatrix <- function(dtm){
-  sm = spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
+  sm = Matrix::spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
   rownames(sm) = rownames(dtm)
   colnames(sm) = colnames(dtm)
   sm

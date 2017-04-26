@@ -687,13 +687,13 @@ tCorpus <- R6::R6Class("tCorpus",
 
 
 #' @export
-print.tCorpus <- function(tc) {
-  sent_info = if ('sent_i' %in% tc$names) paste(' and sentences (n = ', nrow(unique(tc$get(c('doc_id','sent_i')))), ')', sep='') else ''
-  cat('tCorpus containing ', tc$n, ' tokens',
-      '\nsplit by documents (n = ', tc$n_meta, ')', sent_info,
+print.tCorpus <- function(x, ...) {
+  sent_info = if ('sent_i' %in% x$names) paste(' and sentences (n = ', nrow(unique(x$get(c('doc_id','sent_i')))), ')', sep='') else ''
+  cat('tCorpus containing ', x$n, ' tokens',
+      '\nsplit by documents (n = ', x$n_meta, ')', sent_info,
       '\ncontains:',
-      '\n  - ', length(tc$names), ' data column', if (length(tc$names) > 1) '(s)', ':\t', paste(tc$names, collapse=', '),
-      '\n  - ', length(tc$meta_names), ' meta column', if (length(tc$meta_names) > 1) '(s)', ': \t', paste(tc$meta_names, collapse=', '),
+      '\n  - ', length(tc$names), ' data column', if (length(x$names) > 1) '(s)', ':\t', paste(x$names, collapse=', '),
+      '\n  - ', length(tc$meta_names), ' meta column', if (length(x$meta_names) > 1) '(s)', ': \t', paste(x$meta_names, collapse=', '),
       '\n', sep='')
 }
 
@@ -720,22 +720,18 @@ rebuild_tcorpus <- function(tc) {
                     meta = tc$meta)
 }
 
-#' @export
-summary.tCorpus <- function(tc) {
-  tc
-}
 
 #' @export
-summary.tCorpus <- function(tc) tc
+summary.tCorpus <- function(object, ...) object
 
 #' @export
-as.tcorpus <- function(x) UseMethod('as.tcorpus')
+as.tcorpus <- function(x, ...) UseMethod('as.tcorpus')
 
 #' @export
-as.tcorpus.tCorpus <- function(x) x
+as.tcorpus.tCorpus <- function(x, ...) x
 
 #' @export
-as.tcorpus.default <- function(x) stop('x has to be a tCorpus object')
+as.tcorpus.default <- function(x, ...) stop('x has to be a tCorpus object')
 ## params: preprocess_params=list, filter_params,
 
 is_tcorpus <- function(x, allow_stc=F){

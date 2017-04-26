@@ -8,8 +8,6 @@
 \title{Create or extract a feature index}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$feature_index(feature='word', context_level='document', max_window_size=100, as_ascii=F)}
-\code{tCorpus$reset_feature_index()}
 }
 \arguments{
 \item{feature}{The feature to be indexed.}

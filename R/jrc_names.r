@@ -38,7 +38,7 @@ download_jrc_names <- function(fname){
   re = readLines(temp)
   re = stringi::stri_split(re, regex='\t', simplify = T)
   re = data.frame(string=as.character(re[,4]), id=as.numeric(re[,1]), lang=fast_factor(re[,3]), pos=fast_factor(re[,2]), stringsAsFactors = F)
-  re = data.table(re)
+  re = data.table::data.table(re)
   saveRDS(re, fname)
   unlink(temp)
 }

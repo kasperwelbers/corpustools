@@ -8,8 +8,6 @@
 \title{Modify the token and meta data.tables of a tCorpus}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$within(expr, copy=self$copy_on_modify, safe=T)}
-\code{tCorpus$within_meta(expr, copy=self$copy_on_modify, safe=T)}
 }
 \arguments{
 \item{expr}{expression to be evaluated within the data.table.}

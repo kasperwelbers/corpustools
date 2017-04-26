@@ -88,14 +88,14 @@ position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, a
   }
 
   if (sum(select) == 0) {
-    mat = spMatrix(nrow=nrows, ncol=ncols)
+    mat = Matrix::spMatrix(nrow=nrows, ncol=ncols)
   } else {
     if (distance_as_value){
       select = select & !duplicated(data.frame(newi, newj)) # remove duplicates. since duplicates are ordered by shifts, this leaves the shortest distance to a term when using distance_as_value=T
       if (abs_distance) {
-        mat = spMatrix(nrow=nrows, ncol=ncols, i=newi[select], j=newj[select], x=abs(shift)[select]+1)
+        mat = Matrix::spMatrix(nrow=nrows, ncol=ncols, i=newi[select], j=newj[select], x=abs(shift)[select]+1)
       } else {
-        mat = spMatrix(nrow=nrows, ncol=ncols, i=newi[select], j=newj[select], x=(shift)[select])
+        mat = Matrix::spMatrix(nrow=nrows, ncol=ncols, i=newi[select], j=newj[select], x=(shift)[select])
       }
     } else{
       mat = spMatrix(nrow=nrows, ncol=ncols, i=newi[select], j=newj[select], x=rep(1, sum(select)))

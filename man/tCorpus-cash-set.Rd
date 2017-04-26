@@ -8,12 +8,8 @@
 \title{Modify the token and meta data.tables of a tCorpus}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$set(column, value, subset, copy=self$copy_on_modify, safe=T)}
-\code{tCorpus$set_meta(column, value, subset, copy=self$copy_on_modify, safe=T)}
 
 ## R6 method for class tCorpus.
-\code{tCorpus$set(oldname, newname)}
-\code{tCorpus$set_meta(oldname, newname)}
 }
 \arguments{
 \item{column}{Name of a new column (to create) or existing column (to transform)}

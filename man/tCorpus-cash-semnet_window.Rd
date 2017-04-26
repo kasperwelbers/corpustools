@@ -6,7 +6,6 @@
 \title{Create a semantic network based on the co-occurence of words in word windows}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$semnet_window(feature, measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=5, set_matrix_mode=c(NA, 'windowXwindow', 'positionXwindow'))}
 }
 \arguments{
 \item{feature}{The name of the feature column}

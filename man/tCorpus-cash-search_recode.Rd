@@ -6,7 +6,6 @@
 \title{Recode features in a tCorpus based on a search string}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$search_recode(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA, copy=self$copy_on_modify)}
 }
 \arguments{
 \item{feature}{The feature in which to search}

@@ -6,7 +6,6 @@
 \title{Show top features}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$top_features(feature, n=10, group_by=NULL, group_by_meta=NULL, return_long=F)}
 }
 \arguments{
 \item{feature}{The name of the feature}

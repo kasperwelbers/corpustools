@@ -12,7 +12,7 @@ featureHits <- function(hits, queries) {
   fh
 }
 
-is.featureHits <- function(fh) {
+is.featureHits <- function(fh, ...) {
   if (!is(fh$hits, 'data.frame')) return(FALSE)
   if (!all(c('code','feature','i','doc_id','hit_id', 'sent_i', 'word_i') %in% colnames(fh$hits))) return(FALSE)
   if (!all(c('keyword','condition','code','condition_once','subset_tokens','subset_meta') %in% colnames(fh$queries))) return(FALSE)
@@ -20,7 +20,7 @@ is.featureHits <- function(fh) {
 }
 
 #' @export
-print.featureHits <- function(x){
+print.featureHits <- function(x, ...){
   if(!is.featureHits(x)) stop('Not a proper featureHits object')
   n_hits = length(unique(x$hits$hit_id))
   n_docs = length(unique(x$hits$doc_id))
@@ -30,16 +30,16 @@ print.featureHits <- function(x){
 }
 
 #' @export
-summary.featureHits <- function(x){
+summary.featureHits <- function(object, ...){
   #if(is.null(x$hits)) return(NULL)
-  if (!any(is.na(x$hits$sent_i))){
-    x$hits$sent_i = paste(x$hits$doc_id, x$hits$sent_i, sep='_')
-    agg = data.table(x$hits)[,.(hits = length(unique(hit_id)),
+  if (!any(is.na(object$hits$sent_i))){
+    object$hits$sent_i = paste(object$hits$doc_id, object$hits$sent_i, sep='_')
+    agg = data.table(object$hits)[,.(hits = length(unique(hit_id)),
                               sentences = length(unique(sent_i)),
                               documents = length(unique(doc_id))),
                               by='code']
   } else {
-    agg = data.table(x$hits)[,.(hits = length(unique(hit_id)),
+    agg = data.table(object$hits)[,.(hits = length(unique(hit_id)),
                               documents = length(unique(doc_id))),
                            by='code']
   }
@@ -61,7 +61,7 @@ contextHits <- function(hits, queries) {
   ch
 }
 
-is.contextHits <- function(ch) {
+is.contextHits <- function(ch, ...) {
   if (!is(ch$hits, 'data.frame')) return(FALSE)
   if (!all(c('code','doc_id','sent_i') %in% colnames(ch$hits))) return(FALSE)
   if (!all(c('query','code') %in% colnames(ch$queries))) return(FALSE)
@@ -69,7 +69,7 @@ is.contextHits <- function(ch) {
 }
 
 #' @export
-print.contextHits <- function(x){
+print.contextHits <- function(x, ...){
   if(!is.contextHits(x)) stop('Not a proper featureHits object')
   n_docs = length(unique(x$hits$doc_id))
   n_sent = if(any(is.na(x$hits$sent_i))) NULL else nrow(x$hits[,c('doc_id','sent_i')])
@@ -78,18 +78,18 @@ print.contextHits <- function(x){
 }
 
 #' @export
-summary.contextHits <- function(x){
-  #if(is.null(x$hits)) return(NULL)
-  if (!any(is.na(x$hits$sent_i))){
-    x$hits$sent_i = paste(x$hits$doc_id, x$hits$sent_i, sep='_')
-    x = data.table(x$hits)[,.(sentences = length(unique(sent_i)),
+summary.contextHits <- function(object, ...){
+  #if(is.null(object$hits)) return(NULL)
+  if (!any(is.na(object$hits$sent_i))){
+    object$hits$sent_i = paste(object$hits$doc_id, object$hits$sent_i, sep='_')
+    object = data.table(object$hits)[,.(sentences = length(unique(sent_i)),
                               documents = length(unique(doc_id))),
                            by='code']
 
   } else {
-    x = data.table(x$hits)[,.(documents = length(unique(doc_id))),
+    object = data.table(object$hits)[,.(documents = length(unique(doc_id))),
                            by='code']
   }
-  as.data.frame(x)
+  as.data.frame(object)
 }
 

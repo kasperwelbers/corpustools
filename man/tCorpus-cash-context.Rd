@@ -6,7 +6,6 @@
 \title{Get a context vector}
 \usage{
 ## R6 method for class tCorpus.
-\code{tCorpus$data(context_level = c('document','sentence'), with_labels=T)}
 }
 \arguments{
 \item{context_level}{Select whether the context is document or sentence level}

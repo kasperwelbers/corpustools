@@ -6,7 +6,6 @@
 \title{Create a semantic network based on the co-occurence of words in documents}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$semnet(feature, measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA)}
 }
 \arguments{
 \item{feature}{The name of the feature column}

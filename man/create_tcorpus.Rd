@@ -11,15 +11,15 @@ create_tcorpus(x, ...)
 
 \method{create_tcorpus}{character}(x, doc_id = 1:length(x), meta = NULL,
   split_sentences = F, max_sentences = NULL, max_words = NULL,
-  verbose = F)
+  verbose = F, ...)
 
 \method{create_tcorpus}{factor}(x, doc_id = 1:length(x), meta = NULL,
   split_sentences = F, max_sentences = NULL, max_words = NULL,
-  verbose = F)
+  verbose = F, ...)
 
 \method{create_tcorpus}{data.frame}(d, text_columns = "text",
   doc_column = NULL, split_sentences = F, max_sentences = NULL,
-  max_words = NULL)
+  max_words = NULL, ...)
 }
 \arguments{
 \item{meta}{A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x}

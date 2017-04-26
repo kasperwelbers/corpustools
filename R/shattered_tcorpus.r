@@ -195,8 +195,8 @@ shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
 )
 
 #' @export
-print.shattered_tCorpus <- function(stc) {
-  info = stc$info()
+print.shattered_tCorpus <- function(x, ...) {
+  info = x$info()
   dnames = colnames(info$data_head)
   mnames = colnames(info$meta_head)
   cat('tCorpus containing ', info$n, ' tokens',
@@ -208,7 +208,7 @@ print.shattered_tCorpus <- function(stc) {
 }
 
 #' @export
-summary.shattered_tCorpus <- function(stc) stc
+summary.shattered_tCorpus <- function(object, ...) objec
 
 #' Open a shattered_tCorpus stored on disk
 #'

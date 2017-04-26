@@ -6,7 +6,6 @@
 \title{Find tokens using a Lucene-like search query}
 \usage{
 ## R6 method for class tCorpus
-\code{tCorpus$search_features(keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mword=F, verbose=F)}
 }
 \arguments{
 \item{keyword}{The keyword part of the query, see explanation in query_tutorial markdown or in details below}
