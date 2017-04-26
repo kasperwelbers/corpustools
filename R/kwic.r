@@ -80,5 +80,5 @@ pretty_kwic <- function(x){
   x = gsub('_| ', ' ', x)
   x = gsub(" ([.,?!:;>)])", '\\1', x)
   x = gsub('([(<]) ', '\\1', x)
-  x = sprintf('...%s...', x)
+  sprintf('...%s...', x)
 }
