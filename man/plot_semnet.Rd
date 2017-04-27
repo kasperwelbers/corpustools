@@ -9,7 +9,7 @@ plot_semnet(g, weight_attr = "weight", min_weight = NA,
   vertexcolor_attr = NA, edgewidth_coef = 1, max_backbone_alpha = NA,
   labelsize_coef = 1, labelspace_coef = 1.1, reduce_labeloverlap = F,
   redo_layout = F, return_graph = T, vertex.label.dist = 0.25,
-  layout_fun = layout_with_fr, ...)
+  layout_fun = igraph::layout_with_fr, ...)
 }
 \arguments{
 \item{g}{A network in the igraph format. Specifically designed for the output of coOccurenceNetwork() and windowedCoOccurenceNetwork()}

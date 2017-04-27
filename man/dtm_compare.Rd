@@ -5,7 +5,7 @@
 \title{Compare two document term matrices}
 \usage{
 dtm_compare(dtm.x, dtm.y = NULL, smooth = 1, min_over = NULL,
-  min_chi2 = NULL, select.rows = NULL, yates_cor = c("auto", "yes", "no"),
+  min_chi2 = NULL, select_rows = NULL, yates_cor = c("auto", "yes", "no"),
   x_is_subset = F)
 }
 \arguments{

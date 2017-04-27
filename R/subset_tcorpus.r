@@ -8,7 +8,7 @@ i_window <- function(tc, i, window, context_level=c('document','sentence')){
   gi = get_global_i(tc, context_level, max_window_size = window)
   gi_i = gi[i]
   gi_window = rep(gi_i, window*2 + 1) + rep(-window:window, each=length(gi_i))
-  window_i = na.omit(match(gi_window, gi))
+  window_i = stats::na.omit(match(gi_window, gi))
   data.table::fsort(unique(window_i))
 }
 
@@ -41,7 +41,7 @@ x_filter <- function(ft, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
 
 #' @export
 freq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
-  if (is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
+  if (methods::is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
   freq_table = table(droplevels(x))
   x %in% x_filter(freq_table, min=min, max=max, top=top, bottom=bottom)
 }
@@ -49,7 +49,7 @@ freq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
 
 #' @export
 docfreq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL, doc_id=parent.frame()$doc_id) {
-  if (is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
+  if (methods::is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
   freq_table = unique(data.frame(doc_id=doc_id, x=x))
   freq_table = table(droplevels(freq_table$x))
   x %in% x_filter(freq_table, min=min, max=max, top=top, bottom=bottom)

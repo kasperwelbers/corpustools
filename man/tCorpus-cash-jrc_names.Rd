@@ -4,9 +4,6 @@
 \alias{jrc_names.tCorpus}
 \alias{tCorpus$jrc_names}
 \title{Multilingual named entity recognition using the JRC-NAMES resource}
-\usage{
-## R6 method for class tCorpus
-}
 \arguments{
 \item{new_feature}{The column name of the new feature.}
 
@@ -26,5 +23,16 @@
 ``JRC-Names is a highly multilingual named entity resource for person and organisation names. [...] JRC-Names is a by-product of the analysis of about 220,000 news reports per day by the Europe Media Monitor (EMM) family of applications.'' (https://ec.europa.eu/jrc/en/language-technologies/jrc-names)
 
 The resource needs to be downloaded first. For this you can use the download_resource() function, which will (by default) download the resource into the tcorpus package folder.
+}
+\section{Usage}{
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{
+jrc_names(new_feature = 'jrc_names', feature = 'word',
+          resource_path = getOption('tcorpus_resources', NULL),
+          collocation_labels = T, batchsize = 50000, low_memory = T,
+          verbose = T, copy = self$copy_on_modify)
+}
 }
 

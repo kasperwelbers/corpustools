@@ -5,7 +5,8 @@
 \title{Set some default network attributes for pretty plotting}
 \usage{
 setNetworkAttributes(g, size_attribute = "freq", color_attribute = NA,
-  redo_layout = F, edgewidth_coef = 1, layout_fun = layout_with_fr)
+  redo_layout = F, edgewidth_coef = 1,
+  layout_fun = igraph::layout_with_fr)
 }
 \arguments{
 \item{g}{A graph in the Igraph format.}

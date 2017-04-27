@@ -19,7 +19,7 @@ search_string <- function(fi, string, allow_multiword=T, allow_proximity=T, only
     hit_single = c() # pun intended
     if(sum(single$ignore_case) > 0) hit_single = union(hit_single, batch_grep(single$regex[single$ignore_case], levels(fi$feature)))
     if(sum(!single$ignore_case) > 0) hit_single = union(hit_single, batch_grep(single$regex[!single$ignore_case], levels(fi$feature), ignore.case = F))
-    hit_single = fi[J(hit_single),,nomatch=0]
+    hit_single = fi[list(hit_single),,nomatch=0]
     hit_single$hit_id = stringi::stri_paste('s', 1:nrow(hit_single), sep='#')
   } else {
     hit_single = NULL
@@ -61,7 +61,7 @@ batch_grep <- function(patterns, x, ignore.case=T, perl=F, batchsize=25, useByte
 
 grep_global_i <- function(fi, regex, ...) {
   exact_feature = levels(fi$feature)[grepl(regex, levels(fi$feature), ...)]
-  fi[J(exact_feature),,nomatch=0]$global_i
+  fi[list(exact_feature),,nomatch=0]$global_i
 }
 
 multiword_grepl <- function(fi, multi, only_last=T, ignore.case=T, perl=F, useBytes=T){

@@ -18,7 +18,7 @@ wordWindowOccurence <- function(tc, feature, context_level=c('document','sentenc
   if (direction == '>') shifts = 0:window.size
 
   feature = tc$get(feature)
-  if (!is(feature,'factor')) feature = fast_factor(feature)
+  if (!methods::is(feature,'factor')) feature = fast_factor(feature)
   if (drop_empty_terms) feature = base::droplevels(feature)
   term_index = as.numeric(feature)
   position = get_global_i(tc, context_level, window.size)
@@ -37,7 +37,7 @@ wordWindowOccurence <- function(tc, feature, context_level=c('document','sentenc
 
 transform_count <- function(m, count_mode=c('normal','dicho','prob'), alpha=2){
   count_mode = match.arg(count_mode)
-  m = as(as(m, 'dgCMatrix'), 'dgTMatrix') ## ensure that values above 1 are not spread out over different indices
+  m = methods::as(methods::as(m, 'dgCMatrix'), 'dgTMatrix') ## ensure that values above 1 are not spread out over different indices
   if (count_mode == 'normal') NULL
   if (count_mode == 'dicho') m@x[m@x > 0] = 1
   if (count_mode == 'prob') {
@@ -59,18 +59,18 @@ feature_cooccurrence <- function(tc, feature, matrix_mode=c('dtm', 'windowXwindo
   if (matrix_mode %in% c('positionXwindow', 'windowXwindow')) {
     ml = cooccurrence_matrix_window(tc, feature, matrix_mode=matrix_mode, count_mode=count_mode, mat_stats=mat_stats, context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
   }
-  ml$mat = as(as(ml$mat, 'dgCMatrix'), 'dgTMatrix')
+  ml$mat = methods::as(methods::as(ml$mat, 'dgCMatrix'), 'dgTMatrix')
   ml
 }
 
 cooccurrence_crossprod <- function(m1, m2=NULL, count_mode, mat_stats, alpha){
-  m1 = transform_count(as(m1, 'dgTMatrix'), count_mode=count_mode, alpha=alpha)
+  m1 = transform_count(methods::as(m1, 'dgTMatrix'), count_mode=count_mode, alpha=alpha)
 
   if (is.null(m2)){
     mat = Matrix::crossprod(m1)
     mat_stats = get_matrix_stats(m1, mat_stats=mat_stats)
   } else {
-    m2 = transform_count(as(m2, 'dgTMatrix'), count_mode=count_mode, alpha=alpha)
+    m2 = transform_count(methods::as(m2, 'dgTMatrix'), count_mode=count_mode, alpha=alpha)
     mat = Matrix::crossprod(m1,m2)
     mat_stats = get_matrix_stats(m1, m2=m2, mat_stats=mat_stats)
   }
@@ -165,7 +165,7 @@ is_symmetrical <- function(mat) identical(colnames(mat), rownames(mat))
 squarify_matrix <- function(mat){
   if (!is_symmetrical(mat)){
     ## necessary since graph.adjacency (for making an igraph object out of a matrix) needs matrix to be symmetrical
-    mat = as(mat, 'dgTMatrix')
+    mat = methods::as(mat, 'dgTMatrix')
     rnames = rownames(mat)
     cnames = colnames(mat)
     dnames = unique(c(rnames,cnames))
@@ -187,8 +187,8 @@ cooc_chi2 <- function(g, x_sum, y_sum=x_sum, autocorrect=T){
   cooc$chi2 = calc_chi2(a = cooc$cooc,                                                   # x=1, y=1
                         b = y_sum[cooc$y] - cooc$cooc,                                   # x=0, y=1
                         c = x_sum[cooc$x] - cooc$cooc,                                   # x=1, y=0
-                        d = nrow(m1) - ((x_sum[cooc$x] + y_sum[cooc$y]) - cooc$cooc),    # x=0, y=0
-                        autocorrect=autocorrect)
+                        d = igraph::ecount(g) - ((x_sum[cooc$x] + y_sum[cooc$y]) - cooc$cooc),    # x=0, y=0
+                        cochrans_criteria = autocorrect)
   cooc
 }
 

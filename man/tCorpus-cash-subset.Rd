@@ -4,9 +4,6 @@
 \alias{subset.tCorpus}
 \alias{tCorpus$subset}
 \title{Subset a tCorpus}
-\usage{
-## R6 method for class tCorpus
-}
 \arguments{
 \item{subset}{logical expression indicating rows to keep in the tokens data.}
 
@@ -31,5 +28,14 @@ tc$freq_filter(word, top=100) keeps only the rolws in which the feature is in th
 tc$docfreq_filter(word, max = 0.9 * tc$n) deletes all rows with features that occured in more than 90% of all documents.
 
 Note that you can also use the \link{tCorpus$feature_subset} method if you want to filter out low/high frequency words, but do not want to delete the rows in the tCorpus.
+}
+\section{Usage}{
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{
+subset(subset = NULL, subset_meta = NULL,
+       drop_levels = F, window = NULL)
+             }
 }
 

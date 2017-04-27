@@ -4,15 +4,17 @@
 \alias{backbone_indegree_alpha}
 \title{Calculate the alpha values that can be used to extract the backbone of a network, for only the in.degree}
 \usage{
-backbone_indegree_alpha(g, k.is.Nvertices = F)
+backbone_indegree_alpha(g, k_is_n = F)
 }
 \arguments{
 \item{g}{A graph in the `Igraph` format.}
+
+\item{k_is_n}{the disparity filter method for backbone extraction uses the number of existing edges (k) for each node, which can be arbitraty if there are many very weak ties, which is often the case in a co-occurence network. By setting k_is_n to TRUE, it is 'assumed' that all nodes are connected, which makes sense from a language model perspective (i.e. probability for co-occurence is never zero)}
 }
 \value{
 A vector of alpha values, which matches the edges. Can thus easily be made an edge attribute: E(g)$alpha = backbone_alpha(g)
 }
 \description{
-Based on the following paper: Serrano, M. Á., Boguñá, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.
+Based on the following paper: Serrano, M. Á., Boguna, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.
 }
 

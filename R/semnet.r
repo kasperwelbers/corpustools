@@ -14,7 +14,7 @@ semnet <- function(tc, feature, measure=c('con_prob', 'con_prob_weighted', 'cosi
 
   g = create_semnet(tc, feature, measure=measure, matrix_mode='dtm', context_level=context_level, n.batches=n.batches, alpha=alpha)
 
-  if (backbone) E(g)$alpha = backbone.alpha(g)
+  if (backbone) igraph::E(g)$alpha = backbone_alpha(g)
   g$measure = measure
 
   class(g) = c('semnet', 'dtm_cooc', measure, class(g))
@@ -41,9 +41,9 @@ semnet_window <- function(tc, feature, measure=c('con_prob', 'cosine', 'count_di
     if (measure %in% c('cosine','count_undirected')) stop('cannot use assymetrical window with undirected similarity measures')
     if (matrix_mode == 'windowXwindow') stop('cannot use assymetrical window with matrix_mode == windowXwindow')
   }
-  g = create_semnet(tc, feature, measure=measure, matrix_mode=matrix_mode, context_level=context_level, window.size=window.size, direction='<>', n.batches=n.batches, alpha=alpha)
+  g = create_semnet(tc, feature, measure=measure, matrix_mode=matrix_mode, context_level=context_level, window.size=window.size, direction='<>', n.batches=n.batches)
 
-  if (backbone) E(g)$alpha = backbone.alpha(g)
+  if (backbone) igraph::E(g)$alpha = backbone_alpha(g)
   g$measure = measure
 
   class(g) = c('semnet', 'window_cooc', measure, class(g))
@@ -87,9 +87,9 @@ create_semnet <- function(tc, feature, measure, matrix_mode, context_level, dire
   }
 
   ## match frequencies (and if available document frequencies)
-  match_i = match(V(g)$name, names(ml$freq))
-  V(g)$freq = ml$freq[match_i]
-  if ('doc_freq' %in% ml) V(g)$doc_freq = ml$doc_freq[match_i]
+  match_i = match(igraph::V(g)$name, names(ml$freq))
+  igraph::V(g)$freq = ml$freq[match_i]
+  if ('doc_freq' %in% ml) igraph::V(g)$doc_freq = ml$doc_freq[match_i]
   g
 }
 
@@ -97,23 +97,5 @@ DocumentTermMatrix_to_dgTMatrix <- function(dtm){
   sm = spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
   rownames(sm) = rownames(dtm)
   colnames(sm) = colnames(dtm)
-  as(sm, 'dgTMatrix')
-}
-
-#####
-aggCoOc <- function(x, position.mat, window.mat){
-  cooc = position.mat[,x] & window.mat
-  cooc = as(cooc, 'lgTMatrix')
-  cooc = summary(cooc)
-  cooc = data.frame(x=x, y=cooc@j, context=cooc@i, weight=cooc@x)
-  cooc = cooc[!cooc$x == cooc$y,]
-  plyr::ddply(cooc, .(x,y,context), summarize, weight=sum(weight))
-}
-
-calculateAdjacencyPerContext <- function(position.mat, window.mat) {
-  adj = plyr::ldply(1:ncol(position.mat), function(x) aggCoOc(x, position.mat, window.mat))
-  adj$context = rownames(position.mat)[adj$context]
-  adj$x = fast_factor(colnames(position.mat))[adj$x]
-  adj$y = fast_factor(colnames(position.mat))[adj$y]
-  adj
+  methods::as(sm, 'dgTMatrix')
 }

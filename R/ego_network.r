@@ -22,14 +22,14 @@ ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_
   if (length(missing) == length(vertex_names)) stop('None of the given vertex_names exist in g')
   if (length(missing) > 0) warning(sprintf('Some of the given vertex_names do not exist in g: [%s]', paste(missing, collapse=', ')))
 
-  delete.edges(g, igraph::E(g))
+  igraph::delete.edges(g, igraph::E(g))
   if (!is.na(weight_attr)) {
     adj = igraph::get.adjacency(g, type='both', attr = weight_attr)
   } else {
     adj = igraph::get.adjacency(g, type='both')
     min_weight = NA; top_edges = NA
   }
-  adj = as(adj, 'dgTMatrix')
+  adj = methods::as(adj, 'dgTMatrix')
   if (igraph::is.directed(g)){
     if (directed == 'out') dt = summary(adj)
     if (directed == 'in') dt = summary(t(adj))
@@ -53,7 +53,7 @@ ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_
 }
 
 build_ego_network <- function(dt, vertex_ids, level, depth, min_weight, top_edges, max_edges_level){
-  ego = dt[J(vertex_ids),]
+  ego = dt[list(vertex_ids),]
   if (!is.null(min_weight)) ego = ego[ego$weight >= min_weight,]
   if (!is.null(top_edges)){
     thres = if (length(top_edges) == depth) top_edges[depth] else top_edges

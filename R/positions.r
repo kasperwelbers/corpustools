@@ -99,11 +99,11 @@ position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, a
       }
     } else{
       mat = spMatrix(nrow=nrows, ncol=ncols, i=newi[select], j=newj[select], x=rep(1, sum(select)))
-      mat = as(mat, 'dgCMatrix')
+      mat = methods::as(mat, 'dgCMatrix')
       if (count_once) mat@x[mat@x>0] = 1
     }
   }
-  mat = as(mat, 'dgTMatrix')
+  mat = methods::as(mat, 'dgTMatrix')
   mat[return_i,,drop=F]
 }
 
@@ -137,7 +137,7 @@ globalFeatureVector <- R6::R6Class("globalFeatureVector",
 
 #' @export
 '[.globalFeatureVector' = function(x,i, ignore_empty=F, allow_na=F) {
-  if (is(i, 'logical')) x$get(which(i)) else x$get(i, ignore_empty=ignore_empty, allow_na=allow_na)
+  if (methods::is(i, 'logical')) x$get(which(i)) else x$get(i, ignore_empty=ignore_empty, allow_na=allow_na)
 }
 
 #' @export

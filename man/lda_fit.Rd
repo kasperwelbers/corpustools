@@ -8,7 +8,7 @@ lda_fit(dtm, method = "Gibbs", K = 50, num.iterations = 500,
   alpha = 50/K, eta = 0.01, burnin = 250)
 }
 \arguments{
-\item{dtm}{a document term matrix (e.g. the output of \code{\link{amcat.dtm.create}})}
+\item{dtm}{a document term matrix}
 
 \item{K}{the number of clusters}
 
@@ -19,10 +19,10 @@ lda_fit(dtm, method = "Gibbs", K = 50, num.iterations = 500,
 \item{eta}{the eta parameter}
 }
 \value{
-A fitted LDA model (see \code{\link{LDA}})
+A fitted LDA model
 }
 \description{
-Estimate an LDA topic model using the \code{\link{LDA}} function
+Estimate an LDA topic model using the LDA function from the topicmodels package.
 The parameters other than dtm are simply passed to the sampler but provide a workable default.
 See the description of that function for more information
 }

@@ -5,7 +5,7 @@ search_contexts <- function(tc, query, code=NULL, feature='word', context_level=
 
   if(query == '') stop('Query cannot be an empty string')
   context_level = match.arg(context_level)
-  windows = na.omit(get_feature_regex(query, default_window = NA)$window)
+  windows = stats::na.omit(get_feature_regex(query, default_window = NA)$window)
   max_window_size = if (length(windows) > 0) max(windows) else 0
 
   fi = tc$feature_index(feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=T)

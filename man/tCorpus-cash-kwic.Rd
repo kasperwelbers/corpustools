@@ -4,9 +4,6 @@
 \alias{kwic.tCorpus}
 \alias{tCorpus$kwic}
 \title{Get keyword-in-context (KWIC) strings}
-\usage{
-## R6 method for class tCorpus
-}
 \arguments{
 \item{hits}{results of feature search. see \link{tCorpus$search_features}.}
 
@@ -32,5 +29,16 @@
 }
 \description{
 Create a data.frame with keyword-in-context strings for given indices (i), search results (hits) or search strings (keyword).
+}
+\section{Usage}{
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{
+kwic(hits = NULL, i = NULL, keyword = NULL, code = '',
+     nwords = 10, nsample = NA, output_feature = 'word',
+     context_levels = c('document','sentence'),
+     prettypaste = T, kw_tag = c('<','>'), ...)
+}
 }
 

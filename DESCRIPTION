@@ -4,9 +4,28 @@ Date: 2016-12-02
 Title: Corpustools
 Author: Kasper Welbers & Wouter van Atteveldt
 Maintainer: Kasper Welbers <kasperwelbers@gmail.com>
-Depends: R (>= 3.2.0), Matrix, data.table
-Imports: plyr, wordcloud, quanteda, stringi, Rcpp, R6
+Depends: 
+    R (>= 3.2.0), 
+    Matrix, 
+    data.table
+Imports: 
+    methods, 
+    plyr, 
+    wordcloud, 
+    SnowballC,
+    stringi, 
+    Rcpp, 
+    R6
+Suggests:
+    testthat,
+    quanteda,
+    tm,
+    topicmodels,
+    RNewsflow,
+    digest,
+    igraph
 LinkingTo: Rcpp
+LazyData: true
 Description: Tools for anayzing text corpora. Create a tCorpus object by tokenizing raw text or importing pre-processed texts, and analyze this data with a rich suite of features.
 SystemRequirements: C++11
 License: MIT

@@ -41,7 +41,7 @@
 #' @param feature The feature column in which to search
 #' @param subset_tokens A call (or character string of a call) as one would normally pass to subset.tCorpus. If given, the keyword has to occur within the subset. This is for instance usefull to only look in named entity POS tags when searching for people or organization. Note that the condition does not have to occur within the subset.
 #' @param subset_meta A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).
-#' @param verbose
+#' @param verbose If TRUE, progress messages will be printed
 #'
 search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mword=F, verbose=F){
   is_tcorpus(tc, T)
@@ -51,8 +51,8 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   if (!'condition' %in% colnames(queries)) queries$condition = condition
   if (!'code' %in% colnames(queries)) queries$code = code
   if (!'condition_once' %in% colnames(queries)) queries$condition_once = condition_once
-  if (!'subset_tokens' %in% colnames(queries)) queries$subset_tokens = if (is(substitute(subset_tokens), 'call')) deparse(substitute(subset_tokens)) else subset_tokens
-  if (!'subset_meta' %in% colnames(queries)) queries$subset_meta = if (is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
+  if (!'subset_tokens' %in% colnames(queries)) queries$subset_tokens = if (methods::is(substitute(subset_tokens), 'call')) deparse(substitute(subset_tokens)) else subset_tokens
+  if (!'subset_meta' %in% colnames(queries)) queries$subset_meta = if (methods::is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
 
   if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(colnames(tc@data)[!colnames(tc@data) %in% c('doc_id','sent_i','word_i','filter')],collapse=', ')))
   if (any(is.na(queries$keyword))) stop('keyword cannot be NA. Provide either the keyword or queries argument')
@@ -61,7 +61,7 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   queries$code = ifelse(is.na(queries$code), sprintf('query_%s', 1:nrow(queries)), queries$code)
 
   windows = get_feature_regex(queries$condition, default_window = NA)
-  windows = na.omit(c(windows$window, windows$condition_window))
+  windows = stats::na.omit(c(windows$window, windows$condition_window))
   max_window_size = if (length(windows) > 0) max(windows) else 0
 
   fi = tc$feature_index(feature=feature, context_level='document', max_window_size=max_window_size, as_ascii=T)

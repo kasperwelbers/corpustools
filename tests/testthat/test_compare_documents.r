@@ -14,21 +14,21 @@ test_that("comparing documents works", {
   #m = tc$dtm('word', subset_meta = doc_id == 1)
 
   g = tc$compare_documents()
-  expect_equal(round(E(g)$weight,3), round(c(0.027, 0.022, 0.027, 0.022),3))
+  expect_equal(round(igraph::E(g)$weight,3), round(c(0.027, 0.022, 0.027, 0.022),3))
 
   g = tc$compare_documents(to_subset = doc_id == '1')
-  expect_true(ecount(g) == 2)
+  expect_true(igraph::ecount(g) == 2)
 
   g = tc$compare_documents(date_col = 'date')
-  expect_true(is.directed(g))
-  expect_true(ecount(g) == 4)
+  expect_true(igraph::is.directed(g))
+  expect_true(igraph::ecount(g) == 4)
 
   capture_output({ ## ignores print verbose
   g = tc$compare_documents(date_col = 'date', hour_window = c(0,36))
   })
 
-  expect_true(is.directed(g))
-  expect_true(ecount(g) == 2)
+  expect_true(igraph::is.directed(g))
+  expect_true(igraph::ecount(g) == 2)
 
   ## due to random selection of which duplicate to delete, chains can lead to varying number of duplicates. Think of something more smart, or order by id/name instead of random
   dedup = tc$deduplicate(feature='word', similarity = 0.025)

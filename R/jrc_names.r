@@ -34,7 +34,7 @@ download_jrc_names <- function(fname){
   message('This package only links to the JRC-Names resource. By downloading and/or using this package you agree to their usage conditions. Please consult the JRC website for information, conditions and citation instructions: \nhttps://ec.europa.eu/jrc/en/language-technologies/jrc-names\n')
 
   temp <- tempfile()
-  download.file("http://optima.jrc.it/data/entities.gzip",temp)
+  utils::download.file("http://optima.jrc.it/data/entities.gzip",temp)
   re = readLines(temp)
   re = stringi::stri_split(re, regex='\t', simplify = T)
   re = data.frame(string=as.character(re[,4]), id=as.numeric(re[,1]), lang=fast_factor(re[,3]), pos=fast_factor(re[,2]), stringsAsFactors = F)

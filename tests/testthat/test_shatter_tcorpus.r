@@ -3,7 +3,6 @@ test_that("shatter tcorpus works", {
   start_time = Sys.time()
 
   library(corpustools)
-  data(sotu_texts)
 
   first = create_tcorpus(sotu_texts[1:500,], 'text', doc_column = 'id')
   more = create_tcorpus(sotu_texts[501:808,], 'text', doc_column = 'id')

@@ -11,15 +11,15 @@
 #' - subsetting or appending the data is not possible. (use the subset function and merge_tcorpua)
 #' - data.table operations that change the data.table by reference. Note that the set and set_meta functions do use assignment by reference.
 #'
-#' @usage
-#' ## R6 method for class tCorpus.
-#' @code{tCorpus$data}
-#' @code{tCorpus$meta}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{data}
+#' \preformatted{meta}
 #'
 #' @name tCorpus$data
 #' @aliases data.tCorpus tCorpus$meta meta.tCorpus
 NULL
-
 
 #' Create or extract a feature index
 #'
@@ -32,10 +32,11 @@ NULL
 #'
 #' You can manually delete the feature_index that is stored in the tCorpus with the tCorpus$reset_feature_index() method.
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$feature_index(feature='word', context_level='document', max_window_size=100, as_ascii=F)}
-#' @code{tCorpus$reset_feature_index()}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{feature_index(feature = 'word', context_level = 'document', max_window_size = 100, as_ascii=F)}
+#' \preformatted{reset_feature_index()}
 #'
 #' @param feature The feature to be indexed.
 #' @param context_level Select whether the context is document or sentence level. In the feature_index, this determines the global_i gaps.
@@ -50,9 +51,10 @@ NULL
 #'
 #' Determining on the purpose, the context of an analysis can be the document level or sentence level (note: at some point we'll add paragraph level). the tCorpus$context() method offers a convenient way to get the context id of tokens for different settings.
 #'
-#' @usage
-#' ## R6 method for class tCorpus.
-#' @code{tCorpus$data(context_level = c('document','sentence'), with_labels=T)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{data(context_level = c('document','sentence'), with_labels = T)}
 #'
 #' @param context_level Select whether the context is document or sentence level
 #' @param with_labels Return context as only ids (numeric, starting at 1) or with labels (factor)
@@ -65,46 +67,13 @@ NULL
 
 #' Modify the token and meta data.tables of a tCorpus
 #'
-#' Modify the token/meta data.table using the \link{transform.data.table} function. Arguments are name-value pairs where the name indicates a new or existing column in the token data, to which the value is set. The value can be specified quite flexibly, and can directly call columns in the tokens data by name. For example, we can make a new column "word_low" by using the "word" column and making it lowercase: $transform_data(word_low = tolower(word)). Note that this can also be used to delete columns by setting their value to NULL: $transform_data(word_low = NULL).
-#'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$transform(..., copy=self$copy_on_modify, safe=T)}
-#' @code{tCorpus$transform_meta(..., copy=self$copy_on_modify, safe=T)}
-#'
-#' @param ... name-value pairs where the name indicates a new or existing column in the token data, to which the value is set.
-#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
-#' @param safe If TRUE, you are unable to modify the position columns (doc_id, sent_i, word_i), which is very likely to break the tCorpus. Only set to FALSE if you know exactly what you're doing.
-#'
-#' @name tCorpus$transform
-#' @aliases transform.tCOrpus tCorpus$transform_meta transform_meta.tCorpus
-NULL
-
-#' Modify the token and meta data.tables of a tCorpus
-#'
-#' Modify the token/meta data.table using the \link{within.data.table} function. The main argument (expr) is one or multiple lines of R code between accolades, in which the columns of the token data can be modified as regular vector objects. For example: expr = {word_low = tolower(word)}. The main advantage of within_data compared to transform_data is that it enables modifying subsets of columns (for example: expr = {pos[pos == 'noun'] = 'N'}
-#'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$within(expr, copy=self$copy_on_modify, safe=T)}
-#' @code{tCorpus$within_meta(expr, copy=self$copy_on_modify, safe=T)}
-#'
-#' @param expr expression to be evaluated within the data.table.
-#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
-#' @param safe If TRUE, you are unable to modify the position columns (doc_id, sent_i, word_i), which is very likely to break the tCorpus. Only set to FALSE if you know exactly what you're doing.
-#'
-#' @name tCorpus$within
-#' @aliases within.tCorpus tCorpus$within_meta within_meta.tCorpus
-NULL
-
-#' Modify the token and meta data.tables of a tCorpus
-#'
 #' Modify the token/meta data.table by setting the values of one (existing or new) column. This is less flexible than within data or transform data, but it has the advantage of allowing columns to be selected as a string, which makes it convenient for modifying the tCorpus from within function. The subset argument can be used to modify only subsets of columns, and can be a logical vector (select TRUE rows), numeric vector (indices of TRUE rows) or logical expression (e.g. pos == 'noun'). If A new column is made whie using a subset, then the rows outside of the selection are set to NA.
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$set(column, value, subset, copy=self$copy_on_modify, safe=T)}
-#' @code{tCorpus$set_meta(column, value, subset, copy=self$copy_on_modify, safe=T)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{set(column, value, subset, copy = self$copy_on_modify, safe = T)}
+#' \preformatted{set_meta(column, value, subset, copy = self$copy_on_modify, safe = T)}
 #'
 #' @param column Name of a new column (to create) or existing column (to transform)
 #' @param value A vector of the same length as the number of rows in the data. Note that if a subset is used, the length of value should be the same as the length of the subset (the TRUE cases of the subset expression) or a single value.
@@ -132,9 +101,13 @@ NULL
 #'
 #' Note that you can also use the \link{tCorpus$feature_subset} method if you want to filter out low/high frequency words, but do not want to delete the rows in the tCorpus.
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$subset(subset=NULL, subset_meta=NULL, drop_levels=F, window=NULL)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{
+#' subset(subset = NULL, subset_meta = NULL,
+#'        drop_levels = F, window = NULL)
+#'              }
 #'
 #' @param subset logical expression indicating rows to keep in the tokens data.
 #' @param subset_meta logical expression indicating rows to keep in the document meta data.
@@ -148,10 +121,11 @@ NULL
 
 #' Change column names in tCorpus data
 #'
-#' @usage
-#' ## R6 method for class tCorpus.
-#' @code{tCorpus$set(oldname, newname)}
-#' @code{tCorpus$set_meta(oldname, newname)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{set(oldname, newname)}
+#' \preformatted{set_meta(oldname, newname)}
 #'
 #' @name tCorpus$set
 #' @aliases set.tCorpus tCorpus$set_meta set_meta.tCorpus
@@ -161,9 +135,15 @@ NULL
 
 #' Preprocess feature
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$preprocess(column, new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english', copy=self$copy_on_modify)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{
+#' preprocess(column, new_column = column,
+#'            lowercase = T, ngrams = 1, ngram_context=c('document', 'sentence'),
+#'            as_ascii = F, remove_punctuation = T, remove_stopwords = F, use_stemming = F,
+#'            language = 'english', copy = self$copy_on_modify)
+#'            }
 #'
 #' @param column the column containing the feature to be used as the input
 #' @param new_column the column to save the preprocessed feature. Can be a new column or overwrite an existing one.
@@ -188,9 +168,10 @@ NULL
 #'
 #' Just as in subset, it is easy to use objects and functions in the filter, including the special functions for using term frequency statistics (see documentation for \link{tCorpus$subset}).
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$feature_subset(column, new_column, subset, copy=self$copy_on_modify)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{feature_subset(column, new_column, subset, copy = self$copy_on_modify)}
 #'
 #' @param column the column containing the feature to be used as the input
 #' @param new_column the column to save the filtered feature. Can be a new column or overwrite an existing one.
@@ -206,9 +187,10 @@ NULL
 #' @description
 #' Compute a number of useful statistics for features: term frequency, idf, etc.
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$feature_stats(feature, sent_freq=F)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{feature_stats(feature, sent_freq=F)}
 #'
 #' @param feature The name of the feature
 #' @param sent_freq If True, include sentence frequency (only if sentence information is available).
@@ -219,9 +201,10 @@ NULL
 
 #' Show top features
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$top_features(feature, n=10, group_by=NULL, group_by_meta=NULL, return_long=F)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{top_features(feature, n = 10, group_by = NULL, group_by_meta = NULL, return_long = F}
 #'
 #' @param feature The name of the feature
 #' @param n Return the top n features
@@ -240,9 +223,15 @@ NULL
 #'
 #' Note that the query arguments (keyword, condition, code, condition_once) can be vectors to search multiple queries at once. Alternatively, the queries argument can be used to pass these arguments in a data.frame
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$search_features(keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mword=F, verbose=F)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{
+#' search_features(keyword = NA, condition = NA, code = NA,
+#'                 queries = NULL, feature = 'word', condition_once=F,
+#'                 subset_tokens = NA, subset_meta = NA,
+#'                 keep_false_condition = F, only_last_mword = F, verbose = F)
+#'              }
 #'
 #' @param keyword The keyword part of the query, see explanation in query_tutorial markdown or in details below
 #' @param condition The condition part of the query, see explanation in query_tutorial markdown or in details below
@@ -254,7 +243,7 @@ NULL
 #' @param subset_meta A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).
 #' @param keep_false_condition if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives
 #' @param only_last_mword If TRUE, then if multiword keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last word. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, word co-occurence analysis)
-#' @param verbose
+#' @param verbose If TRUE, progress messages will be printed
 #'
 #' @details
 #' Brief summary of the query language
@@ -293,9 +282,14 @@ NULL
 #' @description
 #' Search features (see \link{tCorpus$search_features}) and replace features with a new value
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$search_recode(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA, copy=self$copy_on_modify)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{
+#' search_recode(feature, new_value, keyword, condition = NA,
+#'               condition_once = F, subset_tokens = NA, subset_meta = NA,
+#'               copy = self$copy_on_modify)
+#' }
 #'
 #' @param feature The feature in which to search
 #' @param new_value the character string with which all features that are found are replaced
@@ -311,9 +305,15 @@ NULL
 #' @description
 #' Create a data.frame with keyword-in-context strings for given indices (i), search results (hits) or search strings (keyword).
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$kwic(hits=NULL, i=NULL, keyword=NULL, code='', nwords=10, nsample=NA, output_feature='word', context_levels=c('document','sentence'), prettypaste=T, kw_tag=c('<','>'), ...)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{
+#' kwic(hits = NULL, i = NULL, keyword = NULL, code = '',
+#'      nwords = 10, nsample = NA, output_feature = 'word',
+#'      context_levels = c('document','sentence'),
+#'      prettypaste = T, kw_tag = c('<','>'), ...)
+#' }
 #'
 #' @param hits results of feature search. see \link{tCorpus$search_features}.
 #' @param i instead of the hits argument, you can give the indices of features directly.
@@ -335,15 +335,16 @@ NULL
 
 #' Search for documents or sentences using Boolean queries
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$search_contexts(query, code=NULL, feature='word', context_level=c('document','sentence'), verbose=F)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{search_contexts(query, code = NULL, feature = 'word', context_level = c('document','sentence'), verbose = F)}
 #'
 #' @param query A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.
 #' @param code If given, used as a label for the results of the query. Especially usefull if multiple queries are used.
 #' @param feature The name of the feature column
 #' @param context_level Select whether the queries should occur within while "documents" or specific "sentences". Returns results at the specified level.
-#' @param verbose
+#' @param verbose If TRUE, progress messages will be printed
 #'
 #' @details
 #' Brief summary of the query language
@@ -362,6 +363,7 @@ NULL
 #' @aliases search_contexts.tCorpus
 NULL
 
+
 #' Subset tCorpus token data using a query
 #'
 #' @description
@@ -369,9 +371,10 @@ NULL
 #'
 #' See the documentation for \link[=tCorpus$search_contexts]{subset} for an explanation of the query language.
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$subset_query(query, feature='word', context_level=c('document','sentence'), copy=self$copy_on_modify)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{subset_query(query, feature = 'word', context_level = c('document','sentence'), copy = self$copy_on_modify)}
 #'
 #' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
@@ -384,11 +387,15 @@ NULL
 #' Create a semantic network based on the co-occurence of words in documents
 #'
 #' @description
-#' This function calculates the co-occurence of features and returns a network/graph in the \link{igraph} format where nodes are words and edges represent the similarity/adjacency of words. Co-occurence is calcuated based on how often two words occured within the same document (e.g., news article, chapter, paragraph, sentence). The semnet_window() function can be used to calculate co-occurrence of words within a given word distance.
+#' This function calculates the co-occurence of features and returns a network/graph in the igraph format, where nodes are words and edges represent the similarity/adjacency of words. Co-occurence is calcuated based on how often two words occured within the same document (e.g., news article, chapter, paragraph, sentence). The semnet_window() function can be used to calculate co-occurrence of words within a given word distance.
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$semnet(feature, measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{
+#' semnet(feature, measure = c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'),
+#'        context_level = c('document','sentence'), backbone=F, n.batches=NA)
+#' }
 #'
 #' @param feature The name of the feature column
 #' @param measure The similarity measure. Currently supports: "con_prob" (conditional probability), "con_prob_weighted", "cosine" similarity, "count_directed" (i.e number of cooccurrences) and "count_undirected" (same as count_directed, but returned as an undirected network, chi2 (chi-square score))
@@ -403,11 +410,16 @@ NULL
 #' Create a semantic network based on the co-occurence of words in word windows
 #'
 #' @description
-#' This function calculates the co-occurence of features and returns a network/graph in the \link{igraph} format where nodes are words and edges represent the similarity/adjacency of words. Co-occurence is calcuated based on how often two words co-occurr within a given word distance.
+#' This function calculates the co-occurence of features and returns a network/graph in the igraph format, where nodes are words and edges represent the similarity/adjacency of words. Co-occurence is calcuated based on how often two words co-occurr within a given word distance.
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$semnet_window(feature, measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=5, set_matrix_mode=c(NA, 'windowXwindow', 'positionXwindow'))}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{
+#' semnet_window(feature, measure = c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'),
+#'               context_level = c('document','sentence'), window.size = 10, direction = '<>',
+#'               backbone = F, n.batches = 5, set_matrix_mode = c(NA, 'windowXwindow', 'positionXwindow'))
+#' }
 #'
 #' @param feature The name of the feature column
 #' @param measure The similarity measure. Currently supports: "con_prob" (conditional probability), "cosine" similarity, "count_directed" (i.e number of cooccurrences) and "count_undirected" (same as count_directed, but returned as an undirected network, chi2 (chi-square score))
@@ -431,9 +443,15 @@ NULL
 #'
 #' The resource needs to be downloaded first. For this you can use the download_resource() function, which will (by default) download the resource into the tcorpus package folder.
 #'
-#' @usage
-#' ## R6 method for class tCorpus
-#' @code{tCorpus$jrc_names(new_feature='jrc_names', feature='word', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, copy=self$copy_on_modify)}
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{
+#' jrc_names(new_feature = 'jrc_names', feature = 'word',
+#'           resource_path = getOption('tcorpus_resources', NULL),
+#'           collocation_labels = T, batchsize = 50000, low_memory = T,
+#'           verbose = T, copy = self$copy_on_modify)
+#' }
 #'
 #' @param new_feature The column name of the new feature.
 #' @param feature The feature to be used as input. For JRC names regular (unprocessed) words should be used.

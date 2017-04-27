@@ -4,9 +4,6 @@
 \alias{feature_subset.tCorpus}
 \alias{tCorpus$feature_subset}
 \title{Filter feature}
-\usage{
-## R6 method for class tCorpus
-}
 \arguments{
 \item{column}{the column containing the feature to be used as the input}
 
@@ -20,5 +17,11 @@
 Similar to using \link{tCorpus$subset}, but instead of deleting rows it only sets rows for a specified feature to NA. This can be very convenient, because it enables only a selection of features to be used in an analysis (e.g. a topic model) but maintaining the context of the full article, so that results can be viewed in this context (e.g. a topic browser).
 
 Just as in subset, it is easy to use objects and functions in the filter, including the special functions for using term frequency statistics (see documentation for \link{tCorpus$subset}).
+}
+\section{Usage}{
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{feature_subset(column, new_column, subset, copy = self$copy_on_modify)}
 }
 

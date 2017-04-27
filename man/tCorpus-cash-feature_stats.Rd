@@ -4,9 +4,6 @@
 \alias{feature_stats.tCorpus}
 \alias{tCorpus$feature_stats}
 \title{Feature statistics}
-\usage{
-## R6 method for class tCorpus
-}
 \arguments{
 \item{feature}{The name of the feature}
 
@@ -14,5 +11,11 @@
 }
 \description{
 Compute a number of useful statistics for features: term frequency, idf, etc.
+}
+\section{Usage}{
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{feature_stats(feature, sent_freq=F)}
 }
 

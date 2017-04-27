@@ -4,9 +4,6 @@
 \alias{context.tCorpus}
 \alias{tCorpus$context}
 \title{Get a context vector}
-\usage{
-## R6 method for class tCorpus.
-}
 \arguments{
 \item{context_level}{Select whether the context is document or sentence level}
 
@@ -14,5 +11,11 @@
 }
 \description{
 Determining on the purpose, the context of an analysis can be the document level or sentence level (note: at some point we'll add paragraph level). the tCorpus$context() method offers a convenient way to get the context id of tokens for different settings.
+}
+\section{Usage}{
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{data(context_level = c('document','sentence'), with_labels = T)}
 }
 

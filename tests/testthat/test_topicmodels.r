@@ -3,7 +3,6 @@ test_that("topicmodels works", {
   start_time = Sys.time()
 
   library(corpustools)
-  data(sotu_texts)
 
   tc = create_tcorpus(sotu_texts[1:500,], 'text', doc_column = 'id')
   tc = tc$preprocess('word', 'feature', lowercase = T, remove_punctuation = T, remove_stopwords = T, use_stemming = T, language = 'english')

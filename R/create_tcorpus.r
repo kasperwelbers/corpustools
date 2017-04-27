@@ -19,7 +19,7 @@ create_tcorpus <- function(x, ...) {
 create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F, ...) {
   if (any(duplicated(doc_id))) stop('doc_id should not contain duplicate values')
   if (!is.null(meta)){
-    if (!is(meta, 'data.frame')) stop('"meta" is not a data.frame or data.table')
+    if (!methods::is(meta, 'data.frame')) stop('"meta" is not a data.frame or data.table')
     if (!nrow(meta) == length(x)) stop('The number of rows in "meta" does not match the number of texts in "x"')
     if (!'doc_id' %in% colnames(meta)) meta = cbind(doc_id=doc_id, meta)
     meta = data.table::data.table(meta, key = 'doc_id')
@@ -42,20 +42,20 @@ create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, split_senten
 
 #' @rdname create_tcorpus
 #' @export
-create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, ...) {
-  for(cname in text_columns) if (!cname %in% colnames(d)) stop(sprintf('text_column "%s" not in data.frame', cname))
+create_tcorpus.data.frame <- function(x, text_columns='text', doc_column=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, ...) {
+  for(cname in text_columns) if (!cname %in% colnames(x)) stop(sprintf('text_column "%s" not in data.frame', cname))
 
   if (length(text_columns) > 1){
-    text = apply(d[,text_columns], 1, paste, collapse = '\n\n')
+    text = apply(x[,text_columns], 1, paste, collapse = '\n\n')
   } else {
-    text = d[[text_columns]]
+    text = x[[text_columns]]
   }
 
-  doc_id = if (is.null(doc_column)) 1:nrow(d) else d[[doc_column]]
+  doc_id = if (is.null(doc_column)) 1:nrow(x) else x[[doc_column]]
 
   create_tcorpus(text,
                  doc_id = doc_id,
-                 meta = d[,!colnames(d) %in% c(text_columns, doc_column), drop=F],
+                 meta = x[,!colnames(x) %in% c(text_columns, doc_column), drop=F],
                  split_sentences = split_sentences, max_sentences = max_sentences, max_words = max_words)
 }
 
@@ -74,6 +74,8 @@ create_tcorpus.data.frame <- function(d, text_columns='text', doc_column=NULL, s
 #' @export
 tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=F, word_is_local=F) {
   tokens = data.table::as.data.table(tokens)
+  sent_i = word_i = NULL ## used in data.table syntax, but need to have bindings for R CMD check
+
 
   ## check whether the columns specified in the arguments exist
   for(cname in c(doc_col, word_i_col, sent_i_col, meta_cols)){
@@ -88,14 +90,14 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   tokens[,'doc_id' := fast_factor(tokens$doc_id)]
   if (!is.null(sent_i_col)) {
     data.table::setnames(tokens, which(colnames(tokens) == sent_i_col), 'sent_i')
-    if (!is(tokens$sent_i, 'numeric')) stop('sent_i_col has to be numeric/integer')
-    if (!is(tokens$sent_i, 'integer')) tokens[,sent_i := as.integer(sent_i)]
+    if (!methods::is(tokens$sent_i, 'numeric')) stop('sent_i_col has to be numeric/integer')
+    if (!methods::is(tokens$sent_i, 'integer')) tokens[,sent_i := as.integer(sent_i)]
   }
 
   if (!is.null(word_i_col)) {
     data.table::setnames(tokens, which(colnames(tokens) == word_i_col), 'word_i')
-    if (!is(tokens$word_i, 'numeric')) stop('word_i_col has to be numeric/integer')
-    if (!is(tokens$word_i, 'integer')) tokens[,word_i := as.integer(word_i)]
+    if (!methods::is(tokens$word_i, 'numeric')) stop('word_i_col has to be numeric/integer')
+    if (!methods::is(tokens$word_i, 'integer')) tokens[,word_i := as.integer(word_i)]
   } else {
     warning('No word_i column specified. Word order used instead (see documentation).')
     tokens$word_i = 1:nrow(tokens)

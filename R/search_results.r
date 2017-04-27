@@ -13,7 +13,7 @@ featureHits <- function(hits, queries) {
 }
 
 is.featureHits <- function(fh, ...) {
-  if (!is(fh$hits, 'data.frame')) return(FALSE)
+  if (!methods::is(fh$hits, 'data.frame')) return(FALSE)
   if (!all(c('code','feature','i','doc_id','hit_id', 'sent_i', 'word_i') %in% colnames(fh$hits))) return(FALSE)
   if (!all(c('keyword','condition','code','condition_once','subset_tokens','subset_meta') %in% colnames(fh$queries))) return(FALSE)
   return(TRUE)
@@ -31,15 +31,17 @@ print.featureHits <- function(x, ...){
 
 #' @export
 summary.featureHits <- function(object, ...){
+  doc_id = sent_i = hit_id = NULL ##  used in data.table syntax, but need to have bindings for R CMD check
+
   #if(is.null(x$hits)) return(NULL)
   if (!any(is.na(object$hits$sent_i))){
     object$hits$sent_i = paste(object$hits$doc_id, object$hits$sent_i, sep='_')
-    agg = data.table(object$hits)[,.(hits = length(unique(hit_id)),
+    agg = data.table(object$hits)[, list(hits = length(unique(hit_id)),
                               sentences = length(unique(sent_i)),
                               documents = length(unique(doc_id))),
                               by='code']
   } else {
-    agg = data.table(object$hits)[,.(hits = length(unique(hit_id)),
+    agg = data.table(object$hits)[, list(hits = length(unique(hit_id)),
                               documents = length(unique(doc_id))),
                            by='code']
   }
@@ -62,7 +64,7 @@ contextHits <- function(hits, queries) {
 }
 
 is.contextHits <- function(ch, ...) {
-  if (!is(ch$hits, 'data.frame')) return(FALSE)
+  if (!methods::is(ch$hits, 'data.frame')) return(FALSE)
   if (!all(c('code','doc_id','sent_i') %in% colnames(ch$hits))) return(FALSE)
   if (!all(c('query','code') %in% colnames(ch$queries))) return(FALSE)
   return(TRUE)
@@ -80,14 +82,16 @@ print.contextHits <- function(x, ...){
 #' @export
 summary.contextHits <- function(object, ...){
   #if(is.null(object$hits)) return(NULL)
+  doc_id = sent_i = NULL  ## used in data.table syntax, but need to have bindings for R CMD check
+
   if (!any(is.na(object$hits$sent_i))){
     object$hits$sent_i = paste(object$hits$doc_id, object$hits$sent_i, sep='_')
-    object = data.table(object$hits)[,.(sentences = length(unique(sent_i)),
+    object = data.table(object$hits)[, list(sentences = length(unique(sent_i)),
                               documents = length(unique(doc_id))),
                            by='code']
 
   } else {
-    object = data.table(object$hits)[,.(documents = length(unique(doc_id))),
+    object = data.table(object$hits)[, list(documents = length(unique(doc_id))),
                            by='code']
   }
   as.data.frame(object)

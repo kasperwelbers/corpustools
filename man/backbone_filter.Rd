@@ -5,7 +5,7 @@
 \title{Extract the backbone of a network.}
 \usage{
 backbone_filter(g, alpha = 0.05, direction = "none", delete_isolates = T,
-  max.vertices = NULL, use.original.alpha = T, k.is.Nvertices = F)
+  max_vertices = NULL, use_original_alpha = T, k_is_n = F)
 }
 \arguments{
 \item{g}{A graph in the `Igraph` format.}
@@ -16,14 +16,16 @@ backbone_filter(g, alpha = 0.05, direction = "none", delete_isolates = T,
 
 \item{delete_isolates}{If TRUE, vertices with degree 0 (i.e. no edges) are deleted.}
 
-\item{max.vertices}{Optional. Set a maximum number of vertices for the network to be produced. The alpha is then automatically lowered to the point that only the given number of vertices remains connected (degree > 0). This can be usefull if the purpose is to make an interpretation friendly network. See e.g., http://jcom.sissa.it/archive/14/01/JCOM_1401_2015_A01}
+\item{max_vertices}{Optional. Set a maximum number of vertices for the network to be produced. The alpha is then automatically lowered to the point that only the given number of vertices remains connected (degree > 0). This can be usefull if the purpose is to make an interpretation friendly network. See e.g., http://jcom.sissa.it/archive/14/01/JCOM_1401_2015_A01}
 
-\item{use.original.alpha}{if max.vertices is not NULL, this determines whether the lower alpha for selecting the top vertices is also used as a threshold for the edges, or whether the original value given in the alpha parameter is used.}
+\item{use_original_alpha}{if max_vertices is not NULL, this determines whether the lower alpha for selecting the top vertices is also used as a threshold for the edges, or whether the original value given in the alpha parameter is used.}
+
+\item{k_is_n}{the disparity filter method for backbone extraction uses the number of existing edges (k) for each node, which can be arbitraty if there are many very weak ties, which is often the case in a co-occurence network. By setting k_is_n to TRUE, it is 'assumed' that all nodes are connected, which makes sense from a language model perspective (i.e. probability for co-occurence is never zero)}
 }
 \value{
 A graph in the Igraph format
 }
 \description{
-Based on the following paper: Serrano, M. Á., Boguñá, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.
+Based on the following paper: Serrano, M. Á., Boguna, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.
 }
 

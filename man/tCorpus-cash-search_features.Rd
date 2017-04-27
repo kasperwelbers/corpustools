@@ -4,9 +4,6 @@
 \alias{search_features.tCorpus}
 \alias{tCorpus$search_features}
 \title{Find tokens using a Lucene-like search query}
-\usage{
-## R6 method for class tCorpus
-}
 \arguments{
 \item{keyword}{The keyword part of the query, see explanation in query_tutorial markdown or in details below}
 
@@ -28,7 +25,7 @@
 
 \item{only_last_mword}{If TRUE, then if multiword keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last word. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, word co-occurence analysis)}
 
-\item{verbose}{}
+\item{verbose}{If TRUE, progress messages will be printed}
 }
 \description{
 Search tokens in a tokenlist using a query that consists of an keyword, and optionally a condition. For a detailed explanation of the query language please consult the query_tutorial markdown file. For a quick summary see the details below.
@@ -62,5 +59,16 @@ Parameters:
 \itemize{
    \item{condition_once -> if TRUE, then if the condition is satisfied at least once in an article, all occurences of the keyword are accepted. }
 }
+}
+\section{Usage}{
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{
+search_features(keyword = NA, condition = NA, code = NA,
+                queries = NULL, feature = 'word', condition_once=F,
+                subset_tokens = NA, subset_meta = NA,
+                keep_false_condition = F, only_last_mword = F, verbose = F)
+             }
 }
 

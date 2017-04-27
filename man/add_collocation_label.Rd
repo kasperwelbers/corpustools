@@ -2,7 +2,7 @@
 % Please edit documentation in R/collocations.r
 \name{add_collocation_label}
 \alias{add_collocation_label}
-\title{Choose and add collocation strigns based on collocation categories}
+\title{Choose and add collocation strings based on collocation categories}
 \usage{
 add_collocation_label(tc, colloc_id, feature = "word",
   new_feature = sprintf("\%s_l", colloc_id), pref_subset = NULL)

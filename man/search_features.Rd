@@ -32,7 +32,7 @@ search_features(tc, keyword = NA, condition = NA, code = NA,
 
 \item{only_last_mword}{If TRUE, then if multiword keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last word. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, word co-occurence analysis)}
 
-\item{verbose}{}
+\item{verbose}{If TRUE, progress messages will be printed}
 }
 \description{
 Search tokens in a tokenlist using a query that consists of an keyword, and optionally a condition. For a detailed explanation of the query language please consult the query_tutorial markdown file. For a quick summary see the details below.

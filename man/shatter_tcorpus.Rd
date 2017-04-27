@@ -27,7 +27,7 @@ Where possible, the tCorpus functions will then be performed per shard, and the 
 Put simply: if you run into memory problems because you have too much data, you'll probably want to shatter it.
 }
 \details{
-See the documentation for \link{shattered tCorpus} for a more detailed explanation of why you would ever want to shatter your tCorpus.
+See the documentation for \link{shattered_tCorpus} for a more detailed explanation of why you would ever want to shatter your tCorpus.
 
 !! please read the documentation for shard_path if you intend to save the shattered_tCorpus
 }

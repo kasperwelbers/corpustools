@@ -4,8 +4,8 @@ test_jrcnames <- function(tc){
     tc = tc$jrc_names(batchsize = 9999999, low_memory = F)
     d = tc$data
   })
-  expect_equal(as.character(na.omit(d$jrc_names)), c('1510','2042','76099', '76099'))
-  expect_equal(as.character(na.omit(d$jrc_names_l)), c('Barack Obama','Donald Trump', 'Mark Rutte', 'Mark Rutte'))
+  expect_equal(as.character(stats::na.omit(d$jrc_names)), c('1510','2042','76099', '76099'))
+  expect_equal(as.character(stats::na.omit(d$jrc_names_l)), c('Barack Obama','Donald Trump', 'Mark Rutte', 'Mark Rutte'))
 }
 
 test_that("resources works", {

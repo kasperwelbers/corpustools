@@ -6,9 +6,6 @@
 \alias{tCorpus$feature_index}
 \alias{tCorpus$reset_feature_index}
 \title{Create or extract a feature index}
-\usage{
-## R6 method for class tCorpus
-}
 \arguments{
 \item{feature}{The feature to be indexed.}
 
@@ -25,5 +22,12 @@ The global_i represents the global positions of features, with gaps of a certain
 Once a feature_index is created, it is stored within the tCorpus. Then, if the tCorpus$feature_index method is called again, it will first be checked whether the existing feature_index can be used or whether a new one has to be created. The existing feature_index can be used if the parameters are the same, and the max_window_size is equal or lower to the max_window_size of the existing tCorpus. (Note: max_window_size will always be set to at least 100, which should be sufficient for most appliations. While technically max_window_size can be much higher, this can lead to very high integers, to the point where it can slow down or yields overflow errors)
 
 You can manually delete the feature_index that is stored in the tCorpus with the tCorpus$reset_feature_index() method.
+}
+\section{Usage}{
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{feature_index(feature = 'word', context_level = 'document', max_window_size = 100, as_ascii=F)}
+\preformatted{reset_feature_index()}
 }
 

@@ -14,14 +14,14 @@ verbose_sum_counter <- function(n, i=0){
 
 fast_dummy_factor <- function(x) { ## if , still return a factor for consistency, but no need to match stuff
   x = as.integer(x)
-  nlevels = length(na.omit(unique(x)))
+  nlevels = length(stats::na.omit(unique(x)))
   attr(x, 'levels') = if (nlevels > 0) as.character(1:nlevels) else character()
   class(x) <- 'factor'
   x
 }
 
 fast_factor <- function(x, levels=NULL) {
-  if (!is(x, 'factor')) {
+  if (!methods::is(x, 'factor')) {
     if (!all(is.na(x))) {
       if (is.null(levels)) levels = vector(class(x), 0)
       x = .Call('corpustools_fast_factor', PACKAGE = 'corpustools', as.character(x), levels)
@@ -36,7 +36,7 @@ fast_factor <- function(x, levels=NULL) {
 
 col_to_hsv <- function(col, alpha=1) {
   ## make mapped to enable vectorization
-  hsv_col = rgb2hsv(col2rgb('red'))
-  hsv(hsv_col[1], hsv_col[2], hsv_col[3], alpha=alpha)
+  hsv_col = grDevices::rgb2hsv(grDevices::col2rgb('red'))
+  grDevices::hsv(hsv_col[1], hsv_col[2], hsv_col[3], alpha=alpha)
 }
 

@@ -17,7 +17,7 @@ create_tcorpus(x, ...)
   split_sentences = F, max_sentences = NULL, max_words = NULL,
   verbose = F, ...)
 
-\method{create_tcorpus}{data.frame}(d, text_columns = "text",
+\method{create_tcorpus}{data.frame}(x, text_columns = "text",
   doc_column = NULL, split_sentences = F, max_sentences = NULL,
   max_words = NULL, ...)
 }

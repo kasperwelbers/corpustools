@@ -11,12 +11,12 @@ tcorpus_compare <- function(tc_x, tc_y, feature, smooth=0.1, min_over=NULL, min_
 #' @param smooth the smoothing parameter for Laplace smoothing.
 #' @return A data frame with rows corresponding to the terms in dtm and the statistics in the columns
 #' @export
-dtm_compare <- function(dtm.x, dtm.y=NULL, smooth=1, min_over=NULL, min_chi2=NULL, select.rows=NULL, yates_cor=c('auto','yes','no'), x_is_subset=F) {
+dtm_compare <- function(dtm.x, dtm.y=NULL, smooth=1, min_over=NULL, min_chi2=NULL, select_rows=NULL, yates_cor=c('auto','yes','no'), x_is_subset=F) {
   yates_cor = match.arg(yates_cor)
   if (is.null(dtm.y)) {
-    if (is.null(select_rows)) stop("either dtm.y or select.rows has to be specified")
-    dtm.y = dtm.x[!(rownames(dtm.x) %in% select.rows), ]
-    dtm.x = dtm.x[rownames(dtm.x) %in% select.rows, ]
+    if (is.null(select_rows)) stop("either dtm.y or select_rows has to be specified")
+    dtm.y = dtm.x[!(rownames(dtm.x) %in% select_rows), ]
+    dtm.x = dtm.x[rownames(dtm.x) %in% select_rows, ]
   }
   freqs.x = data.frame(feature=colnames(dtm.x), freq=Matrix::colSums(dtm.x))
   freqs.y = data.frame(feature=colnames(dtm.y), freq=Matrix::colSums(dtm.y))

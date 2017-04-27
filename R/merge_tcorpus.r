@@ -12,7 +12,7 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
 
   tc_list = list(...)
   if (length(tc_list) == 1 & class(tc_list[[1]]) == 'list') tc_list = tc_list[[1]]
-  for(i in 1:length(tc_list)) if (!is(tc_list[[i]], 'tCorpus')) stop(sprintf('%s is not a tCorpus object', names(tc_list)[i]))
+  for(i in 1:length(tc_list)) if (!methods::is(tc_list[[i]], 'tCorpus')) stop(sprintf('%s is not a tCorpus object', names(tc_list)[i]))
 
   if (keep_data == 'intersect') {
     cnames = lapply(tc_list, function(x) x$names)
@@ -23,11 +23,11 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
   }
 
   if (keep_meta == 'intersect') {
-    cnames = lapply(tc_list, function(x) colnames(get_meta(x)))
+    cnames = lapply(tc_list, function(x) x$meta_names)
     cnames = Reduce(intersect, cnames)
-    meta = plyr::ldply(lapply(tc_list, get_meta, columns=cnames), .id = 'subcorpus')
+    meta = plyr::ldply(lapply(tc_list, function(x) x$get_meta(cnames, keep_df=T)), .id = 'subcorpus')
   } else {
-    meta = plyr::ldply(lapply(tc_list, get_meta), .id = 'subcorpus')
+    meta = plyr::ldply(lapply(tc_list, function(x) x$meta), .id = 'subcorpus')
   }
 
   if ('sent_i' %in% colnames(data)){

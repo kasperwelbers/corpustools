@@ -3,9 +3,9 @@
 #'
 #' Compute a number of useful statistics for filtering words: term frequency, idf, etc.
 #'
-#' @param dtm a document term matrix (e.g. the output of \code{\link{dtm.create}})
+#' @param dtm a document term matrix
 #' @return A data frame with rows corresponding to the terms in dtm and the statistics in the columns
-term.statistics <- function(tc, feature, context_level=c('document','sentence')) {
+term_statistics <- function(tc, feature, context_level=c('document','sentence')) {
   dtm = tc$dtm(feature, context_level=context_level)
   dtm = dtm[Matrix::rowSums(dtm) > 0, Matrix::colSums(dtm) > 0]    # get rid of empty rows/columns
   vocabulary = colnames(dtm)
@@ -90,7 +90,7 @@ top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, r
 
   break_cols = colnames(group_df)
   group_df[[feature]] = tc$get(feature)
-  scores = ddply(group_df, break_cols, .fun = get_top_freq, n=n, feature=feature)
+  scores = plyr::ddply(group_df, break_cols, .fun = get_top_freq, n=n, feature=feature)
 
   if (!return_long) {
     scores = scores[,!colnames(scores) == 'freq', drop=F]

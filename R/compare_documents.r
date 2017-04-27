@@ -5,8 +5,8 @@ to_POSIXct <- function(x){
 }
 
 compare_documents_fun <- function(tc, feature='word', date_col=NULL, hour_window=c(-24,24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
-  from_subset = if (is(substitute(from_subset), 'call')) deparse(substitute(from_subset)) else from_subset
-  to_subset = if (is(substitute(to_subset), 'call')) deparse(substitute(to_subset)) else to_subset
+  from_subset = if (methods::is(substitute(from_subset), 'call')) deparse(substitute(from_subset)) else from_subset
+  to_subset = if (methods::is(substitute(to_subset), 'call')) deparse(substitute(to_subset)) else to_subset
 
   measure = match.arg(measure)
   if (!is.null(date_col)) date_col = match.arg(date_col, choices = tc$meta_names)

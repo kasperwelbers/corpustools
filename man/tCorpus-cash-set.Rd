@@ -6,11 +6,6 @@
 \alias{tCorpus$set}
 \alias{tCorpus$set_meta}
 \title{Modify the token and meta data.tables of a tCorpus}
-\usage{
-## R6 method for class tCorpus
-
-## R6 method for class tCorpus.
-}
 \arguments{
 \item{column}{Name of a new column (to create) or existing column (to transform)}
 
@@ -26,5 +21,18 @@
 Modify the token/meta data.table by setting the values of one (existing or new) column. This is less flexible than within data or transform data, but it has the advantage of allowing columns to be selected as a string, which makes it convenient for modifying the tCorpus from within function. The subset argument can be used to modify only subsets of columns, and can be a logical vector (select TRUE rows), numeric vector (indices of TRUE rows) or logical expression (e.g. pos == 'noun'). If A new column is made whie using a subset, then the rows outside of the selection are set to NA.
 
 Change column names in tCorpus data
+}
+\section{Usage}{
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{set(column, value, subset, copy = self$copy_on_modify, safe = T)}
+\preformatted{set_meta(column, value, subset, copy = self$copy_on_modify, safe = T)}
+
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{set(oldname, newname)}
+\preformatted{set_meta(oldname, newname)}
 }
 

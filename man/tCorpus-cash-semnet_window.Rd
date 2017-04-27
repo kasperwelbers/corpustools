@@ -4,9 +4,6 @@
 \alias{semnet_window.tCorpus}
 \alias{tCorpus$semnet_window}
 \title{Create a semantic network based on the co-occurence of words in word windows}
-\usage{
-## R6 method for class tCorpus
-}
 \arguments{
 \item{feature}{The name of the feature column}
 
@@ -25,6 +22,16 @@
 \item{set_matrix_mode}{Advanced feature. There are two approaches for calculating window co-occurrence. One is to measure how often a feature occurs within a given word window, which can be calculating by calculating the inner product of a matrix that contains the exact position of features and a matrix that contains the occurrence window. We refer to this as the "positionXwindow" mode. Alternatively, we can measure how much the windows of features overlap, for which take the inner product of two window matrices. By default, semnet_window takes the mode that we deem most appropriate for the similarity measure. Substantially, the positionXwindow approach has the advantage of being very easy to interpret (e.g. how likely is feature "Y" to occurr within 10 words from feature "X"?). The windowXwindow mode, on the other hand, has the interesting feature that similarity is stronger if words co-occurr more closely together (since then their windows overlap more). Currently, we only use the windowXwindow mode for cosine similarity. By using the set_matrix_mode parameter you can override this.}
 }
 \description{
-This function calculates the co-occurence of features and returns a network/graph in the \link{igraph} format where nodes are words and edges represent the similarity/adjacency of words. Co-occurence is calcuated based on how often two words co-occurr within a given word distance.
+This function calculates the co-occurence of features and returns a network/graph in the igraph format, where nodes are words and edges represent the similarity/adjacency of words. Co-occurence is calcuated based on how often two words co-occurr within a given word distance.
+}
+\section{Usage}{
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{
+semnet_window(feature, measure = c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'),
+              context_level = c('document','sentence'), window.size = 10, direction = '<>',
+              backbone = F, n.batches = 5, set_matrix_mode = c(NA, 'windowXwindow', 'positionXwindow'))
+}
 }
 

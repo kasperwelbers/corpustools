@@ -4,9 +4,6 @@
 \alias{search_contexts.tCorpus}
 \alias{tCorpus$search_contexts}
 \title{Search for documents or sentences using Boolean queries}
-\usage{
-## R6 method for class tCorpus
-}
 \arguments{
 \item{query}{A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.}
 
@@ -16,7 +13,7 @@
 
 \item{context_level}{Select whether the queries should occur within while "documents" or specific "sentences". Returns results at the specified level.}
 
-\item{verbose}{}
+\item{verbose}{If TRUE, progress messages will be printed}
 }
 \description{
 Search for documents or sentences using Boolean queries
@@ -33,5 +30,11 @@ The following operators and modifiers are supported:
    \item{Words within a given word distance can be found using quotes plus tilde and a number specifiying the word distance. e.g. "climate chang*"~10}
    \item{Queries are not case sensitive, but can be made so by adding the ~s flag. e.g. COP~s only finds "COP" in uppercase. The ~s flag can also be used on quotes to make all terms within quotes case sensitive, and this can be combined with the word proximity flag. e.g. "Marco Polo"~s10}
  }
+}
+\section{Usage}{
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{search_contexts(query, code = NULL, feature = 'word', context_level = c('document','sentence'), verbose = F)}
 }
 

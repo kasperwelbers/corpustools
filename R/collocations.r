@@ -28,10 +28,7 @@ collocation_strings <- function(tc, colloc_id, feature='word', pref=NULL){
   label[, list(N = data.table::.N, label=unique(get('label'))), by= 'pref,id,label']
 }
 
-
-
-
-#' Choose and add collocation strigns based on collocation categories
+#' Choose and add collocation strings based on collocation categories
 #'
 #' Given a collocation category (e.g., named entity ids), this function finds the most frequently occuring string in this category and adds it as a label for the category
 #'

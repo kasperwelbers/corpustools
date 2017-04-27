@@ -2,17 +2,15 @@
 #'
 get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F){
   form = match.arg(form)
-  if(form == 'tm_dtm') if(!require(tm)) stop('form is set to tm_dtm, but the tm package is not installed.')
-  if(form == 'quanteda_dfm') if(!require(quanteda)) stop('form is set to quanteda_dtm, but the quanteda package is not installed.')
-
+  if(form == 'tm_dtm') if(!requireNamespace('tm', quietly = T)) stop('To use the tm_dtm output form, you need to have the tm package installed.')
+  if(form == 'quanteda_dfm') if(!requireNamespace('quanteda', quietly = T)) stop('To use the quanteda_dtm output form, you need to have the quanteda package installed.')
   is_tcorpus(tc, T)
-  if(is(tc, 'shattered_tCorpus')) return(shard_get_dtm(stc=tc, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form, context_labels=context_labels))
 
   weight = match.arg(weight)
   context_levels = match.arg(context_level)
 
   i = if (!is.null(context)) context else tc$context(context_level, with_labels = context_labels)
-  if (!is(i, 'factor')) i = fast_factor(i)
+  if (!methods::is(i, 'factor')) i = fast_factor(i)
 
   if (!is.null(subset_tokens) | !is.null(subset_meta)) {
     sub_i = tc$subset_i(subset = subset_tokens, subset_meta = subset_meta)
@@ -23,7 +21,7 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   }
 
   feature = tc$get(feature)
-  if(!is(feature, 'factor')) feature = factor(feature)
+  if(!methods::is(feature, 'factor')) feature = factor(feature)
   if (!is.na(ngrams)) {
     filter = if (ngram_before_subset) NULL else sub_i
     feature = grouped_ngrams(feature, group = i, n = ngrams, filter = filter, label = feature_labels) ## designed to work fast if no labels are needed
@@ -34,7 +32,7 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   } else idf = NULL
 
   feature = feature[sub_i]
-  if(drop_empty_terms & is(feature, 'factor')) feature = droplevels(feature)
+  if(drop_empty_terms & methods::is(feature, 'factor')) feature = droplevels(feature)
   notNA = !is.na(feature)
 
   m = Matrix::spMatrix(length(levels(i)), max(as.numeric(feature), na.rm = T),
@@ -50,7 +48,7 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
     if(weight == 'tfidf_norm') attributes(m)$weighting = c("term frequency - inverse document frequency (normalized)", "tf-idf")
     if(!weight %in% c('termfreq','tfidf', 'tfidf_norm')) attributes(m)$weighting = c(weight, weight)
   }
-  if (form == 'quanteda_dfm') m = new("dfmSparse", as(m, 'dgCMatrix'))
+  if (form == 'quanteda_dfm') m = methods::new("dfmSparse", methods::as(m, 'dgCMatrix'))
 
   m
 }
@@ -63,7 +61,7 @@ get_idf <- function(context, feature) {
 }
 
 weight_dtm <- function(m, weight, idf=NULL){
-  m = as(m, 'dgTMatrix')
+  m = methods::as(m, 'dgTMatrix')
   if(weight %in% c('tfidf', 'norm_tfidf')){
     if(weight == 'norm_tfidf') m@x = m@x / rowSums(m)[m@i+1]
     if(is.null(idf)) {
@@ -76,7 +74,7 @@ weight_dtm <- function(m, weight, idf=NULL){
   if(weight == 'docfreq') {
     m = m > 0
   }
-  as(as(m,'dgCMatrix'), 'dgTMatrix')
+  methods::as(methods::as(m,'dgCMatrix'), 'dgTMatrix')
 }
 
 tm_dtm_to_dgTMatrix <- function(dtm){

@@ -208,7 +208,7 @@ print.shattered_tCorpus <- function(x, ...) {
 }
 
 #' @export
-summary.shattered_tCorpus <- function(object, ...) objec
+summary.shattered_tCorpus <- function(object, ...) object
 
 #' Open a shattered_tCorpus stored on disk
 #'

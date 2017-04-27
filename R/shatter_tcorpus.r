@@ -5,7 +5,7 @@
 #' Where possible, the tCorpus functions will then be performed per shard, and the entire tCorpus does not have to be kept in memory.
 #' Put simply: if you run into memory problems because you have too much data, you'll probably want to shatter it.
 #'
-#' See the documentation for \link{shattered tCorpus} for a more detailed explanation of why you would ever want to shatter your tCorpus.
+#' See the documentation for \link{shattered_tCorpus} for a more detailed explanation of why you would ever want to shatter your tCorpus.
 #'
 #' !! please read the documentation for shard_path if you intend to save the shattered_tCorpus
 #'
@@ -21,7 +21,7 @@ shatter_tcorpus <- function(tc, stc, meta_columns=NULL, tokens_per_shard=1000000
   if_duplicates = match.arg(if_duplicates)
   meta_columns = if (!is.null(meta_columns)) match.arg(meta_columns, tc$meta_names, several.ok = T) else c()
 
-  if (is(stc, 'character')) {
+  if (methods::is(stc, 'character')) {
     if (!grepl('.tCorpus$', stc)) stc = paste(stc, 'tCorpus', sep='.')
     stc = shattered_tCorpus$new(path=stc)
   }
@@ -158,7 +158,7 @@ reindex_features <- function(tc, stc){
   feature_levels = stc$feature_levels()
   features = tc$feature_names
   for(feature in features){
-    if (!is(tc$get('feature'), 'factor')) {
+    if (!methods::is(tc$get('feature'), 'factor')) {
       if (feature %in% names(feature_levels)) {
         tc$set(feature, as.factor(tc$get(feature)), copy=F)
       } else next
@@ -249,9 +249,10 @@ equal_groups <- function(index, tokens_per_shard){
   match(shards, unique(shards))
 }
 
-collect_shards <- function(shard_names, doc_ids=NULL) {
+collect_shards <- function(shard_names, select_doc_ids=NULL) {
+  doc_id = NULL ## used in subset syntax, but needs to have bindings for R CMD check
   shard = merge_shards(sapply(shard_names, readRDS))
-  if (!is.null(doc_ids)) shard = shard$subset(subset_meta = doc_id %in% as.character(doc_ids), copy=T)
+  if (!is.null(select_doc_ids)) shard = shard$subset(subset_meta = doc_id %in% as.character(select_doc_ids), copy=T)
   shard
 }
 
@@ -276,7 +277,7 @@ redistribute_shards <- function(stc, tokens_per_shard=100000) {
     newshards = equal_groups(index, tokens_per_shard)
     for(shard_i in unique(newshards)){
       i = shard_i == newshards
-      shard = collect_shards(unique(index$.SHARD[i]), doc_ids = index$doc_id[i])
+      shard = collect_shards(unique(index$.SHARD[i]), select_doc_ids = index$doc_id[i])
       shard_name = sprintf('shard_%s_T=%s_M=%s.rds', shard_i, shard$n, shard$n_meta)
       verbose(shard$n)
 
@@ -324,7 +325,7 @@ reindex_shards <- function(stc, new_stc=stc, meta_columns=NULL, tokens_per_shard
 
   shards = stc$shards()
 
-  if (is(new_stc, 'character')) {
+  if (methods::is(new_stc, 'character')) {
     if (!grepl('.tCorpus$', new_stc)) new_stc = paste(new_stc, 'tCorpus', sep='.')
     new_stc = shattered_tCorpus$new(path=new_stc)
   }
@@ -347,9 +348,8 @@ reindex_shards <- function(stc, new_stc=stc, meta_columns=NULL, tokens_per_shard
   }
   file.rename(tmp_path, new_stc$path())
 
-  set_info(stc, '')
+  stc$set_info('')
   stc$info()
-
 
   new_stc
 }
