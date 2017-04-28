@@ -4,5 +4,6 @@ language: R
 sudo: false
 cache: packages
 
-install:
-- sudo apt-get install libgsl0-dev
+before_install:
+  - sudo apt-get -qq update
+  - sudo apt-get install libgsl0-dev
