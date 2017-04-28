@@ -24,7 +24,7 @@ You can install corpustools directly from github:
 
 ```{r}
 install_github("kasperwelbers/corpustools")
-library(tcorpus)
+library(corpustools)
 ```
 
 tCorpus is built around the tCorpus R6 class. This means that the methods for working with the tCorpus object are accessed with the dollar symbol (e.g., tc$subset(...), tc$semnet(...)). An overview of the methods, including links with more detailed method documentation, is available through a central documentation hub:
