@@ -1,5 +1,5 @@
 test_jrcnames <- function(tc){
-  capture_output({
+  capture.output({
     download_resource('jrc_names')
     tc = tc$jrc_names(batchsize = 9999999, low_memory = F)
     d = tc$data

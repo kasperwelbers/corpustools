@@ -8,7 +8,7 @@ test_that("shatter tcorpus works", {
   more = create_tcorpus(sotu_texts[501:808,], 'text', doc_column = 'id')
   more_with_duplicates = create_tcorpus(sotu_texts[700:1090,], 'text', doc_column = 'id')
 
-  capture_output({ ## ignores print verbose
+  capture.output({ ## ignores print verbose
     stc = shatter_tcorpus(first, 'test', meta_columns=c('party', 'president'), tokens_per_shard=10000, if_exists = 'overwrite')
     stc = shatter_tcorpus(more, 'test', meta_columns=c('party', 'president'), tokens_per_shard=10000, if_exists = 'append')
     stc = shatter_tcorpus(more_with_duplicates, 'test', meta_columns=c('party', 'president'), tokens_per_shard=10000, if_exists = 'append', if_duplicates = 'skip')
@@ -19,7 +19,7 @@ test_that("shatter tcorpus works", {
   expect_equal(info$n_meta, 1090)
   expect_equal(info$n_shards, 12)
 
-  capture_output({
+  capture.output({
     redistribute_shards(stc, tokens_per_shard=20000)
   })
   info = stc$info()
@@ -33,7 +33,7 @@ test_that("shatter tcorpus works", {
   expect_equal(info$n_shards, 6)
 
   ## test renaming duplicates (in this case the wrong thing to do because they are actual duplicates)
-  capture_output({ ## ignores print verbose
+  capture.output({ ## ignores print verbose
     stc = shatter_tcorpus(more, 'test', meta_columns=c('party', 'president'), tokens_per_shard=10000, if_exists = 'overwrite')
     stc = shatter_tcorpus(more_with_duplicates, 'test', meta_columns=c('party', 'president'), tokens_per_shard=10000, if_exists = 'append', if_duplicates = 'rename')
   })

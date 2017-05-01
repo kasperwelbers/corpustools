@@ -72,7 +72,8 @@ manage_duplicates <- function(tc, index, if_duplicates){
     if (if_duplicates == 'stop') stop('DUPLICATES. The new tcorpus contains doc_ids that are already in the shattered_tCorpus. If you know why, you can use the if_duplicates parameter to "skip" the duplicates or automatically "rename" them')
     if (if_duplicates == 'skip') {
       cat('## Skipping ', sum(duplicate), ' duplicate(s)\n')
-      tc = tc$subset(subset_meta = !duplicate, copy=T)
+      evalhere_duplicate = duplicate
+      tc = tc$subset(subset_meta = !evalhere_duplicate, copy=T)
     }
     if (if_duplicates == 'rename') {
       cat('## Renaming ', sum(duplicate), ' duplicate(s)\n')
@@ -157,14 +158,14 @@ feature_levels_list <- function(tc){
 reindex_features <- function(tc, stc){
   feature_levels = stc$feature_levels()
   features = tc$feature_names
-  for(feature in features){
-    if (!methods::is(tc$get('feature'), 'factor')) {
-      if (feature %in% names(feature_levels)) {
-        tc$set(feature, as.factor(tc$get(feature)), copy=F)
+  for(evalhere_feature in features){
+    if (!methods::is(tc$get(evalhere_feature), 'factor')) {
+      if (evalhere_feature %in% names(feature_levels)) {
+        tc$set(feature, as.factor(tc$get(evalhere_feature)), copy=F)
       } else next
     }
-    fl = feature_levels[[feature]]
-    tc$set(feature, match_factor_labels(tc$get(feature), fl), copy=F)
+    fl = feature_levels[[evalhere_feature]]
+    tc$set(evalhere_feature, match_factor_labels(tc$get(evalhere_feature), fl), copy=F)
   }
   tc$set_keys()
   tc
@@ -194,9 +195,9 @@ shatter_loop <- function(tc, meta_columns=c(), tokens_per_shard=1000000, n_shard
       if (verbose) cat(verbose_string, uval, '\n')
       uval_path = if (save_path=='') uval else paste(save_path, uval, sep='/')
       if (!dir.exists(uval_path)) dir.create(uval_path)
-      i = which(val == uval)
 
-      shard_index[i] = shatter_loop(tc$subset(subset_meta=i, copy = T), next_columns,
+      evalhere_i = which(val == uval)
+      shard_index[evalhere_i] = shatter_loop(tc$subset(subset_meta=evalhere_i, copy = T), next_columns,
                                     tokens_per_shard=tokens_per_shard, n_shards=n_shards, save_path=uval_path, compress=compress,
                                     verbose_string=paste(verbose_string,'---', sep=''))
     }
@@ -217,14 +218,14 @@ save_shards <- function(tc, tokens_per_shard=1000000, n_shards=NA, save_path='',
   if (is.null(batch_i)) return(shard_index) ## if there are no batches, stop
 
   for(i in 1:nrow(batch_i)){
-    meta_i = (batch_i$start[i]):(batch_i$end[i])
-    shard = tc$subset(subset_meta = meta_i, copy=T)
+    evalhere_meta_i = (batch_i$start[i]):(batch_i$end[i])
+    shard = tc$subset(subset_meta = evalhere_meta_i, copy=T)
     shard$set_keys()
     if (shard$n_meta > 0){
       fname = sprintf('shard_%s_T=%s_M=%s.rds', i+n_existing_shards, shard$n, shard$n_meta)
       if (verbose) cat(verbose_string, fname, '\n')
       fpath = sprintf('%s/%s', save_path, fname)
-      shard_index[meta_i] = fpath
+      shard_index[evalhere_meta_i] = fpath
       saveRDS(shard, fpath, compress=compress)
     }
   }
@@ -252,7 +253,8 @@ equal_groups <- function(index, tokens_per_shard){
 collect_shards <- function(shard_names, select_doc_ids=NULL) {
   doc_id = NULL ## used in subset syntax, but needs to have bindings for R CMD check
   shard = merge_shards(sapply(shard_names, readRDS))
-  if (!is.null(select_doc_ids)) shard = shard$subset(subset_meta = doc_id %in% as.character(select_doc_ids), copy=T)
+  evalhere_select_doc_ids = select_doc_ids
+  if (!is.null(select_doc_ids)) shard = shard$subset(subset_meta = doc_id %in% as.character(evalhere_select_doc_ids), copy=T)
   shard
 }
 

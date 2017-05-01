@@ -37,8 +37,8 @@ collocation_strings <- function(tc, colloc_id, feature='word', pref=NULL){
 #'
 #' @export
 add_collocation_label <- function(tc, colloc_id, feature='word', new_feature=sprintf('%s_l', colloc_id), pref_subset=NULL){
-  pref_subset = deparse(substitute(pref_subset))
-  if (!pref_subset == 'NULL') pref = tc$subset_i(subset_meta=pref_subset) else pref = NULL
+  evalhere_pref_subset = deparse(substitute(pref_subset))
+  if (!pref_subset == 'NULL') pref = tc$subset_i(subset_meta=evalhere_pref_subset) else pref = NULL
 
   label = collocation_strings(tc, colloc_id, feature=feature, pref=pref) ## for shattered_tCorpus, this has to be done for the entire corpus first, or labels will not match across shards
   ## select most frequent labels, prioritzing pref is true
@@ -48,7 +48,8 @@ add_collocation_label <- function(tc, colloc_id, feature='word', new_feature=spr
   label$label = as.factor(label$label)
   levels(label$label) = gsub('_', ' ', levels(label$label), fixed=T)
 
-  tc$set(new_feature, value = label$label[match(tc$get(colloc_id), label$id)])
+  evalhere_colloc_id = colloc_id
+  tc$set(new_feature, value = label$label[match(tc$get(evalhere_colloc_id), label$id)])
 }
 
 

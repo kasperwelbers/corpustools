@@ -9,6 +9,10 @@ test_that("Query search works", {
   tc = create_tcorpus(text, doc_id = c('a','b','c'), split_sentences = T)
   #corpustools:::sourceall()
 
+  .select = 'a'
+  tc$subset(doc_id == .select, copy=T)
+  tc$data$select = 1
+
   ## simple keyword only
   hits = tc$search_features(keyword = 'fuel')
   expect_equal(as.character(hits$hits$feature), c('fuel','fuel'))

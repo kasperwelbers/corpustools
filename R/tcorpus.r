@@ -62,6 +62,8 @@ tCorpus <- R6::R6Class("tCorpus",
        if (nrow(mod) > self$n) stop('Replacement cannot have more rows. For adding more data, please use the merge_tcorpora function or the $add_data method')
 
        mod = data.table(mod)
+       if (any(grepl('^evalhere_', colnames(mod)))) stop('column names in a tCorpus cannot start with "evalhere_"') ## evalhere_ is used as a prefix for object names when set/subset are called within tCorpus methods. This is to prevent conflict when a tCorpus has an identically named column
+       if (!all(c('doc_id','word_i') %in% colnames(mod))) stop('Replacement must have a doc_id and word_i column')
        if ('sent_i' %in% colnames(mod)) setkeyv(mod, c('doc_id','sent_i','word_i')) else setkeyv(mod, c('doc_id','word_i'))
 
        positioncols = intersect(c('doc_id','sent_i','word_i'), colnames(mod))
@@ -87,6 +89,9 @@ tCorpus <- R6::R6Class("tCorpus",
      safe_meta_mod = function(mod) {
        if (is.null(mod)) return(NULL)
        mod = data.table(mod)
+       if (any(grepl('^evalhere_', colnames(mod)))) stop('column names in a tCorpus cannot start with "evalhere_"')
+       if (!all(c('doc_id') %in% colnames(mod))) stop('Replacement must have a doc_id column')
+
        setkey(mod, 'doc_id')
        if (nrow(mod) < self$n_meta) stop('Replacement cannot have fewer rows. For subsetting, please use the $subset method')
        if (nrow(mod) > self$n_meta) stop('Replacement cannot have more rows. For adding more data, please use the merge_tcorpora function or the $add_data method')
@@ -115,7 +120,6 @@ tCorpus <- R6::R6Class("tCorpus",
        private$.feature_index = if (!is.null(feature_index)) feature_index else NULL
        self$set_keys()
      },
-
 
 ## SHOW/GET DATA METHODS ##
     get = function(columns=NULL, keep_df=F, as.df=F) {
@@ -197,6 +201,7 @@ tCorpus <- R6::R6Class("tCorpus",
        if (column == 'doc_id') stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
        if(methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.data, parent.frame())
        if(methods::is(substitute(value), 'call')) value = eval(substitute(value), private$.data, parent.frame())
+       if (grepl('^evalhere_', column)) stop('column names in a tCorpus cannot start with evalhere_')
 
        if (copy) {
          selfcopy = self$copy()$set(column=column, value=value, subset=subset, copy=F)
@@ -263,6 +268,8 @@ tCorpus <- R6::R6Class("tCorpus",
 
      set_colname = function(oldname, newname) {
        if (oldname %in% c('doc_id','sent_i','word_i')) stop('The position columns (doc_id, sent_i, word_i) cannot be set or changed (with safe = T)')
+       if (grepl('^evalhere_', newname)) stop('column names in a tCorpus cannot start with evalhere_')
+
        data.table::setnames(private$.data, oldname, newname)
        invisible(self)
      },
@@ -271,6 +278,7 @@ tCorpus <- R6::R6Class("tCorpus",
        if (column == 'doc_id') stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
        if(methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.meta, parent.frame())
        if(methods::is(substitute(value), 'call')) value = eval(substitute(value), private$.meta, parent.frame())
+       if (grepl('^evalhere_', column)) stop('column names in a tCorpus cannot start with evalhere_')
 
        if (copy) {
          selfcopy = self$copy()$set_meta(column=column, value=value, subset=subset, copy=F)
@@ -317,6 +325,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
      set_meta_colname = function(oldname, newname) {
        if (oldname %in% c('doc_id')) stop('The position columns (doc_id, sent_i, word_i) cannot be set or changed (with safe = T)')
+       if (grepl('^evalhere_', newname)) stop('column names in a tCorpus cannot start with evalhere_')
        setnames(private$.meta, oldname, newname)
        invisible(self)
      },
@@ -361,7 +370,8 @@ tCorpus <- R6::R6Class("tCorpus",
 
       subset_meta = function(subset=NULL, drop_levels=T, copy=self$copy_on_modify){
         ## subset also has a subset_meta argument, but we add this for consistency with other _meta methods
-        self$subset(subset_meta = subset, drop_levels=drop_levels, copy=copy)
+        evalhere_subset = subset
+        self$subset(subset_meta = evalhere_subset, drop_levels=drop_levels, copy=copy)
       },
 
       subset_i = function(subset=NULL, subset_meta=NULL, window=NULL, inverse=F){
@@ -497,8 +507,9 @@ tCorpus <- R6::R6Class("tCorpus",
        }
 
        hits = self$search_features(keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta)
-       x = as.numeric(as.character(hits$hits$i)) ## for one of those inexplicable R reasons, I cannot directly use this numeric vector.... really no clue at all why
-       self$set(feature, new_value, subset = x, copy = F)
+       evalhere_x = as.numeric(as.character(hits$hits$i))
+       evalhere_new_value = new_value
+       self$set(feature, evalhere_new_value, subset = evalhere_x, copy = F)
        invisible(self)
      },
 
@@ -554,7 +565,11 @@ tCorpus <- R6::R6Class("tCorpus",
        subset_meta_x = eval(substitute(subset_meta_x), private$.meta, parent.frame(2))
 
        if(is.null(subset_x) & is.null(subset_meta_x) & is.null(query_x)) stop("at least one of subset_x, subset_meta_x or query_x has to be specified")
-       if(!is.null(subset_x) | !is.null(subset_meta_x)) tc_x = self$subset(subset=subset_x, subset_meta=subset_meta_x, copy=T)
+       if(!is.null(subset_x) | !is.null(subset_meta_x)) {
+         evalhere_subset_x = subset_x
+         evalhere_subset_meta_x = subset_meta_x
+         tc_x = self$subset(subset=evalhere_subset_x, subset_meta = evalhere_subset_meta_x, copy=T)
+       }
        if(!is.null(query_x)) tc_x = self$subset_query(query_x, feature=query_feature, copy=T)
 
        comp = tc_x$compare_corpus(self, feature=feature, smooth=smooth, min_over=min_over, min_chi2=min_chi2, yates_cor=yates_cor, is_subset=T)
@@ -582,11 +597,12 @@ tCorpus <- R6::R6Class("tCorpus",
          return(selfcopy)
        }
 
-       self$set('DEDUPLICATE_FEATURE', self$get(feature), copy = F)
+       evalhere_feature = feature
+       self$set('DEDUPLICATE_FEATURE', self$get(evalhere_feature), copy = F)
        self$feature_subset('DEDUPLICATE_FEATURE', 'DEDUPLICATE_FEATURE', subset = docfreq_filter('DEDUPLICATE_FEATURE', min=min_docfreq, max=self$n * max_docfreq_pct), copy=F)
 
-       duplicates = get_duplicates(self, feature=feature, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
-       self$subset(subset_meta = !doc_id %in% duplicates, copy=F)
+       evalhere_duplicates = get_duplicates(self, feature=feature, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
+       self$subset(subset_meta = !doc_id %in% evalhere_duplicates, copy=F)
        self$set('DEDUPLICATE_FEATURE', NULL, copy=F)
        invisible(self)
      },

@@ -9,7 +9,6 @@ test_that("comparing documents works", {
                  date = c('2010-01-01','2010-01-01','2012-01-01'))
   tc = create_tcorpus(d)
 
-
   #tc$dtm('word', subset_tokens = word_i < 10, weight = 'norm_tfidf')
   #m = tc$dtm('word', subset_meta = doc_id == 1)
 
@@ -23,7 +22,7 @@ test_that("comparing documents works", {
   expect_true(igraph::is.directed(g))
   expect_true(igraph::ecount(g) == 4)
 
-  capture_output({ ## ignores print verbose
+  capture.output({ ## ignores print verbose
   g = tc$compare_documents(date_col = 'date', hour_window = c(0,36))
   })
 

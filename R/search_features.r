@@ -83,18 +83,18 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
     hit$doc_id = tc$get('doc_id')[hit$i]
 
     ## take subset into account
-    subset_tokens = queries$subset_tokens[i]
-    subset_meta = queries$subset_meta[i]
-    if (is.na(subset_tokens)) subset_tokens = NULL
-    if (is.na(subset_meta)) subset_meta = NULL
+    evalhere_subset_tokens = queries$subset_tokens[i]
+    evalhere_subset_meta = queries$subset_meta[i]
+    if (is.na(evalhere_subset_tokens)) evalhere_subset_tokens = NULL
+    if (is.na(evalhere_subset_meta)) evalhere_subset_meta = NULL
 
-    if (!is.null(subset_tokens) | !is.null(subset_meta)){
+    if (!is.null(evalhere_subset_tokens) | !is.null(evalhere_subset_meta)){
       if (i == 1) {
-        i_filter = tc$subset_i(subset=subset_tokens, subset_meta=subset_meta)
-      } else { # if subset_tokens and subset_meta are identical to previous query, i_filter does not need to be calculated again (this is easily the case, since its convenient to give a subset globally by passing a single value)
+        i_filter = tc$subset_i(subset=evalhere_subset_tokens, subset_meta=evalhere_subset_meta)
+      } else { # if evalhere_subset_tokens and evalhere_subset_meta are identical to previous query, i_filter does not need to be calculated again (this is easily the case, since its convenient to give a subset globally by passing a single value)
 
-        if (!identical(subset_tokens, queries$subset_tokens[i-1]) | !identical(subset_meta, queries$subset_meta[i-1])) {
-          i_filter = tc$subset_i(subset=subset_tokens, subset_meta=subset_meta)
+        if (!identical(evalhere_subset_tokens, queries$subset_tokens[i-1]) | !identical(evalhere_subset_meta, queries$subset_meta[i-1])) {
+          i_filter = tc$subset_i(subset=evalhere_subset_tokens, subset_meta=evalhere_subset_meta)
         }
       }
       hit = hit[hit$i %in% i_filter,,drop=F]
