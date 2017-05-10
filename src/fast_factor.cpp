@@ -6,12 +6,12 @@ IntegerVector fast_factor_template( const Vector<RTYPE>& x, Vector<RTYPE> levs) 
   if (levs.size() == 0) {
     levs = sort_unique(x);
   }
-  IntegerVector out = match(x, levs);
-  out.attr("levels") = as<CharacterVector>(levs);
+  Vector<RTYPE> levs_nona = na_omit(levs);
+  IntegerVector out = match(x, levs_nona);
+  out.attr("levels") = as<CharacterVector>(levs_nona);
   out.attr("class") = "factor";
   return out;
 }
-
 
 // [[Rcpp::export]]
 SEXP fast_factor( SEXP x, SEXP levs) {

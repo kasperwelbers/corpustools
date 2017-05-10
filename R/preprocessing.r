@@ -13,22 +13,6 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
   tc$set(column = new_column, value = evalhere_feature)
 }
 
-#' Filter features
-#'
-#' Similar to subsetting, but instead of deleting rows, the rows for the specified column as set to NA. This way the vocabulary can be reduced while still beign able to bring results of analyses back to the full text
-#'
-subset_feature_fun <- function(tc, i, column, new_column, inverse=F){
-  evalhere_i = i
-  if (column == new_column) {
-    tc$set(new_column, NA, subset = evalhere_i, copy=F)
-  } else {
-    evalhere_feature = tc$get(column)
-    evalhere_feature[evalhere_i] = NA
-    tc$set(new_column, evalhere_feature, copy=F)
-  }
-  invisible(tc)
-}
-
 #' @export
 preprocess_words <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=T, as_ascii=F, remove_punctuation=T, remove_stopwords=F){
   language = match.arg(language, choices=c('danish','dutch','english','finnish','french','german','hungarian','italian','norwegian','porter','portuguese','romanian','russian','spanish','swedish','turkish'))

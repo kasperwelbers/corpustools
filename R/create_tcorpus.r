@@ -155,7 +155,7 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
   }
 
   if (!is.null(meta_cols)){
-    add_meta = unique(tokens[,c('doc_id', meta_cols)])
+    add_meta = unique(tokens[,c('doc_id', meta_cols), with=F])
     if (nrow(add_meta) > nrow(meta)) stop('The document meta columns specified in meta_cols are not unique within documents')
     meta = cbind(meta, add_meta[,meta_cols,with=F])
   }

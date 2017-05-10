@@ -184,7 +184,9 @@ tCorpus <- R6::R6Class("tCorpus",
        if(methods::is(substitute(subset_tokens), 'call')) subset_tokens = eval(substitute(subset_tokens), private$.data, parent.frame())
        if(methods::is(substitute(subset_meta), 'call')) subset_meta = eval(substitute(subset_meta), private$.meta, parent.frame())
 
-       get_dtm(self, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form, subset_tokens=subset_tokens, subset_meta=subset_meta, context=context, context_labels=context_labels, feature_labels=feature_labels, ngrams=ngrams, ngram_before_subset=ngram_before_subset)
+       get_dtm(self, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form,
+               subset_tokens=subset_tokens, subset_meta=subset_meta, context=context, context_labels=context_labels,
+               feature_labels=feature_labels, ngrams=ngrams, ngram_before_subset=ngram_before_subset)
      },
 
 ## DATA MODIFICATION METHODS ##
@@ -197,10 +199,10 @@ tCorpus <- R6::R6Class("tCorpus",
                    p = private$.p)
      },
 
-     set = function(column, value, subset=NULL, copy=self$copy_on_modify){
+     set = function(column, value, subset=NULL, subset_value=T, copy=self$copy_on_modify){
        if (column == 'doc_id') stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
-       if(methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.data, parent.frame())
-       if(methods::is(substitute(value), 'call')) value = eval(substitute(value), private$.data, parent.frame())
+       if (methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.data, parent.frame())
+       if (methods::is(substitute(value), 'call')) value = eval(substitute(value), private$.data, parent.frame())
        if (grepl('^evalhere_', column)) stop('column names in a tCorpus cannot start with evalhere_')
 
        if (copy) {
@@ -209,23 +211,29 @@ tCorpus <- R6::R6Class("tCorpus",
        }
 
        if (!is.null(subset)){
+         if (subset_value & length(value) > 1) value = value[subset]
          if (!column %in% colnames(private$.data)) {
            private$.data[,(column) := NA]
-           if (methods::is(value, 'factor')) private$.data[,(column) := fast_factor(private$.data[[column]])]
-         } else {
-           if (methods::is(private$.data[[column]], 'factor')) {
-             value = fast_factor(value)
-             levels(private$.data[[column]]) = c(levels(private$.data[[column]]), levels(value))
+           if (methods::is(value, 'factor')) {
+             private$.data[,(column) := fast_factor(private$.data[[column]])]
+           } else {
+             private$.data[,(column) := methods::as(private$.data[[column]], class(value))]
            }
-           if (column %in% c('sent_i','word_i')) {  ## for position columns, first perform checks (inefficient, but this should be a rare case anyway)
-              if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')
-              value = as.integer(value)
-              mod = if ('sent_i' %in% self$names) private$.data[,c('doc_id','sent_i','word_i')] else private$.data[,c('doc_id','word_i')]
-              mod[subset, (column) := value]
-              check_unique_rows(mod)
-           }
-           private$.data[subset, (column) := value]
          }
+         if (methods::is(private$.data[[column]], 'factor')) {
+           value = fast_factor(value)
+           levels(private$.data[[column]]) = c(levels(private$.data[[column]]), levels(value))
+         }
+
+         if (column %in% c('sent_i','word_i')) {  ## for position columns, first perform checks (inefficient, but this should be a rare case anyway)
+            if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')
+            value = as.integer(value)
+            mod = if ('sent_i' %in% self$names) private$.data[,c('doc_id','sent_i','word_i')] else private$.data[,c('doc_id','word_i')]
+            mod[subset, (column) := value]
+            check_unique_rows(mod)
+         }
+         private$.data[subset, (column) := value]
+
        } else {
          if (column %in% c('sent_i','word_i')) {
            if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')
@@ -238,6 +246,12 @@ tCorpus <- R6::R6Class("tCorpus",
          suppressWarnings(private$.data[,(column) := value])
        }
        if (identical(self$provenance()$index_feature, column)) self$reset_feature_index # reset feature index if necessary
+
+       ## strangely, the assign by reference in data.table sometimes adds NA as a factor level...
+       if (anyNA(levels(private$.data[[column]]))) {
+         private$.data[,(column) := factor(private$.data[[column]])]
+       }
+
        self$set_keys()
        invisible(self)
      },
@@ -274,10 +288,11 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
-     set_meta = function(column, value, subset=NULL, copy=self$copy_on_modify){
+     set_meta = function(column, value, subset=NULL, subset_value=T, copy=self$copy_on_modify){
        if (column == 'doc_id') stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
        if(methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.meta, parent.frame())
        if(methods::is(substitute(value), 'call')) value = eval(substitute(value), private$.meta, parent.frame())
+
        if (grepl('^evalhere_', column)) stop('column names in a tCorpus cannot start with evalhere_')
 
        if (copy) {
@@ -286,19 +301,30 @@ tCorpus <- R6::R6Class("tCorpus",
        }
 
        if (!is.null(subset)){
+         if (subset_value & length(value) > 1) value = value[subset]
+
          if (!column %in% colnames(private$.meta)) {
            private$.meta[[column]] = NA
-           if (methods::is(value, 'factor')) private$.meta[[column]] = fast_factor(private$.meta[[column]])
-         } else {
-           if (methods::is(private$.meta[[column]], 'factor')) {
-             value = fast_factor(value)
-             levels(private$.meta[[column]]) = c(levels(private$.meta[[column]]), levels(value))
+           if (methods::is(value, 'factor')) {
+             private$.meta[[column]] = fast_factor(private$.meta[[column]])
+           } else {
+             private$.meta[,(column) := methods::as(private$.meta[[column]], class(value))]
            }
-           private$.meta[subset, (column) := value]
          }
+         if (methods::is(private$.meta[[column]], 'factor')) {
+           value = fast_factor(value)
+           levels(private$.meta[[column]]) = c(levels(private$.meta[[column]]), levels(value))
+         }
+         private$.meta[subset, (column) := value]
+
        } else {
          ## ugly suppress. Should look into why data.table give the (seemingly harmless) internal.selfref warning
          suppressWarnings(private$.meta[,(column) := value])
+       }
+
+       ## strangely, the assign by reference in data.table sometimes adds NA as a factor level...
+       if (anyNA(levels(private$.meta[[column]]))) {
+         private$.meta[,(column) := factor(private$.meta[[column]])]
        }
        invisible(self)
      },
@@ -458,13 +484,21 @@ tCorpus <- R6::R6Class("tCorpus",
      },
 
      feature_subset = function(column, new_column, subset, inverse=F, copy=self$copy_on_modify){
-       if(methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.data, parent.frame())
+       if (methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.data, parent.frame())
 
        if (copy) {
          selfcopy = self$copy()$feature_subset(column=column, new_column=new_column, subset=subset, inverse=inverse, copy=F)
          return(selfcopy)
        }
-       invisible(subset_feature_fun(self, i=which(!subset), column=column, new_column=new_column, inverse=inverse))
+
+       if (inverse) {
+         if (is(subset, 'numeric')) subset = 1:self$n %in% subset ## this can be the case if a vector of indices is passed to subset (which is not a valid call, but is allowed for convenience because it is a common way of subsetting)
+         subset = !subset
+       }
+
+       evalhere_subset = subset
+       self$set(new_column, private$.data[[column]], subset = evalhere_subset, copy=F)
+       invisible(self)
      },
 
      feature_stats = function(feature, context_level=c('document','sentence')){
@@ -597,11 +631,13 @@ tCorpus <- R6::R6Class("tCorpus",
          return(selfcopy)
        }
 
+       ## adding DEDUPLICATE_FEATURE is not very elegant and memory efficient. Better alternative, perhaps, is to pass docfreq_filter results to compare_documents_fun.
        evalhere_feature = feature
        self$set('DEDUPLICATE_FEATURE', self$get(evalhere_feature), copy = F)
        self$feature_subset('DEDUPLICATE_FEATURE', 'DEDUPLICATE_FEATURE', subset = docfreq_filter('DEDUPLICATE_FEATURE', min=min_docfreq, max=self$n * max_docfreq_pct), copy=F)
 
-       evalhere_duplicates = get_duplicates(self, feature=feature, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
+
+       evalhere_duplicates = get_duplicates(self, feature='DEDUPLICATE_FEATURE', date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
        self$subset(subset_meta = !doc_id %in% evalhere_duplicates, copy=F)
        self$set('DEDUPLICATE_FEATURE', NULL, copy=F)
        invisible(self)
@@ -623,8 +659,8 @@ tCorpus <- R6::R6Class("tCorpus",
           selfcopy = self$copy()$lda_topic_features(m=m, feature=feature, new_feature=new_feature, context_level=context_level, copy=F)
           return(selfcopy)
         }
-        d = lda_features(tc=self, m=m, feature=feature, new_feature=new_feature, context_level=context_level)
-        self$set(new_feature, d$v[order(d$i)], copy=F)
+        evalhere_d = lda_features(tc=self, m=m, feature=feature, new_feature=new_feature, context_level=context_level)
+        self$set(new_feature, evalhere_d$v[order(evalhere_d$i)], copy=F)
         invisible(self)
       },
 

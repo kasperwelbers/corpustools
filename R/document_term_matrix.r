@@ -23,7 +23,8 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   }
 
   feature = tc$get(feature)
-  if(!methods::is(feature, 'factor')) feature = factor(feature)
+
+  if(!methods::is(feature, 'factor')) feature = fast_factor(feature)
   if (!is.na(ngrams)) {
     filter = if (ngram_before_subset) NULL else sub_i
     feature = grouped_ngrams(feature, group = i, n = ngrams, filter = filter, label = feature_labels) ## designed to work fast if no labels are needed

@@ -1,9 +1,8 @@
 
-## add support for spacyr
-
-## perhaps DO make .data and .meta public, (possibly rename as .DATA and .META) and just very clearly note in the documentation that using these is a your own risk
-## the main reason is that it is much faster and memory efficient to use this data directly.
-## Then, also add a test method that check whether assumptions have been violated.
+## there is still some funky stuff with subset and set. When a call is a single object name, it is not recognized as a call
+## e.g., tc$set('feature', word) does not work, even if tc$data has a word column. But tc$set('feature', tolower(word)) would work.
+## Currently the reason to only evaluate if a call is that this allows passing on of evaluation results in nested functions.
+## One solution is to pass evaluation results as an evalhere_ object, and then always evaluate calls.
 
 ## when creating a tCorpus, keep all settings as provenance. When appending data, use provenance as default settings
 

@@ -20,13 +20,16 @@ dtm_compare <- function(dtm.x, dtm.y=NULL, smooth=1, min_over=NULL, min_chi2=NUL
   }
   freqs.x = data.frame(feature=colnames(dtm.x), freq=Matrix::colSums(dtm.x))
   freqs.y = data.frame(feature=colnames(dtm.y), freq=Matrix::colSums(dtm.y))
+
   f = merge(freqs.x, freqs.y, all=T, by="feature")
   f[is.na(f)] = 0
   if (x_is_subset) f$freq.y = f$freq.y - f$freq.x
+
   f$freq = f$freq.x + f$freq.y
   f = f[f$freq > 0,]
-  f$relfreq.x = (f$freq.x+smooth) / (sum(freqs.x$freq) + (nrow(freqs.x)*smooth))
-  f$relfreq.y = (f$freq.y+smooth) / (sum(freqs.y$freq) + (nrow(freqs.y)*smooth))
+
+  f$relfreq.x = (f$freq.x+smooth) / (sum(f$freq.x) + (nrow(f)*smooth))
+  f$relfreq.y = (f$freq.y+smooth) / (sum(f$freq.y) + (nrow(f)*smooth))
   f$over = (f$relfreq.x) / (f$relfreq.y)
 
   freq.notx = sum(f$freq.x) - f$freq.x

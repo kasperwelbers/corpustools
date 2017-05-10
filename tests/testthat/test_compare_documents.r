@@ -3,11 +3,13 @@ test_that("comparing documents works", {
   start_time = Sys.time()
 
   library(corpustools)
+  corpustools:::sourceall()
   d = data.frame(text = c('Renewable fuel is better than fossil fuels!',
                           'A fueled debate about fuel',
                           'Mark Rutte is simply Rutte'),
                  date = c('2010-01-01','2010-01-01','2012-01-01'))
   tc = create_tcorpus(d)
+
 
   #tc$dtm('word', subset_tokens = word_i < 10, weight = 'norm_tfidf')
   #m = tc$dtm('word', subset_meta = doc_id == 1)
