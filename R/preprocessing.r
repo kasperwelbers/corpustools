@@ -13,6 +13,20 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
   tc$set(column = new_column, value = evalhere_feature)
 }
 
+
+#' Preprocess words in a character vector
+#'
+#' @param x A character vector in which each element is a word (i.e. a tokenized text)
+#' @param context Optionally, a character vector of the same length as x, specifying the context of word (e.g., document, sentence). Has to be given if ngram > 1
+#' @param language The language used for stemming and removing stopwords
+#' @param use_stemming Logical, use stemming. (Make sure the specify the right language!)
+#' @param lowercase Logical, make word lowercase
+#' @param ngrams A number, specifying the number of words per ngram. Default is unigrams (1).
+#' @param replace_whitespace Logical. If TRUE, all whitespace is replaced by underscores
+#' @param as_ascii Logical. If TRUE, words will be forced to ascii
+#' @param remove_punctuation Logical. if TRUE, punctuation is removed
+#' @param remove_stopwords Logical. If TRUE, stopwords are removed (Make sure to specify the right language!)
+#'
 #' @export
 preprocess_words <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=T, as_ascii=F, remove_punctuation=T, remove_stopwords=F){
   language = match.arg(language, choices=c('danish','dutch','english','finnish','french','german','hungarian','italian','norwegian','porter','portuguese','romanian','russian','spanish','swedish','turkish'))

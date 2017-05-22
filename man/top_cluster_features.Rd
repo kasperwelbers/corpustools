@@ -7,6 +7,15 @@
 top_cluster_features(g, cluster_attr, measure = c("degree", "freq"),
   top_n = 5)
 }
+\arguments{
+\item{g}{an Igraph object}
+
+\item{cluster_attr}{THe name of the vertex attribute that contains the cluster ids}
+
+\item{measure}{The measure used to determine the top features. currently supports highest "degree" or "freq" (if freq column exists)}
+
+\item{top_n}{The number of top features per cluster}
+}
 \description{
 Get top features from semnet clusters
 }

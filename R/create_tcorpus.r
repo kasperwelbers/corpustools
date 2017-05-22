@@ -1,12 +1,19 @@
+?print
 
 #' Create a tCorpus
 #'
 #' @rdname create_tcorpus
 #'
+#' @param x main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.
 #' @param meta A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x
 #' @param split_sentences Logical. If TRUE, the sentence number of tokens is also computed.
 #' @param max_words An integer. Limits the number of words per document to the specified number
+#' @param doc_id if x is a character/factor vector, doc_id can be used to specify document ids. This has to be a vector of the same length as x
+#' @param doc_column If x is a data.frame, this specifies the column with the document ids.
+#' @param text_columns if x is a data.frame, this specifies the column(s) that contains text. The texts are paste together in the order specified here.
 #' @param max_sentences An integer. Limits the number of sentences per document to the specified number. If set when split_sentences == FALSE, split_sentences will be set to TRUE.
+#' @param verbose If TRUE, report progress
+#' @param ... not used
 #'
 #' @export
 #' @name create_tcorpus

@@ -11,7 +11,7 @@
 
 \item{...}{See \link{tCorpus$search_features} for the query parameters}
 
-\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
+\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
 }
 \description{
 Search features (see \link{tCorpus$search_features}) and replace features with a new value
@@ -23,7 +23,7 @@ Search features (see \link{tCorpus$search_features}) and replace features with a
 \preformatted{
 search_recode(feature, new_value, keyword, condition = NA,
               condition_once = F, subset_tokens = NA, subset_meta = NA,
-              copy = self$copy_on_modify)
+              copy = self$always_copy)
 }
 }
 

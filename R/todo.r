@@ -1,4 +1,8 @@
 
+## fix and test how data.table deals with factors if assign by reference is used.
+## do something about how the set and set_meta methods deal with assigning by subset if the classes don't match. Yield error seems best
+
+
 ## there is still some funky stuff with subset and set. When a call is a single object name, it is not recognized as a call
 ## e.g., tc$set('feature', word) does not work, even if tc$data has a word column. But tc$set('feature', tolower(word)) would work.
 ## Currently the reason to only evaluate if a call is that this allows passing on of evaluation results in nested functions.

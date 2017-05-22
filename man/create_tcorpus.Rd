@@ -22,6 +22,12 @@ create_tcorpus(x, ...)
   max_words = NULL, ...)
 }
 \arguments{
+\item{x}{main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.}
+
+\item{...}{not used}
+
+\item{doc_id}{if x is a character/factor vector, doc_id can be used to specify document ids. This has to be a vector of the same length as x}
+
 \item{meta}{A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x}
 
 \item{split_sentences}{Logical. If TRUE, the sentence number of tokens is also computed.}
@@ -29,6 +35,12 @@ create_tcorpus(x, ...)
 \item{max_sentences}{An integer. Limits the number of sentences per document to the specified number. If set when split_sentences == FALSE, split_sentences will be set to TRUE.}
 
 \item{max_words}{An integer. Limits the number of words per document to the specified number}
+
+\item{verbose}{If TRUE, report progress}
+
+\item{text_columns}{if x is a data.frame, this specifies the column(s) that contains text. The texts are paste together in the order specified here.}
+
+\item{doc_column}{If x is a data.frame, this specifies the column with the document ids.}
 }
 \description{
 Create a tCorpus

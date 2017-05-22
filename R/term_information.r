@@ -1,10 +1,8 @@
 
-#' Compute some useful corpus statistics for a dtm
-#'
-#' Compute a number of useful statistics for filtering words: term frequency, idf, etc.
-#'
-#' @param dtm a document term matrix
-#' @return A data frame with rows corresponding to the terms in dtm and the statistics in the columns
+# Compute some useful corpus statistics for a dtm
+#
+# Compute a number of useful statistics for filtering words: term frequency, idf, etc.
+
 term_statistics <- function(tc, feature, context_level=c('document','sentence')) {
   dtm = tc$dtm(feature, context_level=context_level)
   dtm = dtm[Matrix::rowSums(dtm) > 0, Matrix::colSums(dtm) > 0]    # get rid of empty rows/columns

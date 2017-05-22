@@ -5,14 +5,22 @@
 #' Before plotting the network, the setNetworkAttributes() function is used to set pretty defaults for plotting. Optionally, reduce_labeloverlap can be used to prevent labeloverlap (as much as possible).
 #'
 #' @param g A network in the igraph format. Specifically designed for the output of coOccurenceNetwork() and windowedCoOccurenceNetwork()
+#' @param weight_attr The name of the weight attribute. Default is 'weight'
+#' @param min_weight The minimum weight. All edges with a lower weight are dropped
+#' @param delete_isolates If TRUE, isolate vertices (also after applying min_weight) are dropped
 #' @param vertexsize_attr a character string indicating a vertex attribute that represents size. Default is 'freq', which is created in the coOccurenceNetwork functions to indicate the number of times a word occured.
+#' @param vertexsize_coef a coefficient for changing the vertex size.
 #' @param vertexcolor_attr a character string indicating a vertex attribute that represents color. The attribute can also be a numeric value (e.g., a cluster membership) in which case colors are assigned to numbers. If no (valid) color attribute is given, vertex color are based on undirected fastgreedy.community() clustering.
+#' @param edgewidth_coef a coefficient for changing the edge width
+#' @param max_backbone_alpha If g has an edge attribute named alpha (added if backbone extraction is used), this specifies the maximum alpha value.
 #' @param labelsize_coef a coefficient for increasing or decreasing the size of the vertexlabel.
 #' @param labelspace_coef a coefficient that roughly determines the minimal distance between vertex labels, based on the size of labels. Only used if reduce_labeloverlap is TRUE.
 #' @param reduce_labeloverlap if TRUE, an algorithm is used to reduce overlap as best as possible.
 #' @param redo_layout If TRUE, a new layout will be calculated using layout_with_fr(). If g does not have a layout attribute (g$layout), a new layout is automatically calculated.
 #' @param return_graph if TRUE, plot_semnet() also returns the graph object with the attributes and layout as shown in the plot.
 #' @param ... additional arguments are passed on to plot.igraph()
+#' @param vertex.label.dist The distance of the label to the center of the vertex
+#' @param layout_fun The igraph layout function that is used.
 #'
 #' @return Plots a network, and returns the network object if return_graph is TRUE.
 #' @export
@@ -63,8 +71,12 @@ plot_args_as_attributes <- function(g, args){
 #' The purpose of this function is to create some default network attribute options to plot networks in a nice and insightfull way.
 #'
 #' @param g A graph in the Igraph format.
+#' @param color_attribute the name of the attribute that is used to select the color
+#' @param redo_layout if TRUE, force new layout if layout already exists as a graph attribute
+#' @param edgewidth_coef A coefficient for changing the edge width
+#' @param layout_fun THe igraph layout function used
 #' @param size_attribute the name of the vertex attribute to be used to set the size of nodes
-#' @param if TRUE, isolates are placed next to the network
+#'
 #' @return a network in the Igraph format
 #' @export
 setNetworkAttributes <- function(g, size_attribute='freq', color_attribute=NA, redo_layout=F, edgewidth_coef=1, layout_fun=igraph::layout_with_fr){
@@ -170,32 +182,13 @@ reduceLabelOverlap <- function(g, labelspace_coef=1.1, cex_from_device=F, label.
   g
 }
 
-
-#' Plot a wordcloud with words ordered and coloured according to a dimension (x)
-#'
-#' @param x The (approximate) x positions of the words
-#' @param y The (approximate) y positions of the words
-#' @param words A character vector with the words to plot
-#' @param wordfreq The frequency of the words, defaulting to 1
-#'
-#' @export
-plotWords <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', ylab='', yaxt='n', scale=2, random.y=F, xlim=NULL, ylim=NULL, col=NULL, ...){
-  wordsize = rescale_var(log(wordfreq), 0.75, scale)
-  if (is.null(y) & random.y) y = sample(seq(-1, 1, by = 0.001), length(x))
-  if (is.null(y) & !random.y) y = wordsize
-  xmargin = (max(x) - min(x)) * 0.2
-  ymargin = (max(y) - min(y)) * 0.2
-  if (is.null(xlim)) xlim = c(min(x) - xmargin, max(x) + xmargin)
-  if (is.null(ylim)) ylim = c(min(y) - ymargin, max(y) + ymargin)
-
-  graphics::plot(x, y, type = "n", xlim = xlim, ylim = ylim, frame.plot = F, yaxt = yaxt, ylab = ylab, xlab = xlab, ...)
-  wl <- as.data.frame(wordcloud::wordlayout(x, y, words, cex = wordsize))
-
-  graphics::text(wl$x + 0.5 * wl$width, wl$y + 0.5 * wl$ht, words, cex = wordsize, col = col)
-}
-
 #' Get top features from semnet clusters
 #'
+#'
+#' @param g an Igraph object
+#' @param cluster_attr THe name of the vertex attribute that contains the cluster ids
+#' @param measure The measure used to determine the top features. currently supports highest "degree" or "freq" (if freq column exists)
+#' @param top_n The number of top features per cluster
 #'
 #' @export
 top_cluster_features <- function(g, cluster_attr, measure=c('degree','freq'), top_n=5){

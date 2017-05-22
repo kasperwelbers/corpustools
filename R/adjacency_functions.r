@@ -2,8 +2,14 @@
 #'
 #' This function returns the occurence of words (position.matrix) and the window of occurence (window.matrix). This format enables the co-occurence of words within sliding windows (i.e. word distance) to be calculated by multiplying position.matrix with window.matrix.
 #'
+#' @param tc a tCorpus object
+#' @param feature The name of the feature column
+#' @param context_level Select whether to use "document" or "sentence" as context boundaries
 #' @param window.size The distance within which words should occur from each other to be counted as a co-occurence.
 #' @param direction a string indicating whether only the left ('<') or right ('>') side of the window, or both ('<>'), should be used.
+#' @param distance_as_value If True, the values of the matrix will represent the shorts distance to the occurence of a feature
+#' @param batch_rows Used in functions that call this function in batches
+#' @param drop_empty_terms If TRUE, emtpy terms (with zero occurence) will be dropped
 #'
 #' @return A list with two matrices. position.mat gives the specific position of a term, and window.mat gives the window in which each word occured. The rows represent the position of a term, and matches the input of this function (position, term and context). The columns represents terms.
 #' @export

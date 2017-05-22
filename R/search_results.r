@@ -19,6 +19,11 @@ is.featureHits <- function(fh, ...) {
   return(TRUE)
 }
 
+#' S3 print for featureHits class
+#'
+#' @param x a featureHits object, as returned by \link{tCorpus$search_features}
+#' @param ... not used
+#'
 #' @export
 print.featureHits <- function(x, ...){
   if(!is.featureHits(x)) stop('Not a proper featureHits object')
@@ -29,6 +34,11 @@ print.featureHits <- function(x, ...){
   if(!is.null(n_sent)) cat(' /', n_sent, 'sentences)\n') else cat(')\n')
 }
 
+#' S3 summary for featureHits class
+#'
+#' @param object a featureHits object, as returned by \link{tCorpus$search_features}
+#' @param ... not used
+#'
 #' @export
 summary.featureHits <- function(object, ...){
   doc_id = sent_i = hit_id = NULL ##  used in data.table syntax, but need to have bindings for R CMD check
@@ -70,6 +80,11 @@ is.contextHits <- function(ch, ...) {
   return(TRUE)
 }
 
+#' S3 print for contextHits class
+#'
+#' @param x a contextHits object, as returned by \link{tCorpus$search_contexts}
+#' @param ... not used
+#'
 #' @export
 print.contextHits <- function(x, ...){
   if(!is.contextHits(x)) stop('Not a proper featureHits object')
@@ -79,6 +94,11 @@ print.contextHits <- function(x, ...){
   if(!is.null(n_sent)) cat(' /', n_sent, 'sentences') else cat('\n')
 }
 
+#' S3 summary for contextHits class
+#'
+#' @param object a contextHits object, as returned by \link{tCorpus$search_contexts}
+#' @param ... not used
+#'
 #' @export
 summary.contextHits <- function(object, ...){
   #if(is.null(object$hits)) return(NULL)

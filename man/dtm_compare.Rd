@@ -6,7 +6,7 @@
 \usage{
 dtm_compare(dtm.x, dtm.y = NULL, smooth = 1, min_over = NULL,
   min_chi2 = NULL, select_rows = NULL, yates_cor = c("auto", "yes", "no"),
-  x_is_subset = F)
+  x_is_subset = F, what = c("freq", "docfreq"))
 }
 \arguments{
 \item{dtm.x}{the main document-term matrix}
@@ -14,6 +14,18 @@ dtm_compare(dtm.x, dtm.y = NULL, smooth = 1, min_over = NULL,
 \item{dtm.y}{the 'reference' document-term matrix}
 
 \item{smooth}{the smoothing parameter for Laplace smoothing.}
+
+\item{min_over}{threshold for the over value, which is the ratio of the relative frequency of a term in dtm.x and dtm.y}
+
+\item{min_chi2}{threshold for the chi^2 value}
+
+\item{select_rows}{Alternative to using dtm.y. Has to be a vector with rownames, by which}
+
+\item{yates_cor}{mode for using yates correctsion in the chi^2 calculation. Can be turned on ("yes") or off ("no"), or set to "auto", in which case cochrans rule is used to determine whether yates' correction is used.}
+
+\item{x_is_subset}{Specify whether dtm.x is a subset of dtm.y. In this case, the term frequencies of dtm.x will be subtracted from the term frequencies in dtm.y}
+
+\item{what}{choose whether to compare the frequency ("freq") of terms, or the document frequency ("docfreq"). This also affects how chi^2 is calculated, comparing either freq relative to vocabulary size or docfreq relative to corpus size (N)}
 }
 \value{
 A data frame with rows corresponding to the terms in dtm and the statistics in the columns

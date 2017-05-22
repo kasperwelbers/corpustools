@@ -15,7 +15,7 @@ lda_features <- function(tc, m, feature, new_feature='LDA_topic', context_level=
 }
 ?tCorpus
 
-#' Estimate a topic model using the lda package
+#' Estimate a topic model using the LDA function of the topicmodels package
 #'
 #' Estimate an LDA topic model using the LDA function from the topicmodels package.
 #' The parameters other than dtm are simply passed to the sampler but provide a workable default.
@@ -25,7 +25,10 @@ lda_features <- function(tc, m, feature, new_feature='LDA_topic', context_level=
 #' @param K the number of clusters
 #' @param num.iterations the number of iterations
 #' @param alpha the alpha parameter
+#' @param method set method. see documentation for LDA function of the topicmodels package
+#' @param burnin The number of burnin iterations
 #' @param eta the eta parameter
+#'
 #' @return A fitted LDA model
 #' @export
 lda_fit <- function(dtm, method='Gibbs', K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250) {

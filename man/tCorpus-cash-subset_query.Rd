@@ -5,7 +5,7 @@
 \alias{tCorpus$subset_query}
 \title{Subset tCorpus token data using a query}
 \arguments{
-\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
+\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
 }
 \description{
 A convenience function that searches for contexts (documents, sentences), and uses the results to \link[=tCorpus$search_contexts]{subset} the tCorpus token data.
@@ -16,6 +16,6 @@ See the documentation for \link[=tCorpus$search_contexts]{subset} for an explana
 
 ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 
-\preformatted{subset_query(query, feature = 'word', context_level = c('document','sentence'), copy = self$copy_on_modify)}
+\preformatted{subset_query(query, feature = 'word', context_level = c('document','sentence'), copy = self$always_copy)}
 }
 

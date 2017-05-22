@@ -16,7 +16,7 @@
 \strong{Context-level queries}
 \tabular{ll}{
   \link[=tCorpus$search_contexts]{$search_contexts()} \tab Search for documents or sentences using Lucene-like queries \cr
-  \link[=tCorpus$search_subset]{$search_subset()} \tab use the search_contexts query syntax to subset the tCorpus
+  \link[=tCorpus$subset_query]{$subset_query()} \tab use the search_contexts query syntax to subset the tCorpus
 }
 }
 

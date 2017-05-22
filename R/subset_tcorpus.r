@@ -12,11 +12,6 @@ i_window <- function(tc, i, window, context_level=c('document','sentence')){
   data.table::fsort(unique(window_i))
 }
 
-#' Subset a tcorpus for a window around the results of search_features()
-#'
-#' This function works like the search_features() function, but instead of returning a data.frame with the search results, it returns a subset of the tcorpus with the search results, and a specified window arround the results.
-#'
-#' @return a tCorpus object
 subset_query_window <- function(tc, window, keyword=NA, condition=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, verbose=F){
   hits = search_features(tc, keyword=keyword, condition=condition, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, only_last_mword=F, verbose=verbose)
   tc = subset_window(tc, i=hits$i, window=window, context_level = 'document')
@@ -38,7 +33,17 @@ x_filter <- function(ft, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
   select
 }
 
-
+#' Support function for subset method
+#'
+#' Support function to enable subsetting by frequency stats of a given feature.
+#' Should only be used within the tCorpus subset method, or any tCorpus method that supports a subset argument.
+#'
+#' @param x the name of the feature column. Can be given as a call or a string.
+#' @param min A number, setting the minimum frequency value
+#' @param max A number, setting the maximum frequency value
+#' @param top A number. If given, only the top x features with the highest frequency are TRUE
+#' @param bottom A number. If given, only the bottom x features with the highest frequency are TRUE
+#'
 #' @export
 freq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
   if (methods::is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
@@ -47,6 +52,18 @@ freq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
 }
 
 
+#' Support function for subset method
+#'
+#' Support function to enable subsetting by document frequency stats of a given feature.
+#' Should only be used within the tCorpus subset method, or any tCorpus method that supports a subset argument.
+#'
+#' @param x the name of the feature column. Can be given as a call or a string.
+#' @param min A number, setting the minimum document frequency value
+#' @param max A number, setting the maximum document frequency value
+#' @param top A number. If given, only the top x features with the highest document frequency are TRUE
+#' @param bottom A number. If given, only the bottom x features with the highest document frequency are TRUE
+#' @param doc_id Added for reference, but should not be used. Automatically takes doc_id from tCorpus if the docfreq_filter function is used within the subset method.
+#'
 #' @export
 docfreq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL, doc_id=parent.frame()$doc_id) {
   if (methods::is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))

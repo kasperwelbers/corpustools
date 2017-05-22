@@ -4,8 +4,17 @@
 #'
 #' @param x The (approximate) x positions of the words
 #' @param y The (approximate) y positions of the words
-#' @param words A character vector with the words to plot
 #' @param wordfreq The frequency of the words, defaulting to 1
+#' @param words A character vector with the words to plot
+#' @param xlab Label of the x axis
+#' @param ylab Label of the y axis
+#' @param yaxt see \code{par} documentation
+#' @param scale Maximum size to scale the wordsize
+#' @param random.y if TRUE, the y position of words is random, otherwise it represents the word frequency.
+#' @param xlim Starting value of x axis
+#' @param ylim Starting value of y axis
+#' @param ... additional parameters passed to the plot function
+#'
 #' @return nothing
 #' @export
 plotWords <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', ylab='', yaxt='n', scale=2, random.y=T, xlim=NULL, ylim=NULL, ...){

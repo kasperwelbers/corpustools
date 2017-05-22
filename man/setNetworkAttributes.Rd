@@ -13,7 +13,13 @@ setNetworkAttributes(g, size_attribute = "freq", color_attribute = NA,
 
 \item{size_attribute}{the name of the vertex attribute to be used to set the size of nodes}
 
-\item{if}{TRUE, isolates are placed next to the network}
+\item{color_attribute}{the name of the attribute that is used to select the color}
+
+\item{redo_layout}{if TRUE, force new layout if layout already exists as a graph attribute}
+
+\item{edgewidth_coef}{A coefficient for changing the edge width}
+
+\item{layout_fun}{THe igraph layout function used}
 }
 \value{
 a network in the Igraph format

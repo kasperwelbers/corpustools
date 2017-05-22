@@ -1,5 +1,3 @@
-#' Create a document term matrix from a tCorpus
-#'
 get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F){
   form = match.arg(form)
   if(form == 'tm_dtm') if(!requireNamespace('tm', quietly = T)) stop('To use the tm_dtm output form, you need to have the tm package installed.')
@@ -38,9 +36,10 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   if(drop_empty_terms & methods::is(feature, 'factor')) feature = droplevels(feature)
   notNA = !is.na(feature)
 
-  m = Matrix::spMatrix(length(levels(i)), max(as.numeric(feature), na.rm = T),
+  m = Matrix::spMatrix(length(levels(i)), length(levels(feature)),
                        as.numeric(i)[notNA], as.numeric(feature)[notNA],
                        rep(1, sum(notNA)))
+
   dimnames(m) = list(levels(i), levels(feature))
 
   m = weight_dtm(m, weight, idf=idf)

@@ -26,6 +26,6 @@ backbone_filter(g, alpha = 0.05, direction = "none", delete_isolates = T,
 A graph in the Igraph format
 }
 \description{
-Based on the following paper: Serrano, M. Á., Boguna, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.
+Based on the following paper: Serrano, M. A., Boguna, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.
 }
 

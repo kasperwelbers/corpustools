@@ -10,9 +10,13 @@
 #' !! please read the documentation for shard_path if you intend to save the shattered_tCorpus
 #'
 #' @param tc a tCorpus object
+#' @param stc THe name of the shattered tCorpus
+#' @param meta_columns Optionally, meta columns can be used to index the shards. For example, if the meta columns "medium" and "month" are given, then all shards are first indexed in folders per month per medium
+#' @param if_exists What to do if the stc already exists? Default is "stop", to prevent accidental overwriting. "append" can be used to add the new shards to the existing shattered tCorpus, and "overwrite" can be used to delete the old shattered tCorpus.
+#' @param if_duplicates In case that if_exists == "append", what to do if the new tCorpus has document ids that are already in the shattered tCorpus? Default is "stop". Alternatively, duplicate doc_ids can be skipped ("skip"), in case they are actually identical, or the name can be changed ("rename") in case only the name is duplicate
+#' @param compress Use compression
+#' @param verbose If TRUE, report progress
 #' @param tokens_per_shard The number of tokens per shard. This is an approximation, since a tCorpus should not be broken within documents. Also, given the number of shards that is required, tokens will be evently distributed (for instance, if tokens_per_shard is 1,000,000, and there are 1,500,000 tokens, you'll get 2 tokens of 750,000 shards)
-#' @param n_shards Alternatively, you can specify the number of shards. This is also only an approximation, as the algorithm tries to find equal sized shards that do not break documents
-#' @param shard_path the path for where to save the shard files. If not specified, the shards will be saved as temporary files. Note that temporary files are not automatically saved if you save the shattered_tCorpus (which only contains the references), so if you intend to save its best to specify a path to store the shards properly. Alternatively, and recommended, you can use save_stk() to save a shattered_tCorpus with its shards
 #'
 #' @return a shattered_tCorpus object
 #' @export
@@ -161,7 +165,7 @@ reindex_features <- function(tc, stc){
   for(evalhere_feature in features){
     if (!methods::is(tc$get(evalhere_feature), 'factor')) {
       if (evalhere_feature %in% names(feature_levels)) {
-        tc$set(feature, as.factor(tc$get(evalhere_feature)), copy=F)
+        tc$set(evalhere_feature, as.factor(tc$get(evalhere_feature)), copy=F)
       } else next
     }
     fl = feature_levels[[evalhere_feature]]
@@ -317,6 +321,8 @@ redistribute_shards <- function(stc, tokens_per_shard=100000) {
 #' @param stc A shattered_tCorpus object
 #' @param new_stc Either a shattered_tCorpus object or a character string giving the name (or path) for a new shattered_tCorpus.
 #' @param tokens_per_shard The number of tokens per shard. This is an approximation, since a tCorpus should not be broken within documents. Also, given the number of shards that is required, tokens will be evently distributed (for instance, if tokens_per_shard is 1,000,000, and there are 1,500,000 tokens, you'll get 2 tokens of 750,000 shards)
+#' @param meta_columns The new column in the metadata used to index the shards
+#' @param compress Use compression
 #'
 #' @export
 reindex_shards <- function(stc, new_stc=stc, meta_columns=NULL, tokens_per_shard=1000000, compress=TRUE){

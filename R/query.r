@@ -27,8 +27,8 @@ parse_query <- function(query){
   ## checks
   if(any(grepl('\\&[ ]*\\&', query))) stop('Query has repeating AND statemenets (... AND AND ...)')
   if(any(grepl('\\![ ]*\\!', query))) stop('Query has repeating NOT statemenets (... NOT NOT ...)')
+  if(any(grepl('^[ ]*\\&\\!|\\([ ]*\\!', query))) stop('NOT cannot be the first term in a query (or within parentheses) because it means AND NOT. If you want to find everything except what comes after NOT, this can be done with "* NOT ..."')
   if(any(grepl('^[ ]*\\&|\\([ ]*\\&', query))) stop('AND cannot be the first term in a query (or within parentheses)')
-  if(any(grepl('^[ ]*\\!|\\([ ]*\\!', query))) stop('NOT cannot be the first term in a query (or within parentheses) because it means AND NOT. If you want to find everything except what comes after NOT, this can be done with "* NOT ..."')
 
   if(any(grepl('\\^[^0-9]\\b', query, perl=T))) stop('Invalid flag after ^ (caret). This can only be a number (see search_features query details for conditions)')
   if(any(grepl('\\~[^s0-9]\\b', query, perl=T))) stop('Invalid flag after ~ (tilde). This can only be a number (for multiword proximity) or ~s for (case sensitive)')

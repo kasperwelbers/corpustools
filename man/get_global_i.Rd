@@ -9,6 +9,10 @@ get_global_i(tc, context_level = c("document", "sentence"),
 }
 \arguments{
 \item{tc}{tCorpus object}
+
+\item{context_level}{either 'document' or 'sentence'}
+
+\item{max_window_size}{Determines the size of the gap between documents. Called max_window_size because this gap determines what the maximum window size is for non-overlapping windows between documents}
 }
 \value{
 a tCorpus object

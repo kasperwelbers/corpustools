@@ -9,6 +9,7 @@ tCorpus: a corpus class for tokenized texts
 }
 \section{Working with the tCorpus}{
 
+
 The primary goal of the tCorpus is to facilitate various corpus analysis techniques. The documentation for currently implemented techniques can be reached through the following links.
 \tabular{ll}{
   \link[=tCorpus_create]{Create a tCorpus} \tab Functions for creating a tCorpus object \cr

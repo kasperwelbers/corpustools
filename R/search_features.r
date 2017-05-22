@@ -71,8 +71,8 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
 }
 
 search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep_false_condition, verbose){
-  res = list()
   n = nrow(queries)
+  res = vector('list', n)
   for (i in 1:n){
     code = queries$code[i]
     if (verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
@@ -114,12 +114,12 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
     }
 
     if (!keep_false_condition) {
-      res[[code]] = hit[hit$condition, c('feature','i','doc_id', 'hit_id')]
+      res[[i]] = hit[hit$condition, c('feature','i','doc_id', 'hit_id')]
     } else {
-      res[[code]] = hit[,c('feature','i','doc_id','condition', 'hit_id')]
+      res[[i]] = hit[,c('feature','i','doc_id','condition', 'hit_id')]
     }
   }
-
+  names(res) = queries$code
   hits = plyr::ldply(res, function(x) x, .id='code')
   position_cols = if ('sent_i' %in% tc$names) c('sent_i', 'word_i') else c('word_i')
   hits = cbind(hits, tc$get(position_cols, keep_df = T)[hits$i,])

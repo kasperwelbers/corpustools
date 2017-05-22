@@ -17,7 +17,7 @@
 
 \item{low_memory}{if TRUE (default) then data will be sorted in a way that tries to get a roughly equal number of string matches per batch, to prevent huge match tables (costing memory). If FALSE, data will be sorted in a way to get fewer unique words per batch, which can speed up matching, but can lead to a very unequal number of matches per batch.}
 
-\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$copy_on_modify to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
+\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
 }
 \description{
 ``JRC-Names is a highly multilingual named entity resource for person and organisation names. [...] JRC-Names is a by-product of the analysis of about 220,000 news reports per day by the Europe Media Monitor (EMM) family of applications.'' (https://ec.europa.eu/jrc/en/language-technologies/jrc-names)
@@ -32,7 +32,7 @@ The resource needs to be downloaded first. For this you can use the download_res
 jrc_names(new_feature = 'jrc_names', feature = 'word',
           resource_path = getOption('tcorpus_resources', NULL),
           collocation_labels = T, batchsize = 50000, low_memory = T,
-          verbose = T, copy = self$copy_on_modify)
+          verbose = T, copy = self$always_copy)
 }
 }
 

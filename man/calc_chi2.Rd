@@ -8,6 +8,19 @@
 \usage{
 calc_chi2(a, b, c, d, correct = T, cochrans_criteria = F)
 }
+\arguments{
+\item{a}{topleft value of the table}
+
+\item{b}{topright value}
+
+\item{c}{bottomleft value}
+
+\item{d}{bottomright value}
+
+\item{correct}{if TRUE, use yates correction. Can be a vector of length a (i.e. the number of tables)}
+
+\item{cochrans_criteria}{if TRUE, check if cochrans_criteria indicate that a correction should be used. This overrides the correct parameter}
+}
 \description{
 Compute the chi^2 statistic for a 2x2 crosstab containing the values
 [a, b]

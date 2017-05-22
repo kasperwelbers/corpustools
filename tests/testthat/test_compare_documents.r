@@ -10,7 +10,6 @@ test_that("comparing documents works", {
                  date = c('2010-01-01','2010-01-01','2012-01-01'))
   tc = create_tcorpus(d)
 
-
   #tc$dtm('word', subset_tokens = word_i < 10, weight = 'norm_tfidf')
   #m = tc$dtm('word', subset_meta = doc_id == 1)
 

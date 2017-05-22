@@ -1,7 +1,7 @@
 test_that("Corpus comparison works!", {
   cat('\n', '-> Testing: Compare corpora', '\n')
   start_time = Sys.time()
-
+  #corpustools:::sourceall()
   #devtools::install_github('kasperwelbers/tcorpus')
   library(corpustools)
   text = c('Renewable fuel is better than fossil fuels!',
@@ -15,19 +15,16 @@ test_that("Corpus comparison works!", {
   tc_y = create_tcorpus(text_y, split_sentences = T)
 
   comp = tc$compare_corpus(tc_y, 'word')
-
   expect_equal(round(sum(comp$chi2),3), 2.215)
   #graphics::plot(comp)
   #graphics::plot(comp, mode = 'both')
 
   comp = tc$compare_subset('word', query_x = 'rutte')
-  sum(comp$relfreq.x)
-  sum(comp$relfreq.y)
-
   expect_equal(round(sum(comp$chi2),3), 5.646)
   #graphics::plot(comp)
 
-  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
+  comp = tc$compare_subset('word', query_x = 'rutte', what='docfreq', smooth=0)
+  expect_equal(round(sum(comp$chi2),3), 4.809)
 
 
   ### check if relative freq adds to 1
@@ -38,5 +35,7 @@ test_that("Corpus comparison works!", {
 
   expect_true(round(sum(comp$relfreq.x),1) == 1)
   expect_true(round(sum(comp$relfreq.y),1) == 1)
+
+  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 })
 

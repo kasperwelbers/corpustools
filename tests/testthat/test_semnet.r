@@ -45,7 +45,7 @@ test_that("Semnet works", {
 
   tc$search_features('Rutte OR Renewable')
   ## also works with NA's (which are ignored)
-  tc_withNA = tc$search_recode('word', NA, 'Rutte OR Renewable')
+  tc_withNA = tc$search_recode('word', NA, 'Rutte OR Renewable', copy=T)
 
   tc_withNA$data
   g = tc_withNA$semnet('word', measure = 'count_undirected')

@@ -9,9 +9,21 @@ wordWindowOccurence(tc, feature, context_level = c("document", "sentence"),
   batch_rows = NULL, drop_empty_terms = T)
 }
 \arguments{
+\item{tc}{a tCorpus object}
+
+\item{feature}{The name of the feature column}
+
+\item{context_level}{Select whether to use "document" or "sentence" as context boundaries}
+
 \item{window.size}{The distance within which words should occur from each other to be counted as a co-occurence.}
 
 \item{direction}{a string indicating whether only the left ('<') or right ('>') side of the window, or both ('<>'), should be used.}
+
+\item{distance_as_value}{If True, the values of the matrix will represent the shorts distance to the occurence of a feature}
+
+\item{batch_rows}{Used in functions that call this function in batches}
+
+\item{drop_empty_terms}{If TRUE, emtpy terms (with zero occurence) will be dropped}
 }
 \value{
 A list with two matrices. position.mat gives the specific position of a term, and window.mat gives the window in which each word occured. The rows represent the position of a term, and matches the input of this function (position, term and context). The columns represents terms.

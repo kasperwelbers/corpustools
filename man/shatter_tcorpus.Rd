@@ -11,11 +11,19 @@ shatter_tcorpus(tc, stc, meta_columns = NULL, tokens_per_shard = 1e+06,
 \arguments{
 \item{tc}{a tCorpus object}
 
+\item{stc}{THe name of the shattered tCorpus}
+
+\item{meta_columns}{Optionally, meta columns can be used to index the shards. For example, if the meta columns "medium" and "month" are given, then all shards are first indexed in folders per month per medium}
+
 \item{tokens_per_shard}{The number of tokens per shard. This is an approximation, since a tCorpus should not be broken within documents. Also, given the number of shards that is required, tokens will be evently distributed (for instance, if tokens_per_shard is 1,000,000, and there are 1,500,000 tokens, you'll get 2 tokens of 750,000 shards)}
 
-\item{n_shards}{Alternatively, you can specify the number of shards. This is also only an approximation, as the algorithm tries to find equal sized shards that do not break documents}
+\item{if_exists}{What to do if the stc already exists? Default is "stop", to prevent accidental overwriting. "append" can be used to add the new shards to the existing shattered tCorpus, and "overwrite" can be used to delete the old shattered tCorpus.}
 
-\item{shard_path}{the path for where to save the shard files. If not specified, the shards will be saved as temporary files. Note that temporary files are not automatically saved if you save the shattered_tCorpus (which only contains the references), so if you intend to save its best to specify a path to store the shards properly. Alternatively, and recommended, you can use save_stk() to save a shattered_tCorpus with its shards}
+\item{if_duplicates}{In case that if_exists == "append", what to do if the new tCorpus has document ids that are already in the shattered tCorpus? Default is "stop". Alternatively, duplicate doc_ids can be skipped ("skip"), in case they are actually identical, or the name can be changed ("rename") in case only the name is duplicate}
+
+\item{compress}{Use compression}
+
+\item{verbose}{If TRUE, report progress}
 }
 \value{
 a shattered_tCorpus object

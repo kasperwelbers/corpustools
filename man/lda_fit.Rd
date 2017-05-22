@@ -2,13 +2,15 @@
 % Please edit documentation in R/lda.r
 \name{lda_fit}
 \alias{lda_fit}
-\title{Estimate a topic model using the lda package}
+\title{Estimate a topic model using the LDA function of the topicmodels package}
 \usage{
 lda_fit(dtm, method = "Gibbs", K = 50, num.iterations = 500,
   alpha = 50/K, eta = 0.01, burnin = 250)
 }
 \arguments{
 \item{dtm}{a document term matrix}
+
+\item{method}{set method. see documentation for LDA function of the topicmodels package}
 
 \item{K}{the number of clusters}
 
@@ -17,6 +19,8 @@ lda_fit(dtm, method = "Gibbs", K = 50, num.iterations = 500,
 \item{alpha}{the alpha parameter}
 
 \item{eta}{the eta parameter}
+
+\item{burnin}{The number of burnin iterations}
 }
 \value{
 A fitted LDA model

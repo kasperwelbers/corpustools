@@ -1,4 +1,4 @@
-## R6 classes are a bit tricky to document. That's why we use a somewhat unconventional approach
+## R6 classes are a bit tricky to document. Thats why we use a somewhat unconventional approach
 ## The tCorpus documentation page serves as a general overview for tcorpus related functions and methods
 ## This r file contains this overview, including the subpages
 ## each method is documented separately in the documentation_methods r file
@@ -6,6 +6,7 @@
 #' tCorpus: a corpus class for tokenized texts
 #'
 #' @section Working with the tCorpus:
+#'
 #' The primary goal of the tCorpus is to facilitate various corpus analysis techniques. The documentation for currently implemented techniques can be reached through the following links.
 #' \tabular{ll}{
 #'   \link[=tCorpus_create]{Create a tCorpus} \tab Functions for creating a tCorpus object \cr
@@ -56,16 +57,16 @@ NULL
 #'
 #' There are several ways to modify the data and meta data in tCorpus.
 #' The less efficient but more classic approach is to directly assign to the $data and $meta, which can be used as regular data.tables (though note that assignment by reference is not possible)
-#' The fastest and most memory efficient way is to use the set_* and delete_* methods, which support modify by reference (see documentation for \link[=tCorpus_reference_mode]{Reference mode}).
+#' The fastest and most memory efficient way is to use the set_* and delete_* methods, which support modify by reference (see documentation for \link[=tCorpus_always_copy]{always_copy}).
 #'
 #' \tabular{ll}{
-#'   \link[=tCorpus$set]{$set()} \tab Modify the token data by setting the values of one (existing or new) column. Modifies by reference if copy_on_modify is set to FALSE \cr
+#'   \link[=tCorpus$set]{$set()} \tab Modify the token data by setting the values of one (existing or new) column. Modifies by reference if always_copy is set to FALSE \cr
 #'   \link[=tCorpus$set]{$set_meta()} \tab The set method for the document meta data \cr
-#'   \link[=tCorpus$set_levels]{$set_levels()} \tab Change the levels of factor columns. Modifies by reference if copy_on_modify is set to FALSE \cr
+#'   \link[=tCorpus$set_levels]{$set_levels()} \tab Change the levels of factor columns. Modifies by reference if always_copy is set to FALSE \cr
 #'   \link[=tCorpus$set_meta_levels]{$set_meta_levels()} \tab Change the levels of factor columns in the meta data \cr
-#'   \link[=tCorpus$set_colname]{$set_colname()} \tab Modify column names of token data. Modifies by reference if copy_on_modify is set to FALSE  \cr
+#'   \link[=tCorpus$set_colname]{$set_colname()} \tab Modify column names of token data. Modifies by reference if always_copy is set to FALSE  \cr
 #'   \link[=tCorpus$set_meta_colname]{$set_meta_colname()} \tab Delete columns in the meta data \cr
-#'   \link[=tCorpus$delete_columns]{$delete_columns()} \tab Delete columns. Modifies by reference if copy_on_modify is set to FALSE  \cr
+#'   \link[=tCorpus$delete_columns]{$delete_columns()} \tab Delete columns. Modifies by reference if always_copy is set to FALSE  \cr
 #'   \link[=tCorpus$delete_meta_columns]{$delete_meta_columns()} \tab Delete columns in the meta data
 #' }
 #'
@@ -78,7 +79,7 @@ NULL
 #' \tabular{ll}{
 #'   \link[=tCorpus$subset]{$subset()} \tab Modify the token and/or meta data using the \link{subset.tCorpus} function. A subset expression can be specified for both the token data (subset) and the document meta data (subset_meta). \cr
 #'   \link[=tCorpus$subset]{$subset_meta()} \tab For consistency with other *_meta methods \cr
-#'   \link[=tCorpus$subset_query]{$subset_query()} \tab Subset the tCorpus based on a query, as used in \link[=tcorpus$search_contexts]{$search_contexts}
+#'   \link[=tCorpus$subset_query]{$subset_query()} \tab Subset the tCorpus based on a query, as used in \link[=tCorpus$search_contexts]{$search_contexts}
 #' }
 #'
 #'
@@ -101,6 +102,55 @@ NULL
 #' }
 #'
 #' @name tCorpus_data
+NULL
+
+
+#' Modify tCorpus by reference
+#'
+#' \link[=tCorpus]{(back to overview)}
+#'
+#' By default, if any tCorpus method is used that changes the corpus (e.g., set, subset),
+#' it makes this change by reference. This is very convenient when working with a large
+#' corpus, because it means that the corpus does not have to be copied when changes are made,
+#' which slows things down, and can cause memory issues.
+#'
+#' To illustrate, for a tCorpus object named `tc`, the subset method can be called like this:
+#'
+#' \strong{tc$subset(doc_id \%in\% selection)}
+#'
+#' The `tc` object itself is now modified, and does not have to be assigned to a name, as would be the more
+#' common R philosophy. Like this:
+#'
+#' \strong{tc = tc$subset(doc_id \%in\% selection)}
+#'
+#' The results of both lines of code are the same. The assignment in the second approach is not necessary,
+#' but doesn't harm either because tc$subset returns the modified corpus invisibly (see ?invisible if that sounds spooky).
+#'
+#' Be aware, however, that the following does not work!!
+#'
+#' \strong{tc2 = tc$subset(doc_id \%in\% selection)}
+#'
+#' In this case, tc2 does contain the subsetted corpus, but tc itself will also be subsetted!!
+#' If you want to make a subset (or use any of the other methods that modify the corpus) and also keep the original,
+#' you can use the copy parameter.
+#'
+#' \strong{tc2 = tc$subset(doc_id \%in\% selection, copy=T)}
+#'
+#' Now, tc will not be subsetted itself, but will subset a copy of itself and return it to be assigned to tc2.
+#'
+#' Note that tc is also modified by reference if the subset method (or any other method that modified the corpus)
+#' is called within a function. No matter where and how you call the method, tc itself will be subsetted unless you
+#' explicitly set copy to True.
+#'
+#' Alternatively, you can also set copy = T to be the default, in which case the tCorpus works more
+#' according to the classic R philosophy. To do so, you can set tc$always_copy to True
+#'
+#' \strong{tc$always_copy = T}
+#'
+#' This, however is not recommended, especially when working with a huge corpus. As explained above,
+#' changing by reference is much faster and more memory efficient.
+#'
+#' @name tCorpus_always_copy
 NULL
 
 #' Preprocessing, subsetting and analyzing features
@@ -134,7 +184,7 @@ NULL
 #' \strong{Context-level queries}
 #' \tabular{ll}{
 #'   \link[=tCorpus$search_contexts]{$search_contexts()} \tab Search for documents or sentences using Lucene-like queries \cr
-#'   \link[=tCorpus$search_subset]{$search_subset()} \tab use the search_contexts query syntax to subset the tCorpus
+#'   \link[=tCorpus$subset_query]{$subset_query()} \tab use the search_contexts query syntax to subset the tCorpus
 #' }
 #'
 #' @name tCorpus_querying

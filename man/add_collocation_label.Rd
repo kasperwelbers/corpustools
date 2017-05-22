@@ -11,6 +11,12 @@ add_collocation_label(tc, colloc_id, feature = "word",
 \item{tc}{a tcorpus object}
 
 \item{colloc_id}{the data column containing the unique id for collocation words}
+
+\item{feature}{the name of the feature column}
+
+\item{new_feature}{the name of the new feature column}
+
+\item{pref_subset}{Optionally, a subset call, to specify a subset that has priority for finding the most frequently occuring string}
 }
 \description{
 Given a collocation category (e.g., named entity ids), this function finds the most frequently occuring string in this category and adds it as a label for the category

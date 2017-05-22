@@ -14,9 +14,21 @@ plot_semnet(g, weight_attr = "weight", min_weight = NA,
 \arguments{
 \item{g}{A network in the igraph format. Specifically designed for the output of coOccurenceNetwork() and windowedCoOccurenceNetwork()}
 
+\item{weight_attr}{The name of the weight attribute. Default is 'weight'}
+
+\item{min_weight}{The minimum weight. All edges with a lower weight are dropped}
+
+\item{delete_isolates}{If TRUE, isolate vertices (also after applying min_weight) are dropped}
+
 \item{vertexsize_attr}{a character string indicating a vertex attribute that represents size. Default is 'freq', which is created in the coOccurenceNetwork functions to indicate the number of times a word occured.}
 
+\item{vertexsize_coef}{a coefficient for changing the vertex size.}
+
 \item{vertexcolor_attr}{a character string indicating a vertex attribute that represents color. The attribute can also be a numeric value (e.g., a cluster membership) in which case colors are assigned to numbers. If no (valid) color attribute is given, vertex color are based on undirected fastgreedy.community() clustering.}
+
+\item{edgewidth_coef}{a coefficient for changing the edge width}
+
+\item{max_backbone_alpha}{If g has an edge attribute named alpha (added if backbone extraction is used), this specifies the maximum alpha value.}
 
 \item{labelsize_coef}{a coefficient for increasing or decreasing the size of the vertexlabel.}
 
@@ -27,6 +39,10 @@ plot_semnet(g, weight_attr = "weight", min_weight = NA,
 \item{redo_layout}{If TRUE, a new layout will be calculated using layout_with_fr(). If g does not have a layout attribute (g$layout), a new layout is automatically calculated.}
 
 \item{return_graph}{if TRUE, plot_semnet() also returns the graph object with the attributes and layout as shown in the plot.}
+
+\item{vertex.label.dist}{The distance of the label to the center of the vertex}
+
+\item{layout_fun}{The igraph layout function that is used.}
 
 \item{...}{additional arguments are passed on to plot.igraph()}
 }

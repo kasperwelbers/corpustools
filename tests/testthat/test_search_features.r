@@ -15,7 +15,7 @@ test_that("Query search works", {
 
   ## aggregating results
   res = tc$aggregate(hits=hits)
-  expect_equal(colnames(res), c('group','N','query_1'))
+  expect_equal(colnames(res), c('group','N','V', 'query_1'))
 
   ## multiword keywords
   hits = tc$search_features('"a fueled debate"', only_last_mword = T)

@@ -5,19 +5,15 @@
 \alias{meta.tCorpus}
 \alias{tCorpus$data}
 \alias{tCorpus$meta}
-\title{Access the data from a tCorpus}
+\title{Access specific column from the data or meta data.}
 \description{
-The $data and $meta fields can be used to access and modify the token data and meta data.
-
-Several limitations:
-- subsetting or appending the data is not possible. (use the subset function and merge_tcorpua)
-- data.table operations that change the data.table by reference. Note that the set and set_meta functions do use assignment by reference.
+Alternative to using the $data and $meta field. This is more efficient if not all columns are selected, because $data copies the whole data.table, whereas get only copies the selected columns.
 }
 \section{Usage}{
 
 ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 
-\preformatted{data}
+\preformatted{get}
 \preformatted{meta}
 }
 

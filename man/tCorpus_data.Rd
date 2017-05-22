@@ -22,16 +22,16 @@
 
 There are several ways to modify the data and meta data in tCorpus.
 The less efficient but more classic approach is to directly assign to the $data and $meta, which can be used as regular data.tables (though note that assignment by reference is not possible)
-The fastest and most memory efficient way is to use the set_* and delete_* methods, which support modify by reference (see documentation for \link[=tCorpus_reference_mode]{Reference mode}).
+The fastest and most memory efficient way is to use the set_* and delete_* methods, which support modify by reference (see documentation for \link[=tCorpus_always_copy]{always_copy}).
 
 \tabular{ll}{
-  \link[=tCorpus$set]{$set()} \tab Modify the token data by setting the values of one (existing or new) column. Modifies by reference if copy_on_modify is set to FALSE \cr
+  \link[=tCorpus$set]{$set()} \tab Modify the token data by setting the values of one (existing or new) column. Modifies by reference if always_copy is set to FALSE \cr
   \link[=tCorpus$set]{$set_meta()} \tab The set method for the document meta data \cr
-  \link[=tCorpus$set_levels]{$set_levels()} \tab Change the levels of factor columns. Modifies by reference if copy_on_modify is set to FALSE \cr
+  \link[=tCorpus$set_levels]{$set_levels()} \tab Change the levels of factor columns. Modifies by reference if always_copy is set to FALSE \cr
   \link[=tCorpus$set_meta_levels]{$set_meta_levels()} \tab Change the levels of factor columns in the meta data \cr
-  \link[=tCorpus$set_colname]{$set_colname()} \tab Modify column names of token data. Modifies by reference if copy_on_modify is set to FALSE  \cr
+  \link[=tCorpus$set_colname]{$set_colname()} \tab Modify column names of token data. Modifies by reference if always_copy is set to FALSE  \cr
   \link[=tCorpus$set_meta_colname]{$set_meta_colname()} \tab Delete columns in the meta data \cr
-  \link[=tCorpus$delete_columns]{$delete_columns()} \tab Delete columns. Modifies by reference if copy_on_modify is set to FALSE  \cr
+  \link[=tCorpus$delete_columns]{$delete_columns()} \tab Delete columns. Modifies by reference if always_copy is set to FALSE  \cr
   \link[=tCorpus$delete_meta_columns]{$delete_meta_columns()} \tab Delete columns in the meta data
 }
 
@@ -44,7 +44,7 @@ For this, you can use the subset and append methods, or merge tCorpora together.
 \tabular{ll}{
   \link[=tCorpus$subset]{$subset()} \tab Modify the token and/or meta data using the \link{subset.tCorpus} function. A subset expression can be specified for both the token data (subset) and the document meta data (subset_meta). \cr
   \link[=tCorpus$subset]{$subset_meta()} \tab For consistency with other *_meta methods \cr
-  \link[=tCorpus$subset_query]{$subset_query()} \tab Subset the tCorpus based on a query, as used in \link[=tcorpus$search_contexts]{$search_contexts}
+  \link[=tCorpus$subset_query]{$subset_query()} \tab Subset the tCorpus based on a query, as used in \link[=tCorpus$search_contexts]{$search_contexts}
 }
 
 \strong{Fields}

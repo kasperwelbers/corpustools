@@ -48,6 +48,8 @@ global_position <- function(position, context, max_window_size=NA, presorted=F, 
 #' This way, the distance of features can be calculated across multiple contexts using a single vector
 #'
 #' @param tc tCorpus object
+#' @param context_level either 'document' or 'sentence'
+#' @param max_window_size Determines the size of the gap between documents. Called max_window_size because this gap determines what the maximum window size is for non-overlapping windows between documents
 #'
 #' @return a tCorpus object
 #' @export
