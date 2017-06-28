@@ -14,4 +14,3 @@ print.contextHits(x, ...)
 \description{
 S3 print for contextHits class
 }
-

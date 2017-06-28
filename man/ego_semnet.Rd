@@ -33,4 +33,3 @@ Create an ego network from an igraph object.
 \details{
 The function is similar to the ego function in igraph, but with some notable differences. Firstly, if multiple vertex_names are given, the ego network for both is given in 1 network (whereas igraph creates a list of networks). Secondly, the min_weight and top_edges parameters can be used to focus on the strongest edges.
 }
-

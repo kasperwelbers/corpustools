@@ -5,7 +5,7 @@ featureHits <- function(hits, queries) {
   if (!'sent_i' %in% colnames(hits)) {
     hits$sent_i = if(nrow(hits) == 0) numeric() else NA
   }
-  hits = hits[,c('code','feature','doc_id','sent_i','word_i', 'hit_id','i')]
+  hits = hits[,c('code','feature','doc_id','sent_i','token_i', 'hit_id','i')]
   fh = list(hits=hits, queries=queries)
   class(fh) = c('featureHits', class(fh))
   if(!is.featureHits(fh)) stop('Not a proper featureHits object')
@@ -14,7 +14,7 @@ featureHits <- function(hits, queries) {
 
 is.featureHits <- function(fh, ...) {
   if (!methods::is(fh$hits, 'data.frame')) return(FALSE)
-  if (!all(c('code','feature','i','doc_id','hit_id', 'sent_i', 'word_i') %in% colnames(fh$hits))) return(FALSE)
+  if (!all(c('code','feature','i','doc_id','hit_id', 'sent_i', 'token_i') %in% colnames(fh$hits))) return(FALSE)
   if (!all(c('keyword','condition','code','condition_once','subset_tokens','subset_meta') %in% colnames(fh$queries))) return(FALSE)
   return(TRUE)
 }

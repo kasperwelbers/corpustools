@@ -19,4 +19,3 @@
   \link[=tCorpus$subset_query]{$subset_query()} \tab use the search_contexts query syntax to subset the tCorpus
 }
 }
-

@@ -11,16 +11,19 @@ test_that("Query search works", {
 
   ## simple keyword only
   hits = tc$search_features(keyword = 'fuel')
+  tc$code_features(keyword = 'fuel')
+  tc$data
+
   expect_equal(as.character(hits$hits$feature), c('fuel','fuel'))
 
   ## aggregating results
   res = tc$aggregate(hits=hits)
   expect_equal(colnames(res), c('group','N','V', 'query_1'))
 
-  ## multiword keywords
-  hits = tc$search_features('"a fueled debate"', only_last_mword = T)
+  ## multitoken keywords
+  hits = tc$search_features('"a fueled debate"', only_last_mtoken = T)
   expect_equal(as.character(hits$hits$feature), c('debate'))
-  hits = tc$search_features('"a fueled debate"', only_last_mword = F)
+  hits = tc$search_features('"a fueled debate"', only_last_mtoken = F)
   expect_equal(as.character(hits$hits$feature), c('A','fueled', 'debate'))
 
   ## proximity keywords
@@ -53,18 +56,18 @@ test_that("Query search works", {
   hits = tc$search_features(keyword = 'fuel', condition = '(renewable AND fuel) OR (debate AND fuel)')
   expect_equal(as.character(hits$hits$feature), c('fuel','fuel'))
 
-  ## multiword and proximity conditions
+  ## multitoken and proximity conditions
   hits = tc$search_features(keyword = 'fuel', condition = '"renewable fuel" "a debate"~3')
   expect_equal(as.character(hits$hits$feature), c('fuel','fuel'))
 
   ## condition close to keyword
-  hits = tc$search_features(keyword = 'fuel', condition = 'fossil^2') ## not within 2 words distance
+  hits = tc$search_features(keyword = 'fuel', condition = 'fossil^2') ## not within 2 tokens distance
   expect_true(nrow(hits$hits) == 0)
   hits = tc$search_features(keyword = 'fuel', condition = 'fossil^10') ## this matches
   expect_true(nrow(hits$hits) == 1)
 
   ## condition before and after to keyword
-  hits = tc$search_features(keyword = 'fuel', condition = 'better>2') ## better occurs (within) 2 words after fuel
+  hits = tc$search_features(keyword = 'fuel', condition = 'better>2') ## better occurs (within) 2 tokens after fuel
   expect_true(nrow(hits$hits) == 1)
   hits = tc$search_features(keyword = 'fuel', condition = 'better<2') ## but not before
   expect_true(nrow(hits$hits) == 0)
@@ -101,24 +104,20 @@ test_that("Query search works", {
   expect_true(nrow(hits$hits) == 1) ## should be only the hit in doc 'a', instead of 'a' and 'b'
 
   ## kwic
-  kw = tc$kwic(i=4, nwords=2)
+  kw = tc$kwic(i=4, ntokens=2)
   expect_true(kw$kwic == '...fuel is <better> than fossil...')
   hits = tc$search_features(keyword = 'better')
-  kw = tc$kwic(hits=hits, nwords=2)
+  kw = tc$kwic(hits=hits, ntokens=2)
   expect_true(kw$kwic == '...fuel is <better> than fossil...')
-  kw = tc$kwic(keyword = 'better', nwords=2)
+  kw = tc$kwic(keyword = 'better', ntokens=2)
   expect_true(kw$kwic == '...fuel is <better> than fossil...')
 
-  ## kwic with multiword queries
+  ## kwic with multitoken queries
   kw = tc$kwic(keyword = c('"renewable fuels"~10'), nsample = NA) ## without gap
   expect_equal(kw$feature, 'Renewable -> fuels')
-  kw = tc$kwic(keyword = c('"renewable fuels"~10'), nwords = 2) ## with gap
+  kw = tc$kwic(keyword = c('"renewable fuels"~10'), ntokens = 2) ## with gap
   expect_true(grepl('[...]', kw$kwic))
 
-  ## code queries
-  #tc$search_code(tc, queries=queries)
-  ##code = code_features(tc, queries, condition_once=c(F,T,F))
-  ##expect_equal(as.numeric(table(code)), c(12,1,2,2))
 
   cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 

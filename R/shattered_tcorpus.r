@@ -129,7 +129,7 @@ shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
 
 
        ## SEARCHING / QUERYING ##
-       search_features = function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mword=F, verbose=F){
+       search_features = function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mtoken=F, verbose=F){
          stop('not yet implemented')
        },
 
@@ -137,11 +137,11 @@ shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
          stop('not yet implemented')
        },
 
-       search_contexts = function(query, code=NULL, feature='word', context_level=c('document','sentence'), verbose=F){
+       search_contexts = function(query, code=NULL, feature='token', context_level=c('document','sentence'), verbose=F){
          stop('not yet implemented')
        },
 
-       subset_query = function(query, feature='word', context_level=c('document','sentence'), copy=self$always_copy){
+       subset_query = function(query, feature='token', context_level=c('document','sentence'), copy=self$always_copy){
          stop('not yet implemented')
        },
 
@@ -156,7 +156,7 @@ shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
 
        ## RESOURCES ##
 
-       jrc_names = function(new_feature='jrc_names', feature='word', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, copy=self$always_copy){
+       jrc_names = function(new_feature='jrc_names', feature='token', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, copy=self$always_copy){
          stop('not yet implemented')
        },
 
@@ -181,7 +181,7 @@ shattered_tCorpus <- R6::R6Class("shattered_tCorpus",
        feature_names = function(e=NULL) {
          if (!is.null(e)) stop('Cannot change tcorpus$featurenames by assignment. Instead, use the set_colname() function')
          dnames = self$names
-         dnames[!dnames %in% c('doc_id','sent_i','word_i')]
+         dnames[!dnames %in% c('doc_id','sent_i','token_i')]
        },
        names = function(e=NULL) {
          if (!is.null(e)) stop('Cannot change tcorpus$names by assignment. Instead, use the set_colname() function')

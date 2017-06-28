@@ -4,7 +4,7 @@ to_POSIXct <- function(x){
            error = function(e) stop(sprintf('Date column cannot be interpreted as POSIXct: \n\t-> %s', e)))
 }
 
-compare_documents_fun <- function(tc, feature='word', date_col=NULL, hour_window=c(-24,24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
+compare_documents_fun <- function(tc, feature='token', date_col=NULL, hour_window=c(-24,24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
   measure = match.arg(measure)
   if (!is.null(date_col)) date_col = match.arg(date_col, choices = tc$meta_names)
 
@@ -53,7 +53,7 @@ compare_documents_fun <- function(tc, feature='word', date_col=NULL, hour_window
   g
 }
 
-get_duplicates <- function(tc, feature='word', date_col=NULL, meta_cols=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, print_duplicates=F) {
+get_duplicates <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, print_duplicates=F) {
   keep = match.arg(keep)
   for (mvar in meta_cols) if (!mvar %in% tc$meta_names) stop(sprintf('Meta column (%s) not in corpus', mvar))
 

@@ -20,7 +20,7 @@ plot_semnet(g, weight_attr = "weight", min_weight = NA,
 
 \item{delete_isolates}{If TRUE, isolate vertices (also after applying min_weight) are dropped}
 
-\item{vertexsize_attr}{a character string indicating a vertex attribute that represents size. Default is 'freq', which is created in the coOccurenceNetwork functions to indicate the number of times a word occured.}
+\item{vertexsize_attr}{a character string indicating a vertex attribute that represents size. Default is 'freq', which is created in the coOccurenceNetwork functions to indicate the number of times a token occured.}
 
 \item{vertexsize_coef}{a coefficient for changing the vertex size.}
 
@@ -55,4 +55,3 @@ plot_semnet is a wrapper for the plot.igraph() function optimized for plotting a
 \details{
 Before plotting the network, the setNetworkAttributes() function is used to set pretty defaults for plotting. Optionally, reduce_labeloverlap can be used to prevent labeloverlap (as much as possible).
 }
-

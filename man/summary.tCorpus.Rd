@@ -14,4 +14,3 @@ summary.tCorpus(object, ...)
 \description{
 Summary of a tCorpus object
 }
-

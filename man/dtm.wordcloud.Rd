@@ -31,4 +31,3 @@ Compute the term frequencies for the dtm and plot a word cloud with the top n to
 You can either supply a document-term matrix or provide terms and freqs directly
 (in which case this is an alias for wordcloud::wordcloud with sensible defaults)
 }
-

@@ -24,16 +24,16 @@ test_that("Query document search works", {
   expect_true(nrow(hits$hits) == 0)
 
   ## proximity search
-  hits = tc$search_contexts('"bos wouter"~5', context_level = 'sentence') # bos and wouter within a word distance of 5
+  hits = tc$search_contexts('"bos wouter"~5', context_level = 'sentence') # bos and wouter within a token distance of 5
   expect_true(nrow(hits$hits) == 0)
 
-  hits = tc$search_contexts('"bos wouter"~10', context_level = 'sentence') #  bos and wouter within a word distance of 10
+  hits = tc$search_contexts('"bos wouter"~10', context_level = 'sentence') #  bos and wouter within a token distance of 10
   expect_true(nrow(hits$hits) > 0)
 
-  hits = tc$search_contexts('wouter NOT "bos wouter"~10', context_level = 'sentence') # wouter should not occur within 10 words from bos
+  hits = tc$search_contexts('wouter NOT "bos wouter"~10', context_level = 'sentence') # wouter should not occur within 10 tokens from bos
   expect_true(nrow(hits$hits) == 0)
 
-  hits = tc$search_contexts('wouter NOT "bos wouter"~3', context_level = 'sentence') # wouter should not occur within 10 words from bos
+  hits = tc$search_contexts('wouter NOT "bos wouter"~3', context_level = 'sentence') # wouter should not occur within 10 tokens from bos
   expect_true(nrow(hits$hits) == 1)
 
   ## BOOLEAN

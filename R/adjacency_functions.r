@@ -1,19 +1,19 @@
 #' Gives the window in which a term occured in a matrix.
 #'
-#' This function returns the occurence of words (position.matrix) and the window of occurence (window.matrix). This format enables the co-occurence of words within sliding windows (i.e. word distance) to be calculated by multiplying position.matrix with window.matrix.
+#' This function returns the occurence of tokens (position.matrix) and the window of occurence (window.matrix). This format enables the co-occurence of tokens within sliding windows (i.e. token distance) to be calculated by multiplying position.matrix with window.matrix.
 #'
 #' @param tc a tCorpus object
 #' @param feature The name of the feature column
 #' @param context_level Select whether to use "document" or "sentence" as context boundaries
-#' @param window.size The distance within which words should occur from each other to be counted as a co-occurence.
+#' @param window.size The distance within which tokens should occur from each other to be counted as a co-occurence.
 #' @param direction a string indicating whether only the left ('<') or right ('>') side of the window, or both ('<>'), should be used.
 #' @param distance_as_value If True, the values of the matrix will represent the shorts distance to the occurence of a feature
 #' @param batch_rows Used in functions that call this function in batches
 #' @param drop_empty_terms If TRUE, emtpy terms (with zero occurence) will be dropped
 #'
-#' @return A list with two matrices. position.mat gives the specific position of a term, and window.mat gives the window in which each word occured. The rows represent the position of a term, and matches the input of this function (position, term and context). The columns represents terms.
+#' @return A list with two matrices. position.mat gives the specific position of a term, and window.mat gives the window in which each token occured. The rows represent the position of a term, and matches the input of this function (position, term and context). The columns represents terms.
 #' @export
-wordWindowOccurence <- function(tc, feature, context_level=c('document','sentence'), window.size=10, direction='<>', distance_as_value=F, batch_rows=NULL, drop_empty_terms=T){
+tokenWindowOccurence <- function(tc, feature, context_level=c('document','sentence'), window.size=10, direction='<>', distance_as_value=F, batch_rows=NULL, drop_empty_terms=T){
   is_tcorpus(tc)
 
   context_level = match.arg(context_level)
@@ -129,7 +129,7 @@ cooccurrence_matrix <- function(tc, feature, count_mode, mat_stats, context_leve
 
 cooccurrence_matrix_window <- function(tc, feature, matrix_mode='position_to_window', count_mode='dicho', mat_stats=c('sum.x','sum.y','magnitude.x','magnitude.y'), context_level='document', direction='<>', window.size=10, n.batches=window.size, alpha=2, drop_empty_terms=T){
   if (is.na(n.batches)){
-    wwo = wordWindowOccurence(tc, feature, context_level, window.size, direction, drop_empty_terms=drop_empty_terms)
+    wwo = tokenWindowOccurence(tc, feature, context_level, window.size, direction, drop_empty_terms=drop_empty_terms)
     if (matrix_mode == 'windowXwindow') ml = cooccurrence_crossprod(wwo$window.mat, wwo$window.mat, count_mode=count_mode, alpha=alpha, mat_stats=mat_stats)
     if (matrix_mode == 'positionXwindow') ml = cooccurrence_crossprod(wwo$position.mat, wwo$window.mat, count_mode=count_mode, alpha=alpha, mat_stats=mat_stats)
     ml[['freq']] = Matrix::colSums(wwo$position.mat)
@@ -139,7 +139,7 @@ cooccurrence_matrix_window <- function(tc, feature, matrix_mode='position_to_win
     ml = list()
     for(i in 1:nrow(batch_i)){
       batch_rows = batch_i$start[i]:batch_i$end[i]
-      wwo = wordWindowOccurence(tc, feature, context_level, window.size, direction, batch_rows=batch_rows)
+      wwo = tokenWindowOccurence(tc, feature, context_level, window.size, direction, batch_rows=batch_rows)
       if (matrix_mode == 'windowXwindow') cooc = cooccurrence_crossprod(wwo$window.mat, wwo$window.mat, count_mode=count_mode, alpha=alpha, mat_stats=mat_stats)
       if (matrix_mode == 'positionXwindow') cooc = cooccurrence_crossprod(wwo$position.mat, wwo$window.mat, count_mode=count_mode, alpha=alpha, mat_stats=mat_stats)
 

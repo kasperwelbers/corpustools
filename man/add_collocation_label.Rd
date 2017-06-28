@@ -4,13 +4,13 @@
 \alias{add_collocation_label}
 \title{Choose and add collocation strings based on collocation categories}
 \usage{
-add_collocation_label(tc, colloc_id, feature = "word",
+add_collocation_label(tc, colloc_id, feature = "token",
   new_feature = sprintf("\%s_l", colloc_id), pref_subset = NULL)
 }
 \arguments{
 \item{tc}{a tcorpus object}
 
-\item{colloc_id}{the data column containing the unique id for collocation words}
+\item{colloc_id}{the data column containing the unique id for collocation tokens}
 
 \item{feature}{the name of the feature column}
 
@@ -21,4 +21,3 @@ add_collocation_label(tc, colloc_id, feature = "word",
 \description{
 Given a collocation category (e.g., named entity ids), this function finds the most frequently occuring string in this category and adds it as a label for the category
 }
-

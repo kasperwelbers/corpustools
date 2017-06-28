@@ -17,4 +17,3 @@ A vector of alpha values, which matches the edges. Can thus easily be made an ed
 \description{
 Based on the following paper: Serrano, M. A., Boguna, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.
 }
-

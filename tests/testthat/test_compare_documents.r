@@ -10,8 +10,8 @@ test_that("comparing documents works", {
                  date = c('2010-01-01','2010-01-01','2012-01-01'))
   tc = create_tcorpus(d)
 
-  #tc$dtm('word', subset_tokens = word_i < 10, weight = 'norm_tfidf')
-  #m = tc$dtm('word', subset_meta = doc_id == 1)
+  #tc$dtm('token', subset_tokens = token_i < 10, weight = 'norm_tfidf')
+  #m = tc$dtm('token', subset_meta = doc_id == 1)
 
   g = tc$compare_documents()
   expect_equal(round(igraph::E(g)$weight,3), round(c(0.027, 0.022, 0.027, 0.022),3))
@@ -31,7 +31,7 @@ test_that("comparing documents works", {
   expect_true(igraph::ecount(g) == 2)
 
   ## due to random selection of which duplicate to delete, chains can lead to varying number of duplicates. Think of something more smart, or order by id/name instead of random
-  dedup = tc$deduplicate(feature='word', similarity = 0.025)
+  dedup = tc$deduplicate(feature='token', similarity = 0.025)
   #expect_true(dedup$n_meta == 1)
   cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 

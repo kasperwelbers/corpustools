@@ -20,4 +20,3 @@ a tCorpus object
 \description{
 Merge tCorpus objects
 }
-

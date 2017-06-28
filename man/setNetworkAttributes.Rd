@@ -27,4 +27,3 @@ a network in the Igraph format
 \description{
 The purpose of this function is to create some default network attribute options to plot networks in a nice and insightfull way.
 }
-

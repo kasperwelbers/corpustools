@@ -1,7 +1,15 @@
 
+test <- function(x){
+  print(class(substitute(x)))
+}
+
+
+
+## the default min docfreq in deduplicate is misleading, because 1 docfreq words do count for the similarity calculation.
+## instead, make it so that for the matrix multiplication columns with sum 1 are emptied (not deleted, to preserve the resulting adjacency matrix)
+
 ## fix and test how data.table deals with factors if assign by reference is used.
 ## do something about how the set and set_meta methods deal with assigning by subset if the classes don't match. Yield error seems best
-
 
 ## there is still some funky stuff with subset and set. When a call is a single object name, it is not recognized as a call
 ## e.g., tc$set('feature', word) does not work, even if tc$data has a word column. But tc$set('feature', tolower(word)) would work.

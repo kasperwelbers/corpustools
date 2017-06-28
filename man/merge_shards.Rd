@@ -15,4 +15,3 @@ a tCorpus object
 \description{
 Similar to merge_tcorpora, but assumes that the tCorpora are identical in structure (same columns in the same order and same provenance)
 }
-

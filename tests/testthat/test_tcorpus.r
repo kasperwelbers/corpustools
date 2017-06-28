@@ -7,13 +7,13 @@ test_that("tCorpus class works", {
   tokens = data.frame(document = c(rep(1, 8), rep(2, 5), rep(3, 5)),
                  sentence = c(1:8, 1:5, 1:5),
                  id = 1:18,
-                 word = c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte'))
-  tc = tokens_to_tcorpus(tokens, doc_col ='document', sent_i_col = 'sentence', word_i_col = 'id')
+                 token = c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte'))
+  tc = tokens_to_tcorpus(tokens, doc_col ='document', sent_i_col = 'sentence', token_i_col = 'id')
 
   doc_id = tc$data$doc_id
   expect_equal(doc_id, as.factor(c(rep('1', 8), rep('2', 5), rep('3', 5))))
-  word = tc$data$word
-  expect_equal(as.character(word), c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte'))
+  token = tc$data$token
+  expect_equal(as.character(token), c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte'))
 
   ### create from text
   text = c('Renewable fuel is better than fossil fuels!',
@@ -23,8 +23,8 @@ test_that("tCorpus class works", {
 
   doc_id = tc$data$doc_id
   expect_equal(doc_id, as.factor(c(rep('a', 8), rep('b', 5), rep('c', 5))))
-  word = tc$data$word
-  expect_equal(word, as.factor(c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte')))
+  token = tc$data$token
+  expect_equal(token, as.factor(c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte')))
 
   ### create from text with sentences
   text = c('Renewable fuel is better than fossil fuels! This is really a fueled debate about fuel', 'Mark Rutte is simply Rutte')
@@ -47,17 +47,17 @@ test_that("tCorpus class works", {
 
   doc_id = tc$data$doc_id
   expect_equal(doc_id, as.factor(c(rep('a', 8), rep('b', 5), rep('c', 5))))
-  word = tc$data$word
-  expect_equal(word, as.factor(c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte')))
+  token = tc$data$token
+  expect_equal(token, as.factor(c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte')))
 
   meta_medium = tc$meta$medium
   expect_equal(meta_medium, as.factor(c('a','a','b')))
 
   ## change data
-  word = tc$data$word
-  newword =fast_factor(tolower(word))
-  tc = tc$set('word', newword)
-  expect_equal(tc$data$word, newword)
+  token = tc$data$token
+  newtoken =fast_factor(tolower(token))
+  tc = tc$set('token', newtoken)
+  expect_equal(tc$data$token, newtoken)
 
   medium = tc$meta$medium
   newmedium = as.factor(paste('source', medium))

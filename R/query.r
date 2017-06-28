@@ -2,7 +2,7 @@ FORM_SYMBOLS = '!&()| {}'
 FORM_REGEX = sprintf('([^%s]+)', FORM_SYMBOLS)
 
 ## look for alternative to as_ascii with iconv? Or just allow as_ascii in search for latin languages? (it's nice to not care about accents)
-## make a test function that creates a tCorpus with every possible character as a 1 char word, and then search this corpus with queries for each character to see whether it hits
+## make a test function that creates a tCorpus with every possible character as a 1 char token, and then search this corpus with queries for each character to see whether it hits
 ## perhaps better to use switch to a (shorter) list of REGEX symbols that is not allowed (i.e. the symbols used in the R logical expression).
 
 parse_queries <- function(query){
@@ -31,9 +31,9 @@ parse_query <- function(query){
   if(any(grepl('^[ ]*\\&|\\([ ]*\\&', query))) stop('AND cannot be the first term in a query (or within parentheses)')
 
   if(any(grepl('\\^[^0-9]\\b', query, perl=T))) stop('Invalid flag after ^ (caret). This can only be a number (see search_features query details for conditions)')
-  if(any(grepl('\\~[^s0-9]\\b', query, perl=T))) stop('Invalid flag after ~ (tilde). This can only be a number (for multiword proximity) or ~s for (case sensitive)')
+  if(any(grepl('\\~[^s0-9]\\b', query, perl=T))) stop('Invalid flag after ~ (tilde). This can only be a number (for multitoken proximity) or ~s for (case sensitive)')
 
-  ## also allow empty space as OR (note that this also adds OR statements for adjacent words between quotes. This is WRONG, but will be fixed in the next step)
+  ## also allow empty space as OR (note that this also adds OR statements for adjacent tokens between quotes. This is WRONG, but will be fixed in the next step)
   query = gsub('(?<=[+*?".a-zA-Z0-9/~_)-])[ ]+(?=[+*?".a-zA-Z0-9/~_(-])', ' | ', query, perl=T)
 
   ## parts of the string between quotes are treated as single query terms
@@ -48,7 +48,7 @@ parse_query <- function(query){
 
     replacewith = m ## use replacewith to make multiple changes before gsubbing them back into query
 
-    ## for query parts between quotes, replace all OR statements between words within parenteses with the regex | (without spaces). This way, they will be treated as a singel regex term in search_string()
+    ## for query parts between quotes, replace all OR statements between tokens within parenteses with the regex | (without spaces). This way, they will be treated as a singel regex term in search_string()
     parmatch = gregexpr('(?<=\\().*?(?=\\))', replacewith, perl=T)
     for(pm in regmatches(replacewith, parmatch)[[1]]) {
       replacewith = gsub(pm, gsub(' +', '', pm), replacewith, fixed=T)
@@ -119,7 +119,7 @@ get_feature_regex <- function(terms, default_window=NA){
                      window = ifelse(grepl('~[s]*[0-9][s]*', terms) == T, gsub('.*~[s]*([0-9]*).*', '\\1', terms), default_window),
                      direction = get_direction(terms),
                      condition_window = ifelse(grepl('[<>^][0-9]', terms) == T, gsub('.*[<>^]([0-9]*).*', '\\1', terms), default_window),
-                     ignore_case = ifelse(grepl('~[0-9]*[s][0-9]*', terms) == T, F, T)) ## if a case sensitive flag occurs (~s) then do not ignore case. Note that the case_insensitive_flags function takes care of case insensitive words in multiword strings
+                     ignore_case = ifelse(grepl('~[0-9]*[s][0-9]*', terms) == T, F, T)) ## if a case sensitive flag occurs (~s) then do not ignore case. Note that the case_insensitive_flags function takes care of case insensitive tokens in multitoken strings
 
   terms$window = as.numeric(as.character(terms$window))
   terms$condition_window = as.numeric(as.character(terms$condition_window))
@@ -133,7 +133,7 @@ get_feature_regex <- function(terms, default_window=NA){
   #FORM_REGEX
 
   #print(terms)
-  terms$regex = gsub(FORM_REGEX, '\\\\b\\1\\\\b', terms$regex) ## add word boundaries
+  terms$regex = gsub(FORM_REGEX, '\\\\b\\1\\\\b', terms$regex) ## add token boundaries
   terms$regex = ifelse(terms$ignore_case, terms$regex, case_insensitive_flags(terms$term, terms$regex))
   if(!is.null(esc)) for(i in 1:nrow(esc)) terms$regex = gsub(esc$id[i], esc$esc[i], terms$regex, fixed = T)
 
@@ -160,10 +160,10 @@ get_direction <- function(term){
 
 case_insensitive_flags <- function(term, regex){
   ## we cannot force case sensitive search within a case insensitive regex. However, we can use the (?i) regex flag to force case insensitive in a case sensitive search.
-  ## so for terms that contains at least one s flag, we use case sensitive search, and for individual words for which the flag is not set we use the (?i) regex flag
+  ## so for terms that contains at least one s flag, we use case sensitive search, and for individual tokens for which the flag is not set we use the (?i) regex flag
   for (i in 1:length(term)){
     if (grepl('\\"[0-9^]*~[0-9]*s', term[[i]])) {
-      next ## if the s flag is set around the multiword string "Like This"~s, then all words are case sensitive
+      next ## if the s flag is set around the multitoken string "Like This"~s, then all tokens are case sensitive
     } else {
       t = regmatches(term[[i]], gregexpr(FORM_REGEX, term[i]))[[1]]
       r = regmatches(regex[[i]], gregexpr(FORM_REGEX, regex[i]))[[1]]

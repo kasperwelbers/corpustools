@@ -1,7 +1,7 @@
 
 # Compute some useful corpus statistics for a dtm
 #
-# Compute a number of useful statistics for filtering words: term frequency, idf, etc.
+# Compute a number of useful statistics for filtering tokens: term frequency, idf, etc.
 
 term_statistics <- function(tc, feature, context_level=c('document','sentence')) {
   dtm = tc$dtm(feature, context_level=context_level)

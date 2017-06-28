@@ -14,4 +14,3 @@ print.shattered_tCorpus(x, ...)
 \description{
 S3 print for shattered_tCorpus class
 }
-

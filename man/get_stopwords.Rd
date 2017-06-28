@@ -15,4 +15,3 @@ A character vector containing stopwords
 \description{
 Get a character vector of stopwords
 }
-

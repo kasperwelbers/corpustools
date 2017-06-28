@@ -10,7 +10,7 @@
 \strong{Create networks}
 \tabular{ll}{
   \link[=tCorpus$semnet]{$semnet)} \tab Feature co-occurrence within contexts (documents, sentences) \cr
-  \link[=tCorpus$semnet_window]{$semnet_window()} \tab Feature co-occurrence within a specified word distance
+  \link[=tCorpus$semnet_window]{$semnet_window()} \tab Feature co-occurrence within a specified token distance
 }
 \strong{Support functions for analyzing and visualizing the semantic network}
 \tabular{ll}{
@@ -18,4 +18,3 @@
   \link[=plot_semnet]{plot_semnet()} \tab Convenience function for visualizing an Igraph network, specialized for semantic networks
 }
 }
-

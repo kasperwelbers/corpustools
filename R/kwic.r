@@ -1,12 +1,12 @@
 
-keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsample=NA, output_feature='word', context_level=c('document', 'sentence'), prettypaste=T, kw_tag=c('<','>')){
+keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, nsample=NA, output_feature='token', context_level=c('document', 'sentence'), prettypaste=T, kw_tag=c('<','>')){
   if (class(i) == 'logical') i = which(i)
   ## first filter tokens on document id (to speed up computation)
 
   if (is.null(tc$provenance('index_feature'))){
-    gi = tc$feature_index(feature=output_feature, context_level=context_level, max_window_size = nwords)$global_i
+    gi = tc$feature_index(feature=output_feature, context_level=context_level, max_window_size = ntokens)$global_i
   } else {
-    gi = tc$feature_index(feature=tc$provenance('index_feature'), context_level=context_level, max_window_size = nwords, as_ascii = tc$provenance('as_ascii'))$global_i
+    gi = tc$feature_index(feature=tc$provenance('index_feature'), context_level=context_level, max_window_size = ntokens, as_ascii = tc$provenance('as_ascii'))$global_i
   }
   gi = data.table::fsort(gi)
 
@@ -14,10 +14,10 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsampl
 
   if (!is.null(hits)) {
     if(!is.featureHits(hits)) stop('hits must be a featureHits object (created with the $search_features() method')
-    d = tc$get(c('doc_id', 'word_i'))
+    d = tc$get(c('doc_id', 'token_i'))
     d$i = 1:nrow(d)
-    setkeyv(d, c('doc_id', 'word_i'))
-    i = d[hits$hits[,c('doc_id', 'word_i')]]$i
+    setkeyv(d, c('doc_id', 'token_i'))
+    i = d[hits$hits[,c('doc_id', 'token_i')]]$i
     code = hits$hits$code
     hit_id = hits$hits$hit_id
   } else {
@@ -41,7 +41,7 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', nwords=10, nsampl
     global_i = global_i[samp]
   }
 
-  shifts = -nwords:nwords
+  shifts = -ntokens:ntokens
   d = data.frame(global_i = rep(global_i, each=length(shifts)) + shifts,
                  hit_id = rep(hit_id, each=length(shifts)),
                  is_kw = rep(shifts == 0, length(global_i)))

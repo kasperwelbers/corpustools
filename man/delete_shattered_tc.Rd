@@ -12,4 +12,3 @@ delete_shattered_tc(stc)
 \description{
 Delete a shattered_tCorpus and all files it refers to
 }
-

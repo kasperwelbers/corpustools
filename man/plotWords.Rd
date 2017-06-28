@@ -39,4 +39,3 @@ nothing
 \description{
 Plot a wordcloud with words ordered and coloured according to a dimension (x)
 }
-

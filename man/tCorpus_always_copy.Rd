@@ -48,4 +48,3 @@ according to the classic R philosophy. To do so, you can set tc$always_copy to T
 This, however is not recommended, especially when working with a huge corpus. As explained above,
 changing by reference is much faster and more memory efficient.
 }
-

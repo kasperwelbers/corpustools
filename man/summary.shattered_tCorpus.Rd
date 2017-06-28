@@ -14,4 +14,3 @@ summary.shattered_tCorpus(object, ...)
 \description{
 S3 summary for shattered_tCorpus class
 }
-

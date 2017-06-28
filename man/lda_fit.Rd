@@ -30,4 +30,3 @@ Estimate an LDA topic model using the LDA function from the topicmodels package.
 The parameters other than dtm are simply passed to the sampler but provide a workable default.
 See the description of that function for more information
 }
-

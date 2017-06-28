@@ -47,12 +47,12 @@ tCorpus <- R6::R6Class("tCorpus",
 
      check_unique_rows = function(d){
        if ('sent_i' %in% colnames(d)) {
-         if (!identical(key(tc$data), c('doc_id', 'sent_i', 'word_i'))) setkeyv(mod, c('doc_id','sent_i','word_i'))
-         if (nrow(unique(d, by=c('doc_id', 'sent_i', 'word_i'))) < nrow(d)) stop('After transformation, word_i is no longer unique')
-         if (nrow(unique(d[,c('doc_id','word_i')])) < nrow(d)) stop('After transformation, word_i is not unique within documents')
+         if (!identical(key(tc$data), c('doc_id', 'sent_i', 'token_i'))) setkeyv(mod, c('doc_id','sent_i','token_i'))
+         if (nrow(unique(d, by=c('doc_id', 'sent_i', 'token_i'))) < nrow(d)) stop('After transformation, token_i is no longer unique')
+         if (nrow(unique(d[,c('doc_id','token_i')])) < nrow(d)) stop('After transformation, token_i is not unique within documents')
        } else {
-         if (!identical(key(tc$data), c('doc_id', 'word_i'))) setkeyv(mod, c('doc_id','word_i'))
-         if (nrow(unique(d, by=c('doc_id', 'word'))) < nrow(d)) stop('After transformation, word_i is not unique within documents')
+         if (!identical(key(tc$data), c('doc_id', 'token_i'))) setkeyv(mod, c('doc_id','token_i'))
+         if (nrow(unique(d, by=c('doc_id', 'token'))) < nrow(d)) stop('After transformation, token_i is not unique within documents')
        }
      },
 
@@ -63,10 +63,10 @@ tCorpus <- R6::R6Class("tCorpus",
 
        mod = data.table(mod)
        if (any(grepl('^evalhere_', colnames(mod)))) stop('column names in a tCorpus cannot start with "evalhere_"') ## evalhere_ is used as a prefix for object names when set/subset are called within tCorpus methods. This is to prevent conflict when a tCorpus has an identically named column
-       if (!all(c('doc_id','word_i') %in% colnames(mod))) stop('Replacement must have a doc_id and word_i column')
-       if ('sent_i' %in% colnames(mod)) setkeyv(mod, c('doc_id','sent_i','word_i')) else setkeyv(mod, c('doc_id','word_i'))
+       if (!all(c('doc_id','token_i') %in% colnames(mod))) stop('Replacement must have a doc_id and token_i column')
+       if ('sent_i' %in% colnames(mod)) setkeyv(mod, c('doc_id','sent_i','token_i')) else setkeyv(mod, c('doc_id','token_i'))
 
-       positioncols = intersect(c('doc_id','sent_i','word_i'), colnames(mod))
+       positioncols = intersect(c('doc_id','sent_i','token_i'), colnames(mod))
        if (!identical(private$.data[,positioncols,with=F], mod[,positioncols,with=F])) {
          if (!identical(private$.data$doc_id, mod$doc_id)) {
            stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
@@ -82,7 +82,6 @@ tCorpus <- R6::R6Class("tCorpus",
          }
        }
        private$.data = mod
-       if (self$auto_gc) gc()
        self$set_keys()
      },
 
@@ -99,7 +98,6 @@ tCorpus <- R6::R6Class("tCorpus",
          stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
        }
        private$.meta = mod
-       if (self$auto_gc) gc()
        self$set_keys()
      }
 
@@ -108,9 +106,11 @@ tCorpus <- R6::R6Class("tCorpus",
    public = list(
 
      always_copy = F, ## if TRUE, tCorpus works like 'typical' R (modify on copy). If FALSE, all modifications made using methods will be made to the referenced data. Not needing to copy data is a great boon of R6 as a reference class, but we should keep this optional to facilitate the common R workflow
-     ## (set to F every once in a while to run unit tests in reference mode)
 
-     auto_gc = T, ## if TRUE, automatically perform gc() within functions that create large copies. R seems to handle the cleaning of R6 environments poorly (which can be huge for a tCorpus). It appears (but needs more testing) that R sometimes goes for the swap memory even though RAM has already been freed.
+     ##finalize = function() {
+     ##   finalize is the R6 destructor function, called upon GC.
+     ##   print("Finalizer has been called!")
+     ##},
      help = function() ?tCorpus,
 
      initialize = function(data, meta, feature_index=NULL, p=NULL) {
@@ -158,7 +158,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
      provenance = function(name=NULL) if (is.null(name)) private$.p else private$.p[[name]],
 
-     feature_index = function(feature='word', context_level=c('document','sentence'), max_window_size=100, as_ascii=F){
+     feature_index = function(feature='token', context_level=c('document','sentence'), max_window_size=100, as_ascii=F){
        context_level = match.arg(context_level)
        if (max_window_size < 100) max_window_size = 100 ## always use a window of at least 100,
        prov = private$.p
@@ -181,18 +181,39 @@ tCorpus <- R6::R6Class("tCorpus",
      },
 
      dtm = function(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F) {
-       if(methods::is(substitute(subset_tokens), 'call')) subset_tokens = eval(substitute(subset_tokens), private$.data, parent.frame())
-       if(methods::is(substitute(subset_meta), 'call')) subset_meta = eval(substitute(subset_meta), private$.meta, parent.frame())
+       if (class(substitute(subset_tokens)) %in% c('call', 'name')) subset_tokens = eval(substitute(subset_tokens), private$.data, parent.frame())
+       if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = eval(substitute(subset_meta), private$.meta, parent.frame())
 
        get_dtm(self, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form,
                subset_tokens=subset_tokens, subset_meta=subset_meta, context=context, context_labels=context_labels,
                feature_labels=feature_labels, ngrams=ngrams, ngram_before_subset=ngram_before_subset)
      },
 
+     print = function(doc_id, column='token', meta_columns = self$meta_names) {
+       evalhere_doc_id = as.character(doc_id)
+
+       d = private$.data[list(evalhere_doc_id),]
+       d = split(d[[column]], f = d$doc_id)
+       texts = stringi::stri_paste_list(d, sep = ' ')
+
+       if (length(meta_columns) > 0) {
+         meta = private$.meta[list(evalhere_doc_id), meta_columns, with=F]
+         header = ''
+         for (j in 1:ncol(meta)) {
+           meta_field = stringi::stri_paste(colnames(meta)[j], meta[[j]], sep=': ')
+           header = if (j == 1) meta_field else paste(header, meta_field, sep=', ')
+         }
+         texts = paste(header, texts, sep='\n\n')
+       }
+
+       texts = paste(texts, sep = '\n------------\n')
+       cat(texts)
+       invisible(texts)
+     },
+
 ## DATA MODIFICATION METHODS ##
 
      copy = function(){
-       if (self$auto_gc) gc()
        tCorpus$new(data = data.table::copy(private$.data),
                    meta = data.table::copy(private$.meta),
                    feature_index = private$.feature_index,
@@ -201,8 +222,8 @@ tCorpus <- R6::R6Class("tCorpus",
 
      set = function(column, value, subset=NULL, subset_value=T, copy=self$always_copy){
        if (column == 'doc_id') stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
-       if (methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.data, parent.frame())
-       if (methods::is(substitute(value), 'call')) value = eval(substitute(value), private$.data, parent.frame())
+       if (class(substitute(subset)) %in% c('call', 'name')) subset = eval(substitute(subset), private$.data, parent.frame())
+       if (class(substitute(value)) %in% c('call', 'name')) value = eval(substitute(value), private$.data, parent.frame())
        if (grepl('^evalhere_', column)) stop('column names in a tCorpus cannot start with evalhere_')
 
        if (copy) {
@@ -226,20 +247,20 @@ tCorpus <- R6::R6Class("tCorpus",
            levels(private$.data[[column]]) = c(levels(private$.data[[column]]), levels(value))
          }
 
-         if (column %in% c('sent_i','word_i')) {  ## for position columns, first perform checks (inefficient, but this should be a rare case anyway)
+         if (column %in% c('sent_i','token_i')) {  ## for position columns, first perform checks (inefficient, but this should be a rare case anyway)
             if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')
             value = as.integer(value)
-            mod = if ('sent_i' %in% self$names) private$.data[,c('doc_id','sent_i','word_i')] else private$.data[,c('doc_id','word_i')]
+            mod = if ('sent_i' %in% self$names) private$.data[,c('doc_id','sent_i','token_i')] else private$.data[,c('doc_id','token_i')]
             mod[subset, (column) := value]
             check_unique_rows(mod)
          }
          private$.data[subset, (column) := value]
 
        } else {
-         if (column %in% c('sent_i','word_i')) {
+         if (column %in% c('sent_i','token_i')) {
            if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')
            value = as.integer(value)
-           mod = if ('sent_i' %in% self$names) private$.data[,c('doc_id','sent_i','word_i')] else private$.data[,c('doc_id','word_i')]
+           mod = if ('sent_i' %in% self$names) private$.data[,c('doc_id','sent_i','token_i')] else private$.data[,c('doc_id','token_i')]
            suppressWarnings(mod[, (column) := value])
            check_unique_rows(mod)
          }
@@ -271,8 +292,8 @@ tCorpus <- R6::R6Class("tCorpus",
      },
 
      delete_columns = function(cnames, copy=self$always_copy){
-       protected_cols = intersect(self$names, c('doc_id', 'word_i'))
-       if (any(protected_cols %in% cnames)) stop("The position columns doc_id and word_i cannot be deleted")
+       protected_cols = intersect(self$names, c('doc_id', 'token_i'))
+       if (any(protected_cols %in% cnames)) stop("The position columns doc_id and token_i cannot be deleted")
        if (copy) {
          selfcopy = self$copy()$delete_columns(cnames=cnames, copy=F)
          return(selfcopy)
@@ -282,7 +303,7 @@ tCorpus <- R6::R6Class("tCorpus",
      },
 
      set_colname = function(oldname, newname) {
-       if (oldname %in% c('doc_id','sent_i','word_i')) stop('The position columns (doc_id, sent_i, word_i) cannot be set or changed')
+       if (oldname %in% c('doc_id','sent_i','token_i')) stop('The position columns (doc_id, sent_i, token_i) cannot be set or changed')
        if (grepl('^evalhere_', newname)) stop('column names in a tCorpus cannot start with evalhere_')
 
        data.table::setnames(private$.data, oldname, newname)
@@ -291,8 +312,8 @@ tCorpus <- R6::R6Class("tCorpus",
 
      set_meta = function(column, value, subset=NULL, subset_value=T, copy=self$always_copy){
        if (column == 'doc_id') stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
-       if(methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.meta, parent.frame())
-       if(methods::is(substitute(value), 'call')) value = eval(substitute(value), private$.meta, parent.frame())
+       if (class(substitute(subset)) %in% c('call', 'name')) subset = eval(substitute(subset), private$.meta, parent.frame())
+       if (class(substitute(value)) %in% c('call', 'name')) value = eval(substitute(value), private$.meta, parent.frame())
 
        if (grepl('^evalhere_', column)) stop('column names in a tCorpus cannot start with evalhere_')
 
@@ -358,8 +379,8 @@ tCorpus <- R6::R6Class("tCorpus",
      },
 
      subset = function(subset=NULL, subset_meta=NULL, drop_levels=T, window=NULL, copy=self$always_copy){
-       if(methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.data, parent.frame())
-       if(methods::is(substitute(subset_meta), 'call')) subset_meta = eval(substitute(subset_meta), private$.meta, parent.frame())
+       if (class(substitute(subset)) %in% c('call', 'name')) subset = eval(substitute(subset), private$.data, parent.frame())
+       if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = eval(substitute(subset_meta), private$.meta, parent.frame())
 
        if (copy) {
          selfcopy = self$copy()$subset(subset=subset, subset_meta=subset_meta, drop_levels=drop_levels, window=window, copy=F)
@@ -397,14 +418,14 @@ tCorpus <- R6::R6Class("tCorpus",
 
       subset_meta = function(subset=NULL, drop_levels=T, copy=self$always_copy){
         ## subset also has a subset_meta argument, but we add this for consistency with other _meta methods
-        if(methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.meta, parent.frame())
+        if (class(substitute(subset)) %in% c('call', 'name')) subset = eval(substitute(subset), private$.meta, parent.frame())
         evalhere_subset = subset
         self$subset(subset_meta = evalhere_subset, drop_levels=drop_levels, copy=copy)
       },
 
       subset_i = function(subset=NULL, subset_meta=NULL, window=NULL, inverse=F){
-        if(methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.data, parent.frame())
-        if(methods::is(substitute(subset_meta), 'call')) subset_meta = eval(substitute(subset_meta), private$.meta, parent.frame())
+        if (class(substitute(subset)) %in% c('call', 'name')) subset = eval(substitute(subset), private$.data, parent.frame())
+        if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = eval(substitute(subset_meta), private$.meta, parent.frame())
 
         ## enable subset_i to be called from a character string. (e.g. used in search_features)
         if(methods::is(subset, 'character')) subset_meta = eval(parse(text=subset_meta), private$.meta, parent.frame())
@@ -435,7 +456,7 @@ tCorpus <- R6::R6Class("tCorpus",
        private$set_provenance(index_feature=NULL, context_level=NULL, max_window_size=NULL, as_ascii=NULL)
      },
 
-     aggregate = function(meta_cols=NULL, hits=NULL, feature=NULL, count=c('documents','words'), wide=T){
+     aggregate = function(meta_cols=NULL, hits=NULL, feature=NULL, count=c('documents','tokens'), wide=T){
         count = match.arg(count)
 
         meta = data.table::copy(private$.meta)
@@ -491,9 +512,9 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(preprocess_feature(self, column=column, new_column=new_column, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, use_stemming=use_stemming, language=language))
      },
 
-     feature_subset = function(column, new_column, subset, inverse=F, copy=self$always_copy){
-       if (new_column %in% c('doc_id','sent_i','word_i')) stop('The position columns (doc_id, sent_i, word_i) cannot be used')
-       if (methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), private$.data, parent.frame())
+     feature_subset = function(column, new_column=column, subset, inverse=F, copy=self$always_copy){
+       if (new_column %in% c('doc_id','sent_i','token_i')) stop('The position columns (doc_id, sent_i, token_i) cannot be used')
+       if (class(substitute(subset)) %in% c('call', 'name')) subset = eval(substitute(subset), private$.data, parent.frame())
 
 
        if (copy) {
@@ -524,40 +545,46 @@ tCorpus <- R6::R6Class("tCorpus",
        top_features(self, feature=feature, n=n, group_by=group_by, group_by_meta=group_by_meta, return_long=return_long)
      },
 
+     feature_associations = function(keyword=NULL, condition=NA, hits=NULL, feature='token', window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'), subset=NULL, subset_meta=NULL) {
+       if (is.null(keyword) & is.null(hits)) stop('either keyword or hits has to be specified')
+       if (!is.null(keyword) & !is.null(hits)) stop('only keyword or hits can be specified')
+       if (!is.null(keyword)) hits = self$search_features(keyword=keyword, condition=condition)
 
-## SEARCHING / QUERYING ##
-     search_features = function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mword=F, verbose=F){
-       subset_tokens = if (methods::is(substitute(subset_tokens), 'call')) deparse(substitute(subset_tokens)) else subset_tokens
-       subset_meta = if (methods::is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
-
-       search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=keep_false_condition, only_last_mword=only_last_mword, verbose=verbose)
+       feature_associations(self, hits=hits, feature=feature, window=window, n=n, min_freq=min_freq, sort_by=sort_by, subset=subset, subset_meta=subset_meta)
      },
 
-     code_features = function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', column='code', condition_once=F, subset_tokens=NA, subset_meta=NA, only_last_mword=F, verbose=F){
-       subset = if (methods::is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
-       subset_meta = if (methods::is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
 
-       hits = search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, only_last_mword=only_last_mword, verbose=verbose)
-       #print(hits$hits)
+## SEARCHING / QUERYING ##
+     search_features = function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mtoken=F, verbose=F){
+       subset_tokens = if (class(substitute(subset_tokens)) %in% c('call')) deparse(substitute(subset_tokens)) else subset_tokens
+       subset_meta = if (class(substitute(subset_meta)) %in% c('call')) deparse(substitute(subset_meta)) else subset_meta
+
+       search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=keep_false_condition, only_last_mtoken=only_last_mtoken, verbose=verbose)
+     },
+
+     code_features = function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', column='code', condition_once=F, subset_tokens=NA, subset_meta=NA, only_last_mtoken=F, verbose=F){
+       subset = if (class(substitute(subset)) %in% c('call')) deparse(substitute(subset)) else subset
+       subset_meta = if (class(substitute(subset_meta)) %in% c('call')) deparse(substitute(subset_meta)) else subset_meta
+
+       hits = search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, only_last_mtoken=only_last_mtoken, verbose=verbose)
 
        #feature = private$.data
        evalhere_i = hits$hits$i
        evalhere_value = hits$hits$code
-       self$set(column=column, subset=evalhere_i, value=evalhere_value)
+       self$set(column=column, subset=evalhere_i, value=evalhere_value, subset_value=F)
        #private$.data[hits$hits$i, (column) := hits$hits$code]
 
        invisible(self)
      },
 
      search_recode = function(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA, copy=self$always_copy){
-       subset = if (methods::is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
-       subset_meta = if (methods::is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
+       subset = if (class(substitute(subset_tokens)) %in% c('call')) deparse(substitute(subset_tokens)) else subset_tokens
+       subset_meta = if (class(substitute(subset_meta)) %in% c('call')) deparse(substitute(subset_meta)) else subset_meta
 
        if (copy) {
           selfcopy = self$copy()$search_recode(feature=feature, new_value=new_value, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, copy=F)
           return(selfcopy)
        }
-
        hits = self$search_features(keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta)
        evalhere_x = as.numeric(as.character(hits$hits$i))
        evalhere_new_value = new_value
@@ -565,11 +592,11 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
-     search_contexts = function(query, code=NULL, feature='word', context_level=c('document','sentence'), verbose=F){
+     search_contexts = function(query, code=NULL, feature='token', context_level=c('document','sentence'), verbose=F){
        search_contexts(self, query, code=code, feature=feature, context_level=context_level, verbose=verbose)
      },
 
-     subset_query = function(query, feature='word', context_level=c('document','sentence'), copy=self$always_copy){
+     subset_query = function(query, feature='token', context_level=c('document','sentence'), copy=self$always_copy){
        if (copy) {
          selfcopy = self$copy()$subset_query(query=query, feature=feature, context_level=context_level, copy=F)
          return(selfcopy)
@@ -590,30 +617,32 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
-     kwic = function(hits=NULL, i=NULL, keyword=NULL, code='', nwords=10, nsample=NA, output_feature='word', context_level=c('document','sentence'), prettypaste=T, kw_tag=c('<','>'), ...){
-       if (!is.null(keyword)) hits = self$search_features(keyword=keyword, code=code, ...)
-       keyword_in_context(self, hits=hits, i=i, code=code, nwords=nwords, nsample=nsample, output_feature=output_feature, context_level=context_level, prettypaste=prettypaste, kw_tag=kw_tag)
+     kwic = function(hits=NULL, i=NULL, keyword=NULL, code='', ntokens=10, nsample=NA, output_feature='token', keyword_feature='token', context_level=c('document','sentence'), prettypaste=T, kw_tag=c('<','>'), ...){
+       if (!is.null(keyword)) hits = self$search_features(keyword=keyword, code=code, feature = keyword_feature, ...)
+       keyword_in_context(self, hits=hits, i=i, code=code, ntokens=ntokens, nsample=nsample, output_feature=output_feature, context_level=context_level, prettypaste=prettypaste, kw_tag=kw_tag)
      },
 
 ## CO-OCCURRENCE NETWORKS ##
-     semnet = function(feature, measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA){
+     semnet = function(feature, measure=c('cosine', 'con_prob', 'con_prob_weighted', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA){
+       measure = match.arg(measure)
        if (!requireNamespace('igraph', quietly = T)) stop('igraph package needs to be installed in order to use semnet methods')
        semnet(self, feature=feature, measure=measure, context_level=context_level, backbone=backbone, n.batches=n.batches)
      },
 
-     semnet_window = function(feature, measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=1, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
+     semnet_window = function(feature, measure=c('cosine', 'con_prob', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=NA, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
+       measure = match.arg(measure)
        if (!requireNamespace('igraph', quietly = T)) stop('igraph package needs to be installed in order to use semnet methods')
        semnet_window(self, feature=feature, measure=measure, context_level=context_level, window.size=window.size, direction=direction, backbone=backbone, n.batches=n.batches, set_matrix_mode=set_matrix_mode)
      },
 ## CORPUS COMPARISON ##
 
-     compare_corpus = function(tc_y, feature, smooth=0.1, min_over=NULL, min_chi2=NULL, is_subset=F, yates_cor=c('auto','yes','no'), what=c('freq','docfreq')){
+     compare_corpus = function(tc_y, feature, smooth=0.1, min_ratio=NULL, min_chi2=NULL, is_subset=F, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
        if (is_subset & self$n > tc_y$n) stop('tCorpus x (the one calling the method) cannot be a subset of tCorpus y, because it has more tokens')
        what = match.arg(what)
-       tcorpus_compare(self, tc_y, feature, smooth=smooth, min_over=min_over, min_chi2=min_chi2, yates_cor=yates_cor, x_is_subset=is_subset, what=what)
+       tcorpus_compare(self, tc_y, feature, smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, x_is_subset=is_subset, what=what)
      },
 
-     compare_subset = function(feature, subset_x=NULL, subset_meta_x=NULL, query_x=NULL, query_feature='word', smooth=0.1, min_over=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), what=c('freq','docfreq')){
+     compare_subset = function(feature, subset_x=NULL, subset_meta_x=NULL, query_x=NULL, query_feature='token', smooth=0.1, min_ratio=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
        subset_x = eval(substitute(subset_x), private$.meta, parent.frame(2))
        subset_meta_x = eval(substitute(subset_meta_x), private$.meta, parent.frame(2))
        what = match.arg(what)
@@ -626,14 +655,13 @@ tCorpus <- R6::R6Class("tCorpus",
        }
        if(!is.null(query_x)) tc_x = self$subset_query(query_x, feature=query_feature, copy=T)
 
-       comp = tc_x$compare_corpus(self, feature=feature, smooth=smooth, min_over=min_over, min_chi2=min_chi2, yates_cor=yates_cor, is_subset=T, what=what)
-       if (self$auto_gc) rm(tc_x); gc()
+       comp = tc_x$compare_corpus(self, feature=feature, smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, is_subset=T, what=what)
        comp
      },
 
 ## DOCUMENT COMPARISON ##
 
-     compare_documents = function(feature='word', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
+     compare_documents = function(feature='token', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
        if (!requireNamespace('RNewsflow', quietly = T)) stop('RNewsflow package needs to be installed in order to use document comparison methods')
         weight = match.arg(weight)
         from_subset = eval(substitute(from_subset), private$.meta, parent.frame(2))
@@ -641,7 +669,7 @@ tCorpus <- R6::R6Class("tCorpus",
         compare_documents_fun(self, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=min_similarity, weight=weight, ngrams=ngrams, from_subset=from_subset, to_subset=to_subset)
      },
 
-     deduplicate = function(feature='word', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=self$always_copy){
+     deduplicate = function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=self$always_copy){
        if (!requireNamespace('RNewsflow', quietly = T)) stop('RNewsflow package needs to be installed in order to use document comparison methods')
 
        weight = match.arg(weight)
@@ -685,7 +713,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
 ## RESOURCES ##
 
-     jrc_names = function(new_feature='jrc_names', feature='word', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, copy=self$always_copy){
+     jrc_names = function(new_feature='jrc_names', feature='token', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, copy=self$always_copy){
        if (copy) {
          selfcopy = self$copy()$jrc_names(new_feature=new_feature, feature=feature, resource_path=resource_path, collocation_labels=collocation_labels, batchsize=batchsize, low_memory=low_memory, verbose=verbose, copy=F)
          return(selfcopy)
@@ -697,9 +725,9 @@ tCorpus <- R6::R6Class("tCorpus",
      set_keys = function(){
        ## ignore copy T or F, since setting keys is always a good thing
        if ('sent_i' %in% colnames(private$.data)){
-         setkey(private$.data, 'doc_id', 'sent_i', 'word_i')
+         setkey(private$.data, 'doc_id', 'sent_i', 'token_i')
        } else {
-         setkey(private$.data, 'doc_id', 'word_i')
+         setkey(private$.data, 'doc_id', 'token_i')
        }
        setkey(private$.meta, 'doc_id')
        if (!is.null(private$.feature_index)) setkey(private$.feature_index, 'feature')
@@ -722,7 +750,7 @@ tCorpus <- R6::R6Class("tCorpus",
      n_meta = function() nrow(private$.meta),
      feature_names = function(e=NULL) {
        if (!is.null(e)) stop('Cannot change tcorpus$feature_names by assignment. Instead, use the set_colname() function')
-       fnames = colnames(private$.data)[!colnames(private$.data) %in% c('doc_id','sent_i','word_i')]
+       fnames = colnames(private$.data)[!colnames(private$.data) %in% c('doc_id','sent_i','token_i')]
      },
      names = function(e=NULL) {
        if (!is.null(e)) stop('Cannot change tcorpus$names by assignment. Instead, use the set_colname() function')
@@ -791,7 +819,7 @@ rebuild_tcorpus <- function(tc) {
   tokens_to_tcorpus(tokens = tc$data,
                     doc_col = 'doc_id',
                     sent_i_col = ifelse('sent_i' %in% tc$names, T, F),
-                    word_i_col = 'word_i',
+                    token_i_col = 'token_i',
                     meta = tc$meta)
 }
 
@@ -846,7 +874,7 @@ safe_selection <- function(d, selection){
 }
 
 eval_subset <- function(d, subset){
-  subset = if (methods::is(substitute(subset), 'call')) deparse(substitute(subset)) else subset
+  subset = if (class(substitute(subset)) %in% c('call')) deparse(substitute(subset)) else subset
   subset = if (methods::is(substitute(subset), 'character')) parse(text=subset) else substitute(subset)
   eval(subset, d, parent.frame(2))
 }

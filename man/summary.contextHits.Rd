@@ -14,4 +14,3 @@ summary.contextHits(object, ...)
 \description{
 S3 summary for contextHits class
 }
-

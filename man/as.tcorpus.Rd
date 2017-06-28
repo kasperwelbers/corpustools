@@ -14,4 +14,3 @@ as.tcorpus(x, ...)
 \description{
 Force an object to be a tCorpus class
 }
-

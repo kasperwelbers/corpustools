@@ -3,23 +3,23 @@
 \name{create_tcorpus}
 \alias{create_tcorpus}
 \alias{create_tcorpus.character}
-\alias{create_tcorpus.data.frame}
 \alias{create_tcorpus.factor}
+\alias{create_tcorpus.data.frame}
 \title{Create a tCorpus}
 \usage{
 create_tcorpus(x, ...)
 
 \method{create_tcorpus}{character}(x, doc_id = 1:length(x), meta = NULL,
-  split_sentences = F, max_sentences = NULL, max_words = NULL,
+  split_sentences = F, max_sentences = NULL, max_tokens = NULL,
   verbose = F, ...)
 
 \method{create_tcorpus}{factor}(x, doc_id = 1:length(x), meta = NULL,
-  split_sentences = F, max_sentences = NULL, max_words = NULL,
+  split_sentences = F, max_sentences = NULL, max_tokens = NULL,
   verbose = F, ...)
 
 \method{create_tcorpus}{data.frame}(x, text_columns = "text",
   doc_column = NULL, split_sentences = F, max_sentences = NULL,
-  max_words = NULL, ...)
+  max_tokens = NULL, ...)
 }
 \arguments{
 \item{x}{main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.}
@@ -34,7 +34,7 @@ create_tcorpus(x, ...)
 
 \item{max_sentences}{An integer. Limits the number of sentences per document to the specified number. If set when split_sentences == FALSE, split_sentences will be set to TRUE.}
 
-\item{max_words}{An integer. Limits the number of words per document to the specified number}
+\item{max_tokens}{An integer. Limits the number of tokens per document to the specified number}
 
 \item{verbose}{If TRUE, report progress}
 
@@ -45,4 +45,3 @@ create_tcorpus(x, ...)
 \description{
 Create a tCorpus
 }
-

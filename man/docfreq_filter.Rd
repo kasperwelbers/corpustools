@@ -24,4 +24,3 @@ docfreq_filter(x, min = -Inf, max = Inf, top = NULL, bottom = NULL,
 Support function to enable subsetting by document frequency stats of a given feature.
 Should only be used within the tCorpus subset method, or any tCorpus method that supports a subset argument.
 }
-

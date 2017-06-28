@@ -5,9 +5,9 @@
 \title{Find tokens using a Lucene-like search query}
 \usage{
 search_features(tc, keyword = NA, condition = NA, code = NA,
-  queries = NULL, feature = "word", condition_once = F,
+  queries = NULL, feature = "token", condition_once = F,
   subset_tokens = NA, subset_meta = NA, keep_false_condition = F,
-  only_last_mword = F, verbose = F)
+  only_last_mtoken = F, verbose = F)
 }
 \arguments{
 \item{tc}{a tCorpus object}
@@ -30,7 +30,7 @@ search_features(tc, keyword = NA, condition = NA, code = NA,
 
 \item{keep_false_condition}{if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives}
 
-\item{only_last_mword}{If TRUE, then if multiword keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last word. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, word co-occurence analysis)}
+\item{only_last_mtoken}{If TRUE, then if multitoken keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last token. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, token co-occurence analysis)}
 
 \item{verbose}{If TRUE, progress messages will be printed}
 }
@@ -46,7 +46,7 @@ Brief summary of the query language
 The keyword:
 \itemize{
    \item{is the actual feature that has to be found in the token}
-   \item{can contain multiple words with OR statement (and empty spaces are also considered OR statements)}
+   \item{can contain multiple tokens with OR statement (and empty spaces are also considered OR statements)}
    \item{CANNOT contain AND or NOT statements (this is what the condition is for)}
    \item{accepts the ? wildcard, which means that any single character can be used in this place}
    \item{accepts the * wildcard, which means that any number of characters can be used in this place}
@@ -57,7 +57,7 @@ The condition:
    \item{has to be TRUE for the keyword to be accepted. Thus, if a condition is given, the query can be interpreted as: keyword AND condition}
    \item{can contain complex boolean statements, using AND, OR and NOT statements, and using parentheses}
    \item{accepts the ? and * wildcards}
-   \item{can be specified for a maximum word distance of the keyword. The terms in the condition are looked up within this word distance. Individual terms can be given a word distance using the ~ symbol, where "word~50" means that "word" is looked up within 50 words of the keyword.}
+   \item{can be specified for a maximum token distance of the keyword. The terms in the condition are looked up within this token distance. Individual terms can be given a token distance using the ~ symbol, where "token~50" means that "token" is looked up within 50 tokens of the keyword.}
 }
 
 Parameters:
@@ -65,4 +65,3 @@ Parameters:
    \item{condition_once -> if TRUE, then if the condition is satisfied at least once in an article, all occurences of the keyword are accepted. }
 }
 }
-

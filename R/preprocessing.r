@@ -5,30 +5,30 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
   if (!methods::is(feature, 'factor')) feature = factor(feature)
 
   if (ngrams == 1) {
-    evalhere_feature = preprocess_words(feature, context=NA, language=language, use_stemming=use_stemming, lowercase=lowercase, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords)
+    evalhere_feature = preprocess_tokens(feature, context=NA, language=language, use_stemming=use_stemming, lowercase=lowercase, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords)
   } else {
     context = tc$context(context_level=ngram_context, with_labels = F)
-    evalhere_feature = preprocess_words(feature, context=context, language=language, use_stemming=use_stemming, lowercase=lowercase, ngrams = ngrams, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords)
+    evalhere_feature = preprocess_tokens(feature, context=context, language=language, use_stemming=use_stemming, lowercase=lowercase, ngrams = ngrams, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords)
   }
   tc$set(column = new_column, value = evalhere_feature)
 }
 
 
-#' Preprocess words in a character vector
+#' Preprocess tokens in a character vector
 #'
-#' @param x A character vector in which each element is a word (i.e. a tokenized text)
-#' @param context Optionally, a character vector of the same length as x, specifying the context of word (e.g., document, sentence). Has to be given if ngram > 1
+#' @param x A character vector in which each element is a token (i.e. a tokenized text)
+#' @param context Optionally, a character vector of the same length as x, specifying the context of token (e.g., document, sentence). Has to be given if ngram > 1
 #' @param language The language used for stemming and removing stopwords
 #' @param use_stemming Logical, use stemming. (Make sure the specify the right language!)
-#' @param lowercase Logical, make word lowercase
-#' @param ngrams A number, specifying the number of words per ngram. Default is unigrams (1).
+#' @param lowercase Logical, make token lowercase
+#' @param ngrams A number, specifying the number of tokens per ngram. Default is unigrams (1).
 #' @param replace_whitespace Logical. If TRUE, all whitespace is replaced by underscores
-#' @param as_ascii Logical. If TRUE, words will be forced to ascii
+#' @param as_ascii Logical. If TRUE, tokens will be forced to ascii
 #' @param remove_punctuation Logical. if TRUE, punctuation is removed
 #' @param remove_stopwords Logical. If TRUE, stopwords are removed (Make sure to specify the right language!)
 #'
 #' @export
-preprocess_words <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=T, as_ascii=F, remove_punctuation=T, remove_stopwords=F){
+preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=T, as_ascii=F, remove_punctuation=T, remove_stopwords=F){
   language = match.arg(language, choices=c('danish','dutch','english','finnish','french','german','hungarian','italian','norwegian','porter','portuguese','romanian','russian','spanish','swedish','turkish'))
   if (!methods::is(x, 'factor')) x = fast_factor(x)
   if (replace_whitespace) levels(x) = gsub(' ', '_', levels(x), fixed=T)
@@ -45,9 +45,9 @@ preprocess_words <- function(x, context=NULL, language='english', use_stemming=F
   x
 }
 
-create_ngrams <- function(words, group, n, label=T, hash=F) {
-  ngrams = matrix(ncol=n, nrow=length(words))
-  for(i in 1:n) ngrams[,n-i+1] = shift(words, n=i-1, fill = '')
+create_ngrams <- function(tokens, group, n, label=T, hash=F) {
+  ngrams = matrix(ncol=n, nrow=length(tokens))
+  for(i in 1:n) ngrams[,n-i+1] = shift(tokens, n=i-1, fill = '')
 
   newart = which(!duplicated(group))
   for(i in 1:(n-1)) {
@@ -55,7 +55,7 @@ create_ngrams <- function(words, group, n, label=T, hash=F) {
     replace_i = replace_i[replace_i <= nrow(ngrams)]
     if (length(replace_i) > 0) ngrams[replace_i, 1:(n-i)] = ''
   }
-  if (methods::is(words, 'factor')) {
+  if (methods::is(tokens, 'factor')) {
     ngrams = split(as.numeric(t(ngrams)), rep(1:nrow(ngrams), each = ncol(ngrams)))
   } else {
     ngrams = split(t(ngrams), rep(1:nrow(ngrams), each = ncol(ngrams)))
@@ -69,27 +69,27 @@ create_ngrams <- function(words, group, n, label=T, hash=F) {
     hash = as.integer(sapply(ungrams, ashash))
     return(hash[ngrams_i])
   } else {
-    if (methods::is(words, 'factor') & label) {
-      ungrams = sapply(ungrams, function(x) ifelse(is.na(x), '', levels(words)[x]), simplify = F)
+    if (methods::is(tokens, 'factor') & label) {
+      ungrams = sapply(ungrams, function(x) ifelse(is.na(x), '', levels(tokens)[x]), simplify = F)
     }
     ungrams = if (label) as.factor(stringi::stri_paste_list(ungrams, sep='/')) else 1:length(ungrams)
     return(ungrams[ngrams_i])
   }
 }
 
-grouped_ngrams <- function(words, group, n, filter=rep(T, length(words)), label=T, hash=F){
-  filter = filter & !is.na(words)
-  words = words[filter]
-  group = if (length(group) == 1) rep(group, length(words)) else group[filter]
+grouped_ngrams <- function(tokens, group, n, filter=rep(T, length(tokens)), label=T, hash=F){
+  filter = filter & !is.na(tokens)
+  tokens = tokens[filter]
+  group = if (length(group) == 1) rep(group, length(tokens)) else group[filter]
 
   if (label &! hash) {
     ngrams = as.factor(rep(NA, length(filter)))
-    ng = create_ngrams(words, group, n, label=label, hash=hash)
+    ng = create_ngrams(tokens, group, n, label=label, hash=hash)
     levels(ngrams) = levels(ng)
     ngrams[which(filter)] = ng
   } else {
     ngrams = vector('numeric', length(filter))
-    ngrams[which(filter)] = create_ngrams(words, group, n, label=label, hash=hash)
+    ngrams[which(filter)] = create_ngrams(tokens, group, n, label=label, hash=hash)
   }
   ngrams
 }

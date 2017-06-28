@@ -18,8 +18,8 @@ normalize_string <- function(x, lowercase=T, ascii=T, trim=T){
 
 
 use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsize=50000, flatten_colloc=T, lowercase=F, ascii=F, low_memory=T, verbose=F){
-  if (!'word' %in% tc$names) stop('To use resources that use string matching, the tCorpus must hvae a feature column with clean (not preprocessed) text, labeled "word"')
-  fi = tc$feature_index(feature = 'word')
+  if (!'token' %in% tc$names) stop('To use resources that use string matching, the tCorpus must hvae a feature column with clean (not preprocessed) text, labeled "token"')
+  fi = tc$feature_index(feature = 'token')
 
   levels(fi$feature) = normalize_string(levels(fi$feature), lowercase=lowercase, ascii = ascii)
   setkey(fi, 'feature')
@@ -55,7 +55,7 @@ use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsiz
   candidates = vector('list', length(batches))
   counter = verbose_sum_counter(nrow(re))
   for(i in seq_along(batches)){
-    candidates[[i]] = fast_multiword_stringmatch(batches[[i]], fi=fi, gf=gf, regex_sep=regex_sep, case_sensitive=case_sensitive)
+    candidates[[i]] = fast_multitoken_stringmatch(batches[[i]], fi=fi, gf=gf, regex_sep=regex_sep, case_sensitive=case_sensitive)
     if (verbose) counter(nrow(batches[[i]]))
   }
   if (verbose) message('Binding results')
@@ -80,7 +80,7 @@ use_stringmatch_resource <- function(tc, re, regex_sep, case_sensitive, batchsiz
   index
 }
 
-fast_multiword_stringmatch <- function(re, fi, gf, regex_sep, case_sensitive=T){
+fast_multitoken_stringmatch <- function(re, fi, gf, regex_sep, case_sensitive=T){
   i = 1:length(re$string)
 
   if (!case_sensitive) {

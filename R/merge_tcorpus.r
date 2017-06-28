@@ -42,7 +42,7 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
     sent_col = NULL
   }
 
-  tokens_to_tcorpus(data, doc_col='doc_id', sent_i_col=sent_col, word_i_col='word_i', meta=meta, sent_is_local = T, word_is_local = T)
+  tokens_to_tcorpus(data, doc_col='doc_id', sent_i_col=sent_col, token_i_col='token_i', meta=meta, sent_is_local = T, token_is_local = T)
 }
 
 #' Merge tCorpus shards

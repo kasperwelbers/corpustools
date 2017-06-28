@@ -4,16 +4,16 @@
 \alias{tokens_to_tcorpus}
 \title{Create a tcorpus based on tokens (i.e. preprocessed texts)}
 \usage{
-tokens_to_tcorpus(tokens, doc_col = "doc_id", word_i_col = NULL,
+tokens_to_tcorpus(tokens, doc_col = "doc_id", token_i_col = NULL,
   sent_i_col = NULL, meta = NULL, meta_cols = NULL, feature_cols = NULL,
-  sent_is_local = F, word_is_local = F)
+  sent_is_local = F, token_is_local = F)
 }
 \arguments{
-\item{tokens}{A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (word_i_col)}
+\item{tokens}{A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (token_i_col)}
 
 \item{doc_col}{The name of the column that contains the document ids/names}
 
-\item{word_i_col}{The name of the column that contains the positions of words. If NULL, it is assumed that the data.frame is ordered by the order of words and does not contain gaps (e.g., filtered out words)}
+\item{token_i_col}{The name of the column that contains the positions of tokens. If NULL, it is assumed that the data.frame is ordered by the order of tokens and does not contain gaps (e.g., filtered out tokens)}
 
 \item{sent_i_col}{Optionally, the name of the column that indicates the sentences in which tokens occured.}
 
@@ -25,9 +25,8 @@ tokens_to_tcorpus(tokens, doc_col = "doc_id", word_i_col = NULL,
 
 \item{sent_is_local}{Sentences in the tCorpus must be locally unique within documents. If sent_is_local is FALSE, then sentences are made sure to be locally unique. However,  it is then assumed that the first sentence in a document is sentence 1, which might not be the case if tokens (input) is a subset. If you know for a fact that the sentence column in tokens is already locally unique, you can set sent_is_local to TRUE to keep the original sent_i values.}
 
-\item{word_is_local}{Same as sent_is_local, but or word_i}
+\item{token_is_local}{Same as sent_is_local, but or token_i}
 }
 \description{
 Create a tcorpus based on tokens (i.e. preprocessed texts)
 }
-

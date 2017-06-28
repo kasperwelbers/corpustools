@@ -18,4 +18,3 @@
   \link[=tCorpus$top_features]{$top_features()} \tab Show top features, optionally grouped by a given factor
 }
 }
-

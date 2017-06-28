@@ -4,9 +4,9 @@
 \alias{dtm_compare}
 \title{Compare two document term matrices}
 \usage{
-dtm_compare(dtm.x, dtm.y = NULL, smooth = 1, min_over = NULL,
+dtm_compare(dtm.x, dtm.y = NULL, smooth = 0.1, min_ratio = NULL,
   min_chi2 = NULL, select_rows = NULL, yates_cor = c("auto", "yes", "no"),
-  x_is_subset = F, what = c("freq", "docfreq"))
+  x_is_subset = F, what = c("freq", "docfreq", "cooccurrence"))
 }
 \arguments{
 \item{dtm.x}{the main document-term matrix}
@@ -15,7 +15,7 @@ dtm_compare(dtm.x, dtm.y = NULL, smooth = 1, min_over = NULL,
 
 \item{smooth}{the smoothing parameter for Laplace smoothing.}
 
-\item{min_over}{threshold for the over value, which is the ratio of the relative frequency of a term in dtm.x and dtm.y}
+\item{min_ratio}{threshold for the ratio value, which is the ratio of the relative frequency of a term in dtm.x and dtm.y}
 
 \item{min_chi2}{threshold for the chi^2 value}
 
@@ -33,4 +33,3 @@ A data frame with rows corresponding to the terms in dtm and the statistics in t
 \description{
 Compare two document term matrices
 }
-

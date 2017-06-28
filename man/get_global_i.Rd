@@ -21,4 +21,3 @@ a tCorpus object
 Features are given global ids, with an added distance (max_window_size) between contexts (e.g., documents, sentences).
 This way, the distance of features can be calculated across multiple contexts using a single vector
 }
-

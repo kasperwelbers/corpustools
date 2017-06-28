@@ -14,4 +14,3 @@ print.featureHits(x, ...)
 \description{
 S3 print for featureHits class
 }
-

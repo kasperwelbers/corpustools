@@ -18,12 +18,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // count
-std::map<String, int> count(SEXP x);
+std::map<String, int> count(SEXP& x);
 RcppExport SEXP corpustools_count(SEXP xSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
+    Rcpp::traits::input_parameter< SEXP& >::type x(xSEXP);
     rcpp_result_gen = Rcpp::wrap(count(x));
     return rcpp_result_gen;
 END_RCPP
@@ -38,4 +38,16 @@ BEGIN_RCPP
     rcpp_result_gen = Rcpp::wrap(full_set_ids(x));
     return rcpp_result_gen;
 END_RCPP
+}
+
+static const R_CallMethodDef CallEntries[] = {
+    {"corpustools_fast_factor", (DL_FUNC) &corpustools_fast_factor, 2},
+    {"corpustools_count", (DL_FUNC) &corpustools_count, 1},
+    {"corpustools_full_set_ids", (DL_FUNC) &corpustools_full_set_ids, 1},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_corpustools(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
 }

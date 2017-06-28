@@ -1,15 +1,15 @@
 
 ## todo: test whether tokenize package is better match
 
-tokenize_to_dataframe <- function(x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F){
+tokenize_to_dataframe <- function(x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_tokens=NULL, verbose=F){
   batch_i = get_batch_i(length(doc_id), batchsize=5000, return_list=T)
   prog = if (verbose) 'text' else 'none'
-  plyr::ldply(batch_i, tokenize_to_dataframe_batch, x=x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, .progress=prog)
+  plyr::ldply(batch_i, tokenize_to_dataframe_batch, x=x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, .progress=prog)
 }
 
 custom_dot_abbreviations <- function(){
   ## stringi::stri_split_boundaries can handle many cases where a dot is not used at the end of a sentence, but some language specific abbreviations have to be added manually
-  ## this is mostly important for honorifics, because then the word after the dot abbreviations is often a name, and thus capitalized
+  ## this is mostly important for honorifics, because then the token after the dot abbreviations is often a name, and thus capitalized
   ## here we can add abbreviations. Note that all abbreviations are matched with case-insensitive regex, and are assumed to be followed by a dot
   ## (there should be a list somewhere for this stuff, right?)
   common_titles = c('mr','miss','mrs','ms','mx',  ## english
@@ -30,14 +30,14 @@ unescape_custom_dot_abbreviation <- function(x) {
   stringi::stri_replace_all(x, '.', fixed = '___CuDoAb___')
 }
 
-split_tokens <- function(x, max_words) {
+split_tokens <- function(x, max_tokens) {
   x = stringi::stri_split_boundaries(x, type='word')
   x = lapply(x, function(x) x[!x == ' '])
-  if (!is.null(max_words)) x = sapply(x, head, max_words)
+  if (!is.null(max_tokens)) x = sapply(x, head, max_tokens)
   x
 }
 
-tokenize_to_dataframe_batch <- function(batch_i, x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_words=NULL){
+tokenize_to_dataframe_batch <- function(batch_i, x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_tokens=NULL){
   x = x[batch_i]
   doc_id = doc_id[batch_i]
   x = gsub('_', ' ', x, fixed=T)
@@ -46,24 +46,24 @@ tokenize_to_dataframe_batch <- function(batch_i, x, doc_id=1:length(x), split_se
     x = stringi::stri_split_boundaries(x, type='sentence')
 
     if (!is.null(max_sentences)) x = sapply(x, head, max_sentences)
-    x = lapply(x, function(x) unlist_to_df(split_tokens(x, max_words),
+    x = lapply(x, function(x) unlist_to_df(split_tokens(x, max_tokens),
                                            global_position=T))
     doclen = sapply(x, function(x) length(x$id))
     x = rbindlist(x)
-    colnames(x) = c('sent_i','word_i','word')
+    colnames(x) = c('sent_i','token_i','token')
 
     x$doc_id = rep(doc_id, doclen)
-    data.table::setcolorder(x, c('doc_id','sent_i','word_i','word'))
+    data.table::setcolorder(x, c('doc_id','sent_i','token_i','token'))
 
-    if (!is.null(max_words)) x = x[x$position <= max_words,]
-    x$word = unescape_custom_dot_abbreviation(x$word)
+    if (!is.null(max_tokens)) x = x[x$position <= max_tokens,]
+    x$token = unescape_custom_dot_abbreviation(x$token)
   } else {
-    x = split_tokens(x, max_words)
+    x = split_tokens(x, max_tokens)
     x = as.data.table(unlist_to_df(x, doc_id))
-    colnames(x) = c('doc_id', 'word_i', 'word')
+    colnames(x) = c('doc_id', 'token_i', 'token')
   }
 
-  x$word = as.factor(x$word)
+  x$token = as.factor(x$token)
   x$doc_id = as.factor(x$doc_id)
   x
 }

@@ -1,5 +1,5 @@
 ## Function for the tCorpus$search_contexts method
-search_contexts <- function(tc, query, code=NULL, feature='word', context_level=c('document','sentence'), verbose=F){
+search_contexts <- function(tc, query, code=NULL, feature='token', context_level=c('document','sentence'), verbose=F){
   is_tcorpus(tc, T)
   if (is_shattered(tc)) return(shardloop_rbind(stc=tc, mcall=match.call(), verbose=verbose))
 

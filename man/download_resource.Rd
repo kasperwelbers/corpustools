@@ -26,4 +26,3 @@ By default, the file will be saved to the location of the tcorpus package (for w
 Alternatively, the file can be saved as the specified local_path.
 This can also be specified globally by using the set_resources_path function.
 }
-

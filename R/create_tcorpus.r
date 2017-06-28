@@ -7,7 +7,7 @@
 #' @param x main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.
 #' @param meta A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x
 #' @param split_sentences Logical. If TRUE, the sentence number of tokens is also computed.
-#' @param max_words An integer. Limits the number of words per document to the specified number
+#' @param max_tokens An integer. Limits the number of tokens per document to the specified number
 #' @param doc_id if x is a character/factor vector, doc_id can be used to specify document ids. This has to be a vector of the same length as x
 #' @param doc_column If x is a data.frame, this specifies the column with the document ids.
 #' @param text_columns if x is a data.frame, this specifies the column(s) that contains text. The texts are paste together in the order specified here.
@@ -23,7 +23,7 @@ create_tcorpus <- function(x, ...) {
 
 #' @rdname create_tcorpus
 #' @export
-create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F, ...) {
+create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, verbose=F, ...) {
   if (any(duplicated(doc_id))) stop('doc_id should not contain duplicate values')
   if (!is.null(meta)){
     if (!methods::is(meta, 'data.frame')) stop('"meta" is not a data.frame or data.table')
@@ -36,20 +36,20 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, split_sen
   }
   meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
 
-  tCorpus$new(data = data.table::data.table(tokenize_to_dataframe(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose)),
+  tCorpus$new(data = data.table::data.table(tokenize_to_dataframe(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, verbose=verbose)),
               meta = base::droplevels(meta))
 }
 
 #' @rdname create_tcorpus
 #' @export
-create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, verbose=F, ...) {
-  create_tcorpus(as.character(x), doc_id=doc_id, meta=meta, split_sentences=split_sentences, max_sentences=max_sentences, max_words=max_words, verbose=verbose)
+create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, verbose=F, ...) {
+  create_tcorpus(as.character(x), doc_id=doc_id, meta=meta, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, verbose=verbose)
 }
 
 
 #' @rdname create_tcorpus
 #' @export
-create_tcorpus.data.frame <- function(x, text_columns='text', doc_column=NULL, split_sentences=F, max_sentences=NULL, max_words=NULL, ...) {
+create_tcorpus.data.frame <- function(x, text_columns='text', doc_column=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, ...) {
   for(cname in text_columns) if (!cname %in% colnames(x)) stop(sprintf('text_column "%s" not in data.frame', cname))
 
   if (length(text_columns) > 1){
@@ -63,29 +63,29 @@ create_tcorpus.data.frame <- function(x, text_columns='text', doc_column=NULL, s
   create_tcorpus(text,
                  doc_id = doc_id,
                  meta = x[,!colnames(x) %in% c(text_columns, doc_column), drop=F],
-                 split_sentences = split_sentences, max_sentences = max_sentences, max_words = max_words)
+                 split_sentences = split_sentences, max_sentences = max_sentences, max_tokens = max_tokens)
 }
 
 #' Create a tcorpus based on tokens (i.e. preprocessed texts)
 #'
-#' @param tokens A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (word_i_col)
+#' @param tokens A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (token_i_col)
 #' @param doc_col The name of the column that contains the document ids/names
-#' @param word_i_col The name of the column that contains the positions of words. If NULL, it is assumed that the data.frame is ordered by the order of words and does not contain gaps (e.g., filtered out words)
+#' @param token_i_col The name of the column that contains the positions of tokens. If NULL, it is assumed that the data.frame is ordered by the order of tokens and does not contain gaps (e.g., filtered out tokens)
 #' @param sent_i_col Optionally, the name of the column that indicates the sentences in which tokens occured.
 #' @param meta Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)
 #' @param meta_cols Alternatively, if there are document meta columns in the tokens data.table, meta_cols can be used to recognized them. Note that these values have to be unique within documents.
 #' @param feature_cols Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)
 #' @param sent_is_local Sentences in the tCorpus must be locally unique within documents. If sent_is_local is FALSE, then sentences are made sure to be locally unique. However,  it is then assumed that the first sentence in a document is sentence 1, which might not be the case if tokens (input) is a subset. If you know for a fact that the sentence column in tokens is already locally unique, you can set sent_is_local to TRUE to keep the original sent_i values.
-#' @param word_is_local Same as sent_is_local, but or word_i
+#' @param token_is_local Same as sent_is_local, but or token_i
 #'
 #' @export
-tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=F, word_is_local=F) {
+tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_i_col=NULL, sent_i_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=F, token_is_local=F) {
   tokens = data.table::as.data.table(tokens)
-  sent_i = word_i = NULL ## used in data.table syntax, but need to have bindings for R CMD check
+  sent_i = token_i = NULL ## used in data.table syntax, but need to have bindings for R CMD check
 
 
   ## check whether the columns specified in the arguments exist
-  for(cname in c(doc_col, word_i_col, sent_i_col, meta_cols)){
+  for(cname in c(doc_col, token_i_col, sent_i_col, meta_cols)){
     if (!cname %in% colnames(tokens)) stop(sprintf('"%s" is not an existing columnname in "tokens"', cname))
   }
   if (!is.null(meta)){
@@ -101,19 +101,19 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
     if (!methods::is(tokens$sent_i, 'integer')) tokens[,sent_i := as.integer(sent_i)]
   }
 
-  if (!is.null(word_i_col)) {
-    data.table::setnames(tokens, which(colnames(tokens) == word_i_col), 'word_i')
-    if (!methods::is(tokens$word_i, 'numeric')) stop('word_i_col has to be numeric/integer')
-    if (!methods::is(tokens$word_i, 'integer')) tokens[,word_i := as.integer(word_i)]
+  if (!is.null(token_i_col)) {
+    data.table::setnames(tokens, which(colnames(tokens) == token_i_col), 'token_i')
+    if (!methods::is(tokens$token_i, 'numeric')) stop('token_i_col has to be numeric/integer')
+    if (!methods::is(tokens$token_i, 'integer')) tokens[,token_i := as.integer(token_i)]
   } else {
-    warning('No word_i column specified. Word order used instead (see documentation).')
-    tokens$word_i = 1:nrow(tokens)
-    word_is_local = F
+    warning('No token_i column specified. token order used instead (see documentation).')
+    tokens$token_i = 1:nrow(tokens)
+    token_is_local = F
   }
 
   ## delete unused columns
-  if (is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sent_i_col, word_i_col, meta_cols)]
-  used_columns = c('doc_id','sent_i','word_i', meta_cols, feature_cols)
+  if (is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sent_i_col, token_i_col, meta_cols)]
+  used_columns = c('doc_id','sent_i','token_i', meta_cols, feature_cols)
   unused_columns = setdiff(colnames(tokens), used_columns)
   if(length(unused_columns) > 0) tokens[, (unused_columns) := NULL]
 
@@ -123,28 +123,28 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', word_i_col=NULL, sent_i_
 
   ## set data.table keys (sorting the data) and verify that there are no duplicates
   if (!is.null(sent_i_col)) {
-    data.table::setkeyv(tokens, c('doc_id','sent_i','word_i'))
-    if (!anyDuplicated(tokens, by=c('doc_id','sent_i','word_i')) == 0) stop('tokens should not contain duplicate triples of documents (doc_col), sentences (sent_i_col) and word positions (word_i_col)')
+    data.table::setkeyv(tokens, c('doc_id','sent_i','token_i'))
+    if (!anyDuplicated(tokens, by=c('doc_id','sent_i','token_i')) == 0) stop('tokens should not contain duplicate triples of documents (doc_col), sentences (sent_i_col) and token positions (token_i_col)')
   } else {
-    data.table::setkeyv(tokens, c('doc_id','word_i'))
-    if (!anyDuplicated(tokens, by=c('doc_id','word_i')) == 0) stop('tokens should not contain duplicate doubles of documents (doc_col) and word positions (word_i_col)')
+    data.table::setkeyv(tokens, c('doc_id','token_i'))
+    if (!anyDuplicated(tokens, by=c('doc_id','token_i')) == 0) stop('tokens should not contain duplicate doubles of documents (doc_col) and token positions (token_i_col)')
   }
 
-  ## make sure that sent_i and word_i are locally unique within documents
+  ## make sure that sent_i and token_i are locally unique within documents
   ndoc = nrow(unique(tokens, by='doc_id'))
   if (!is.null(sent_i_col)){
     if (sent_is_local) {
         if (ndoc > 1) if (!anyDuplicated(unique(tokens, by=c('doc_id','sent_i')), by='sent_i') == 0) warning("Sentence positions (sent_i) do not appear to be locally unique within documents (no duplicates). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
     }
     if (!sent_is_local) tokens[,'sent_i' := local_position(tokens$sent_i, tokens$doc_id, presorted = T)] ## make sure sentences are locally unique within documents (and not globally)
-    if (!word_is_local) tokens[,'word_i' := global_position(tokens$word_i,
+    if (!token_is_local) tokens[,'token_i' := global_position(tokens$token_i,
                                                             global_position(tokens$sent_i, tokens$doc_id, presorted = T, position_is_local=T),
-                                                            presorted = T)]  ## make word positions globally unique, taking sentence id into account (in case words are locally unique within sentences)
+                                                            presorted = T)]  ## make token positions globally unique, taking sentence id into account (in case tokens are locally unique within sentences)
   }
-  if (word_is_local) {
-    if (ndoc > 1) if (!anyDuplicated(tokens, by=c('doc_id','word_i')) == 0) warning("Word positions (word_i) do not appear to be locally unique within documents (no duplicates). Unless you are sure they are, set word_is_local to FALSE (and read documentation)")
+  if (token_is_local) {
+    if (ndoc > 1) if (!anyDuplicated(tokens, by=c('doc_id','token_i')) == 0) warning("token positions (token_i) do not appear to be locally unique within documents (no duplicates). Unless you are sure they are, set token_is_local to FALSE (and read documentation)")
   } else {
-    tokens[,'word_i' := local_position(tokens$word_i, tokens$doc_id, presorted=T)] ## make words locally unique within documents
+    tokens[,'token_i' := local_position(tokens$token_i, tokens$doc_id, presorted=T)] ## make tokens locally unique within documents
   }
 
   ## arrange the meta data

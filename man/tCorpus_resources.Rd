@@ -12,4 +12,3 @@
   \link[=tCorpus$jrc_names]{$jrc_names()} \tab Multilingual named entity recognition (in news items) \cr
 }
 }
-

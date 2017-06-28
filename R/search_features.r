@@ -11,7 +11,7 @@
 #' The keyword:
 #' \itemize{
 #'    \item{is the actual feature that has to be found in the token}
-#'    \item{can contain multiple words with OR statement (and empty spaces are also considered OR statements)}
+#'    \item{can contain multiple tokens with OR statement (and empty spaces are also considered OR statements)}
 #'    \item{CANNOT contain AND or NOT statements (this is what the condition is for)}
 #'    \item{accepts the ? wildcard, which means that any single character can be used in this place}
 #'    \item{accepts the * wildcard, which means that any number of characters can be used in this place}
@@ -22,7 +22,7 @@
 #'    \item{has to be TRUE for the keyword to be accepted. Thus, if a condition is given, the query can be interpreted as: keyword AND condition}
 #'    \item{can contain complex boolean statements, using AND, OR and NOT statements, and using parentheses}
 #'    \item{accepts the ? and * wildcards}
-#'    \item{can be specified for a maximum word distance of the keyword. The terms in the condition are looked up within this word distance. Individual terms can be given a word distance using the ~ symbol, where "word~50" means that "word" is looked up within 50 words of the keyword.}
+#'    \item{can be specified for a maximum token distance of the keyword. The terms in the condition are looked up within this token distance. Individual terms can be given a token distance using the ~ symbol, where "token~50" means that "token" is looked up within 50 tokens of the keyword.}
 #' }
 #'
 #' Parameters:
@@ -37,13 +37,13 @@
 #' @param queries Alternatively, a data.frame can be given that contains a "keyword" column, and optionally columns for the "condition", "code" and "condition_once" paramters.
 #' @param condition_once logical. If TRUE, then if an keyword satisfies its conditions once in an article, all keywords within that article are coded.
 #' @param keep_false_condition if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives
-#' @param only_last_mword If TRUE, then if multiword keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last word. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, word co-occurence analysis)
+#' @param only_last_mtoken If TRUE, then if multitoken keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last token. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, token co-occurence analysis)
 #' @param feature The feature column in which to search
 #' @param subset_tokens A call (or character string of a call) as one would normally pass to subset.tCorpus. If given, the keyword has to occur within the subset. This is for instance usefull to only look in named entity POS tags when searching for people or organization. Note that the condition does not have to occur within the subset.
 #' @param subset_meta A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).
 #' @param verbose If TRUE, progress messages will be printed
 #'
-search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='word', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mword=F, verbose=F){
+search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mtoken=F, verbose=F){
   is_tcorpus(tc, T)
   if (is_shattered(tc)) return(shardloop_rbind(stc=tc, mcall=match.call(), verbose=verbose))
 
@@ -54,7 +54,7 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   if (!'subset_tokens' %in% colnames(queries)) queries$subset_tokens = if (methods::is(substitute(subset_tokens), 'call')) deparse(substitute(subset_tokens)) else subset_tokens
   if (!'subset_meta' %in% colnames(queries)) queries$subset_meta = if (methods::is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
 
-  if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(colnames(tc@data)[!colnames(tc@data) %in% c('doc_id','sent_i','word_i','filter')],collapse=', ')))
+  if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(colnames(tc@data)[!colnames(tc$data) %in% c('doc_id','sent_i','token_i','filter')],collapse=', ')))
   if (any(is.na(queries$keyword))) stop('keyword cannot be NA. Provide either the keyword or queries argument')
 
   queries$code = as.character(queries$code)
@@ -65,19 +65,19 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   max_window_size = if (length(windows) > 0) max(windows) else 0
 
   fi = tc$feature_index(feature=feature, context_level='document', max_window_size=max_window_size, as_ascii=T)
-  hits = search_features_loop(tc, fi=fi, queries=queries, feature=feature, only_last_mword=only_last_mword, keep_false_condition=keep_false_condition, verbose=verbose)
+  hits = search_features_loop(tc, fi=fi, queries=queries, feature=feature, only_last_mtoken=only_last_mtoken, keep_false_condition=keep_false_condition, verbose=verbose)
 
   featureHits(hits, queries)
 }
 
-search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep_false_condition, verbose){
+search_features_loop <- function(tc, fi, queries, feature, only_last_mtoken, keep_false_condition, verbose){
   n = nrow(queries)
   res = vector('list', n)
   for (i in 1:n){
     code = queries$code[i]
     if (verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
     kw = queries$keyword[i]
-    hit = search_string(fi, kw, allow_proximity = T, only_last_mword = only_last_mword)
+    hit = search_string(fi, kw, allow_proximity = T, only_last_mtoken = only_last_mtoken)
     if(is.null(hit)) next
 
     hit$doc_id = tc$get('doc_id')[hit$i]
@@ -121,10 +121,10 @@ search_features_loop <- function(tc, fi, queries, feature, only_last_mword, keep
   }
   names(res) = queries$code
   hits = plyr::ldply(res, function(x) x, .id='code')
-  position_cols = if ('sent_i' %in% tc$names) c('sent_i', 'word_i') else c('word_i')
+  position_cols = if ('sent_i' %in% tc$names) c('sent_i', 'token_i') else c('token_i')
   hits = cbind(hits, tc$get(position_cols, keep_df = T)[hits$i,])
 
-  if (nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor(), sent_i=numeric(), word_i = numeric(), hit_id=numeric())
+  if (nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor(), sent_i=numeric(), token_i = numeric(), hit_id=numeric())
   hits = hits[order(hits$i),]
 
   hits$hit_id = match(hits$hit_id, unique(hits$hit_id))

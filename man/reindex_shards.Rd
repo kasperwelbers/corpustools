@@ -21,4 +21,3 @@ reindex_shards(stc, new_stc = stc, meta_columns = NULL,
 \description{
 Note that depending on the size of the shattered_tCorpus this can take quite a while.
 }
-

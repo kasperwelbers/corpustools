@@ -13,4 +13,3 @@
   \link[=tokens_to_tcorpus]{tokens_to_tcorpus()} \tab Create a tCorpus from a data.frame of already tokenized texts
 }
 }
-

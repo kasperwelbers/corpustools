@@ -14,4 +14,3 @@ summary.featureHits(object, ...)
 \description{
 S3 summary for featureHits class
 }
-

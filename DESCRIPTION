@@ -1,7 +1,7 @@
 Package: corpustools
 Version: 0.201
 Date: 2016-12-02
-Title: Corpustools
+Title: A corpus analysis toolkit for tokenized text
 Author: Kasper Welbers & Wouter van Atteveldt
 Maintainer: Kasper Welbers <kasperwelbers@gmail.com>
 Depends: 
@@ -31,4 +31,4 @@ SystemRequirements: C++11
 License: MIT
 URL: http://github.com/kasperwelbers/corpustools
 Roxygen: list(wrap = FALSE)
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

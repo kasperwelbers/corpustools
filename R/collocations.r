@@ -7,7 +7,7 @@
 # Some features can be grouped in categories that span over multiple rows. For instance, unique ids for named entities. This function groups these collocation categories, and collapses the features into collocation strings.
 # This can be used to count how often each collocation string occurs. Also, it is used in the add_collocation_label function to choosse labels for collocation categories based on the most frequent occurring string
 
-collocation_strings <- function(tc, colloc_id, feature='word', pref=NULL){
+collocation_strings <- function(tc, colloc_id, feature='token', pref=NULL){
   f = tc$get(c(feature, colloc_id))
   colnames(f) = c('feature','id')
   f$pref = F
@@ -32,13 +32,13 @@ collocation_strings <- function(tc, colloc_id, feature='word', pref=NULL){
 #' Given a collocation category (e.g., named entity ids), this function finds the most frequently occuring string in this category and adds it as a label for the category
 #'
 #' @param tc a tcorpus object
-#' @param colloc_id the data column containing the unique id for collocation words
+#' @param colloc_id the data column containing the unique id for collocation tokens
 #' @param feature the name of the feature column
 #' @param new_feature the name of the new feature column
 #' @param pref_subset Optionally, a subset call, to specify a subset that has priority for finding the most frequently occuring string
 #'
 #' @export
-add_collocation_label <- function(tc, colloc_id, feature='word', new_feature=sprintf('%s_l', colloc_id), pref_subset=NULL){
+add_collocation_label <- function(tc, colloc_id, feature='token', new_feature=sprintf('%s_l', colloc_id), pref_subset=NULL){
   evalhere_pref_subset = deparse(substitute(pref_subset))
   if (!pref_subset == 'NULL') pref = tc$subset_i(subset_meta=evalhere_pref_subset) else pref = NULL
 

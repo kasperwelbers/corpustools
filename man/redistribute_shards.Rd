@@ -14,4 +14,3 @@ redistribute_shards(stc, tokens_per_shard = 1e+05)
 \description{
 For good performance it's generally best to keep shards of moderate size. Not too small to prevent tedious merging and looping, and not too big to prevent memory problems. This function redistributes the shards (within categories) to approximate the specified tokens_per_shard
 }
-

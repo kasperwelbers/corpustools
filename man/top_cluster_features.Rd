@@ -19,4 +19,3 @@ top_cluster_features(g, cluster_attr, measure = c("degree", "freq"),
 \description{
 Get top features from semnet clusters
 }
-

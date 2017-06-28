@@ -12,4 +12,3 @@ data(sotu_texts)
 State of the Union addresses
 }
 \keyword{datasets}
-

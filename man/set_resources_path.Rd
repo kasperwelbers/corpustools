@@ -12,4 +12,3 @@ set_resources_path(path = NULL)
 \description{
 By default, tcorpus stores the resources within the tcorpus directory. With set_resources_path you can change this default to a custom path.
 }
-

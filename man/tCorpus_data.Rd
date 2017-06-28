@@ -65,4 +65,3 @@ For the sake of convenience, the number of rows and column names of the data and
   $droplevels() \tab Drop the unused factor levels in the token and meta data.
 }
 }
-

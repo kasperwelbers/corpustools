@@ -14,4 +14,3 @@ print.tCorpus(x, ...)
 \description{
 S3 print for tCorpus class
 }
-

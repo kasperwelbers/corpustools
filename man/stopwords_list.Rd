@@ -12,4 +12,3 @@ data(stopwords_list)
 Basic stopword lists
 }
 \keyword{datasets}
-

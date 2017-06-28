@@ -5,7 +5,7 @@ using namespace Rcpp;
 // TABLE FUNCTION
 
 // [[Rcpp::export]]
-std::map<String, int> count(SEXP x) {
+std::map<String, int> count(SEXP &x) {
   CharacterVector v = as<CharacterVector>(x);
 
   std::map<String, int> t;
@@ -17,7 +17,7 @@ std::map<String, int> count(SEXP x) {
 }
 
 // get map keys
-CharacterVector keys( std::map<String, int> t) {
+CharacterVector keys( std::map<String, int> &t) {
   CharacterVector k(t.size());
   int i = 0;
   for ( auto it = t.begin(); it != t.end(); ++it){
@@ -28,7 +28,7 @@ CharacterVector keys( std::map<String, int> t) {
 }
 
 // get map values
-IntegerVector values( std::map<String, int> t) {
+IntegerVector values( std::map<String, int> &t) {
   IntegerVector v(t.size());
   int i = 0;
   for ( auto it = t.begin(); it != t.end(); ++it){

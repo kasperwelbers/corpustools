@@ -39,4 +39,3 @@ See the documentation for \link{shattered_tCorpus} for a more detailed explanati
 
 !! please read the documentation for shard_path if you intend to save the shattered_tCorpus
 }
-

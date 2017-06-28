@@ -16,4 +16,3 @@ If a shattered_tCorpus has been created, this function can be used to read/open/
 For the sake of reference: a shattered_tCorpus is nothing more than an object that refers to a folder containing the tCorpus shards and index.
 To create a shattered_tCorpus, consult the documentation ?shattered_tCorpus.
 }
-

@@ -39,4 +39,3 @@ Can I big data now?
 \item This functionality is not competing with big data software such as Hadoop. The goal is also not to facilitate cluster computing of shards. Still, if you have a decent computer and super-speed is not your goal, then the shattered_tCorpus approach should enable you to scale up pretty well.
 }
 }
-

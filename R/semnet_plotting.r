@@ -8,7 +8,7 @@
 #' @param weight_attr The name of the weight attribute. Default is 'weight'
 #' @param min_weight The minimum weight. All edges with a lower weight are dropped
 #' @param delete_isolates If TRUE, isolate vertices (also after applying min_weight) are dropped
-#' @param vertexsize_attr a character string indicating a vertex attribute that represents size. Default is 'freq', which is created in the coOccurenceNetwork functions to indicate the number of times a word occured.
+#' @param vertexsize_attr a character string indicating a vertex attribute that represents size. Default is 'freq', which is created in the coOccurenceNetwork functions to indicate the number of times a token occured.
 #' @param vertexsize_coef a coefficient for changing the vertex size.
 #' @param vertexcolor_attr a character string indicating a vertex attribute that represents color. The attribute can also be a numeric value (e.g., a cluster membership) in which case colors are assigned to numbers. If no (valid) color attribute is given, vertex color are based on undirected fastgreedy.community() clustering.
 #' @param edgewidth_coef a coefficient for changing the edge width
@@ -161,17 +161,17 @@ reduceLabelOverlap <- function(g, labelspace_coef=1.1, cex_from_device=F, label.
     label.cex = 1
   }
 
-  #ord = order(-centralization.degree(gs)$res) ## reorder so that least central words are relocated first
-  ord = order(-label.cex) ## reorder so that smallest words are relocated first
+  #ord = order(-centralization.degree(gs)$res) ## reorder so that least central tokens are relocated first
+  ord = order(-label.cex) ## reorder so that smallest tokens are relocated first
   layout_matrix = layout_matrix[ord,]
   label.cex = label.cex[ord]
   label = label[ord]
 
 
   graphics::plot(layout_matrix, axes = F, frame.plot = F, xlab='', ylab='', type='n', xlim = c(-1,1), ylim=c(-1,1))
-  newlayout = wordcloud::wordlayout(layout_matrix[,1], layout_matrix[,2], label, cex=label.cex*labelspace_coef, rstep = rstep, tstep=tstep, xlim = c(-1,1), ylim=c(-1,1))
+  newlayout = tokencloud::tokenlayout(layout_matrix[,1], layout_matrix[,2], label, cex=label.cex*labelspace_coef, rstep = rstep, tstep=tstep, xlim = c(-1,1), ylim=c(-1,1))
 
-  ## calculate new cex based on percentual difference old and new word width
+  ## calculate new cex based on percentual difference old and new token width
   #oldwidth = mapply(strwidth, s=label, cex=label.cex*labelspace_coef)
   #shrinkcoef = newlayout[,'width'] / oldwidth
   #newlayout = cbind(newlayout, newcex=label.cex*shrinkcoef)
