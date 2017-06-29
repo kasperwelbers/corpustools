@@ -88,7 +88,7 @@ NULL
 #' @section Usage:
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
-#' \preformatted{dtm(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F)
+#' \preformatted{dtm(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F)}
 #'
 #' @param feature The name of the feature column
 #' @param context_level Select whether the rows of the dtm should represent "documents" or "sentences".
@@ -165,7 +165,7 @@ NULL
 #' @section Usage:
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
-#' \preformatted{delete_columns(cnames, copy=self$always_copy)
+#' \preformatted{delete_columns(cnames, copy=self$always_copy)}
 #' \preformatted{delete_meta_columns(cnames, copy=self$always_copy)}
 #'
 #' @param cnames the names of the columns to delete

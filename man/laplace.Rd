@@ -4,12 +4,12 @@
 \alias{laplace}
 \title{Laplace (i.e. add constant) smoothing}
 \usage{
-laplace(freq, lambda = 0.1)
+laplace(freq, add = 0.5)
 }
 \arguments{
 \item{freq}{A numeric vector of term frequencies (integers).}
 
-\item{lambda}{}
+\item{add}{The added value}
 }
 \value{
 A numeric vector with the smoothed term proportions

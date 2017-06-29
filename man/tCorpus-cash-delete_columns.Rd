@@ -14,3 +14,11 @@
 \description{
 Delete column from the data and meta data
 }
+\section{Usage}{
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{delete_columns(cnames, copy=self$always_copy)}
+\preformatted{delete_meta_columns(cnames, copy=self$always_copy)}
+}
+

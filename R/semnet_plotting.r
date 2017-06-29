@@ -169,7 +169,7 @@ reduceLabelOverlap <- function(g, labelspace_coef=1.1, cex_from_device=F, label.
 
 
   graphics::plot(layout_matrix, axes = F, frame.plot = F, xlab='', ylab='', type='n', xlim = c(-1,1), ylim=c(-1,1))
-  newlayout = tokencloud::tokenlayout(layout_matrix[,1], layout_matrix[,2], label, cex=label.cex*labelspace_coef, rstep = rstep, tstep=tstep, xlim = c(-1,1), ylim=c(-1,1))
+  newlayout = wordcloud::wordlayout(layout_matrix[,1], layout_matrix[,2], label, cex=label.cex*labelspace_coef, rstep = rstep, tstep=tstep, xlim = c(-1,1), ylim=c(-1,1))
 
   ## calculate new cex based on percentual difference old and new token width
   #oldwidth = mapply(strwidth, s=label, cex=label.cex*labelspace_coef)

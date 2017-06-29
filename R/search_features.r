@@ -45,7 +45,6 @@
 #'
 search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mtoken=F, verbose=F){
   is_tcorpus(tc, T)
-  if (is_shattered(tc)) return(shardloop_rbind(stc=tc, mcall=match.call(), verbose=verbose))
 
   if (is.null(queries)) queries = data.frame(keyword=keyword)
   if (!'condition' %in% colnames(queries)) queries$condition = condition

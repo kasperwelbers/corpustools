@@ -1,6 +1,6 @@
 #' Simple Good Turing smoothing
 #'
-#' Implementation of the Simple Good Turing smoothing proposed in: Gale, W. A., & Sampson, G. (1995). Good‐turing frequency estimation without tears. Journal of Quantitative Linguistics, 2(3), 217-237.
+#' Implementation of the Simple Good Turing smoothing proposed in: Gale, W. A., \& Sampson, G. (1995). Good turing frequency estimation without tears. Journal of Quantitative Linguistics, 2(3), 217-237.
 #'
 #' @param freq A numeric vector of term frequencies (integers).
 #'
@@ -22,7 +22,6 @@ sgt <- function(freq){
     v$p[match(freq, v$r)]
   }
 }
-#freq = c(0,0,0,1,1,1,1,1,1,2,2,2,2,2,3,3,3,3,3,3,5,5,5,10,10,30)
 
 can_smooth <- function(freq){
   ff = table(freq)
@@ -33,12 +32,12 @@ can_smooth <- function(freq){
 #' Laplace (i.e. add constant) smoothing
 #'
 #' @param freq A numeric vector of term frequencies (integers).
-#' @param lambda
+#' @param add The added value
 #'
 #' @return A numeric vector with the smoothed term proportions
 #' @export
-laplace <- function(freq, lambda=0.1){
-  (freq + lambda) / sum(freq + lambda)
+laplace <- function(freq, add=0.5){
+  (freq + add) / sum(freq + add)
 }
 
 sgt_values <- function(r, Nr, conf=1.96) {
@@ -48,7 +47,7 @@ sgt_values <- function(r, Nr, conf=1.96) {
   Nrz = nrzest(r, Nr)
 
   # linear good-turing estimate
-  f = lm(log(Nrz) ~ log(r))
+  f = stats::lm(log(Nrz) ~ log(r))
   coef = f$coefficients
   if (is.na(coef[2])) {
     warning('Could not properly calculate linear Good-Turing estimate.')

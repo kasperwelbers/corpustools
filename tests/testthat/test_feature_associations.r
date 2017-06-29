@@ -8,10 +8,7 @@ test_that("feature associations", {
   topf = tc$feature_associations('war')
   topf
 
-  freq = table(tc$data$token)
-
-  expect_equal(as.character(topf$feature[1:3]),
-               c('terror','cold','chiefs'))
+  expect_equal(round(topf$ratio[topf$feature == 'terror'], 4), 12.6998)
 
   cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 })
