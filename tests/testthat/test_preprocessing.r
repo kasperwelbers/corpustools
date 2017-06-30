@@ -3,7 +3,7 @@ test_that("preprocessing works", {
   start_time = Sys.time()
 
   library(corpustools)
-
+  #library(testthat)
   tokens = data.frame(document = c(rep(1, 8), rep(2, 5), rep(3, 5)),
                       sentence = c(rep(1, 8), rep(2, 5), rep(3, 5)),
                       id = 1:18,
@@ -16,7 +16,7 @@ test_that("preprocessing works", {
   ## test preprocess_feature
   token = tc$data$token
 
-  context = get_context(tc, 'document')
+  context = tc$context('document')
   feature = preprocess_tokens(token, context=context, language='english', lowercase = T, use_stemming = T, ngrams = 3)
 
   tc = tc$preprocess('token', new_column='feature', language='english', lowercase = T, use_stemming = T, ngrams = 3, ngram_context = 'document')

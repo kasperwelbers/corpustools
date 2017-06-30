@@ -1,5 +1,3 @@
-?print
-
 #' Create a tCorpus
 #'
 #' @rdname create_tcorpus

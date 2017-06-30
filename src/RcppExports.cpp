@@ -17,33 +17,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// count
-std::map<String, int> count(SEXP& x);
-RcppExport SEXP corpustools_count(SEXP xSEXP) {
+// full_set_ids
+IntegerVector full_set_ids(CharacterVector v, int nsets);
+RcppExport SEXP corpustools_full_set_ids(SEXP vSEXP, SEXP nsetsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP& >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(count(x));
+    Rcpp::traits::input_parameter< CharacterVector >::type v(vSEXP);
+    Rcpp::traits::input_parameter< int >::type nsets(nsetsSEXP);
+    rcpp_result_gen = Rcpp::wrap(full_set_ids(v, nsets));
     return rcpp_result_gen;
 END_RCPP
 }
-// full_set_ids
-IntegerVector full_set_ids(SEXP x);
-RcppExport SEXP corpustools_full_set_ids(SEXP xSEXP) {
+// ngrams
+CharacterVector ngrams(CharacterVector tokens, CharacterVector group, int n, std::string sep, std::string empty);
+RcppExport SEXP corpustools_ngrams(SEXP tokensSEXP, SEXP groupSEXP, SEXP nSEXP, SEXP sepSEXP, SEXP emptySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< SEXP >::type x(xSEXP);
-    rcpp_result_gen = Rcpp::wrap(full_set_ids(x));
+    Rcpp::traits::input_parameter< CharacterVector >::type tokens(tokensSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type group(groupSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    Rcpp::traits::input_parameter< std::string >::type sep(sepSEXP);
+    Rcpp::traits::input_parameter< std::string >::type empty(emptySEXP);
+    rcpp_result_gen = Rcpp::wrap(ngrams(tokens, group, n, sep, empty));
+    return rcpp_result_gen;
+END_RCPP
+}
+// test
+CharacterVector test(CharacterVector v);
+RcppExport SEXP corpustools_test(SEXP vSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< CharacterVector >::type v(vSEXP);
+    rcpp_result_gen = Rcpp::wrap(test(v));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
     {"corpustools_fast_factor", (DL_FUNC) &corpustools_fast_factor, 2},
-    {"corpustools_count", (DL_FUNC) &corpustools_count, 1},
-    {"corpustools_full_set_ids", (DL_FUNC) &corpustools_full_set_ids, 1},
+    {"corpustools_full_set_ids", (DL_FUNC) &corpustools_full_set_ids, 2},
+    {"corpustools_ngrams", (DL_FUNC) &corpustools_ngrams, 5},
+    {"corpustools_test", (DL_FUNC) &corpustools_test, 1},
     {NULL, NULL, 0}
 };
 

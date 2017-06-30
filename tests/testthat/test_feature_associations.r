@@ -13,3 +13,4 @@ test_that("feature associations", {
   cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 })
 
+

@@ -5,11 +5,15 @@ fast_factor <- function(x, levs) {
     .Call('corpustools_fast_factor', PACKAGE = 'corpustools', x, levs)
 }
 
-count <- function(x) {
-    .Call('corpustools_count', PACKAGE = 'corpustools', x)
+full_set_ids <- function(v, nsets) {
+    .Call('corpustools_full_set_ids', PACKAGE = 'corpustools', v, nsets)
 }
 
-full_set_ids <- function(x) {
-    .Call('corpustools_full_set_ids', PACKAGE = 'corpustools', x)
+ngrams <- function(tokens, group, n, sep, empty) {
+    .Call('corpustools_ngrams', PACKAGE = 'corpustools', tokens, group, n, sep, empty)
+}
+
+test <- function(v) {
+    .Call('corpustools_test', PACKAGE = 'corpustools', v)
 }
 

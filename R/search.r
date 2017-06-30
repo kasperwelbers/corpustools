@@ -158,6 +158,6 @@ proximity_grepl <- function(fi, proxi, only_last=T, ignore.case=T, perl=F, useBy
 
 
 full_set_ids <- function(id){
-  .Call('corpustools_full_set_ids', PACKAGE = 'corpustools', id)
+  .Call('corpustools_full_set_ids', PACKAGE = 'corpustools', id, min(table(id)))
 }
 

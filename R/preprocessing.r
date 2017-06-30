@@ -45,51 +45,26 @@ preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=
   x
 }
 
-create_ngrams <- function(tokens, group, n, label=T, hash=F) {
-  ngrams = matrix(ncol=n, nrow=length(tokens))
-  for(i in 1:n) ngrams[,n-i+1] = shift(tokens, n=i-1, fill = '')
-
-  newart = which(!duplicated(group))
-  for(i in 1:(n-1)) {
-    replace_i = newart+i-1
-    replace_i = replace_i[replace_i <= nrow(ngrams)]
-    if (length(replace_i) > 0) ngrams[replace_i, 1:(n-i)] = ''
-  }
-  if (methods::is(tokens, 'factor')) {
-    ngrams = split(as.numeric(t(ngrams)), rep(1:nrow(ngrams), each = ncol(ngrams)))
-  } else {
-    ngrams = split(t(ngrams), rep(1:nrow(ngrams), each = ncol(ngrams)))
-  }
-  ungrams = unique(ngrams) ## only perform string binding and hashing on unique ngrams (never keep all ngrams in memory as string)
-  ngrams_i = match(ngrams, ungrams)
-
-  if(hash) {
-    if (!requireNamespace('digest', quietly = T)) stop('"digest" package needs to be installed')
-    ashash <- function(x) readBin(digest::digest(x, 'sha1', raw=T), what='integer')
-    hash = as.integer(sapply(ungrams, ashash))
-    return(hash[ngrams_i])
-  } else {
-    if (methods::is(tokens, 'factor') & label) {
-      ungrams = sapply(ungrams, function(x) ifelse(is.na(x), '', levels(tokens)[x]), simplify = F)
-    }
-    ungrams = if (label) as.factor(stringi::stri_paste_list(ungrams, sep='/')) else 1:length(ungrams)
-    return(ungrams[ngrams_i])
-  }
+create_ngrams <- function(tokens, group, n, label=T, sep = '/', empty='') {
+  if (!length(tokens) == length(group)) stop("tokens has to be of same length as group")
+  ng = .Call('corpustools_ngrams', PACKAGE = 'corpustools', tokens, group, n, sep, empty)
+  ng = fast_factor(ng)
+  if (label) return(ng) else return(as.numeric(ng))
 }
 
-grouped_ngrams <- function(tokens, group, n, filter=rep(T, length(tokens)), label=T, hash=F){
+grouped_ngrams <- function(tokens, group, n, filter=rep(T, length(tokens)), label=T){
   filter = filter & !is.na(tokens)
   tokens = tokens[filter]
   group = if (length(group) == 1) rep(group, length(tokens)) else group[filter]
 
-  if (label &! hash) {
+  if (label) {
     ngrams = as.factor(rep(NA, length(filter)))
-    ng = create_ngrams(tokens, group, n, label=label, hash=hash)
+    ng = create_ngrams(tokens, group, n, label=label)
     levels(ngrams) = levels(ng)
     ngrams[which(filter)] = ng
   } else {
     ngrams = vector('numeric', length(filter))
-    ngrams[which(filter)] = create_ngrams(tokens, group, n, label=label, hash=hash)
+    ngrams[which(filter)] = create_ngrams(tokens, group, n, label=label)
   }
   ngrams
 }
