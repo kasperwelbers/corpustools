@@ -52,7 +52,6 @@ global_position <- function(position, context, max_window_size=NA, presorted=F, 
 #' @param max_window_size Determines the size of the gap between documents. Called max_window_size because this gap determines what the maximum window size is for non-overlapping windows between documents
 #'
 #' @return a tCorpus object
-#' @export
 get_global_i <- function(tc, context_level=c('document','sentence'), max_window_size=200){
   is_tcorpus(tc)
   context_level = match.arg(context_level)

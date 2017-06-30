@@ -13,7 +13,6 @@ lda_features <- function(tc, m, feature, new_feature='LDA_topic', context_level=
   data.table::setkeyv(wa, c('context','feature'))
   merge(d, wa, all.x = T)
 }
-?tCorpus
 
 #' Estimate a topic model using the LDA function of the topicmodels package
 #'

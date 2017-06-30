@@ -1,10 +1,4 @@
 
-test <- function(x){
-  print(class(substitute(x)))
-}
-
-
-
 ## the default min docfreq in deduplicate is misleading, because 1 docfreq words do count for the similarity calculation.
 ## instead, make it so that for the matrix multiplication columns with sum 1 are emptied (not deleted, to preserve the resulting adjacency matrix)
 

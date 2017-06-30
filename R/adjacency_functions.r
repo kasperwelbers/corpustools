@@ -12,7 +12,6 @@
 #' @param drop_empty_terms If TRUE, emtpy terms (with zero occurence) will be dropped
 #'
 #' @return A list with two matrices. position.mat gives the specific position of a term, and window.mat gives the window in which each token occured. The rows represent the position of a term, and matches the input of this function (position, term and context). The columns represents terms.
-#' @export
 tokenWindowOccurence <- function(tc, feature, context_level=c('document','sentence'), window.size=10, direction='<>', distance_as_value=F, batch_rows=NULL, drop_empty_terms=T){
   is_tcorpus(tc)
 

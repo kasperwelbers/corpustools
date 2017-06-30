@@ -5,7 +5,6 @@
 #' @param keep_meta if 'intersect', then only the document meta columns that occur in all tCorpurs objects are kept
 #'
 #' @return a tCorpus object
-#' @export
 merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('intersect', 'all')){
   keep_data = match.arg(keep_data)
   keep_meta = match.arg(keep_meta)
@@ -44,20 +43,3 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
 
   tokens_to_tcorpus(data, doc_col='doc_id', sent_i_col=sent_col, token_i_col='token_i', meta=meta, sent_is_local = T, token_is_local = T)
 }
-
-#' Merge tCorpus shards
-#'
-#' Similar to merge_tcorpora, but assumes that the tCorpora are identical in structure (same columns in the same order and same provenance)
-#'
-#' @param shards a named list or named arguments with tCorpus objects
-#'
-#' @return a tCorpus object
-#' @export
-merge_shards <- function(shards){
-  tc = tCorpus$new(data=rbindlist(lapply(shards, function(x) x$data)),
-                   meta=rbindlist(lapply(shards, function(x) x$meta)),
-                   p = shards[[1]]$provenance())
-  tc$set_keys()
-  tc
-}
-

@@ -711,17 +711,7 @@ tCorpus <- R6::R6Class("tCorpus",
         invisible(self)
       },
 
-## RESOURCES ##
-
-     jrc_names = function(new_feature='jrc_names', feature='token', resource_path=getOption('tcorpus_resources', NULL), collocation_labels=T, batchsize=50000, low_memory=T, verbose=T, copy=self$always_copy){
-       if (copy) {
-         selfcopy = self$copy()$jrc_names(new_feature=new_feature, feature=feature, resource_path=resource_path, collocation_labels=collocation_labels, batchsize=batchsize, low_memory=low_memory, verbose=verbose, copy=F)
-         return(selfcopy)
-       }
-       jrc_names(self, new_feature=new_feature, feature=feature, resource_path=resource_path, collocation_labels=collocation_labels, batchsize=batchsize, low_memory=low_memory, verbose=verbose)
-     },
-
-     ## util
+## UTIL
      set_keys = function(){
        ## ignore copy T or F, since setting keys is always a good thing
        if ('sent_i' %in% colnames(private$.data)){
