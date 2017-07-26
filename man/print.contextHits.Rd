@@ -4,7 +4,7 @@
 \alias{print.contextHits}
 \title{S3 print for contextHits class}
 \usage{
-print.contextHits(x, ...)
+\method{print}{contextHits}(x, ...)
 }
 \arguments{
 \item{x}{a contextHits object, as returned by \link{tCorpus$search_contexts}}

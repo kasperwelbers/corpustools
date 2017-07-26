@@ -4,7 +4,7 @@
 \alias{print.tCorpus}
 \title{S3 print for tCorpus class}
 \usage{
-print.tCorpus(x, ...)
+\method{print}{tCorpus}(x, ...)
 }
 \arguments{
 \item{x}{a tCorpus object}

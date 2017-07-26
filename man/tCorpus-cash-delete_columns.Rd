@@ -8,8 +8,6 @@
 \title{Delete column from the data and meta data}
 \arguments{
 \item{cnames}{the names of the columns to delete}
-
-\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
 }
 \description{
 Delete column from the data and meta data
@@ -18,7 +16,7 @@ Delete column from the data and meta data
 
 ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 
-\preformatted{delete_columns(cnames, copy=self$always_copy)}
-\preformatted{delete_meta_columns(cnames, copy=self$always_copy)}
+\preformatted{delete_columns(cnames)}
+\preformatted{delete_meta_columns(cnames)}
 }
 

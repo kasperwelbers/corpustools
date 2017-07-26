@@ -2,7 +2,7 @@ Package: corpustools
 Version: 0.201
 Date: 2016-12-02
 Title: A corpus analysis toolkit for tokenized text
-Author: Kasper Welbers & Wouter van Atteveldt
+Author: Kasper Welbers and Wouter van Atteveldt
 Maintainer: Kasper Welbers <kasperwelbers@gmail.com>
 Depends: 
     R (>= 3.2.0), 
@@ -28,7 +28,7 @@ LinkingTo: Rcpp
 LazyData: true
 Description: Tools for anayzing text corpora. Create a tCorpus object by tokenizing raw text or importing pre-processed texts, and analyze this data with a rich suite of features.
 SystemRequirements: C++11
-License: MIT
+License: MIT + file LICENSE
 URL: http://github.com/kasperwelbers/corpustools
 Roxygen: list(wrap = FALSE)
 RoxygenNote: 6.0.1

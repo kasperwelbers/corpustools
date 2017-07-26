@@ -4,7 +4,7 @@
 \alias{print.featureHits}
 \title{S3 print for featureHits class}
 \usage{
-print.featureHits(x, ...)
+\method{print}{featureHits}(x, ...)
 }
 \arguments{
 \item{x}{a featureHits object, as returned by \link{tCorpus$search_features}}

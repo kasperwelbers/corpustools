@@ -3,6 +3,8 @@
 \name{tCorpus$subset}
 \alias{tCorpus$subset}
 \alias{subset.tCorpus}
+\alias{subset_meta.tCorpus}
+\alias{tCorpus$subset_meta}
 \title{Subset a tCorpus}
 \arguments{
 \item{subset}{logical expression indicating rows to keep in the tokens data.}
@@ -13,7 +15,7 @@
 
 \item{window}{If not NULL, an integer specifiying the window to be used to return the subset. For instance, if the subset contains token 10 in a document and window is 5, the subset will contain token 5 to 15. Naturally, this does not apply to subset_meta.}
 
-\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
+\item{copy}{If TRUE, the method returns a new tCorpus object instead of subsetting the current one. This is added for convenience when analyzing a subset of the data. e.g., tc_nyt = tc$subset_meta(medium == "New_York_Times", copy=T)}
 }
 \description{
 Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta). The subset arguments work according to the \link{subset.data.table} function.
@@ -24,8 +26,10 @@ The freq_filter() and docfreq_filter() can be used to filter terms based on term
 The first argument to these functions is the name of the feature, e.g., freq_filter(token).
 To filter this feature you can specify: min (minimum frequency), max (maximum frequency), top (n most frequent tokens) and bottom (n least frequent tokens).
 For example, tc$freq_filter(token, min=10) filters out all rows in which the specified feature occures at least 10 times in the entire corpus.
-tc$freq_filter(token, top=100) keeps only the rolws in which the feature is in the top 100 most frequent features.
-tc$docfreq_filter(token, max = 0.9 * tc$n) deletes all rows with features that occured in more than 90% of all documents.
+freq_filter(token, top=100) keeps only the rolws in which the feature is in the top 100 most frequent features.
+docfreq_filter(token, max = 0.9 * tc$n) deletes all rows with features that occured in more than 90% of all documents.
+
+The subset_meta() method is an alternative for using subset(subset_meta = ...), that is added for consistency with the other _meta accessor methods.
 
 Note that you can also use the \link{tCorpus$feature_subset} method if you want to filter out low/high frequency tokens, but do not want to delete the rows in the tCorpus.
 }
@@ -35,7 +39,8 @@ Note that you can also use the \link{tCorpus$feature_subset} method if you want 
 
 \preformatted{
 subset(subset = NULL, subset_meta = NULL,
-       drop_levels = F, window = NULL)
+       drop_levels = F, window = NULL, copy = F)
+subset_meta(subset = NULL, drop_levels = T, copy = F)
              }
 }
 

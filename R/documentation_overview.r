@@ -56,7 +56,7 @@ NULL
 #'
 #' There are several ways to modify the data and meta data in tCorpus.
 #' The less efficient but more classic approach is to directly assign to the $data and $meta, which can be used as regular data.tables (though note that assignment by reference is not possible)
-#' The fastest and most memory efficient way is to use the set_* and delete_* methods, which support modify by reference (see documentation for \link[=tCorpus_always_copy]{always_copy}).
+#' The fastest and most memory efficient way is to use the set_* and delete_* methods, which support modify by reference (see documentation for \link[=tCorpus_modify_by_reference]{modifying by reference}).
 #'
 #' \tabular{ll}{
 #'   \link[=tCorpus$set]{$set()} \tab Modify the token data by setting the values of one (existing or new) column. Modifies by reference if always_copy is set to FALSE \cr
@@ -108,10 +108,10 @@ NULL
 #'
 #' \link[=tCorpus]{(back to overview)}
 #'
-#' By default, if any tCorpus method is used that changes the corpus (e.g., set, subset),
-#' it makes this change by reference. This is very convenient when working with a large
+#' If any tCorpus method is used that changes the corpus (e.g., set, subset),
+#' the change is made by reference. This is very convenient when working with a large
 #' corpus, because it means that the corpus does not have to be copied when changes are made,
-#' which slows things down, and can cause memory issues.
+#' which is slow and memory inefficient.
 #'
 #' To illustrate, for a tCorpus object named `tc`, the subset method can be called like this:
 #'
@@ -130,8 +130,14 @@ NULL
 #' \strong{tc2 = tc$subset(doc_id \%in\% selection)}
 #'
 #' In this case, tc2 does contain the subsetted corpus, but tc itself will also be subsetted!!
-#' If you want to make a subset (or use any of the other methods that modify the corpus) and also keep the original,
-#' you can use the copy parameter.
+#'
+#' We force this approach on you, because it is faster and more memory efficient, which becomes
+#' crucial for large corpora. If you do want to make a copy, it has to be done explicitly with the
+#' copy() method.
+#'
+#' \strong{tc2 = tc$copy()}
+#'
+#' For methods where copying is often usefull, such as subset, there is also a copy parameter.
 #'
 #' \strong{tc2 = tc$subset(doc_id \%in\% selection, copy=T)}
 #'
@@ -139,17 +145,9 @@ NULL
 #'
 #' Note that tc is also modified by reference if the subset method (or any other method that modified the corpus)
 #' is called within a function. No matter where and how you call the method, tc itself will be subsetted unless you
-#' explicitly set copy to True.
+#' explicitly copy it first or set copy to True.
 #'
-#' Alternatively, you can also set copy = T to be the default, in which case the tCorpus works more
-#' according to the classic R philosophy. To do so, you can set tc$always_copy to True
-#'
-#' \strong{tc$always_copy = T}
-#'
-#' This, however is not recommended, especially when working with a huge corpus. As explained above,
-#' changing by reference is much faster and more memory efficient.
-#'
-#' @name tCorpus_always_copy
+#' @name tCorpus_modify_by_reference
 NULL
 
 #' Preprocessing, subsetting and analyzing features

@@ -10,8 +10,6 @@
 \item{column}{the name of the column}
 
 \item{levels}{The new levels}
-
-\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
 }
 \description{
 Change levels of factor columns
@@ -20,7 +18,7 @@ Change levels of factor columns
 
 ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 
-\preformatted{set_levels(column, levels, copy = self$always_copy)}
-\preformatted{set_meta_levels(column, levels, copy = self$always_copy)}
+\preformatted{set_levels(column, levels)}
+\preformatted{set_meta_levels(column, levels)}
 }
 

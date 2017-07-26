@@ -24,6 +24,7 @@ is.featureHits <- function(fh, ...) {
 #' @param x a featureHits object, as returned by \link{tCorpus$search_features}
 #' @param ... not used
 #'
+#' @method print featureHits
 #' @export
 print.featureHits <- function(x, ...){
   if(!is.featureHits(x)) stop('Not a proper featureHits object')
@@ -39,6 +40,7 @@ print.featureHits <- function(x, ...){
 #' @param object a featureHits object, as returned by \link{tCorpus$search_features}
 #' @param ... not used
 #'
+#' @method summary featureHits
 #' @export
 summary.featureHits <- function(object, ...){
   doc_id = sent_i = hit_id = NULL ##  used in data.table syntax, but need to have bindings for R CMD check
@@ -85,6 +87,7 @@ is.contextHits <- function(ch, ...) {
 #' @param x a contextHits object, as returned by \link{tCorpus$search_contexts}
 #' @param ... not used
 #'
+#' @method print contextHits
 #' @export
 print.contextHits <- function(x, ...){
   if(!is.contextHits(x)) stop('Not a proper featureHits object')
@@ -99,6 +102,7 @@ print.contextHits <- function(x, ...){
 #' @param object a contextHits object, as returned by \link{tCorpus$search_contexts}
 #' @param ... not used
 #'
+#' @method summary contextHits
 #' @export
 summary.contextHits <- function(object, ...){
   #if(is.null(object$hits)) return(NULL)

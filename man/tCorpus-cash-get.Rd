@@ -14,12 +14,7 @@
 \item{as.df}{if True, the output will be a regular data.frame instead of a data.table}
 }
 \description{
-The $data and $meta fields can be used to access and modify the token data and meta data.
-
-Several limitations:
-- subsetting or appending the data is not possible. (use the subset function and merge_tcorpua)
-- data.table operations that change the data.table by reference are not possible. Note that the set and set_meta functions do use assignment by reference.
-- the returned data.table is a copy of the data.table within the corpus. This copy is an actual copy (the copy-on-modify mechanic doesn't work here) which can eat up memory if. Accordingly, if you only want to get 1 or several columns, it is more efficient to use the get() and get_meta() methods, which only copy the selected columns.
+Alternative to using the $data and $meta field. This is more efficient if not all columns are selected, because $data copies the whole data.table, whereas get only copies the selected columns.
 }
 \section{Usage}{
 

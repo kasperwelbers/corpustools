@@ -16,8 +16,6 @@
 \item{value}{A vector of the same length as the number of rows in the data. Note that if a subset is used, the length of value should be the same as the length of the subset (the TRUE cases of the subset expression) or a single value.}
 
 \item{subset}{logical expression indicating rows to keep in the tokens data or meta data}
-
-\item{copy}{If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.}
 }
 \description{
 Modify the token/meta data.table by setting the values of one (existing or new) column. This is less flexible than within data or transform data, but it has the advantage of allowing columns to be selected as a string, which makes it convenient for modifying the tCorpus from within function. The subset argument can be used to modify only subsets of columns, and can be a logical vector (select TRUE rows), numeric vector (indices of TRUE rows) or logical expression (e.g. pos == 'noun'). If A new column is made whie using a subset, then the rows outside of the selection are set to NA.
@@ -28,8 +26,8 @@ Change column names in tCorpus data
 
 ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 
-\preformatted{set(column, value, subset, copy = self$always_copy)}
-\preformatted{set_meta(column, value, subset, copy = self$always_copy)}
+\preformatted{set(column, value, subset)}
+\preformatted{set_meta(column, value, subset)}
 
 
 ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).

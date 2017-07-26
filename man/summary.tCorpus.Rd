@@ -4,7 +4,7 @@
 \alias{summary.tCorpus}
 \title{Summary of a tCorpus object}
 \usage{
-summary.tCorpus(object, ...)
+\method{summary}{tCorpus}(object, ...)
 }
 \arguments{
 \item{object}{A tCorpus object}

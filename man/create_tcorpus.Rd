@@ -18,7 +18,7 @@ create_tcorpus(x, ...)
   verbose = F, ...)
 
 \method{create_tcorpus}{data.frame}(x, text_columns = "text",
-  doc_column = NULL, split_sentences = F, max_sentences = NULL,
+  doc_column = "doc_id", split_sentences = F, max_sentences = NULL,
   max_tokens = NULL, ...)
 }
 \arguments{

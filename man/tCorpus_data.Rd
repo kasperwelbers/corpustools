@@ -22,7 +22,7 @@
 
 There are several ways to modify the data and meta data in tCorpus.
 The less efficient but more classic approach is to directly assign to the $data and $meta, which can be used as regular data.tables (though note that assignment by reference is not possible)
-The fastest and most memory efficient way is to use the set_* and delete_* methods, which support modify by reference (see documentation for \link[=tCorpus_always_copy]{always_copy}).
+The fastest and most memory efficient way is to use the set_* and delete_* methods, which support modify by reference (see documentation for \link[=tCorpus_modify_by_reference]{modifying by reference}).
 
 \tabular{ll}{
   \link[=tCorpus$set]{$set()} \tab Modify the token data by setting the values of one (existing or new) column. Modifies by reference if always_copy is set to FALSE \cr

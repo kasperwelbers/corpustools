@@ -4,7 +4,7 @@
 \alias{summary.featureHits}
 \title{S3 summary for featureHits class}
 \usage{
-summary.featureHits(object, ...)
+\method{summary}{featureHits}(object, ...)
 }
 \arguments{
 \item{object}{a featureHits object, as returned by \link{tCorpus$search_features}}

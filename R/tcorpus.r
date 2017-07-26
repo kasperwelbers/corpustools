@@ -104,13 +104,6 @@ tCorpus <- R6::R6Class("tCorpus",
    ),
 
    public = list(
-
-     always_copy = F, ## if TRUE, tCorpus works like 'typical' R (modify on copy). If FALSE, all modifications made using methods will be made to the referenced data. Not needing to copy data is a great boon of R6 as a reference class, but we should keep this optional to facilitate the common R workflow
-
-     ##finalize = function() {
-     ##   finalize is the R6 destructor function, called upon GC.
-     ##   print("Finalizer has been called!")
-     ##},
      help = function() ?tCorpus,
 
      initialize = function(data, meta, feature_index=NULL, p=NULL) {
@@ -220,16 +213,11 @@ tCorpus <- R6::R6Class("tCorpus",
                    p = private$.p)
      },
 
-     set = function(column, value, subset=NULL, subset_value=T, copy=self$always_copy){
+     set = function(column, value, subset=NULL, subset_value=T){
        if (column == 'doc_id') stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
        if (class(substitute(subset)) %in% c('call', 'name')) subset = eval(substitute(subset), private$.data, parent.frame())
        if (class(substitute(value)) %in% c('call', 'name')) value = eval(substitute(value), private$.data, parent.frame())
        if (grepl('^evalhere_', column)) stop('column names in a tCorpus cannot start with evalhere_')
-
-       if (copy) {
-         selfcopy = self$copy()$set(column=column, value=value, subset=subset, copy=F)
-         return(selfcopy)
-       }
 
        if (!is.null(subset)){
          if (subset_value & length(value) > 1) value = value[subset]
@@ -278,26 +266,18 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
-     set_levels = function(column, levels, copy=self$always_copy) {
+     set_levels = function(column, levels) {
        if (!methods::is(private$.data[[column]], 'factor')) stop(sprintf('"%s" is not a factor', column))
        if (!length(levels) == length(levels(private$.data[[column]]))) stop('new levels of different length than current levels')
-       if (copy) {
-         selfcopy = self$copy()$set_levels(column=column, levels=levels, copy=F)
-         return(selfcopy)
-       }
        if (column == 'doc_id') {
          private$.meta$doc_id = levels[match(levels(private$.data$doc_id), private$.meta$doc_id)]
        }
        data.table::setattr(private$.data[[column]], 'levels', levels)
      },
 
-     delete_columns = function(cnames, copy=self$always_copy){
+     delete_columns = function(cnames){
        protected_cols = intersect(self$names, c('doc_id', 'token_i'))
        if (any(protected_cols %in% cnames)) stop("The position columns doc_id and token_i cannot be deleted")
-       if (copy) {
-         selfcopy = self$copy()$delete_columns(cnames=cnames, copy=F)
-         return(selfcopy)
-       }
        for (col in cnames) private$.data[,(col) := NULL]
        invisible(self)
      },
@@ -310,17 +290,12 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
-     set_meta = function(column, value, subset=NULL, subset_value=T, copy=self$always_copy){
+     set_meta = function(column, value, subset=NULL, subset_value=T){
        if (column == 'doc_id') stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
        if (class(substitute(subset)) %in% c('call', 'name')) subset = eval(substitute(subset), private$.meta, parent.frame())
        if (class(substitute(value)) %in% c('call', 'name')) value = eval(substitute(value), private$.meta, parent.frame())
 
        if (grepl('^evalhere_', column)) stop('column names in a tCorpus cannot start with evalhere_')
-
-       if (copy) {
-         selfcopy = self$copy()$set_meta(column=column, value=value, subset=subset, copy=F)
-         return(selfcopy)
-       }
 
        if (!is.null(subset)){
          if (subset_value & length(value) > 1) value = value[subset]
@@ -351,22 +326,14 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
-      set_meta_levels = function(column, levels, copy=self$always_copy) {
+     set_meta_levels = function(column, levels) {
         if (!methods::is(private$.meta[[column]], 'factor')) stop(sprintf('"%s" is not a factor', column))
-        if (copy) {
-          selfcopy = self$copy()$set_meta_levels(column=column, levels=levels, copy=F)
-          return(selfcopy)
-        }
         data.table::setattr(private$.meta[[column]], 'levels', levels)
       },
 
-     delete_meta_columns = function(cnames, copy=self$always_copy){
+     delete_meta_columns = function(cnames){
         protected_cols = intersect(self$names, c('doc_id'))
         if (any(protected_cols %in% cnames)) stop('doc_id cannot be deleted')
-        if (copy) {
-          selfcopy = self$copy()$delete_meta_columns(cnames=cnames, copy=F)
-          return(selfcopy)
-        }
         for (col in cnames) private$.meta[,(col) := NULL]
         invisible(self)
       },
@@ -378,7 +345,7 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
-     subset = function(subset=NULL, subset_meta=NULL, drop_levels=T, window=NULL, copy=self$always_copy){
+     subset = function(subset=NULL, subset_meta=NULL, drop_levels=T, window=NULL, copy=F){
        if (class(substitute(subset)) %in% c('call', 'name')) subset = eval(substitute(subset), private$.data, parent.frame())
        if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = eval(substitute(subset_meta), private$.meta, parent.frame())
 
@@ -412,11 +379,11 @@ tCorpus <- R6::R6Class("tCorpus",
          private$select_rows(subset, keep_meta = F)
        }
 
-       if (drop_levels) self$droplevels(copy=F)
+       if (drop_levels) self$droplevels()
        invisible(self)
      },
 
-      subset_meta = function(subset=NULL, drop_levels=T, copy=self$always_copy){
+      subset_meta = function(subset=NULL, drop_levels=T, copy=F){
         ## subset also has a subset_meta argument, but we add this for consistency with other _meta methods
         if (class(substitute(subset)) %in% c('call', 'name')) subset = eval(substitute(subset), private$.meta, parent.frame())
         evalhere_subset = subset
@@ -504,18 +471,13 @@ tCorpus <- R6::R6Class("tCorpus",
 
 
 ## FEATURE MANAGEMENT ##
-     preprocess = function(column, new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english', copy=self$always_copy) {
-       if (copy) {
-       selfcopy = self$copy()$preprocess(column=column, new_column=new_column, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, use_stemming=use_stemming, language=language, copy=F)
-         return(selfcopy)
-       }
+     preprocess = function(column, new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english') {
        invisible(preprocess_feature(self, column=column, new_column=new_column, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, use_stemming=use_stemming, language=language))
      },
 
-     feature_subset = function(column, new_column=column, subset, inverse=F, copy=self$always_copy){
+     feature_subset = function(column, new_column=column, subset, inverse=F, copy=F){
        if (new_column %in% c('doc_id','sent_i','token_i')) stop('The position columns (doc_id, sent_i, token_i) cannot be used')
        if (class(substitute(subset)) %in% c('call', 'name')) subset = eval(substitute(subset), private$.data, parent.frame())
-
 
        if (copy) {
          selfcopy = self$copy()$feature_subset(column=column, new_column=new_column, subset=subset, inverse=inverse, copy=F)
@@ -529,9 +491,9 @@ tCorpus <- R6::R6Class("tCorpus",
        if (new_column %in% self$names) {
           old_column = data.table::copy(private$.data[[column]])
           private$.data[, (new_column) := NA]
-          self$set(new_column, old_column, subset = evalhere_subset, copy=F)
+          self$set(new_column, old_column, subset = evalhere_subset)
        } else {
-          self$set(new_column, private$.data[[column]], subset = evalhere_subset, copy=F)
+          self$set(new_column, private$.data[[column]], subset = evalhere_subset)
        }
 
        invisible(self)
@@ -577,18 +539,14 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
-     search_recode = function(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA, copy=self$always_copy){
+     search_recode = function(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA){
        subset = if (class(substitute(subset_tokens)) %in% c('call')) deparse(substitute(subset_tokens)) else subset_tokens
        subset_meta = if (class(substitute(subset_meta)) %in% c('call')) deparse(substitute(subset_meta)) else subset_meta
 
-       if (copy) {
-          selfcopy = self$copy()$search_recode(feature=feature, new_value=new_value, keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, copy=F)
-          return(selfcopy)
-       }
        hits = self$search_features(keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta)
        evalhere_x = as.numeric(as.character(hits$hits$i))
        evalhere_new_value = new_value
-       self$set(feature, evalhere_new_value, subset = evalhere_x, copy = F)
+       self$set(feature, evalhere_new_value, subset = evalhere_x)
        invisible(self)
      },
 
@@ -596,7 +554,7 @@ tCorpus <- R6::R6Class("tCorpus",
        search_contexts(self, query, code=code, feature=feature, context_level=context_level, verbose=verbose)
      },
 
-     subset_query = function(query, feature='token', context_level=c('document','sentence'), copy=self$always_copy){
+     subset_query = function(query, feature='token', context_level=c('document','sentence'), copy=F){
        if (copy) {
          selfcopy = self$copy()$subset_query(query=query, feature=feature, context_level=context_level, copy=F)
          return(selfcopy)
@@ -669,7 +627,7 @@ tCorpus <- R6::R6Class("tCorpus",
         compare_documents_fun(self, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=min_similarity, weight=weight, ngrams=ngrams, from_subset=from_subset, to_subset=to_subset)
      },
 
-     deduplicate = function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=self$always_copy){
+     deduplicate = function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=F){
        if (!requireNamespace('RNewsflow', quietly = T)) stop('RNewsflow package needs to be installed in order to use document comparison methods')
 
        weight = match.arg(weight)
@@ -681,12 +639,12 @@ tCorpus <- R6::R6Class("tCorpus",
 
        ## adding DEDUPLICATE_FEATURE is not very elegant and memory efficient. Better alternative, perhaps, is to pass docfreq_filter results to compare_documents_fun.
        evalhere_feature = feature
-       self$set('DEDUPLICATE_FEATURE', self$get(evalhere_feature), copy = F)
+       self$set('DEDUPLICATE_FEATURE', self$get(evalhere_feature))
        self$feature_subset('DEDUPLICATE_FEATURE', 'DEDUPLICATE_FEATURE', subset = docfreq_filter('DEDUPLICATE_FEATURE', min=min_docfreq, max=self$n * max_docfreq_pct), copy=F)
 
        evalhere_duplicates = get_duplicates(self, feature='DEDUPLICATE_FEATURE', date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
        self$subset(subset_meta = !doc_id %in% evalhere_duplicates, copy=F)
-       self$set('DEDUPLICATE_FEATURE', NULL, copy=F)
+       self$set('DEDUPLICATE_FEATURE', NULL)
        invisible(self)
      },
 
@@ -697,17 +655,13 @@ tCorpus <- R6::R6Class("tCorpus",
 
         dtm = self$dtm(feature=feature, context_level=context_level, ...)
         m = lda_fit(dtm=dtm, method='Gibbs', K=K, num.iterations=num.iterations, alpha=alpha, eta=eta, burnin=burnin)
-        if (!is.null(create_feature)) self$lda_topic_features(m=m, feature=feature, new_feature=create_feature, context_level=context_level, copy=F)
+        if (!is.null(create_feature)) self$lda_topic_features(m=m, feature=feature, new_feature=create_feature, context_level=context_level)
         m
       },
 
-      lda_topic_features = function(m, feature, new_feature='LDA_topic', context_level=c('document','sentence'), copy=self$always_copy){
-        if (copy) {
-          selfcopy = self$copy()$lda_topic_features(m=m, feature=feature, new_feature=new_feature, context_level=context_level, copy=F)
-          return(selfcopy)
-        }
+      lda_topic_features = function(m, feature, new_feature='LDA_topic', context_level=c('document','sentence')){
         evalhere_d = lda_features(tc=self, m=m, feature=feature, new_feature=new_feature, context_level=context_level)
-        self$set(new_feature, evalhere_d$v[order(evalhere_d$i)], copy=F)
+        self$set(new_feature, evalhere_d$v[order(evalhere_d$i)])
         invisible(self)
       },
 
@@ -723,11 +677,7 @@ tCorpus <- R6::R6Class("tCorpus",
        if (!is.null(private$.feature_index)) setkey(private$.feature_index, 'feature')
      },
 
-     droplevels = function(copy=self$always_copy){
-       if (copy) {
-         selfcopy = self$copy()$droplevels(copy=F)
-         return(selfcopy)
-       }
+     droplevels = function(){
        private$.data = base::droplevels(private$.data)
        private$.meta = base::droplevels(private$.meta)
        invisible(self)
@@ -779,6 +729,7 @@ tCorpus <- R6::R6Class("tCorpus",
 #' @param x a tCorpus object
 #' @param ... not used
 #'
+#' @method print tCorpus
 #' @export
 print.tCorpus <- function(x, ...) {
   sent_info = if ('sent_i' %in% x$names) paste(' and sentences (n = ', nrow(unique(x$get(c('doc_id','sent_i')))), ')', sep='') else ''
@@ -818,6 +769,7 @@ rebuild_tcorpus <- function(tc) {
 #' @param object A tCorpus object
 #' @param ... not used
 #'
+#' @method summary tCorpus
 #' @export
 summary.tCorpus <- function(object, ...) object
 

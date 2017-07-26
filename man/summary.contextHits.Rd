@@ -4,7 +4,7 @@
 \alias{summary.contextHits}
 \title{S3 summary for contextHits class}
 \usage{
-summary.contextHits(object, ...)
+\method{summary}{contextHits}(object, ...)
 }
 \arguments{
 \item{object}{a contextHits object, as returned by \link{tCorpus$search_contexts}}

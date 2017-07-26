@@ -5,12 +5,7 @@
 #' Access the data from a tCorpus
 #'
 #' @description
-#' The $data and $meta fields can be used to access and modify the token data and meta data.
-#'
-#' Several limitations:
-#' - subsetting or appending the data is not possible. (use the subset function and merge_tcorpua)
-#' - data.table operations that change the data.table by reference are not possible. Note that the set and set_meta functions do use assignment by reference.
-#' - the returned data.table is a copy of the data.table within the corpus. This copy is an actual copy (the copy-on-modify mechanic doesn't work here) which can eat up memory if. Accordingly, if you only want to get 1 or several columns, it is more efficient to use the get() and get_meta() methods, which only copy the selected columns.
+#' Alternative to using the $data and $meta field. This is more efficient if not all columns are selected, because $data copies the whole data.table, whereas get only copies the selected columns.
 #'
 #' @section Usage:
 #' ## R6 active method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
@@ -29,7 +24,15 @@ NULL
 #' Access specific column from the data or meta data.
 #'
 #' @description
-#' Alternative to using the $data and $meta field. This is more efficient if not all columns are selected, because $data copies the whole data.table, whereas get only copies the selected columns.
+#' The $data and $meta fields can be used to extract the token and meta data.
+#'
+#' In addition, it can be used to modify the data (with some limitations) using common assignment syntax.
+#' However, for efficiency it is recommended to use the accessor methods (i.e. the set*, get*, subset* and delete* methods)
+#'
+#' Limitations for modifying by assignment:
+#' - subsetting or appending the data is not possible. (use the subset function and merge_tcorpua)
+#' - data.table operations that change the data.table by reference are not possible. Note that the set and set_meta functions do use assignment by reference.
+#' - the returned data.table is a copy of the data.table within the corpus. This copy is an actual copy (the copy-on-modify mechanic doesn't work here) which can eat up memory if. Accordingly, if you only want to get 1 or several columns, it is more efficient to use the get() and get_meta() methods, which only copy the selected columns.
 #'
 #' @section Usage:
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
@@ -116,13 +119,12 @@ NULL
 #' @section Usage:
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
-#' \preformatted{set(column, value, subset, copy = self$always_copy)}
-#' \preformatted{set_meta(column, value, subset, copy = self$always_copy)}
+#' \preformatted{set(column, value, subset)}
+#' \preformatted{set_meta(column, value, subset)}
 #'
 #' @param column Name of a new column (to create) or existing column (to transform)
 #' @param value A vector of the same length as the number of rows in the data. Note that if a subset is used, the length of value should be the same as the length of the subset (the TRUE cases of the subset expression) or a single value.
 #' @param subset logical expression indicating rows to keep in the tokens data or meta data
-#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @name tCorpus$set
 #' @aliases set.tCorpus tCorpus$set_meta set_meta.tCorpus
@@ -133,12 +135,11 @@ NULL
 #' @section Usage:
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
-#' \preformatted{set_levels(column, levels, copy = self$always_copy)}
-#' \preformatted{set_meta_levels(column, levels, copy = self$always_copy)}
+#' \preformatted{set_levels(column, levels)}
+#' \preformatted{set_meta_levels(column, levels)}
 #'
 #' @param column the name of the column
 #' @param levels The new levels
-#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @name tCorpus$set_levels
 #' @aliases set_levels.tCorpus tCorpus$set_meta_levels set_meta_levels.tCorpus
@@ -165,11 +166,10 @@ NULL
 #' @section Usage:
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
-#' \preformatted{delete_columns(cnames, copy=self$always_copy)}
-#' \preformatted{delete_meta_columns(cnames, copy=self$always_copy)}
+#' \preformatted{delete_columns(cnames)}
+#' \preformatted{delete_meta_columns(cnames)}
 #'
 #' @param cnames the names of the columns to delete
-#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @name tCorpus$delete_columns
 #' @aliases delete_columns.tCorpus tCorpus$delete_meta_columns delete_meta_columns.tCorpus
@@ -186,8 +186,10 @@ NULL
 #' The first argument to these functions is the name of the feature, e.g., freq_filter(token).
 #' To filter this feature you can specify: min (minimum frequency), max (maximum frequency), top (n most frequent tokens) and bottom (n least frequent tokens).
 #' For example, tc$freq_filter(token, min=10) filters out all rows in which the specified feature occures at least 10 times in the entire corpus.
-#' tc$freq_filter(token, top=100) keeps only the rolws in which the feature is in the top 100 most frequent features.
-#' tc$docfreq_filter(token, max = 0.9 * tc$n) deletes all rows with features that occured in more than 90% of all documents.
+#' freq_filter(token, top=100) keeps only the rolws in which the feature is in the top 100 most frequent features.
+#' docfreq_filter(token, max = 0.9 * tc$n) deletes all rows with features that occured in more than 90% of all documents.
+#'
+#' The subset_meta() method is an alternative for using subset(subset_meta = ...), that is added for consistency with the other _meta accessor methods.
 #'
 #' Note that you can also use the \link{tCorpus$feature_subset} method if you want to filter out low/high frequency tokens, but do not want to delete the rows in the tCorpus.
 #'
@@ -196,17 +198,18 @@ NULL
 #'
 #' \preformatted{
 #' subset(subset = NULL, subset_meta = NULL,
-#'        drop_levels = F, window = NULL)
+#'        drop_levels = F, window = NULL, copy = F)
+#' subset_meta(subset = NULL, drop_levels = T, copy = F)
 #'              }
 #'
 #' @param subset logical expression indicating rows to keep in the tokens data.
 #' @param subset_meta logical expression indicating rows to keep in the document meta data.
 #' @param drop_levels if TRUE, drop all unused factor levels after subsetting
 #' @param window If not NULL, an integer specifiying the window to be used to return the subset. For instance, if the subset contains token 10 in a document and window is 5, the subset will contain token 5 to 15. Naturally, this does not apply to subset_meta.
-#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
+#' @param copy If TRUE, the method returns a new tCorpus object instead of subsetting the current one. This is added for convenience when analyzing a subset of the data. e.g., tc_nyt = tc$subset_meta(medium == "New_York_Times", copy=T)
 #'
 #' @name tCorpus$subset
-#' @aliases subset.tCorpus
+#' @aliases subset.tCorpus tCorpus$subset subset_meta.tCorpus tCorpus$subset_meta
 NULL
 
 #' Change column names in tCorpus data
@@ -232,7 +235,7 @@ NULL
 #' preprocess(column, new_column = column,
 #'            lowercase = T, ngrams = 1, ngram_context=c('document', 'sentence'),
 #'            as_ascii = F, remove_punctuation = T, remove_stopwords = F, use_stemming = F,
-#'            language = 'english', copy = self$always_copy)
+#'            language = 'english')
 #'            }
 #'
 #' @param column the column containing the feature to be used as the input
@@ -245,7 +248,6 @@ NULL
 #' @param remove_stopwords remove (i.e. make NA) stopwords. (!) Make sure to set the language argument correctly.
 #' @param use_stemming reduce features (tokens) to their stem
 #' @param language The language used for stopwords and stemming
-#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @name tCorpus$preprocess
 #' @aliases preprocess.tCorpus
@@ -261,12 +263,11 @@ NULL
 #' @section Usage:
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
-#' \preformatted{feature_subset(column, new_column, subset, copy = self$always_copy)}
+#' \preformatted{feature_subset(column, new_column, subset)}
 #'
 #' @param column the column containing the feature to be used as the input
 #' @param new_column the column to save the filtered feature. Can be a new column or overwrite an existing one.
 #' @param subset logical expression indicating rows to keep in the tokens data. i.e. rows for which the logical expression is FALSE will be set to NA.
-#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @name tCorpus$feature_subset
 #' @aliases feature_subset.tCorpus
@@ -377,14 +378,12 @@ NULL
 #'
 #' \preformatted{
 #' search_recode(feature, new_value, keyword, condition = NA,
-#'               condition_once = F, subset_tokens = NA, subset_meta = NA,
-#'               copy = self$always_copy)
+#'               condition_once = F, subset_tokens = NA, subset_meta = NA)
 #' }
 #'
 #' @param feature The feature in which to search
 #' @param new_value the character string with which all features that are found are replaced
 #' @param ... See \link{tCorpus$search_features} for the query parameters
-#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
 #'
 #' @name tCorpus$search_recode
 #' @aliases search_recode.tCorpus
@@ -450,7 +449,7 @@ NULL
 #'  }
 #'
 #' @name tCorpus$search_contexts
-#' @aliases search_contexts.tCorpus
+#' @aliases search_contexts.tCorpus tCorpus$search_contexts
 NULL
 
 #' Subset tCorpus token data using a query
@@ -463,12 +462,14 @@ NULL
 #' @section Usage:
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
-#' \preformatted{subset_query(query, feature = 'token', context_level = c('document','sentence'), copy = self$always_copy)}
+#' \preformatted{subset_query(query, feature = 'token', context_level = c('document','sentence'))}
 #'
-#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
+#' @param query A character string that is a query. See \link{tCorpus$search_contexts} for query syntax.
+#' @param feature The name of the feature columns on which the query is used.
+#' @param context_level Select whether the query and subset are performed at the document or sentence level.
 #'
 #' @name tCorpus$subset_query
-#' @aliases subset_query.tCorpus
+#' @aliases subset_query.tCorpus tCorpus$subset_query
 NULL
 
 ## CO-OCCURRENCE NETWORKS ##

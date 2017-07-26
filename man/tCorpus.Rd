@@ -20,7 +20,6 @@ The primary goal of the tCorpus is to facilitate various corpus analysis techniq
   \link[=tCorpus_compare]{Corpus comparison} \tab Compare corpora \cr
   \link[=tCorpus_topmod]{Topic modeling}  \tab Create and visualize topic models \cr
   \link[=tCorpus_docsim]{Document similarity} \tab Calculate document similarity \cr
-  \link[=tCorpus_resources]{Language resources} \tab An overview of external language resource plugins
 }
 }
 
