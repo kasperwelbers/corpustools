@@ -17,7 +17,6 @@
 #'   \link[=tCorpus_compare]{Corpus comparison} \tab Compare corpora \cr
 #'   \link[=tCorpus_topmod]{Topic modeling}  \tab Create and visualize topic models \cr
 #'   \link[=tCorpus_docsim]{Document similarity} \tab Calculate document similarity \cr
-#'   \link[=tCorpus_resources]{Language resources} \tab An overview of external language resource plugins
 #' }
 #'
 #' @name tCorpus
@@ -228,18 +227,5 @@ NULL
 #'
 #' @name tCorpus_docsim
 NULL
-
-#' Language resources
-#'
-#' \link[=tCorpus]{(back to overview)}
-#'
-#' \strong{Named entity recognition}
-#' \tabular{ll}{
-#'   \link[=tCorpus$jrc_names]{$jrc_names()} \tab Multilingual named entity recognition (in news items) \cr
-#' }
-#'
-#' @name tCorpus_resources
-NULL
-
 
 

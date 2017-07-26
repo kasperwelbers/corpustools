@@ -522,34 +522,3 @@ NULL
 #' @name tCorpus$semnet_window
 #' @aliases semnet_window.tCorpus
 NULL
-
-## RESOURCES ##
-
-#' Multilingual named entity recognition using the JRC-NAMES resource
-#'
-#' @description
-#' ``JRC-Names is a highly multilingual named entity resource for person and organisation names. [...] JRC-Names is a by-product of the analysis of about 220,000 news reports per day by the Europe Media Monitor (EMM) family of applications.'' (https://ec.europa.eu/jrc/en/language-technologies/jrc-names)
-#'
-#' The resource needs to be downloaded first. For this you can use the download_resource() function, which will (by default) download the resource into the tcorpus package folder.
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{
-#' jrc_names(new_feature = 'jrc_names', feature = 'token',
-#'           resource_path = getOption('tcorpus_resources', NULL),
-#'           collocation_labels = T, batchsize = 50000, low_memory = T,
-#'           verbose = T, copy = self$always_copy)
-#' }
-#'
-#' @param new_feature The column name of the new feature.
-#' @param feature The feature to be used as input. For JRC names regular (unprocessed) tokens should be used.
-#' @param resource_path The path (without the filename) where the resource is stored. See ?download_resource for more information.
-#' @param collocation_labels if True, then for resources that create an id for subsequent tokens (e.g. named entities), labels are added (in a separate column) based on the most frequent collocation combinations in 'your' data. Note that this means that the labels can be different if you run the same analysis on a different corpus; this is why the id is always kept.
-#' @param batchsize The number of named entity string variations per batch. Using bigger batches is faster, but depending on the size of your corpus you might run out of memory (in which case you should use smaller batches). At the time of writing the total number of strings is roughtly 700,000.
-#' @param low_memory if TRUE (default) then data will be sorted in a way that tries to get a roughly equal number of string matches per batch, to prevent huge match tables (costing memory). If FALSE, data will be sorted in a way to get fewer unique tokens per batch, which can speed up matching, but can lead to a very unequal number of matches per batch.
-#' @param copy If TRUE, the method returns a new tCorpus object. This is the normal R way of doing things. Alternatively, the tCorpus can be used as a reference class object by setting copy to FALSE, or setting tCorpus$always_copy to FALSE to use this globally. Please consult the general documentation for tCorpus (?tCorpus) for a more detailed explanation.
-#'
-#' @name tCorpus$jrc_names
-#' @aliases jrc_names.tCorpus
-NULL

@@ -206,7 +206,7 @@ tCorpus <- R6::R6Class("tCorpus",
          texts = paste(header, texts, sep='\n\n')
        }
 
-       texts = paste(texts, sep = '\n------------\n')
+       texts = paste(texts, collapse = '\n------------\n\n')
        cat(texts)
        invisible(texts)
      },
@@ -617,7 +617,7 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
-     kwic = function(hits=NULL, i=NULL, keyword=NULL, code='', ntokens=10, nsample=NA, output_feature='token', keyword_feature='token', context_level=c('document','sentence'), prettypaste=T, kw_tag=c('<','>'), ...){
+     kwic = function(hits=NULL, i=NULL, feature=NULL, keyword=NULL, code='', ntokens=10, nsample=NA, output_feature='token', keyword_feature='token', context_level=c('document','sentence'), prettypaste=T, kw_tag=c('<','>'), ...){
        if (!is.null(keyword)) hits = self$search_features(keyword=keyword, code=code, feature = keyword_feature, ...)
        keyword_in_context(self, hits=hits, i=i, code=code, ntokens=ntokens, nsample=nsample, output_feature=output_feature, context_level=context_level, prettypaste=prettypaste, kw_tag=kw_tag)
      },
@@ -785,8 +785,8 @@ print.tCorpus <- function(x, ...) {
   cat('tCorpus containing ', x$n, ' tokens',
       '\nsplit by documents (n = ', x$n_meta, ')', sent_info,
       '\ncontains:',
-      '\n  - ', length(x$names), ' data column', if (length(x$names) > 1) '(s)', ':\t', paste(x$names, collapse=', '),
-      '\n  - ', length(x$meta_names), ' meta column', if (length(x$meta_names) > 1) '(s)', ': \t', paste(x$meta_names, collapse=', '),
+      '\n  - ', length(x$names), ' data column', if (length(x$names) > 1) 's', ':\t', paste(x$names, collapse=', '),
+      '\n  - ', length(x$meta_names), ' meta column', if (length(x$meta_names) > 1) 's', ': \t', paste(x$meta_names, collapse=', '),
       '\n', sep='')
 }
 

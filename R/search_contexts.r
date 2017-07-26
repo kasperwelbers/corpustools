@@ -2,7 +2,7 @@
 search_contexts <- function(tc, query, code=NULL, feature='token', context_level=c('document','sentence'), verbose=F){
   is_tcorpus(tc, T)
 
-  if(query == '') stop('Query cannot be an empty string')
+  if(any(query == '')) stop('Query cannot be an empty string')
   context_level = match.arg(context_level)
   windows = stats::na.omit(get_feature_regex(query, default_window = NA)$window)
   max_window_size = if (length(windows) > 0) max(windows) else 0
@@ -10,6 +10,7 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
   fi = tc$feature_index(feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=T)
 
   if (!is.null(code)){
+    code = as.character(code)
     code = if (length(code) == length(query)) code else rep(code, length(query))
   } else code = sprintf('query_%s', 1:length(query))
 

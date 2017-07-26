@@ -47,7 +47,7 @@ create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, split_senten
 
 #' @rdname create_tcorpus
 #' @export
-create_tcorpus.data.frame <- function(x, text_columns='text', doc_column=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, ...) {
+create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id', split_sentences=F, max_sentences=NULL, max_tokens=NULL, ...) {
   for(cname in text_columns) if (!cname %in% colnames(x)) stop(sprintf('text_column "%s" not in data.frame', cname))
 
   if (length(text_columns) > 1){
@@ -56,7 +56,10 @@ create_tcorpus.data.frame <- function(x, text_columns='text', doc_column=NULL, s
     text = x[[text_columns]]
   }
 
-  doc_id = if (is.null(doc_column)) 1:nrow(x) else x[[doc_column]]
+  if (!doc_column %in% colnames(x)) {
+    message('No existing document column (doc_column) specified. Using indices as id.')
+    doc_id = 1:nrow(x)
+  } else doc_id = x[[doc_column]]
 
   create_tcorpus(text,
                  doc_id = doc_id,
