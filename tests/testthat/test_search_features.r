@@ -12,7 +12,6 @@ test_that("Query search works", {
   ## simple keyword only
   hits = tc$search_features(keyword = 'fuel')
   tc$code_features(keyword = 'fuel')
-  tc$data
 
   expect_equal(as.character(hits$hits$feature), c('fuel','fuel'))
 

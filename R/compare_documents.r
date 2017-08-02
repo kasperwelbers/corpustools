@@ -40,7 +40,7 @@ compare_documents_fun <- function(tc, feature='token', date_col=NULL, hour_windo
   measure = match.arg(measure)
   if (!is.null(date_col)) date_col = match.arg(date_col, choices = tc$meta_names)
 
-  meta = as.data.frame(tc$meta)
+  meta = as.data.frame(tc$get_meta())
 
   ## construct dtm's based on subsets, but not if date_col and hour_window are given, because then this needs to be done differently for the newsflow.compare function
   if (is.null(date_col) | is.null(hour_window)){
@@ -98,8 +98,9 @@ get_duplicates <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, h
   e = igraph::get.edges(g, igraph::E(g)) ## edges by indices
   d = igraph::get.data.frame(g, 'edges') ## edges by name and with weigth
   if (!is.null(meta_cols)) {
-    mx = tc$meta[,meta_cols, with = F][e[,1],]
-    my = tc$meta[,meta_cols, with = F][e[,2],]
+    mx = tc$get_meta(meta_cols)[e[,1],]
+    my = tc$get_meta(meta_cols)[e[,2],]
+
     allmatch = rowSums(mx == my) == ncol(mx)
     d = d[allmatch,]
   }

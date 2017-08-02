@@ -11,8 +11,6 @@
 
 \item{subset_meta}{logical expression indicating rows to keep in the document meta data.}
 
-\item{drop_levels}{if TRUE, drop all unused factor levels after subsetting}
-
 \item{window}{If not NULL, an integer specifiying the window to be used to return the subset. For instance, if the subset contains token 10 in a document and window is 5, the subset will contain token 5 to 15. Naturally, this does not apply to subset_meta.}
 
 \item{copy}{If TRUE, the method returns a new tCorpus object instead of subsetting the current one. This is added for convenience when analyzing a subset of the data. e.g., tc_nyt = tc$subset_meta(medium == "New_York_Times", copy=T)}
@@ -39,8 +37,8 @@ Note that you can also use the \link{tCorpus$feature_subset} method if you want 
 
 \preformatted{
 subset(subset = NULL, subset_meta = NULL,
-       drop_levels = F, window = NULL, copy = F)
-subset_meta(subset = NULL, drop_levels = T, copy = F)
+       window = NULL, copy = F)
+subset_meta(subset = NULL, copy = F)
              }
 }
 

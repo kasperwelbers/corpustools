@@ -18,7 +18,7 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
     cnames = Reduce(intersect, cnames)
     data = plyr::ldply(lapply(tc_list, function(x) x$get(cnames, keep_df=T)), .id = NULL)
   } else {
-    data = plyr::ldply(lapply(tc_list, function(x) x$data), .id = NULL)
+    data = plyr::ldply(lapply(tc_list, function(x) x$get()), .id = NULL)
   }
 
   if (keep_meta == 'intersect') {
@@ -26,7 +26,7 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
     cnames = Reduce(intersect, cnames)
     meta = plyr::ldply(lapply(tc_list, function(x) x$get_meta(cnames, keep_df=T)), .id = 'subcorpus')
   } else {
-    meta = plyr::ldply(lapply(tc_list, function(x) x$meta), .id = 'subcorpus')
+    meta = plyr::ldply(lapply(tc_list, function(x) x$get_meta()), .id = 'subcorpus')
   }
 
   if ('sent_i' %in% colnames(data)){

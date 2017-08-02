@@ -32,8 +32,8 @@ tCorpus$set('public', 'feature_associations', function(keyword=NULL, condition=N
 ###################################
 
 feature_associations <- function(tc, hits, feature='token', window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'), subset=NULL, subset_meta=NULL) {
-  if(methods::is(substitute(subset), 'call')) subset = eval(substitute(subset), tc$data, parent.frame())
-  if(methods::is(substitute(subset_meta), 'call')) subset_meta = eval(substitute(subset_meta), tc$meta, parent.frame())
+  if(methods::is(substitute(subset), 'call')) subset = tc$eval(substitute(subset), parent.frame())
+  if(methods::is(substitute(subset_meta), 'call')) subset_meta = tc$eval_meta(substitute(subset_meta), parent.frame())
   sort_by = match.arg(sort_by)
 
   i = hits$hits$i

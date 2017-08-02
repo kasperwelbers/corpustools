@@ -66,7 +66,7 @@ test_that("Query document search works", {
   ## query subsetting
   tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = T)
   tc_rutte = tc$subset_query('"mark rutte"~2', context_level = 'sentence')
-  expect_equal(tc_rutte$meta$doc_id, 'c')
+  expect_equal(tc_rutte$get_meta('doc_id'), 'c')
 
   cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 

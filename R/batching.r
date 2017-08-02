@@ -16,7 +16,7 @@ data_batch <- function(tc, context_level, n.batches=10, batchsize=NA, return_lis
   if (for_meta) {
     if (!context_level == 'document') stop('for_meta only possible if context is document')
     con_id = tc$context(context_level, with_labels = T)
-    match_id = as.character(tc$meta$doc_id)
+    match_id = as.character(tc$get_meta('doc_id'))
   } else {
     con_id = tc$context(context_level, with_labels = F)
     match_id = con_id

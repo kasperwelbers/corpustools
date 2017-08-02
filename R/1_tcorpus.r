@@ -31,63 +31,34 @@ tCorpus <- R6::R6Class("tCorpus",
        doc_ids = intersect(unique(private$.data$doc_id), unique(private$.meta$doc_id))
        private$.data = private$.data[doc_ids,]
        private$.meta = private$.meta[doc_ids,]
-       self$set_keys()
+       private$set_keys()
      },
 
      check_unique_rows = function(d){
        if ('sent_i' %in% colnames(d)) {
-         if (!identical(key(tc$data), c('doc_id', 'sent_i', 'token_i'))) setkeyv(mod, c('doc_id','sent_i','token_i'))
+         if (!identical(key(private$.data), c('doc_id', 'sent_i', 'token_i'))) setkeyv(mod, c('doc_id','sent_i','token_i'))
          if (nrow(unique(d, by=c('doc_id', 'sent_i', 'token_i'))) < nrow(d)) stop('After transformation, token_i is no longer unique')
          if (nrow(unique(d[,c('doc_id','token_i')])) < nrow(d)) stop('After transformation, token_i is not unique within documents')
        } else {
-         if (!identical(key(tc$data), c('doc_id', 'token_i'))) setkeyv(mod, c('doc_id','token_i'))
+         if (!identical(key(private$.data), c('doc_id', 'token_i'))) setkeyv(mod, c('doc_id','token_i'))
          if (nrow(unique(d, by=c('doc_id', 'token'))) < nrow(d)) stop('After transformation, token_i is not unique within documents')
        }
      },
 
-     safe_data_mod = function(mod) {
-       if (is.null(mod)) return(NULL)
-       if (nrow(mod) < self$n) stop('Replacement cannot have fewer rows. For subsetting, please use the $subset method')
-       if (nrow(mod) > self$n) stop('Replacement cannot have more rows. For adding more data, please use the merge_tcorpora function or the $add_data method')
-
-       mod = data.table(mod)
-       if (any(grepl('^evalhere_', colnames(mod)))) stop('column names in a tCorpus cannot start with "evalhere_"') ## evalhere_ is used as a prefix for object names when set/subset are called within tCorpus methods. This is to prevent conflict when a tCorpus has an identically named column
-       if (!all(c('doc_id','token_i') %in% colnames(mod))) stop('Replacement must have a doc_id and token_i column')
-       if ('sent_i' %in% colnames(mod)) setkeyv(mod, c('doc_id','sent_i','token_i')) else setkeyv(mod, c('doc_id','token_i'))
-
-       positioncols = intersect(c('doc_id','sent_i','token_i'), colnames(mod))
-       if (!identical(private$.data[,positioncols,with=F], mod[,positioncols,with=F])) {
-         if (!identical(private$.data$doc_id, mod$doc_id)) {
-           stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
-         }
-         private$check_unique_rows(mod)
-         self$reset_feature_index()
+     set_keys = function(){
+       if ('sent_i' %in% colnames(private$.data)){
+         setkey(private$.data, 'doc_id', 'sent_i', 'token_i')
+       } else {
+         setkey(private$.data, 'doc_id', 'token_i')
        }
-
-       indexcol = self$provenance()$index_feature
-       if (!is.null(indexcol)){
-         if (!identical(private$.data[[indexcol]], mod[[indexcol]])) {
-           self$reset_feature_index()
-         }
-       }
-       private$.data = mod
-       self$set_keys()
+       setkey(private$.meta, 'doc_id')
+       if (!is.null(private$.feature_index)) setkey(private$.feature_index, 'feature')
      },
 
-     safe_meta_mod = function(mod) {
-       if (is.null(mod)) return(NULL)
-       mod = data.table(mod)
-       if (any(grepl('^evalhere_', colnames(mod)))) stop('column names in a tCorpus cannot start with "evalhere_"')
-       if (!all(c('doc_id') %in% colnames(mod))) stop('Replacement must have a doc_id column')
-
-       setkey(mod, 'doc_id')
-       if (nrow(mod) < self$n_meta) stop('Replacement cannot have fewer rows. For subsetting, please use the $subset method')
-       if (nrow(mod) > self$n_meta) stop('Replacement cannot have more rows. For adding more data, please use the merge_tcorpora function or the $add_data method')
-       if (!identical(private$.meta$doc_id, mod$doc_id)) {
-         stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
-       }
-       private$.meta = mod
-       self$set_keys()
+     droplevels = function(){
+       private$.data = base::droplevels(private$.data)
+       private$.meta = base::droplevels(private$.meta)
+       invisible(self)
      }
 
    ),
@@ -100,7 +71,7 @@ tCorpus <- R6::R6Class("tCorpus",
        private$.meta = data.table(meta)
        private$.p = if (!is.null(p)) p else list()
        private$.feature_index = if (!is.null(feature_index)) feature_index else NULL
-       self$set_keys()
+       private$set_keys()
      },
 
 ## SHOW/GET DATA METHODS ##
@@ -247,7 +218,7 @@ tCorpus <- R6::R6Class("tCorpus",
          private$.data[,(column) := factor(private$.data[[column]])]
        }
 
-       self$set_keys()
+       private$set_keys()
        invisible(self)
      },
 
@@ -338,7 +309,7 @@ tCorpus <- R6::R6Class("tCorpus",
           private$.meta$doc_id = as.character(private$.meta$doc_id)
         }
         self$reset_feature_index()
-        self$set_keys()
+        private$set_keys()
       },
 
       select_meta_rows = function(selection, keep_data=F) {
@@ -347,15 +318,15 @@ tCorpus <- R6::R6Class("tCorpus",
         private$.meta$doc_id = as.character(private$.meta$doc_id)
         if (!keep_data) private$.data = private$.data[as.character(unique(private$.meta$doc_id)),,nomatch=0]
         self$reset_feature_index()
-        self$set_keys()
+        private$set_keys()
       },
 
-     subset = function(subset=NULL, subset_meta=NULL, drop_levels=T, window=NULL, copy=F){
+     subset = function(subset=NULL, subset_meta=NULL, window=NULL, copy=F){
        if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
        if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = self$eval_meta(substitute(subset_meta), parent.frame())
 
        if (copy) {
-         selfcopy = self$copy()$subset(subset=subset, subset_meta=subset_meta, drop_levels=drop_levels, window=window, copy=F)
+         selfcopy = self$copy()$subset(subset=subset, subset_meta=subset_meta, window=window, copy=F)
          return(selfcopy)
        }
 
@@ -384,15 +355,15 @@ tCorpus <- R6::R6Class("tCorpus",
          self$select_rows(subset, keep_meta = F)
        }
 
-       if (drop_levels) self$droplevels()
+       private$droplevels()
        invisible(self)
      },
 
-      subset_meta = function(subset=NULL, drop_levels=T, copy=F){
+      subset_meta = function(subset=NULL, copy=F){
         ## subset also has a subset_meta argument, but we add this for consistency with other _meta methods
         if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval_meta(substitute(subset), parent.frame())
         evalhere_subset = subset
-        self$subset(subset_meta = evalhere_subset, drop_levels=drop_levels, copy=copy)
+        self$subset(subset_meta = evalhere_subset, copy=copy)
       },
 
       subset_i = function(subset=NULL, subset_meta=NULL, window=NULL, inverse=F){
@@ -471,25 +442,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
         }
         as.data.frame(d)
-      },
-
-## UTIL
-     set_keys = function(){
-       if ('sent_i' %in% colnames(private$.data)){
-         setkey(private$.data, 'doc_id', 'sent_i', 'token_i')
-       } else {
-         setkey(private$.data, 'doc_id', 'token_i')
-       }
-       setkey(private$.meta, 'doc_id')
-       if (!is.null(private$.feature_index)) setkey(private$.feature_index, 'feature')
-     },
-
-     droplevels = function(){
-       private$.data = base::droplevels(private$.data)
-       private$.meta = base::droplevels(private$.meta)
-       invisible(self)
-     }
-
+      }
    ),
 
    active = list(
@@ -514,18 +467,6 @@ tCorpus <- R6::R6Class("tCorpus",
          levels(private$.data$doc_id) = mod
        }
        levels(self$get('doc_id'))
-     },
-
-     data = function(mod=NULL) {
-       ## access data directly, but with checks to protect structure.
-       private$safe_data_mod(mod)
-       data.table::copy(private$.data)
-     },
-
-     meta = function(mod=NULL) {
-       ## access data directly, but with checks to protect structure.
-       private$safe_meta_mod(mod)
-       data.table::copy(private$.meta)
      }
    )
 )
@@ -564,11 +505,11 @@ refresh_tcorpus <- function(tc){
 }
 
 rebuild_tcorpus <- function(tc) {
-  tokens_to_tcorpus(tokens = tc$data,
+  tokens_to_tcorpus(tokens = tc$get(),
                     doc_col = 'doc_id',
                     sent_i_col = ifelse('sent_i' %in% tc$names, T, F),
                     token_i_col = 'token_i',
-                    meta = tc$meta)
+                    meta = tc$get_meta())
 }
 
 #' Summary of a tCorpus object
@@ -647,7 +588,7 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
   }
   if (context_level == 'sentence') {
     if (!'sent_i' %in% tc$names) stop('Sentence level not possible, since no sentence information is available. To enable sentence level analysis, use split_sentences = T in "create_tcorpus()" or specify sent_i_col in "tokens_to_tcorpus()"')
-    d = tc$data
+    d = tc$get(c('doc_id','sent_i'))
     if (with_labels){
       ucontext = unique(d[,c('doc_id','sent_i')])
       ucontext = stringi::stri_paste(ucontext$doc_id, ucontext$sent_i, sep=' #')

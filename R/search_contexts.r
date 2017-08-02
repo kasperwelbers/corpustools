@@ -58,7 +58,7 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
   hits = hits$hits
   if (is.null(hits)) return(NULL)
   if (context_level == 'document'){
-    self$select_meta_rows(self$meta$doc_id %in% hits$doc_id)
+    self$select_meta_rows(self$get_meta('doc_id') %in% hits$doc_id)
   }
   if (context_level == 'sentence'){
     d = self$get(c('doc_id','sent_i'), keep_df=T)

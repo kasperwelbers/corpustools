@@ -14,13 +14,13 @@ test_that("preprocessing works", {
 
   dtm = tc$dtm('token')
   ## test preprocess_feature
-  token = tc$data$token
+  token = tc$get('token')
 
   context = tc$context('document')
   feature = preprocess_tokens(token, context=context, language='english', lowercase = T, use_stemming = T, ngrams = 3)
 
   tc = tc$preprocess('token', new_column='feature', language='english', lowercase = T, use_stemming = T, ngrams = 3, ngram_context = 'document')
-  expect_equal(tc$data$feature, feature)
+  expect_equal(tc$get('feature'), feature)
 
   cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 

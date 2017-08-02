@@ -118,7 +118,7 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   if (!'subset_tokens' %in% colnames(queries)) queries$subset_tokens = if (methods::is(substitute(subset_tokens), 'call')) deparse(substitute(subset_tokens)) else subset_tokens
   if (!'subset_meta' %in% colnames(queries)) queries$subset_meta = if (methods::is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
 
-  if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(colnames(tc@data)[!colnames(tc$data) %in% c('doc_id','sent_i','token_i','filter')],collapse=', ')))
+  if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(tc$feature_names, collapse=', ')))
   if (any(is.na(queries$keyword))) stop('keyword cannot be NA. Provide either the keyword or queries argument')
 
   queries$code = as.character(queries$code)

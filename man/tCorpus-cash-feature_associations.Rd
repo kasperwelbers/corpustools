@@ -5,11 +5,11 @@
 \alias{feature_associations.tCorpus}
 \title{Get common nearby terms given a feature query}
 \arguments{
-\item{keyword}{The keyword part of the query, see explanation in \link{tCorpus.search_features}.}
+\item{keyword}{The keyword part of the query, see explanation in \link{search_features.tCorpus}.}
 
-\item{condition}{The condition part of the query, see explanation in \link{tCorpus.search_features}.}
+\item{condition}{The condition part of the query, see explanation in \link{search_features.tCorpus}.}
 
-\item{hits}{Alternatively, instead of giving a query, the results of \link{tCorpus.search_features} can be used.}
+\item{hits}{Alternatively, instead of giving a query, the results of \link{search_features.tCorpus} can be used.}
 
 \item{feature}{If keyword is used, the name of the feature column within which to search.}
 

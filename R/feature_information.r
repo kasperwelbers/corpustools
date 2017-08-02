@@ -113,7 +113,7 @@ top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, r
       rm(match_i)
     }
   }
-  if (is.null(group_df)) group_df = data.frame(group=rep('tcorpus', nrow(tc$data)))
+  if (is.null(group_df)) group_df = data.frame(group=rep('tcorpus', tc$n))
 
   ## function for ddply
   get_top_freq <- function(d, n, feature){
