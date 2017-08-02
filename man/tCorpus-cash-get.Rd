@@ -12,6 +12,14 @@
 \item{keep_df}{if True, the output will be a data.table (or data.frame) even if it only contains 1 columns}
 
 \item{as.df}{if True, the output will be a regular data.frame instead of a data.table}
+
+\item{subset}{Optionally, only get a subset of rows (see \link{subset.tCorpus} method)}
+
+\item{doc_id}{A vector with document ids to select rows. Faster than subset, because it uses binary search. Cannot be used in combination with subset. If duplicate doc_ids are given, duplicate rows are returned.}
+
+\item{token_i}{A vector with token indices. Can only be used in pairs with doc_id. For example, if doc_id = c(1,1,1,2,2) and token_i = c(1,2,3,1,2), then the first three tokens of doc 1 and the first 2 tokens of doc 2 are returned. This is mainly usefull for fast (binary search) retrieval of specific tokens.}
+
+\item{safe_copy}{for advanced use. The get methods always return a copy of the data, even if the full data is returned (i.e. use get without parameters). This is to prevent accidental changes within tCorpus data (which can break it) if the returned data is modified by reference (see data.table documentation). If safe_copy is set to FALSE and get is called without parameters---tc$get(safe_copy=F))---then no copy is made, which is much faster and more memory efficient. Use this if you need speed and efficiency, but make sure not to change the output data.table by reference.}
 }
 \description{
 Alternative to using the $data and $meta field. This is more efficient if not all columns are selected, because $data copies the whole data.table, whereas get only copies the selected columns.
@@ -20,7 +28,7 @@ Alternative to using the $data and $meta field. This is more efficient if not al
 
 ## R6 active method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 
-\preformatted{get(columns=NULL, keep_df=F, as.df=F)}
-\preformatted{get_meta(columns=NULL, keep_df=F, as.df=F)}
+\preformatted{get(columns=NULL, keep_df=F, as.df=F, subset=NULL, doc_id=NULL, token_i=NULL, safe_copy=T)}
+\preformatted{get_meta(columns=NULL, keep_df=F, as.df=F, subset=NULL, doc_id=NULL, safe_copy=T)}
 }
 

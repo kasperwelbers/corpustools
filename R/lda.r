@@ -1,3 +1,21 @@
+tCorpus$set('public', 'lda_fit', function(feature, create_feature=NULL, K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250, context_level=c('document','sentence'), ...) {
+  if (!requireNamespace('topicmodels', quietly = T)) stop('topicmodels package needs to be installed in order to use LDA')
+
+  dtm = self$dtm(feature=feature, context_level=context_level, ...)
+  m = lda_fit(dtm=dtm, method='Gibbs', K=K, num.iterations=num.iterations, alpha=alpha, eta=eta, burnin=burnin)
+  if (!is.null(create_feature)) self$lda_topic_features(m=m, feature=feature, new_feature=create_feature, context_level=context_level)
+  m
+})
+
+tCorpus$set('public', 'lda_topic_features', function(m, feature, new_feature='LDA_topic', context_level=c('document','sentence')){
+  evalhere_d = lda_features(tc=self, m=m, feature=feature, new_feature=new_feature, context_level=context_level)
+  self$set(new_feature, evalhere_d$v[order(evalhere_d$i)])
+  invisible(self)
+})
+
+#############################
+#############################
+
 lda_features <- function(tc, m, feature, new_feature='LDA_topic', context_level=c('document','sentence')){
   context_level = match.arg(context_level)
   if (!methods::is(m, 'LDA_Gibbs')) stop('An LDA model of class LDA_Gibbs (topicmodels::LDA with method = "Gibbs") is required')

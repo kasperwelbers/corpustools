@@ -1,3 +1,44 @@
+#' Feature statistics
+#'
+#' @description
+#' Compute a number of useful statistics for features: term frequency, idf, etc.
+#'
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{feature_stats(feature, sent_freq=F)}
+#'
+#' @param feature The name of the feature
+#' @param sent_freq If True, include sentence frequency (only if sentence information is available).
+#'
+#' @name tCorpus$feature_stats
+#' @aliases feature_stats.tCorpus
+tCorpus$set('public', 'feature_stats', function(feature, context_level=c('document','sentence')){
+  term_statistics(self, feature=feature, context_level=context_level)
+})
+
+#' Show top features
+#'
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{top_features(feature, n = 10, group_by = NULL, group_by_meta = NULL, return_long = F}
+#'
+#' @param feature The name of the feature
+#' @param n Return the top n features
+#' @param group_by A column in the token data to group the top features by. For example, if token data contains part-of-speech tags (pos), then grouping by pos will show the top n feature per part-of-speech tag.
+#' @param group_by_meta A column in the meta data to group the top features by.
+#' @param return_long if True, results will be returned in a long format. Default is a table, but this can be inconvenient if there are many grouping variables.
+#'
+#' @name tCorpus$top_features
+#' @aliases top_features.tCorpus
+tCorpus$set('public', 'top_features', function(feature, n=10, group_by=NULL, group_by_meta=NULL, return_long=F){
+  top_features(self, feature=feature, n=n, group_by=group_by, group_by_meta=group_by_meta, return_long=return_long)
+})
+
+
+################################
+################################
 
 # Compute some useful corpus statistics for a dtm
 #

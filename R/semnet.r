@@ -1,8 +1,66 @@
 ## double check whether direction of con_prob is correct
 
-# Create a semantic network based on the co-occurence of tokens in documents
-#
-# This function calculates the co-occurence of tokens and returns a network/graph where nodes are tokens and edges represent the similarity/adjacency of tokens. Co-occurence is calcuated based on how often two tokens occured within the same document (e.g., news article, chapter, paragraph, sentence). Note that the cooc_window() function can be used to calculate co-occurrence of tokens within a given token distance.
+#' Create a semantic network based on the co-occurence of tokens in documents
+#'
+#' @description
+#' This function calculates the co-occurence of features and returns a network/graph in the igraph format, where nodes are tokens and edges represent the similarity/adjacency of tokens. Co-occurence is calcuated based on how often two tokens occured within the same document (e.g., news article, chapter, paragraph, sentence). The semnet_window() function can be used to calculate co-occurrence of tokens within a given token distance.
+#'
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{
+#' semnet(feature, measure = c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'),
+#'        context_level = c('document','sentence'), backbone=F, n.batches=NA)
+#' }
+#'
+#' @param feature The name of the feature column
+#' @param measure The similarity measure. Currently supports: "con_prob" (conditional probability), "con_prob_weighted", "cosine" similarity, "count_directed" (i.e number of cooccurrences) and "count_undirected" (same as count_directed, but returned as an undirected network, chi2 (chi-square score))
+#' @param context_level Determine whether features need to co-occurr within "documents" or "sentences"
+#' @param backbone If True, add an edge attribute for the backbone alpha
+#' @param n.batches If a number, perform the calculation in batches
+#'
+#' @name tCorpus$semnet
+#' @aliases semnet.tCorpus
+tCorpus$set('public', 'semnet', function(feature, measure=c('cosine', 'con_prob', 'con_prob_weighted', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA){
+  measure = match.arg(measure)
+  if (!requireNamespace('igraph', quietly = T)) stop('igraph package needs to be installed in order to use semnet methods')
+  semnet(self, feature=feature, measure=measure, context_level=context_level, backbone=backbone, n.batches=n.batches)
+})
+
+#' Create a semantic network based on the co-occurence of tokens in token windows
+#'
+#' @description
+#' This function calculates the co-occurence of features and returns a network/graph in the igraph format, where nodes are tokens and edges represent the similarity/adjacency of tokens. Co-occurence is calcuated based on how often two tokens co-occurr within a given token distance.
+#'
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{
+#' semnet_window(feature, measure = c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'),
+#'               context_level = c('document','sentence'), window.size = 10, direction = '<>',
+#'               backbone = F, n.batches = 5, set_matrix_mode = c(NA, 'windowXwindow', 'positionXwindow'))
+#' }
+#'
+#' @param feature The name of the feature column
+#' @param measure The similarity measure. Currently supports: "con_prob" (conditional probability), "cosine" similarity, "count_directed" (i.e number of cooccurrences) and "count_undirected" (same as count_directed, but returned as an undirected network, chi2 (chi-square score))
+#' @param context_level Determine whether features need to co-occurr within "documents" or "sentences"
+#' @param window.size The token distance within which features are considered to co-occurr
+#' @param direction Determine whether co-occurrence is assymmetricsl ("<>") or takes the order of tokens into account. If direction is '<', then the from/x feature needs to occur before the to/y feature. If direction is '>', then after.
+#' @param backbone If True, add an edge attribute for the backbone alpha
+#' @param n.batches If a number, perform the calculation in batches
+#' @param set_matrix_mode Advanced feature. There are two approaches for calculating window co-occurrence. One is to measure how often a feature occurs within a given token window, which can be calculating by calculating the inner product of a matrix that contains the exact position of features and a matrix that contains the occurrence window. We refer to this as the "positionXwindow" mode. Alternatively, we can measure how much the windows of features overlap, for which take the inner product of two window matrices. By default, semnet_window takes the mode that we deem most appropriate for the similarity measure. Substantially, the positionXwindow approach has the advantage of being very easy to interpret (e.g. how likely is feature "Y" to occurr within 10 tokens from feature "X"?). The windowXwindow mode, on the other hand, has the interesting feature that similarity is stronger if tokens co-occurr more closely together (since then their windows overlap more). Currently, we only use the windowXwindow mode for cosine similarity. By using the set_matrix_mode parameter you can override this.
+#'
+#' @name tCorpus$semnet_window
+#' @aliases semnet_window.tCorpus
+tCorpus$set('public', 'semnet_window', function(feature, measure=c('cosine', 'con_prob', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=NA, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
+  measure = match.arg(measure)
+  if (!requireNamespace('igraph', quietly = T)) stop('igraph package needs to be installed in order to use semnet methods')
+  semnet_window(self, feature=feature, measure=measure, context_level=context_level, window.size=window.size, direction=direction, backbone=backbone, n.batches=n.batches, set_matrix_mode=set_matrix_mode)
+})
+
+
+##########################
+##########################
 
 semnet <- function(tc, feature, measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA, alpha=2){
   is_tcorpus(tc, T)

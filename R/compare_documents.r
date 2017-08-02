@@ -1,3 +1,35 @@
+tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
+  if (!requireNamespace('RNewsflow', quietly = T)) stop('RNewsflow package needs to be installed in order to use document comparison methods')
+  weight = match.arg(weight)
+  from_subset = self$eval_meta(substitute(from_subset), parent.frame())
+  to_subset = self$eval_meta(substitute(to_subset), parent.frame())
+  compare_documents_fun(self, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=min_similarity, weight=weight, ngrams=ngrams, from_subset=from_subset, to_subset=to_subset)
+})
+
+tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=F){
+  if (!requireNamespace('RNewsflow', quietly = T)) stop('RNewsflow package needs to be installed in order to use document comparison methods')
+
+  weight = match.arg(weight)
+  match.arg(feature, self$feature_names)
+  if (copy) {
+    selfcopy = self$copy()$deduplicate(feature=feature, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, min_docfreq=min_docfreq, max_docfreq_pct=max_docfreq_pct, measure=measure, similarity=similarity, keep=keep, weight=weight, ngrams=ngrams, print_duplicates=print_duplicates, copy=F)
+    return(selfcopy)
+  }
+
+  ## adding DEDUPLICATE_FEATURE is not very elegant and memory efficient. Better alternative, perhaps, is to pass docfreq_filter results to compare_documents_fun.
+  evalhere_feature = feature
+  self$set('DEDUPLICATE_FEATURE', self$get(evalhere_feature))
+  self$feature_subset('DEDUPLICATE_FEATURE', 'DEDUPLICATE_FEATURE', subset = docfreq_filter('DEDUPLICATE_FEATURE', min=min_docfreq, max=self$n * max_docfreq_pct), copy=F)
+
+  evalhere_duplicates = get_duplicates(self, feature='DEDUPLICATE_FEATURE', date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
+  self$subset(subset_meta = !doc_id %in% evalhere_duplicates, copy=F)
+  self$set('DEDUPLICATE_FEATURE', NULL)
+  invisible(self)
+})
+
+##################################
+##################################
+
 to_POSIXct <- function(x){
   tryCatch(as.POSIXct(x),
            warning = function(w) stop(sprintf('Date column cannot be properly interpreted as POSIXct: \n%s', w)),

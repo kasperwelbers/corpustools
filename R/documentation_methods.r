@@ -1,5 +1,6 @@
-## tCorpus R6 method documentation
-#### Separate documentation for each method
+## tCorpus R6 method documentation (which is a bit unorthodox)
+#### Separate documentation for each method.
+#### This only contains the accessor method documentation. Other methods documentation is included in the R files with the code (e.g., dtm documentation in document_term_matrix.r)
 #### Names for each class take the form tCorpus$method(...), with as additional alias method.tCorpus (S3 style)
 
 #' Access the data from a tCorpus
@@ -10,12 +11,16 @@
 #' @section Usage:
 #' ## R6 active method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
-#' \preformatted{get(columns=NULL, keep_df=F, as.df=F)}
-#' \preformatted{get_meta(columns=NULL, keep_df=F, as.df=F)}
+#' \preformatted{get(columns=NULL, keep_df=F, as.df=F, subset=NULL, doc_id=NULL, token_i=NULL, safe_copy=T)}
+#' \preformatted{get_meta(columns=NULL, keep_df=F, as.df=F, subset=NULL, doc_id=NULL, safe_copy=T)}
 #'
 #' @param a character vector with the names of the columns
 #' @param keep_df if True, the output will be a data.table (or data.frame) even if it only contains 1 columns
 #' @param as.df if True, the output will be a regular data.frame instead of a data.table
+#' @param subset Optionally, only get a subset of rows (see \link{subset.tCorpus} method)
+#' @param doc_id A vector with document ids to select rows. Faster than subset, because it uses binary search. Cannot be used in combination with subset. If duplicate doc_ids are given, duplicate rows are returned.
+#' @param token_i A vector with token indices. Can only be used in pairs with doc_id. For example, if doc_id = c(1,1,1,2,2) and token_i = c(1,2,3,1,2), then the first three tokens of doc 1 and the first 2 tokens of doc 2 are returned. This is mainly usefull for fast (binary search) retrieval of specific tokens.
+#' @param safe_copy for advanced use. The get methods always return a copy of the data, even if the full data is returned (i.e. use get without parameters). This is to prevent accidental changes within tCorpus data (which can break it) if the returned data is modified by reference (see data.table documentation). If safe_copy is set to FALSE and get is called without parameters---tc$get(safe_copy=F))---then no copy is made, which is much faster and more memory efficient. Use this if you need speed and efficiency, but make sure not to change the output data.table by reference.
 #'
 #' @name tCorpus$get
 #' @aliases get.tCorpus tCorpus$get_meta get_meta.tCorpus
@@ -86,29 +91,7 @@ NULL
 #' @aliases context.tCorpus
 NULL
 
-#' Create a document term matrix
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{dtm(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F)}
-#'
-#' @param feature The name of the feature column
-#' @param context_level Select whether the rows of the dtm should represent "documents" or "sentences".
-#' @param weight Select the weighting scheme for the DTM. Currently supports term frequency (termfreq), document frequency (docfreq), term frequency inverse document frequency (tfidf) and tfidf with normalized document vectors.
-#' @param drop_empty_terms If True, tokens that do not occur (i.e. column where sum is 0) are ignored.
-#' @param form The output format. Default is a sparse matrix in the dgTMatrix class from the Matrix package. Alternatives are tm_dtm for a DocumentTermMatrix in the tm package format or quanteda_dfm for the document feature matrix from the quanteda package.
-#' @param subset_tokens A subset call to select which rows to use in the DTM
-#' @param subset_meta A subset call for the meta data, to select which documents to use in the DTM
-#' @param context Instead of using the document or sentence context, an custom context can be specified. Has to be a vector of the same length as the number of tokens, that serves as the index column. Each unique value will be a row in the DTM.
-#' @param context_labels If False, the DTM will not be given rownames
-#' @param feature_labels If False, the DTM will not be given column names
-#' @param ngrams Optionally, use ngrams instead of individual tokens. This is more memory efficient than first creating an ngram feature in the tCorpus.
-#' @param ngram_before_subset If a subset is used, ngrams can be made before the subset, in which case an ngram can contain tokens that have been filtered out after the subset. Alternatively, if ngrams are made after the subset, ngrams will span over the gaps of tokens that are filtered out.
-#'
-#' @name tCorpus$dtm
-#' @aliases dtm.tCorpus
-NULL
+
 
 ############### MODIFY DATA
 
@@ -222,304 +205,4 @@ NULL
 #'
 #' @name tCorpus$set
 #' @aliases set.tCorpus tCorpus$set_meta set_meta.tCorpus
-NULL
-
-#### preprocessing
-
-#' Preprocess feature
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{
-#' preprocess(column, new_column = column,
-#'            lowercase = T, ngrams = 1, ngram_context=c('document', 'sentence'),
-#'            as_ascii = F, remove_punctuation = T, remove_stopwords = F, use_stemming = F,
-#'            language = 'english')
-#'            }
-#'
-#' @param column the column containing the feature to be used as the input
-#' @param new_column the column to save the preprocessed feature. Can be a new column or overwrite an existing one.
-#' @param lowercase make feature lowercase
-#' @param ngrams create ngrams. The ngrams match the rows in the token data, with the feature in the row being the last token of the ngram. For example, given the features "this is an example", the third feature ("an") will have the trigram "this_is_an". Ngrams at the beginning of a context will have empty spaces. Thus, in the previous example, the second feature ("is") will have the trigram "_is_an".
-#' @param ngram_context Ngrams will not be created across contexts, which can be documents or sentences. For example, if the context_level is sentences, then the last token of sentence 1 will not form an ngram with the first token of sentence 2.
-#' @param as_ascii convert characters to ascii. This is particularly usefull for dealing with special characters.
-#' @param remove_punctuation remove (i.e. make NA) any features that are \emph{only} punctuation (e.g., dots, comma's)
-#' @param remove_stopwords remove (i.e. make NA) stopwords. (!) Make sure to set the language argument correctly.
-#' @param use_stemming reduce features (tokens) to their stem
-#' @param language The language used for stopwords and stemming
-#'
-#' @name tCorpus$preprocess
-#' @aliases preprocess.tCorpus
-NULL
-
-#' Filter feature
-#'
-#' @description
-#' Similar to using \link{tCorpus$subset}, but instead of deleting rows it only sets rows for a specified feature to NA. This can be very convenient, because it enables only a selection of features to be used in an analysis (e.g. a topic model) but maintaining the context of the full article, so that results can be viewed in this context (e.g. a topic browser).
-#'
-#' Just as in subset, it is easy to use objects and functions in the filter, including the special functions for using term frequency statistics (see documentation for \link{tCorpus$subset}).
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{feature_subset(column, new_column, subset)}
-#'
-#' @param column the column containing the feature to be used as the input
-#' @param new_column the column to save the filtered feature. Can be a new column or overwrite an existing one.
-#' @param subset logical expression indicating rows to keep in the tokens data. i.e. rows for which the logical expression is FALSE will be set to NA.
-#'
-#' @name tCorpus$feature_subset
-#' @aliases feature_subset.tCorpus
-NULL
-
-#' Feature statistics
-#'
-#' @description
-#' Compute a number of useful statistics for features: term frequency, idf, etc.
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{feature_stats(feature, sent_freq=F)}
-#'
-#' @param feature The name of the feature
-#' @param sent_freq If True, include sentence frequency (only if sentence information is available).
-#'
-#' @name tCorpus$feature_stats
-#' @aliases feature_stats.tCorpus
-NULL
-
-#' Show top features
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{top_features(feature, n = 10, group_by = NULL, group_by_meta = NULL, return_long = F}
-#'
-#' @param feature The name of the feature
-#' @param n Return the top n features
-#' @param group_by A column in the token data to group the top features by. For example, if token data contains part-of-speech tags (pos), then grouping by pos will show the top n feature per part-of-speech tag.
-#' @param group_by_meta A column in the meta data to group the top features by.
-#' @param return_long if True, results will be returned in a long format. Default is a table, but this can be inconvenient if there are many grouping variables.
-#'
-#' @name tCorpus$top_features
-#' @aliases top_features.tCorpus
-NULL
-
-#' Find tokens using a Lucene-like search query
-#'
-#' @description
-#' Search tokens in a tokenlist using a query that consists of an keyword, and optionally a condition. For a detailed explanation of the query language please consult the query_tutorial markdown file. For a quick summary see the details below.
-#'
-#' Note that the query arguments (keyword, condition, code, condition_once) can be vectors to search multiple queries at once. Alternatively, the queries argument can be used to pass these arguments in a data.frame
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{
-#' search_features(keyword = NA, condition = NA, code = NA,
-#'                 queries = NULL, feature = 'token', condition_once=F,
-#'                 subset_tokens = NA, subset_meta = NA,
-#'                 keep_false_condition = F, only_last_mtoken = F, verbose = F)
-#'              }
-#'
-#' @param keyword The keyword part of the query, see explanation in query_tutorial markdown or in details below
-#' @param condition The condition part of the query, see explanation in query_tutorial markdown or in details below
-#' @param code The code given to the tokens that match the query (usefull when looking for multiple queries)
-#' @param queries Alternatively, a data.frame can be given that contains a "keyword" column, and optionally columns for the "condition", "code" and "condition_once" paramters.
-#' @param feature The name of the feature column within which to search.
-#' @param condition_once logical. If TRUE, then if an keyword satisfies its conditions once in an article, all keywords within that article are coded.
-#' @param subset_tokens A call (or character string of a call) as one would normally pass to subset.tCorpus. If given, the keyword has to occur within the subset. This is for instance usefull to only look in named entity POS tags when searching for people or organization. Note that the condition does not have to occur within the subset.
-#' @param subset_meta A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).
-#' @param keep_false_condition if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives
-#' @param only_last_mtoken If TRUE, then if multitoken keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last token. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, token co-occurence analysis)
-#' @param verbose If TRUE, progress messages will be printed
-#'
-#' @details
-#' Brief summary of the query language
-#'
-#' The keyword:
-#' \itemize{
-#'    \item{is the actual feature that has to be found in the token}
-#'    \item{can contain multiple tokens with OR statement (and empty spaces are also considered OR statements)}
-#'    \item{can contain multitoken strings, using quotes. e.g. "united states"}
-#'    \item{can contain token proximities, using quotes plus tilde and a number specifiying the token distance. e.g. "climate chang*"~10}
-#'    \item{accepts the ? wildcard, which means that any single character can be used in this place}
-#'    \item{accepts the * wildcard, which means that any number of characters can be used in this place}
-#'    \item{is be default not case sensitive, but can be made so by adding ~s. e.g. COP~s}
-#'  }
-#'
-#' The condition:
-#' \itemize{
-#'    \item{has to be TRUE for the keyword to be accepted. Thus, if a condition is given, the query can be interpreted as: keyword AND condition}
-#'    \item{works identical to the keyword, but with several additional options:}
-#'    \item{- can also contain complex boolean statements, using AND, OR and NOT statements, and using parentheses}
-#'    \item{- can be specified for a maximum token distance of the keyword using the ^ (caret) symbol, where "token^50" means that "token" is looked up within 50 tokens of the keyword. This can also be used after multitoken strings, and in combination with the tilde. e.g. "climate chang*"~5^10 will check if the tokens climate and change/changing/etc. co-occur within 5 tokens, and if so, at least on token should occur within 10 tokens of the keyword}
-#'    \item{- the case sensitive and token distance flags can be used together. e.g. COP~s^50 means that all capital COP must be found within 50 tokens of the keyword}
-#' }
-#'
-#' Parameters:
-#' \itemize{
-#'    \item{condition_once -> if TRUE, then if the condition is satisfied at least once in an article, all occurences of the keyword are accepted. }
-#' }
-#'
-#' @name tCorpus$search_features
-#' @aliases search_features.tCorpus
-NULL
-
-#' Recode features in a tCorpus based on a search string
-#'
-#' @description
-#' Search features (see \link{tCorpus$search_features}) and replace features with a new value
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{
-#' search_recode(feature, new_value, keyword, condition = NA,
-#'               condition_once = F, subset_tokens = NA, subset_meta = NA)
-#' }
-#'
-#' @param feature The feature in which to search
-#' @param new_value the character string with which all features that are found are replaced
-#' @param ... See \link{tCorpus$search_features} for the query parameters
-#'
-#' @name tCorpus$search_recode
-#' @aliases search_recode.tCorpus
-NULL
-
-#' Get keyword-in-context (KWIC) strings
-#'
-#' @description
-#' Create a data.frame with keyword-in-context strings for given indices (i), search results (hits) or search strings (keyword).
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{
-#' kwic(hits = NULL, i = NULL, keyword = NULL, code = '',
-#'      ntokens = 10, nsample = NA, output_feature = 'token',
-#'      context_levels = c('document','sentence'),
-#'      prettypaste = T, kw_tag = c('<','>'), ...)
-#' }
-#'
-#' @param hits results of feature search. see \link{tCorpus$search_features}.
-#' @param i instead of the hits argument, you can give the indices of features directly.
-#' @param keyword instead of using the hits or i arguments, a search string can be given directly. Note that this simply a convenient shorthand for first creating a hits object with \link{tCorpus$search_features}. If a keyword is given, then the ... argument is used to pass other arguments to \link{tCorpus$search_features}.
-#' @param code if 'i' or 'keyword' is used, the code argument can be used to add a code label. Should be a vector of the same length that gives the code for each i or keyword, or a vector of length 1 for a single label.
-#' @param ntokens an integers specifying the size of the context, i.e. the number of tokens left and right of the keyword.
-#' @param nsample optionally, get a random sample of the keywords/features. If multiple codes are used, the sample is drawn for each code individually.
-#' @param output_feature the feature column that is used to make the KWIC.
-#' @param context_level Select the maxium context (document or sentence).
-#' @param prettypaste If TRUE, tries to reconstruct the text in a natural way (e.g. no space before a dot). Otherwise, all features are separated by a whitespace.
-#' @param kw_tag a character vector of length 2, that gives the symbols before (first value) and after (second value) the keyword in the KWIC string. Can for instance be used to prepare KWIC with format tags for highlighting.
-#' @param ... See \link{tCorpus$search_features} for the query parameters
-#'
-#' @name tCorpus$kwic
-#' @aliases kwic.tCorpus
-NULL
-
-
-
-#' Search for documents or sentences using Boolean queries
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{search_contexts(query, code = NULL, feature = 'token', context_level = c('document','sentence'), verbose = F)}
-#'
-#' @param query A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.
-#' @param code If given, used as a label for the results of the query. Especially usefull if multiple queries are used.
-#' @param feature The name of the feature column
-#' @param context_level Select whether the queries should occur within while "documents" or specific "sentences". Returns results at the specified level.
-#' @param verbose If TRUE, progress messages will be printed
-#'
-#' @details
-#' Brief summary of the query language
-#'
-#' The following operators and modifiers are supported:
-#' \itemize{
-#'    \item{The standaard Boolean operators: AND, OR and NOT. As a shorthand, an empty space can be used as an OR statement, so that "this that those" means "this OR that OR those". NOT statements stricly mean AND NOT, so should only be used between terms. If you want to find \emph{everything except} certain terms, you can use * (wildcard for \emph{anything}) like this: "* NOT (this that those)".}
-#'    \item{For complex queries parentheses can (and should) be used. e.g. '(spam AND eggs) NOT (fish and (chips OR albatros))}
-#'    \item{Wildcards ? and *. The questionmark can be used to match 1 unknown character or no character at all, e.g. "?at" would find "cat", "hat" and "at". The asterisk can be used to match any number of unknown characters. Both the asterisk and questionmark can be used at the start, end and within a term.}
-#'    \item{Multitoken strings, or exact strings, can be specified using quotes. e.g. "united states"}
-#'    \item{tokens within a given token distance can be found using quotes plus tilde and a number specifiying the token distance. e.g. "climate chang*"~10}
-#'    \item{Queries are not case sensitive, but can be made so by adding the ~s flag. e.g. COP~s only finds "COP" in uppercase. The ~s flag can also be used on quotes to make all terms within quotes case sensitive, and this can be combined with the token proximity flag. e.g. "Marco Polo"~s10}
-#'  }
-#'
-#' @name tCorpus$search_contexts
-#' @aliases search_contexts.tCorpus tCorpus$search_contexts
-NULL
-
-#' Subset tCorpus token data using a query
-#'
-#' @description
-#' A convenience function that searches for contexts (documents, sentences), and uses the results to \link[=tCorpus$search_contexts]{subset} the tCorpus token data.
-#'
-#' See the documentation for \link[=tCorpus$search_contexts]{subset} for an explanation of the query language.
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{subset_query(query, feature = 'token', context_level = c('document','sentence'))}
-#'
-#' @param query A character string that is a query. See \link{tCorpus$search_contexts} for query syntax.
-#' @param feature The name of the feature columns on which the query is used.
-#' @param context_level Select whether the query and subset are performed at the document or sentence level.
-#'
-#' @name tCorpus$subset_query
-#' @aliases subset_query.tCorpus tCorpus$subset_query
-NULL
-
-## CO-OCCURRENCE NETWORKS ##
-
-#' Create a semantic network based on the co-occurence of tokens in documents
-#'
-#' @description
-#' This function calculates the co-occurence of features and returns a network/graph in the igraph format, where nodes are tokens and edges represent the similarity/adjacency of tokens. Co-occurence is calcuated based on how often two tokens occured within the same document (e.g., news article, chapter, paragraph, sentence). The semnet_window() function can be used to calculate co-occurrence of tokens within a given token distance.
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{
-#' semnet(feature, measure = c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'),
-#'        context_level = c('document','sentence'), backbone=F, n.batches=NA)
-#' }
-#'
-#' @param feature The name of the feature column
-#' @param measure The similarity measure. Currently supports: "con_prob" (conditional probability), "con_prob_weighted", "cosine" similarity, "count_directed" (i.e number of cooccurrences) and "count_undirected" (same as count_directed, but returned as an undirected network, chi2 (chi-square score))
-#' @param context_level Determine whether features need to co-occurr within "documents" or "sentences"
-#' @param backbone If True, add an edge attribute for the backbone alpha
-#' @param n.batches If a number, perform the calculation in batches
-#'
-#' @name tCorpus$semnet
-#' @aliases semnet.tCorpus
-NULL
-
-#' Create a semantic network based on the co-occurence of tokens in token windows
-#'
-#' @description
-#' This function calculates the co-occurence of features and returns a network/graph in the igraph format, where nodes are tokens and edges represent the similarity/adjacency of tokens. Co-occurence is calcuated based on how often two tokens co-occurr within a given token distance.
-#'
-#' @section Usage:
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{
-#' semnet_window(feature, measure = c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'),
-#'               context_level = c('document','sentence'), window.size = 10, direction = '<>',
-#'               backbone = F, n.batches = 5, set_matrix_mode = c(NA, 'windowXwindow', 'positionXwindow'))
-#' }
-#'
-#' @param feature The name of the feature column
-#' @param measure The similarity measure. Currently supports: "con_prob" (conditional probability), "cosine" similarity, "count_directed" (i.e number of cooccurrences) and "count_undirected" (same as count_directed, but returned as an undirected network, chi2 (chi-square score))
-#' @param context_level Determine whether features need to co-occurr within "documents" or "sentences"
-#' @param window.size The token distance within which features are considered to co-occurr
-#' @param direction Determine whether co-occurrence is assymmetricsl ("<>") or takes the order of tokens into account. If direction is '<', then the from/x feature needs to occur before the to/y feature. If direction is '>', then after.
-#' @param backbone If True, add an edge attribute for the backbone alpha
-#' @param n.batches If a number, perform the calculation in batches
-#' @param set_matrix_mode Advanced feature. There are two approaches for calculating window co-occurrence. One is to measure how often a feature occurs within a given token window, which can be calculating by calculating the inner product of a matrix that contains the exact position of features and a matrix that contains the occurrence window. We refer to this as the "positionXwindow" mode. Alternatively, we can measure how much the windows of features overlap, for which take the inner product of two window matrices. By default, semnet_window takes the mode that we deem most appropriate for the similarity measure. Substantially, the positionXwindow approach has the advantage of being very easy to interpret (e.g. how likely is feature "Y" to occurr within 10 tokens from feature "X"?). The windowXwindow mode, on the other hand, has the interesting feature that similarity is stronger if tokens co-occurr more closely together (since then their windows overlap more). Currently, we only use the windowXwindow mode for cosine similarity. By using the set_matrix_mode parameter you can override this.
-#'
-#' @name tCorpus$semnet_window
-#' @aliases semnet_window.tCorpus
 NULL

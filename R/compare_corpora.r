@@ -1,3 +1,31 @@
+
+tCorpus$set('public', 'compare_corpus', function(tc_y, feature, smooth=0.1, min_ratio=NULL, min_chi2=NULL, is_subset=F, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
+  if (is_subset & self$n > tc_y$n) stop('tCorpus x (the one calling the method) cannot be a subset of tCorpus y, because it has more tokens')
+  what = match.arg(what)
+  tcorpus_compare(self, tc_y, feature, smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, x_is_subset=is_subset, what=what)
+})
+
+tCorpus$set('public', 'compare_subset', function(feature, subset_x=NULL, subset_meta_x=NULL, query_x=NULL, query_feature='token', smooth=0.1, min_ratio=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
+  subset_x = self$eval(substitute(subset_x), parent.frame())
+  subset_meta_x = self$eval_meta(substitute(subset_meta_x), parent.frame())
+  what = match.arg(what)
+
+  if(is.null(subset_x) & is.null(subset_meta_x) & is.null(query_x)) stop("at least one of subset_x, subset_meta_x or query_x has to be specified")
+  if(!is.null(subset_x) | !is.null(subset_meta_x)) {
+    evalhere_subset_x = subset_x
+    evalhere_subset_meta_x = subset_meta_x
+    tc_x = self$subset(subset=evalhere_subset_x, subset_meta = evalhere_subset_meta_x, copy=T)
+  }
+  if(!is.null(query_x)) tc_x = self$subset_query(query_x, feature=query_feature, copy=T)
+
+  comp = tc_x$compare_corpus(self, feature=feature, smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, is_subset=T, what=what)
+  comp
+})
+
+
+########################
+########################
+
 tcorpus_compare <- function(tc_x, tc_y, feature, smooth=0.1, min_ratio=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), x_is_subset=F, what=c('freq','docfreq', 'cooccurrence')) {
   ## it would be more memory efficient to not split up the tcorpus, but return a dtm and split that up (possibly within the dtm_compare function)
   ## so add an alternative route if tc_y == NULL, where an addition selection parameter is used

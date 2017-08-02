@@ -1,3 +1,34 @@
+#' Create a document term matrix
+#'
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{dtm(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F)}
+#'
+#' @param feature The name of the feature column
+#' @param context_level Select whether the rows of the dtm should represent "documents" or "sentences".
+#' @param weight Select the weighting scheme for the DTM. Currently supports term frequency (termfreq), document frequency (docfreq), term frequency inverse document frequency (tfidf) and tfidf with normalized document vectors.
+#' @param drop_empty_terms If True, tokens that do not occur (i.e. column where sum is 0) are ignored.
+#' @param form The output format. Default is a sparse matrix in the dgTMatrix class from the Matrix package. Alternatives are tm_dtm for a DocumentTermMatrix in the tm package format or quanteda_dfm for the document feature matrix from the quanteda package.
+#' @param subset_tokens A subset call to select which rows to use in the DTM
+#' @param subset_meta A subset call for the meta data, to select which documents to use in the DTM
+#' @param context Instead of using the document or sentence context, an custom context can be specified. Has to be a vector of the same length as the number of tokens, that serves as the index column. Each unique value will be a row in the DTM.
+#' @param context_labels If False, the DTM will not be given rownames
+#' @param feature_labels If False, the DTM will not be given column names
+#' @param ngrams Optionally, use ngrams instead of individual tokens. This is more memory efficient than first creating an ngram feature in the tCorpus.
+#' @param ngram_before_subset If a subset is used, ngrams can be made before the subset, in which case an ngram can contain tokens that have been filtered out after the subset. Alternatively, if ngrams are made after the subset, ngrams will span over the gaps of tokens that are filtered out.
+#'
+#' @name tCorpus$dtm
+#' @aliases dtm.tCorpus
+tCorpus$set('public', 'dtm', function(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F) {
+  if (class(substitute(subset_tokens)) %in% c('call', 'name')) subset_tokens = self$eval(substitute(subset_tokens), parent.frame())
+  if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = self$eval_meta(substitute(subset_meta), parent.frame())
+
+  get_dtm(self, feature=feature, context_level=context_level, weight=weight, drop_empty_terms=drop_empty_terms, form=form,
+          subset_tokens=subset_tokens, subset_meta=subset_meta, context=context, context_labels=context_labels,
+          feature_labels=feature_labels, ngrams=ngrams, ngram_before_subset=ngram_before_subset)
+})
+
 get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F){
   form = match.arg(form)
   if(form == 'tm_dtm') if(!requireNamespace('tm', quietly = T)) stop('To use the tm_dtm output form, you need to have the tm package installed.')

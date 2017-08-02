@@ -12,6 +12,13 @@ verbose_sum_counter <- function(n, i=0){
   }
 }
 
+pretty_text_paste <- function(x){
+  x = gsub('_| ', ' ', x)
+  x = gsub(" ([.,?!:;>)])", '\\1', x)
+  x = gsub('([(<]) ', '\\1', x)
+  x
+}
+
 fast_dummy_factor <- function(x) { ## if , still return a factor for consistency, but no need to match stuff
   x = as.integer(x)
   nlevels = length(stats::na.omit(unique(x)))
