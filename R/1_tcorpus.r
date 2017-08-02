@@ -26,25 +26,6 @@ tCorpus <- R6::R6Class("tCorpus",
        }
        return(TRUE)
      },
-     select_rows = function(selection, keep_meta=F) {
-       selection = safe_selection(private$.data, selection)
-       private$.data = subset(private$.data, selection)
-       if (!keep_meta) {
-         private$.meta = private$.meta[as.character(unique(private$.data$doc_id)),,nomatch=0]
-         private$.meta$doc_id = as.character(private$.meta$doc_id)
-       }
-       self$reset_feature_index()
-       self$set_keys()
-     },
-
-     select_meta_rows = function(selection, keep_data=F) {
-       selection = safe_selection(private$.meta, selection)
-       private$.meta = subset(private$.meta, selection)
-       private$.meta$doc_id = as.character(private$.meta$doc_id)
-       if (!keep_data) private$.data = private$.data[as.character(unique(private$.meta$doc_id)),,nomatch=0]
-       self$reset_feature_index()
-       self$set_keys()
-     },
 
      match_data_to_meta = function(){
        doc_ids = intersect(unique(private$.data$doc_id), unique(private$.meta$doc_id))
@@ -349,6 +330,26 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
+      select_rows = function(selection, keep_meta=F) {
+        selection = safe_selection(private$.data, selection)
+        private$.data = subset(private$.data, selection)
+        if (!keep_meta) {
+          private$.meta = private$.meta[as.character(unique(private$.data$doc_id)),,nomatch=0]
+          private$.meta$doc_id = as.character(private$.meta$doc_id)
+        }
+        self$reset_feature_index()
+        self$set_keys()
+      },
+
+      select_meta_rows = function(selection, keep_data=F) {
+        selection = safe_selection(private$.meta, selection)
+        private$.meta = subset(private$.meta, selection)
+        private$.meta$doc_id = as.character(private$.meta$doc_id)
+        if (!keep_data) private$.data = private$.data[as.character(unique(private$.meta$doc_id)),,nomatch=0]
+        self$reset_feature_index()
+        self$set_keys()
+      },
+
      subset = function(subset=NULL, subset_meta=NULL, drop_levels=T, window=NULL, copy=F){
        if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
        if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = self$eval_meta(substitute(subset_meta), parent.frame())
@@ -372,15 +373,15 @@ tCorpus <- R6::R6Class("tCorpus",
 
        ## subset the data, using different solutions if one or both subsets (data and meta) are used for optimalisation
        if (!is.null(subset_meta) & !is.null(subset)) {
-         private$select_meta_rows(subset_meta, keep_data = T) ## if both subsets are used, first perform both without subseting the other, then match on doc_ids.
-         private$select_rows(subset, keep_meta = T)           ## (we cannot subset one before the other, because subset call's can contains vectors for which the rows should match)
+         self$select_meta_rows(subset_meta, keep_data = T) ## if both subsets are used, first perform both without subseting the other, then match on doc_ids.
+         self$select_rows(subset, keep_meta = T)           ## (we cannot subset one before the other, because subset call's can contains vectors for which the rows should match)
          private$match_data_to_meta()
        }
        if (!is.null(subset_meta) & is.null(subset)) {
-         private$select_meta_rows(subset_meta, keep_data = F)
+         self$select_meta_rows(subset_meta, keep_data = F)
        }
        if (is.null(subset_meta) & !is.null(subset)) {
-         private$select_rows(subset, keep_meta = F)
+         self$select_rows(subset, keep_meta = F)
        }
 
        if (drop_levels) self$droplevels()
