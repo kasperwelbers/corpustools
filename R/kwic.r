@@ -34,79 +34,49 @@ tCorpus$set('public', 'kwic', function(hits=NULL, i=NULL, feature=NULL, keyword=
 #################################
 #################################
 
-
 keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, nsample=NA, output_feature='token', context_level=c('document', 'sentence'), kw_tag=c('<','>')){
   if (class(i) == 'logical') i = which(i)
-  ## first filter tokens on document id (to speed up computation)
+  ## remove i and code parameters
 
-  if (is.null(tc$provenance('index_feature'))){
-    gi = tc$feature_index(feature=output_feature, context_level=context_level, max_window_size = ntokens)$global_i
-  } else {
-    gi = tc$feature_index(feature=tc$provenance('index_feature'), context_level=context_level, max_window_size = ntokens, as_ascii = tc$provenance('as_ascii'))$global_i
-  }
-  gi = data.table::fsort(gi)
-
-  gfv = globalFeatureVector$new(tc$get(output_feature), gi)
-
-  if (!is.null(hits)) {
-    if(!is.featureHits(hits)) stop('hits must be a featureHits object (created with the $search_features() method')
-    d = tc$get(c('doc_id', 'token_i'))
-    d$i = 1:nrow(d)
-    setkeyv(d, c('doc_id', 'token_i'))
-    i = d[hits$hits[,c('doc_id', 'token_i')]]$i
-    code = hits$hits$code
-    hit_id = hits$hits$hit_id
-  } else {
-    if(length(code) == 1) {
-      code = rep(code, length(i))
-      hit_id = 1:length(i)
-    } else {
-      hit_id = match(code, unique(code))
-    }
-  }
-  global_i = gi[i]
-
-  if (length(code) == 0) return(NULL)
+  if(!is.featureHits(hits)) stop('hits must be a featureHits object (created with the $search_features() method')
+  d = hits$hits
 
   if(!is.na(nsample)) {
-    hit_id_samp = head(sample(unique(hit_id)), nsample)
-    samp = hit_id %in% hit_id_samp
-    hit_id = hit_id[samp]
-    code = code[samp]
-    i = i[samp]
-    global_i = global_i[samp]
+    hit_ids = unique(d$hit_id)
+    if (nsample < length(hit_ids)) d = d[d$hit_id %in% sample(hit_ids, nsample),]
   }
 
   shifts = -ntokens:ntokens
-  d = data.frame(global_i = rep(global_i, each=length(shifts)) + shifts,
-                 hit_id = rep(hit_id, each=length(shifts)),
-                 is_kw = rep(shifts == 0, length(global_i)))
-  d = d[d$global_i > 0 & d$global_i <= max(gi),]
+  n = nrow(d)
+  d = d[rep(1:nrow(d), each=length(shifts)), c('doc_id','hit_id','token_i')]
+  d$token_i = d$token_i + shifts
+  d$is_kw = rep(shifts == 0, n)
+  d$feature = tc$get(output_feature, doc_id = d$doc_id, token_i = d$token_i)
+  d = d[!is.na(d$feature),] ## positions that do not exist (token_i out of bounds) returned NA in tc$get
+
+  d$feature = as.character(d$feature)
+  d$feature[d$is_kw] = sprintf('%s%s%s', kw_tag[1], d$feature[d$is_kw], kw_tag[2])
 
   ## kwic's of the same hit_id should be merged.
-  d = d[order(d$hit_id, d$global_i, -d$is_kw),]
-  d = d[!duplicated(d[,c('hit_id','global_i')]),]
-
-  d$feature = gfv[d$global_i, ignore_empty = F]
-  d$feature[d$is_kw] = sprintf('%s%s%s', kw_tag[1], d$feature[d$is_kw], kw_tag[2])
+  d = d[order(d$hit_id, d$token_i, -d$is_kw),]
+  d = d[!duplicated(d[,c('hit_id','token_i')]),]
 
   ## add tag for gap between kwic of merged hit_ids that are not adjacent
   same_hit_id = d$hit_id == shift(d$hit_id, 1, fill = -1)
-  not_adjacent = d$global_i - (shift(d$global_i, 1, fill=-1)) > 1
+  not_adjacent = d$token_i - (shift(d$token_i, 1, fill=-1)) > 1
   gap = same_hit_id & not_adjacent
   d$feature[gap] = sprintf('[...] %s', d$feature[gap])
 
-  d = d[!d$feature == '',]
+  ## paste features together
   kwic = split(as.character(d$feature), d$hit_id)
-  kwic = sapply(kwic, stringi::stri_flatten, collapse=' ')
-
   kwic = data.frame(hit_id = as.numeric(names(kwic)),
-                    kwic = pretty_kwic(kwic))
+                    kwic = stringi::stri_paste_list(kwic, sep = ' '))
+  kwic$kwic = pretty_kwic(kwic$kwic)
 
-  add = data.frame(hit_id = hit_id, doc_id = tc$get('doc_id')[i], code=code)
+  add = hits$hits[hits$hits$hit_id %in% kwic$hit_id, c('doc_id','hit_id','code', 'feature')]
+  feature = split(as.character(add$feature), add$hit_id)
   add = add[!duplicated(add$hit_id),]
-  feature = split(tc$get(output_feature)[i], hit_id)
-  add$feature = sapply(feature, stringi::stri_flatten, collapse=' -> ')
+  add$feature = stringi::stri_paste_list(feature, sep = ' -> ')
 
   kwic = merge(kwic, add, by='hit_id', all.x=T)
   kwic[,c('doc_id','code','hit_id','feature','kwic')]

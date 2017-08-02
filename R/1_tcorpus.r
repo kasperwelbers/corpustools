@@ -36,23 +36,18 @@ tCorpus <- R6::R6Class("tCorpus",
 
      check_unique_rows = function(d){
        if ('sent_i' %in% colnames(d)) {
-         if (!identical(key(private$.data), c('doc_id', 'sent_i', 'token_i'))) setkeyv(mod, c('doc_id','sent_i','token_i'))
-         if (nrow(unique(d, by=c('doc_id', 'sent_i', 'token_i'))) < nrow(d)) stop('After transformation, token_i is no longer unique')
-         if (nrow(unique(d[,c('doc_id','token_i')])) < nrow(d)) stop('After transformation, token_i is not unique within documents')
+         if (anyDuplicated(d, by = c('doc_id', 'sent_i', 'token_i'))) stop('After transformation, token_i is not unique within documents')
        } else {
-         if (!identical(key(private$.data), c('doc_id', 'token_i'))) setkeyv(mod, c('doc_id','token_i'))
-         if (nrow(unique(d, by=c('doc_id', 'token'))) < nrow(d)) stop('After transformation, token_i is not unique within documents')
+         if (anyDuplicated(d, by = c('doc_id','token_i'))) stop('After transformation, token_i is not unique within documents')
        }
      },
 
      set_keys = function(){
-       if ('sent_i' %in% colnames(private$.data)){
-         setkey(private$.data, 'doc_id', 'sent_i', 'token_i')
-       } else {
-         setkey(private$.data, 'doc_id', 'token_i')
+       if (!identical(key(private$.data), c('doc_id', 'token_i'))) setkey(private$.data, 'doc_id', 'token_i')
+       if (!identical(key(private$.meta), c('doc_id'))) setkey(private$.meta, 'doc_id')
+       if (!is.null(private$.feature_index)) {
+         if (!identical(key(private$.feature_index), c('feature'))) setkey(private$.feature_index, 'feature')
        }
-       setkey(private$.meta, 'doc_id')
-       if (!is.null(private$.feature_index)) setkey(private$.feature_index, 'feature')
      },
 
      droplevels = function(){
@@ -80,10 +75,14 @@ tCorpus <- R6::R6Class("tCorpus",
       if (!is.null(doc_id) & !is.null(subset)) stop('Cannot filter by subset and doc_ids at the same time')
       if (is.null(doc_id) & !is.null(token_i)) stop('token_i can only be given in pairs with doc_id')
 
-      if (is.null(columns)) {
-        d = private$.data
+      if (is.null(doc_id) & is.null(subset)) {
+        if (is.null(columns)) {
+          d = private$.data
+        } else {
+          d = if (length(columns) > 1 | keep_df) private$.data[,columns,with=F] else private$.data[[columns]]
+        }
       } else {
-        if (is.null(doc_id) & is.null(subset)) d = if (length(columns) > 1 | keep_df) private$.data[,columns,with=F] else private$.data[[columns]]
+        if (is.null(columns)) columns = colnames(private$.data)
         if (!is.null(subset)) d = if (length(columns) > 1 | keep_df) private$.data[subset,columns,with=F] else private$.data[[columns]][subset]
         if (!is.null(doc_id)) {
           if (is.null(token_i)) {
@@ -96,6 +95,7 @@ tCorpus <- R6::R6Class("tCorpus",
           }
         }
       }
+
       if (as.df) d = as.data.frame(d)
       if(safe_copy) data.table::copy(d) else d
     },
@@ -109,15 +109,20 @@ tCorpus <- R6::R6Class("tCorpus",
       if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval_meta(substitute(subset), parent.frame())
       if (!is.null(doc_id) & !is.null(subset)) stop('Cannot filter by subset and doc_ids at the same time')
 
-      if (is.null(columns)) {
-        d = private$.meta
+
+      if (is.null(doc_id) & is.null(subset)) {
+        if (is.null(columns)) {
+          d = private$.meta
+        } else {
+          d = if (length(columns) > 1 | keep_df) private$.meta[,columns,with=F] else private$.meta[[columns]]
+        }
       } else {
+        if (is.null(columns)) columns = colnames(private$.meta)
         if (!is.null(doc_id)) {
           doc_ids = as.character(doc_id)
           d = if (length(columns) > 1 | keep_df) private$.meta[list(doc_ids),columns,with=F] else private$.meta[list(doc_ids), columns, with=F][[columns]]
         }
         if (!is.null(subset)) d = if (length(columns) > 1 | keep_df) private$.meta[subset,columns,with=F] else private$.meta[[columns]][subset]
-        if (is.null(doc_id) & is.null(subset)) d = if (length(columns) > 1 | keep_df) private$.meta[,columns,with=F] else private$.meta[[columns]]
       }
 
       if (as.df) d = as.data.frame(d)
@@ -498,10 +503,8 @@ print.tCorpus <- function(x, ...) {
 #' @return a tCorpus object
 #' @export
 refresh_tcorpus <- function(tc){
-  tCorpus$new(data=tc$.__enclos_env__$private$.data,
-              meta=tc$.__enclos_env__$private$.meta,
-              p = tc$.__enclos_env__$private$.p,
-              feature_index = tc$.__enclos_env__$private$.feature_index)
+  tCorpus$new(data=tc$get(),
+              meta=tc$get_meta())
 }
 
 rebuild_tcorpus <- function(tc) {

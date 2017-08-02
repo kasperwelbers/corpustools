@@ -103,8 +103,6 @@ test_that("Query search works", {
   expect_true(nrow(hits$hits) == 1) ## should be only the hit in doc 'a', instead of 'a' and 'b'
 
   ## kwic
-  kw = tc$kwic(i=4, ntokens=2)
-  expect_true(kw$kwic == '...fuel is <better> than fossil...')
   hits = tc$search_features(keyword = 'better')
   kw = tc$kwic(hits=hits, ntokens=2)
   expect_true(kw$kwic == '...fuel is <better> than fossil...')
