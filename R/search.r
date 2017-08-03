@@ -74,19 +74,14 @@ multitoken_grepl <- function(fi, multi, only_last=T, ignore.case=T, perl=F, useB
   for(i in 1:length(mtoken_regex)){
     mtoken = mtoken_regex[[i]]
     ign_case = multi$ignore_case[i]
+
+    last_hit = c()
     for(q in mtoken){
-      if (q == mtoken[1]) {   ## if first token, search everything
-        hit = grep_global_i(fi, q, ignore.case=ign_case, perl=perl, useBytes=useBytes)
-
-        if (!only_last) firsthit = hit ## keep in case only_last is FALSE
-      } else { ## if not first token
-        ## search whether the token occurs in the same or next position as the previous token
-        same_or_next = c(hit, hit + 1)
-        fi_next = fi[fi$global_i %in% same_or_next,]
-
-        hit = grep_global_i(fi, q, ignore.case=ign_case, perl=perl, useBytes=useBytes)
-      }
+      hit = grep_global_i(fi, q, ignore.case=ign_case, perl=perl, useBytes=useBytes)
+      if (!q == mtoken[1]) hit = hit[hit %in% c(last_hit, last_hit + 1)]
       if (length(hit) == 0) break
+      if (q == mtoken[1] & !only_last) firsthit = hit ## remember first hit to recall entire string
+      last_hit = hit
     }
 
     hit = list(global_i=hit, hit_id = hit_id:(hit_id+(length(hit)-1)))

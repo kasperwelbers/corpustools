@@ -448,6 +448,12 @@ tCorpus <- R6::R6Class("tCorpus",
         }
         as.data.frame(d)
       }
+
+      #regex = function(x, feature='token', context_level=c('document','sentence'), max_window_size=100, as_ascii=F, ...){
+      #  fi = self$feature_index(feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=as_ascii)
+      #  exact_feature = levels(fi$feature)[grepl(x, levels(fi$feature), ...)]
+      #  fi[list(exact_feature),,nomatch=0]$global_i
+      #}
    ),
 
    active = list(

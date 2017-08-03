@@ -2,16 +2,11 @@ test_that("Semnet works", {
   cat('\n', '-> Testing: Semnet', '\n')
   start_time = Sys.time()
 
-  #devtools::install_github('kasperwelbers/tcorpus')
   library(corpustools)
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte')
   tc = create_tcorpus(text)
-
-  ## add semnet_browser!!
-  ## use the same type of network as we used in the visualisation of research questions (you know what I mean)
-  ## Enable clicking on nodes and edges to see info. e.g., kwic (also of co-occurrences)
 
   g = tc$semnet('token', measure = 'count_undirected')
   expect_equal(sum(igraph::E(g)$weight), 44)
