@@ -12,7 +12,7 @@
 #' search_features(keyword = NA, condition = NA, code = NA,
 #'                 queries = NULL, feature = 'token', condition_once=F,
 #'                 subset_tokens = NA, subset_meta = NA,
-#'                 keep_false_condition = F, only_last_mtoken = F, verbose = F)
+#'                 keep_false_condition = F, verbose = F)
 #'              }
 #'
 #' @param keyword The keyword part of the query, see explanation in query_tutorial markdown or in details below
@@ -24,7 +24,6 @@
 #' @param subset_tokens A call (or character string of a call) as one would normally pass to subset.tCorpus. If given, the keyword has to occur within the subset. This is for instance usefull to only look in named entity POS tags when searching for people or organization. Note that the condition does not have to occur within the subset.
 #' @param subset_meta A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).
 #' @param keep_false_condition if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives
-#' @param only_last_mtoken If TRUE, then if multitoken keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last token. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, token co-occurence analysis)
 #' @param verbose If TRUE, progress messages will be printed
 #'
 #' @details
@@ -57,18 +56,18 @@
 #'
 #' @name tCorpus$search_features
 #' @aliases search_features.tCorpus
-tCorpus$set('public', 'search_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mtoken=F, verbose=F){
+tCorpus$set('public', 'search_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, verbose=F){
   subset_tokens = if (class(substitute(subset_tokens)) %in% c('call')) deparse(substitute(subset_tokens)) else subset_tokens
   subset_meta = if (class(substitute(subset_meta)) %in% c('call')) deparse(substitute(subset_meta)) else subset_meta
 
-  search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=keep_false_condition, only_last_mtoken=only_last_mtoken, verbose=verbose)
+  search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=keep_false_condition, verbose=verbose)
 })
 
-tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', column='code', condition_once=F, subset_tokens=NA, subset_meta=NA, only_last_mtoken=F, verbose=F){
+tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', column='code', condition_once=F, subset_tokens=NA, subset_meta=NA, verbose=F){
   subset = if (class(substitute(subset)) %in% c('call')) deparse(substitute(subset)) else subset
   subset_meta = if (class(substitute(subset_meta)) %in% c('call')) deparse(substitute(subset_meta)) else subset_meta
 
-  hits = search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, only_last_mtoken=only_last_mtoken, verbose=verbose)
+  hits = search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, verbose=verbose)
 
   evalhere_i = hits$hits$i
   evalhere_value = hits$hits$code
@@ -108,7 +107,7 @@ tCorpus$set('public', 'search_recode', function(feature, new_value, keyword, con
 })
 
 
-search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, only_last_mtoken=F, verbose=F){
+search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, verbose=F){
   is_tcorpus(tc, T)
 
   if (is.null(queries)) queries = data.frame(keyword=keyword)
@@ -129,19 +128,19 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   max_window_size = if (length(windows) > 0) max(windows) else 0
 
   fi = tc$feature_index(feature=feature, context_level='document', max_window_size=max_window_size, as_ascii=T)
-  hits = search_features_loop(tc, fi=fi, queries=queries, feature=feature, only_last_mtoken=only_last_mtoken, keep_false_condition=keep_false_condition, verbose=verbose)
+  hits = search_features_loop(tc, fi=fi, queries=queries, feature=feature, keep_false_condition=keep_false_condition, verbose=verbose)
 
   featureHits(hits, queries)
 }
 
-search_features_loop <- function(tc, fi, queries, feature, only_last_mtoken, keep_false_condition, verbose){
+search_features_loop <- function(tc, fi, queries, feature, keep_false_condition, verbose){
   n = nrow(queries)
   res = vector('list', n)
   for (i in 1:n){
     code = queries$code[i]
     if (verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
     kw = queries$keyword[i]
-    hit = search_string(fi, kw, allow_proximity = T, only_last_mtoken = only_last_mtoken)
+    hit = search_string(fi, kw, allow_proximity = T, )
     if(is.null(hit)) next
 
     hit$doc_id = tc$get('doc_id')[hit$i]

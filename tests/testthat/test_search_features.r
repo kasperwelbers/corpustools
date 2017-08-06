@@ -20,9 +20,7 @@ test_that("Query search works", {
   expect_equal(colnames(res), c('group','N','V', 'query_1'))
 
   ## multitoken keywords
-  hits = tc$search_features('"a fueled debate"', only_last_mtoken = T)
-  expect_equal(as.character(hits$hits$feature), c('debate'))
-  hits = tc$search_features('"a fueled debate"', only_last_mtoken = F)
+  hits = tc$search_features('"a fueled debate"')
   expect_equal(as.character(hits$hits$feature), c('A','fueled', 'debate'))
 
   ## proximity keywords

@@ -17,15 +17,30 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// full_set_ids
-IntegerVector full_set_ids(CharacterVector v, int nsets);
-RcppExport SEXP corpustools_full_set_ids(SEXP vSEXP, SEXP nsetsSEXP) {
+// proximity_hit_ids
+IntegerVector proximity_hit_ids(IntegerVector pos, IntegerVector value, int n_unique, int window);
+RcppExport SEXP corpustools_proximity_hit_ids(SEXP posSEXP, SEXP valueSEXP, SEXP n_uniqueSEXP, SEXP windowSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< CharacterVector >::type v(vSEXP);
-    Rcpp::traits::input_parameter< int >::type nsets(nsetsSEXP);
-    rcpp_result_gen = Rcpp::wrap(full_set_ids(v, nsets));
+    Rcpp::traits::input_parameter< IntegerVector >::type pos(posSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type value(valueSEXP);
+    Rcpp::traits::input_parameter< int >::type n_unique(n_uniqueSEXP);
+    Rcpp::traits::input_parameter< int >::type window(windowSEXP);
+    rcpp_result_gen = Rcpp::wrap(proximity_hit_ids(pos, value, n_unique, window));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sequence_hit_ids
+IntegerVector sequence_hit_ids(IntegerVector pos, IntegerVector value, int length);
+RcppExport SEXP corpustools_sequence_hit_ids(SEXP posSEXP, SEXP valueSEXP, SEXP lengthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type pos(posSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type value(valueSEXP);
+    Rcpp::traits::input_parameter< int >::type length(lengthSEXP);
+    rcpp_result_gen = Rcpp::wrap(sequence_hit_ids(pos, value, length));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -58,7 +73,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"corpustools_fast_factor", (DL_FUNC) &corpustools_fast_factor, 2},
-    {"corpustools_full_set_ids", (DL_FUNC) &corpustools_full_set_ids, 2},
+    {"corpustools_proximity_hit_ids", (DL_FUNC) &corpustools_proximity_hit_ids, 4},
+    {"corpustools_sequence_hit_ids", (DL_FUNC) &corpustools_sequence_hit_ids, 3},
     {"corpustools_ngrams", (DL_FUNC) &corpustools_ngrams, 5},
     {"corpustools_test", (DL_FUNC) &corpustools_test, 1},
     {NULL, NULL, 0}

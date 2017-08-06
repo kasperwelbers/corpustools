@@ -23,8 +23,6 @@
 
 \item{keep_false_condition}{if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives}
 
-\item{only_last_mtoken}{If TRUE, then if multitoken keywords are used (i.e. using double quotes, for instance "the united states"), only return the index of the last token. Note that if this is set to FALSE, it affects the occurence frequency, which is often a bad idea (e.g., counting search hits, token co-occurence analysis)}
-
 \item{verbose}{If TRUE, progress messages will be printed}
 }
 \description{
@@ -68,7 +66,7 @@ Parameters:
 search_features(keyword = NA, condition = NA, code = NA,
                 queries = NULL, feature = 'token', condition_once=F,
                 subset_tokens = NA, subset_meta = NA,
-                keep_false_condition = F, only_last_mtoken = F, verbose = F)
+                keep_false_condition = F, verbose = F)
              }
 }
 

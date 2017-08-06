@@ -5,8 +5,12 @@ fast_factor <- function(x, levs) {
     .Call('corpustools_fast_factor', PACKAGE = 'corpustools', x, levs)
 }
 
-full_set_ids <- function(v, nsets) {
-    .Call('corpustools_full_set_ids', PACKAGE = 'corpustools', v, nsets)
+proximity_hit_ids <- function(pos, value, n_unique, window) {
+    .Call('corpustools_proximity_hit_ids', PACKAGE = 'corpustools', pos, value, n_unique, window)
+}
+
+sequence_hit_ids <- function(pos, value, length) {
+    .Call('corpustools_sequence_hit_ids', PACKAGE = 'corpustools', pos, value, length)
 }
 
 ngrams <- function(tokens, group, n, sep, empty) {

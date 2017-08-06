@@ -54,7 +54,10 @@ test_that("Query document search works", {
   expect_true(nrow(hits$hits) == 0)
   hits = tc$search_contexts('Bos~s')
   expect_true(nrow(hits$hits) == 1)
+
+  tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = T)
   hits = tc$search_contexts('"wouter bos"~10s') ## if flag on quotes, all within quotes needs to be case sensitive
+
   expect_true(nrow(hits$hits) == 0)
   hits = tc$search_contexts('"Wouter Bos"~s10')
   expect_true(nrow(hits$hits) == 1)
