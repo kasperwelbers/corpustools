@@ -1,8 +1,7 @@
 test_that("Corpus comparison works!", {
   cat('\n', '-> Testing: Compare corpora', '\n')
   start_time = Sys.time()
-  #corpustools:::sourceall()
-  #devtools::install_github('kasperwelbers/tcorpus')
+
   library(corpustools)
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',

@@ -10,6 +10,8 @@ parse_queries <- function(query){
   do.call(rbind, queries)
 }
 
+
+
 parse_query <- function(query){
   query = iconv(query, to='ASCII//TRANSLIT') # remove accented characters
 
@@ -38,9 +40,8 @@ parse_query <- function(query){
 
   ## parts of the string between quotes are treated as single query terms
   ## if within quotations, spaces stay spaces. Except within parentheses within quotes, spaces are again OR statements
-  ## take the flag symbols (~ < > ^) and values ([0-9s])after quotes along as well.
   ## To escape parts within quotes, we use the double curly brackets {}.
-  quotes = regmatches(query, gregexpr('(\").*?(\"([<>^~][<>~^0-9s]+)?)', query, perl = T))[[1]]
+  quotes = regmatches(query, gregexpr('(\").*?(\")', query, perl = T))[[1]]
   for(m in quotes) {
     not_bracketed = gsub('(?<={).*?(?=})', '', m, perl=T)
     if (grepl('&', not_bracketed)) stop('Queries cannot contain AND statements within quotes')
@@ -60,7 +61,11 @@ parse_query <- function(query){
     query = gsub(m, replacewith, query, fixed=T)
   }
 
-  query = gsub('(?<= )\\*(?= )|(?<=^)\\*(?= )', '!!', query, perl=T)   ## make " * ", as a 'find all' solution, an immediate TRUE. As a placeholder, we use !! (not not, which is technically true, right?)
+  ## if flags are present, pull them into {}
+  query = gsub('\\}([<>^~][<>~^0-9s]+)?', '\\1\\}', query, perl = T)
+
+  ## make " * ", as a 'find all' solution, an immediate TRUE. As a placeholder, we use !! (not not, which is technically true, right?)
+  query = gsub('(?<= )\\*(?= )|(?<=^)\\*(?= )', '!!', query, perl=T)
   query = gsub(' +', ' ', query)
 
   split_regex = paste('(?<={).*?(?=})', FORM_REGEX, sep='|') ## escape curly brackets and select by allowed regex
@@ -81,16 +86,16 @@ eval_query <- function(query_values, query_form){
   eval(parse(text=fill_query(query_values, query_form)))
 }
 
-sparse_matrix_rowid <- function(m){
+logical_sparse_matrix_rowid <- function(m){
   id = vector('character', nrow(m))
-  idlist = with(summary(drop0(m)), split(j, i)) ## create lists for each row that contain indices for j if j == T
+  idlist = with(summary(Matrix::drop0(m)), split(j, i)) ## create lists for each row that contain indices for j if j == T
   id[as.numeric(names(idlist))] = stringi::stri_paste_list(idlist, sep = ',')
   id
 }
 
 eval_query_matrix <- function(qm, terms, form){
   ## only evaluate unique rows of the query matrix, and then match to return the results for each row
-  combination = sparse_matrix_rowid(qm)
+  combination = logical_sparse_matrix_rowid(qm)
 
   isunique = !duplicated(combination)
   ucombination = combination[isunique]
@@ -99,7 +104,6 @@ eval_query_matrix <- function(qm, terms, form){
   res = apply(uqm[,terms, drop=F], 1, eval_query, query_form=form)
   res[match(combination, ucombination)]
 }
-
 
 get_feature_regex <- function(terms, default_window=NA){
   terms = parse_queries(terms)
@@ -117,7 +121,7 @@ get_feature_regex <- function(terms, default_window=NA){
   terms = data.frame(term = terms,
                      regex = gsub('[<>^~][0-9s]*', '', terms),
                      window = ifelse(grepl('~[s]*[0-9][s]*', terms) == T, gsub('.*~[s]*([0-9]*).*', '\\1', terms), default_window),
-                     direction = get_direction(terms),
+                     direction = sapply(terms, get_direction),
                      condition_window = ifelse(grepl('[<>^][0-9]', terms) == T, gsub('.*[<>^]([0-9]*).*', '\\1', terms), default_window),
                      ignore_case = ifelse(grepl('~[0-9]*[s][0-9]*', terms) == T, F, T)) ## if a case sensitive flag occurs (~s) then do not ignore case. Note that the case_insensitive_flags function takes care of case insensitive tokens in multitoken strings
 

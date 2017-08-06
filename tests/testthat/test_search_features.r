@@ -7,17 +7,21 @@ test_that("Query search works", {
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte')
   tc = create_tcorpus(text, doc_id = c('a','b','c'), split_sentences = T)
-  #corpustools:::sourceall()
 
   ## simple keyword only
   hits = tc$search_features(keyword = 'fuel')
   tc$code_features(keyword = 'fuel')
-
   expect_equal(as.character(hits$hits$feature), c('fuel','fuel'))
 
   ## aggregating results
   res = tc$aggregate(hits=hits)
   expect_equal(colnames(res), c('group','N','V', 'query_1'))
+
+  ## ensure aggregate counts correctly (ignoring duplicateh hit_ids within codes)
+  hits = tc$search_features(keyword = c('fuel', 'mark'))  ## ensure hit_ids are counted well
+  agg = tc$aggregate(hits=hits)
+  expect_true(agg$query_1 == 2)
+  expect_true(agg$query_2 == 1)
 
   ## multitoken keywords
   hits = tc$search_features('"a fueled debate"')
@@ -78,6 +82,18 @@ test_that("Query search works", {
   #hits = tc$search_features(keyword = 'fuel', condition = 'fossil^10') ## this matches
   #expect_true(nrow(hits$hits) == 1)
 
+  ## We can prevent double counting with embedded queries by setting unique_i to TRUE
+  hits = tc$search_features('"mark rutte" OR "mark rutte is"~3', unique_i = FALSE) ## normally, double counting is allowed. This is actually faster, and (I think) better for coding tokens (but not for counting)
+  expect_true(summary(hits)$hits == 2)
+
+  hits = tc$search_features('"mark rutte" OR rutte', unique_i = TRUE)
+  expect_true(summary(hits)$hits == 2)
+
+  hits = tc$search_features('"mark rutte" OR "mark rutte"~1', unique_i = TRUE)
+  expect_true(summary(hits)$hits == 1)
+
+  hits = tc$search_features('"mark rutte" OR "mark rutte is"~3', unique_i = TRUE)
+  expect_true(summary(hits)$hits == 1)
 
   ## combining flags
   hits = tc$search_features(keyword = 'fuel', condition = '"A~s debate"~3^4')

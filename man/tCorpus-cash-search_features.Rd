@@ -23,6 +23,8 @@
 
 \item{keep_false_condition}{if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives}
 
+\item{unique_i}{Queries can overlap. For example "mark rutte" also contains "rutte". For some purposes (e.g., counting how often certain queries occur) its better to ignore these overlapping queries. By setting unique_i to TRUE, features will only be assigned to 1 hit_id.}
+
 \item{verbose}{If TRUE, progress messages will be printed}
 }
 \description{

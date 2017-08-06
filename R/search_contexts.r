@@ -101,7 +101,7 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
     #rownames(qm) = context_label # for reference
 
     for(term in q$terms){
-      hits = search_string(fi, term)
+      hits = search_string(fi, term, unique_i=F)
       context_hits = unique(context_i[hits$i])
       qm[,term][context_hits] = T
     }
@@ -112,7 +112,9 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
     code_label = code[[i]]
     res[[code_label]] = unique(tc$get(context_columns, keep_df = T)[first_context_row,])
   }
-  hits = plyr::ldply(res, function(x) x, .id='code')
+  #hits = plyr::ldply(res, function(x) x, .id='code')
+  hits = data.table::rbindlist(res)
+  hits$code = rep(names(res), sapply(res, nrow))
   if (nrow(hits) == 0) hits = NULL
 
   contextHits(hits, data.frame(code=code, query=query))

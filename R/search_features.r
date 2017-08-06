@@ -24,6 +24,7 @@
 #' @param subset_tokens A call (or character string of a call) as one would normally pass to subset.tCorpus. If given, the keyword has to occur within the subset. This is for instance usefull to only look in named entity POS tags when searching for people or organization. Note that the condition does not have to occur within the subset.
 #' @param subset_meta A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).
 #' @param keep_false_condition if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives
+#' @param unique_i Queries can overlap. For example "mark rutte" also contains "rutte". For some purposes (e.g., counting how often certain queries occur) its better to ignore these overlapping queries. By setting unique_i to TRUE, features will only be assigned to 1 hit_id.
 #' @param verbose If TRUE, progress messages will be printed
 #'
 #' @details
@@ -56,18 +57,18 @@
 #'
 #' @name tCorpus$search_features
 #' @aliases search_features.tCorpus
-tCorpus$set('public', 'search_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, verbose=F){
+tCorpus$set('public', 'search_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, unique_i=F, verbose=F){
   subset_tokens = if (class(substitute(subset_tokens)) %in% c('call')) deparse(substitute(subset_tokens)) else subset_tokens
   subset_meta = if (class(substitute(subset_meta)) %in% c('call')) deparse(substitute(subset_meta)) else subset_meta
 
-  search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=keep_false_condition, verbose=verbose)
+  search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=keep_false_condition, unique_i=unique_i, verbose=verbose)
 })
 
-tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', column='code', condition_once=F, subset_tokens=NA, subset_meta=NA, verbose=F){
+tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', column='code', condition_once=F, subset_tokens=NA, subset_meta=NA, unique_i=F, verbose=F){
   subset = if (class(substitute(subset)) %in% c('call')) deparse(substitute(subset)) else subset
   subset_meta = if (class(substitute(subset_meta)) %in% c('call')) deparse(substitute(subset_meta)) else subset_meta
 
-  hits = search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, verbose=verbose)
+  hits = search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, unique_i=unique_i, verbose=verbose)
 
   evalhere_i = hits$hits$i
   evalhere_value = hits$hits$code
@@ -95,11 +96,11 @@ tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=N
 #'
 #' @name tCorpus$search_recode
 #' @aliases search_recode.tCorpus
-tCorpus$set('public', 'search_recode', function(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA){
+tCorpus$set('public', 'search_recode', function(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA, unique_i=F){
   subset = if (class(substitute(subset_tokens)) %in% c('call')) deparse(substitute(subset_tokens)) else subset_tokens
   subset_meta = if (class(substitute(subset_meta)) %in% c('call')) deparse(substitute(subset_meta)) else subset_meta
 
-  hits = self$search_features(keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta)
+  hits = self$search_features(keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, unique_i=unique_i)
   evalhere_x = as.numeric(as.character(hits$hits$i))
   evalhere_new_value = new_value
   self$set(feature, evalhere_new_value, subset = evalhere_x)
@@ -107,7 +108,7 @@ tCorpus$set('public', 'search_recode', function(feature, new_value, keyword, con
 })
 
 
-search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, verbose=F){
+search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, unique_i=T, verbose=F){
   is_tcorpus(tc, T)
 
   if (is.null(queries)) queries = data.frame(keyword=keyword)
@@ -128,19 +129,19 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   max_window_size = if (length(windows) > 0) max(windows) else 0
 
   fi = tc$feature_index(feature=feature, context_level='document', max_window_size=max_window_size, as_ascii=T)
-  hits = search_features_loop(tc, fi=fi, queries=queries, feature=feature, keep_false_condition=keep_false_condition, verbose=verbose)
+  hits = search_features_loop(tc, fi=fi, queries=queries, feature=feature, keep_false_condition=keep_false_condition, unique_i=unique_i, verbose=verbose)
 
   featureHits(hits, queries)
 }
 
-search_features_loop <- function(tc, fi, queries, feature, keep_false_condition, verbose){
+search_features_loop <- function(tc, fi, queries, feature, keep_false_condition, unique_i, verbose){
   n = nrow(queries)
   res = vector('list', n)
   for (i in 1:n){
     code = queries$code[i]
     if (verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
     kw = queries$keyword[i]
-    hit = search_string(fi, kw, allow_proximity = T, )
+    hit = search_string(fi, kw, unique_i=unique_i)
     if(is.null(hit)) next
 
     hit$doc_id = tc$get('doc_id')[hit$i]
@@ -183,14 +184,18 @@ search_features_loop <- function(tc, fi, queries, feature, keep_false_condition,
     }
   }
   names(res) = queries$code
-  hits = plyr::ldply(res, function(x) x, .id='code')
-  position_cols = if ('sent_i' %in% tc$names) c('sent_i', 'token_i') else c('token_i')
-  hits = cbind(hits, tc$get(position_cols, keep_df = T)[hits$i,])
 
-  if (nrow(hits) == 0) hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor(), sent_i=numeric(), token_i = numeric(), hit_id=numeric())
-  hits = hits[order(hits$i),]
+  hits = data.table::rbindlist(res)
+  if (nrow(hits) > 0) {
+    hits$code = rep(names(res), sapply(res, nrow))
+    position_cols = if ('sent_i' %in% tc$names) c('sent_i', 'token_i') else c('token_i')
+    hits = cbind(hits, tc$get(position_cols, keep_df = T)[hits$i,])
+    hits = hits[order(hits$i),]
+    hits$hit_id = match(hits$hit_id, unique(hits$hit_id))
+  } else {
+    hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor(), sent_i=numeric(), token_i = numeric(), hit_id=numeric())
+  }
 
-  hits$hit_id = match(hits$hit_id, unique(hits$hit_id))
   hits
 }
 
@@ -203,7 +208,7 @@ evaluate_condition <- function(tc, fi, hit, condition){
     colnames(qm) = con_query$terms
 
     for (j in 1:length(con_query$terms)){
-      con_hit = search_string(fi, con_query$terms[j])
+      con_hit = search_string(fi, con_query$terms[j], unique_i = F)
 
       con_regex = get_feature_regex(con_query$terms[j])
       direction = con_regex$direction

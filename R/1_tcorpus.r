@@ -422,7 +422,7 @@ tCorpus <- R6::R6Class("tCorpus",
           if (!is.null(hits)) {
             if (!methods::is(hits, c('featureHits', 'contextHits'))) stop('hits must be a featureHits or contextHits object (see the $search_features and $search_contexts methods)')
             if (methods::is(hits, 'featureHits')) {
-              coldata = hits$hits[!duplicated(hits$hits$hit_id),]
+              coldata = hits$hits[!duplicated(hits$hits[,c('code', 'hit_id')]),]
             } else {
               coldata = hits$hits
             }

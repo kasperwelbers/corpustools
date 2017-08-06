@@ -28,7 +28,7 @@ is.featureHits <- function(fh, ...) {
 #' @export
 print.featureHits <- function(x, ...){
   if(!is.featureHits(x)) stop('Not a proper featureHits object')
-  n_hits = length(unique(x$hits$hit_id))
+  n_hits = nrow(unique(x$hits[,c('code', 'hit_id')]))
   n_docs = length(unique(x$hits$doc_id))
   n_sent = if(any(is.na(x$hits$sent_i))) NULL else nrow(x$hits[,c('doc_id','sent_i')])
   cat(n_hits, 'hits (in', n_docs, 'documents')
