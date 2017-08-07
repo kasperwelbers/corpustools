@@ -66,6 +66,14 @@ get_global_i <- function(tc, context_level=c('document','sentence'), max_window_
   global_i
 }
 
+i_window <- function(tc, i, window, context_level=c('document','sentence')){
+  context_level = match.arg(context_level)
+  gi = get_global_i(tc, context_level, max_window_size = window)
+  gi_i = gi[i]
+  gi_window = rep(gi_i, window*2 + 1) + rep(-window:window, each=length(gi_i))
+  gi %in% gi_window
+}
+
 position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, abs_distance=T, return_i_filter=NULL, rows=NULL){
   shifts = shifts[order(abs(shifts))] # order shifts from 0 to higher (this way the shortest distance is used if distance_as_value = T)
 

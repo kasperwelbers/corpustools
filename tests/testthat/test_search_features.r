@@ -3,6 +3,7 @@ test_that("Query search works", {
   start_time = Sys.time()
 
   library(corpustools)
+  library(testthat)
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte')
@@ -112,9 +113,9 @@ test_that("Query search works", {
   hits = tc$search_features(queries=queries, condition_once=c(F,T,F))
   expect_equal(as.character(hits$hits$feature), c('fuel','fuels','debate', 'Rutte', 'Rutte'))
 
-  ## with subsetting
-  hits = tc$search_features(keyword = 'fuel', subset_meta = doc_id == 'a')
-  expect_true(nrow(hits$hits) == 1) ## should be only the hit in doc 'a', instead of 'a' and 'b'
+  ## with subsetting (deprecated)
+  ##hits = tc$search_features(keyword = 'fuel', subset_meta = doc_id == 'a')
+  ##expect_true(nrow(hits$hits) == 1) ## should be only the hit in doc 'a', instead of 'a' and 'b'
 
   ## kwic
   hits = tc$search_features(keyword = 'better')

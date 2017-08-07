@@ -19,8 +19,7 @@ Search features (see \link{tCorpus$search_features}) and replace features with a
 ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 
 \preformatted{
-search_recode(feature, new_value, keyword, condition = NA,
-              condition_once = F, subset_tokens = NA, subset_meta = NA)
+search_recode(feature, new_value, keyword, condition = NA, condition_once = F)
 }
 }
 

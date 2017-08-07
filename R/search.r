@@ -1,25 +1,25 @@
-search_string <- function(fi, string, unique_i=F){
-  ## look up a string
-  ## multiple strings can be used at once (in which case they are seen as related by OR statements)
+search_string <- function(tc, string, unique_i=F, skip_i=c(), with_i=F, subcontext=NULL){
   ## supports single token strings, multitoken strings demarcated with quotes (e.g., "this string") and token proximities (e.g., "marco polo"~10)
   ## This function does not manage complex boolean queries (AND, NOT, parentheses).
   ## If multiple strings are given, results are added together as if they were connected with OR statements
+  hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
+
+  if(any(grepl('\\b(AND|NOT)\\b', string))) stop('string cannot contain Boolean operators AND and NOT')
 
   ## if unique_i == TRUE, the same features cannot be counted in different strings, so queries are sorted from most to least specific (sequence > proximity > single, and more words is more specific)
   ## features that have already been assigned in a more specific query will not be used again
 
-  #string = '"mark rutte" rutte "mark rutte aight"~2'
+  ## subcontext can be a column in the token data. If given, the queries will be performed within unique combinations of doc_id and the subcontext column
+  if (!is.null(subcontext)) if (!subcontext %in% tc$names) stop('subcontext is not a valid column in token data')
 
   regex = get_feature_regex(string)
-
-  is_multitoken = grepl(' ', regex$term)
-  single = regex[!is_multitoken,,drop=F]
+  is_multitoken = grepl(' ', regex$term)  ## split into single and multi term queries (proximity and sequence),
+  single = regex[!is_multitoken,,drop=F]  ## because single terms can be pooled, whereas multi term has to be done per term to take positions into account
   multi = regex[is_multitoken,,drop=F]
 
-  all_hits = list()
   offset_id = 0
-  used_i = c()
-
+  if (unique_i | length(skip_i) > 0) with_i = TRUE
+  all_hits = list()
   ## multitoken queries
   if (nrow(multi) > 0) {
     multi$proximity = !is.na(multi$window)
@@ -28,105 +28,88 @@ search_string <- function(fi, string, unique_i=F){
     if (any(multi$window[multi$proximity] < 1)) stop("Proximity search window cannot be smaller than 1")
 
     for (i in 1:nrow(multi)) {
+      regexterms = stringi::stri_split(multi$regex[i], fixed = ' ')[[1]]
       if (multi$proximity[i]) {
-        all_hits[[i]] = proximity_grepl(fi, multi[i,], offset_id = offset_id, used_i=used_i)
+        hits = multi_lookup(tc, regexterms, window=multi$window[i], ignore_case=multi$ignore_case[i], skip_i = skip_i, with_i=with_i, subcontext=subcontext)
       } else {
-        all_hits[[i]] = sequence_grepl(fi, multi[i,], offset_id = offset_id, used_i=used_i)
+        hits = multi_lookup(tc, regexterms, window=NULL, ignore_case=multi$ignore_case[i], skip_i = skip_i, with_i=with_i, subcontext=subcontext)
       }
-      if (nrow(all_hits[[i]]) > 0) {
-        offset_id = max(all_hits[[i]]$hit_id)
-        if (unique_i) used_i = union(used_i, all_hits[[i]]$i)
+      if (!is.null(hits)) {
+        hits[, hit_id := hit_id + offset_id] ## offset the hit id (by reference)
+        offset_id = max(hits$hit_id)
+        if (unique_i) skip_i = union(skip_i, hits$i)
+        all_hits[[i]] = hits
       }
     }
   }
 
-  ## single token queries (no loop required. single terms are combined for efficiency)
+  ## single token queries (no loop required. single_lookup combines terms in batches for efficiency)
   if (nrow(single) > 0) {
-    all_hits[[length(all_hits) + 1]] = single_grepl(fi, single, offset_id = offset_id, used_i=used_i)
+    hits = single_lookup(tc, x=single$regex, ignore_case=single$ignore_case, skip_i=skip_i, with_i=with_i)
+    if (!is.null(hits)) {
+      hits[, hit_id := hit_id + offset_id]
+      all_hits[[length(all_hits) + 1]] = hits
+    }
   }
 
-  ## bind all results
-  unique(data.table::rbindlist(all_hits))
+  droplevels(unique(data.table::rbindlist(all_hits)))
 }
 
-single_grepl <- function(fi, single, offset_id = 0, used_i = c()) {
-  hit_single = c() # pun unintended
-  if(sum(single$ignore_case) > 0) hit_single = union(hit_single, batch_grep(single$regex[single$ignore_case], levels(fi$feature)))
-  if(sum(!single$ignore_case) > 0) hit_single = union(hit_single, batch_grep(single$regex[!single$ignore_case], levels(fi$feature), ignore.case = F))
-  hits = fi[list(hit_single),,nomatch=0]
-  if (length(used_i) > 0) hits = hits[!hits$i %in% used_i,]
-  hits$hit_id = offset_id + 1:nrow(hits)
+single_lookup <- function(tc, x, ignore_case, perl=F, skip_i=c(), with_i=F) {
+  i = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
+
+  hit_list = list()
+  if(!all(ignore_case)) hit_list[['']] = tc$lookup(x[!ignore_case], ignore_case=F, perl=perl, with_i=with_i)
+  if(any(ignore_case))  hit_list[['']] = tc$lookup(x[ignore_case], ignore_case=T, perl=perl, with_i=with_i)
+
+  hits = data.table::rbindlist(hit_list)
+  if (length(skip_i) > 0) hits = subset(hits, !i %in% skip_i)
+  if (nrow(hits) == 0) return(NULL)
+
+  hits[, hit_id := 1:nrow(hits)]
   hits
 }
 
-sequence_grepl <- function(fi, seq, perl=F, useBytes=T, offset_id = 0, used_i = c()){
+multi_lookup <- function(tc, x, window=NULL, ignore_case, perl=F, skip_i = c(), with_i=F, subcontext=NULL){
   ## keywords with underscores are considered word sequence strings. These can occur both in one row of the tcorpus features, or multiple
   ## this function doesn't care, and captures both, by walking over the tokens and checking whether they occur in the same or subsequent (i.e. next global_i) position
-  q = strsplit(seq$regex, split=' ')[[1]]
-  ign_case = seq$ignore_case
+  ## if window is NULL, x is considered to be a sequence (i.e. each next value of x has to occur on the next (or same) location)
+  i = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
 
-  hit_list = list()
-  for(j in 1:length(q)){
-    hits = grep_fi(fi, q[j], ignore.case=ign_case, perl=perl, useBytes=useBytes)
+  if (length(skip_i) > 0) with_i = TRUE
+
+  hit_list = vector('list', length(x))
+  for(j in 1:length(x)){
+    hits = tc$lookup(x[j], ignore_case=ignore_case, perl=perl, with_i=with_i)
     if (length(hits) > 0) hit_list[[j]] = hits
   }
   hits = data.table::rbindlist(hit_list)
-  if (nrow(hits) > 0) hits$j = rep(1:length(hit_list), sapply(hit_list, nrow))
-  if (length(used_i) > 0) hits = hits[!hits$i %in% used_i,]
-  if (nrow(hits) == 0) return(data.table(feature=character(), i=integer(), global_i=integer(), hit_id=integer()))
 
-  hits = hits[order(hits$global_i),]
+  evalhere_j = rep(1:length(hit_list), sapply(hit_list, nrow))
+  if (nrow(hits) > 0) hits[,j := evalhere_j]
+  if (length(skip_i) > 0) hits = subset(hits, !i %in% skip_i)
+  if (nrow(hits) == 0) return(NULL)
 
-  hits$hit_id = sequence_hit_ids(hits$global_i, hits$j, seq_length = length(q)) ## assign hit ids to valid sequences
-  hits = hits[hits$hit_id > 0,]
-  hits$hit_id = hits$hit_id + offset_id
-
-  hits[,c('feature','i','global_i','hit_id')]
-}
-
-proximity_grepl <- function(fi, proxi, perl=F, useBytes=T, offset_id = 0, used_i = c()){
-  q = strsplit(proxi$regex, split=' ')[[1]]
-  ign_case = proxi$ignore_case
-  window = proxi$window
-
-  hit_list = list()
-  for(j in 1:length(q)){
-    hits = grep_fi(fi, q[j], ignore.case=ign_case, perl=perl, useBytes=useBytes)
-    if (length(hits) > 0) hit_list[[j]] = hits
+  if (is.null(window)) {
+    hits[, hit_id := sequence_hit_ids(hits, seq_length = length(x), subcontext=subcontext)] ## assign hit ids to valid sequences
+  } else {
+    hits[, hit_id := proximity_hit_ids(hits, n_unique = length(x), window=window, subcontext=subcontext)] ## assign hit_ids to groups of tokens within the given window
   }
-
-  hits = data.table::rbindlist(hit_list)
-  if (nrow(hits) > 0) hits$j = rep(1:length(hit_list), sapply(hit_list, nrow))
-  if (length(used_i) > 0) hits = hits[!hits$i %in% used_i,]
-  if (nrow(hits) == 0) return(data.table(feature=character(), i=integer(), global_i=integer(), hit_id=integer()))
-  hits = hits[order(hits$global_i),]
-
-  hits$hit_id = proximity_hit_ids(hits$global_i, hits$j, n_unique = length(q), window=window) ## assign hit_ids to groups of tokens within the given window
-  hits = hits[hits$hit_id > 0,] ## proximity_hit_ids returns 0 for unassigned
-  hits$hit_id = hits$hit_id + offset_id
-
-  hits[,c('feature','i','global_i','hit_id')]
+  hits[, j := NULL]
+  hits = subset(hits, hit_id > 0)
+  if (nrow(hits) > 0) hits else NULL
 }
 
-sequence_hit_ids <- function(global_i, j, seq_length){
-  .Call('corpustools_sequence_hit_ids', PACKAGE = 'corpustools', global_i, j, seq_length)
+sequence_hit_ids <- function(d, seq_length, context='doc_id', position='token_i', value='j', subcontext=NULL){
+  setorderv(d, c(context, position, value))
+  context = if(is.null(subcontext)) d[[context]] else  global_position(d[[subcontext]], d[[context]], presorted = T, position_is_local=T)
+  .Call('corpustools_sequence_hit_ids', PACKAGE = 'corpustools', as.integer(context), as.integer(d[[position]]), as.integer(d[[value]]), seq_length)
 }
 
-proximity_hit_ids <- function(global_i, j, n_unique, window){
-  .Call('corpustools_proximity_hit_ids', PACKAGE = 'corpustools', global_i, j, n_unique, window)
-}
-
-
-batch_grep <- function(patterns, x, ignore.case=T, perl=F, batchsize=25, useBytes=T){
-  ## make batches of terms and turn each batch into a single regex
-  patterns = split(patterns, ceiling(seq_along(patterns)/batchsize))
-  patterns = sapply(patterns, stringi::stri_paste, collapse='|')
-
-  out = rep(F, length(x))
-  for(pattern in patterns){
-    out = out | grepl(pattern, x, ignore.case=ignore.case, perl=perl, useBytes=useBytes)
-  }
-  x[out]
+proximity_hit_ids <- function(d, n_unique, window, context='doc_id', position='token_i', value='j', subcontext=NULL){
+  setorderv(d, c(context, position, value))
+  context = if(is.null(subcontext)) d[[context]] else  global_position(d[[subcontext]], d[[context]], presorted = T, position_is_local=T)
+  .Call('corpustools_proximity_hit_ids', PACKAGE = 'corpustools', as.integer(context), as.integer(d[[position]]), as.integer(d[[value]]), n_unique, window)
 }
 
 grep_global_i <- function(fi, regex, ...) {
@@ -147,6 +130,3 @@ expand_window <- function(i, window) {
 overlapping_windows <- function(hit_list, window=window) {
   Reduce(intersect, sapply(hit_list, expand_window, window=window, simplify = F))
 }
-
-
-

@@ -36,15 +36,7 @@ feature_associations <- function(tc, hits, feature='token', window=15,  n=25, mi
   if(methods::is(substitute(subset_meta), 'call')) subset_meta = tc$eval_meta(substitute(subset_meta), parent.frame())
   sort_by = match.arg(sort_by)
 
-  i = hits$hits$i
-  if (length(i) == 0) return(NULL)
-  window = rep(i, window*2 + 1) + rep(-window:window, each=length(i))
-  window = setdiff(window, i)
-
-  if (!is.null(subset) | !is.null(subset_meta)){
-    subset_i = tc$subset_i(subset, subset_meta)
-    window = intersect(window, subset_i)
-  }
+  window = tc$token_i(hits$hits$doc_id, hits$hits$token_i, subset, subset_meta, window=window)
 
   tc_sub = tc$subset(window, copy=T)
   comp = tc_sub$compare_corpus(tc, feature = feature, is_subset = T)

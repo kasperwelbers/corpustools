@@ -3,12 +3,12 @@ test_that("feature associations", {
   start_time = Sys.time()
 
   library(corpustools)
-  tc = create_tcorpus(sotu_texts)
+  tcc = create_tcorpus(sotu_texts)
 
-  topf = tc$feature_associations('war')
+  topf = tcc$feature_associations('war')
   topf
 
-  expect_equal(round(topf$ratio[topf$feature == 'terror'], 4), 12.6998)
+  expect_equal(round(topf$ratio[topf$feature == 'terror'], 4), 13.9301)
 
   cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 })

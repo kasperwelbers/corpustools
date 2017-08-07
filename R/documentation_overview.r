@@ -46,7 +46,6 @@ NULL
 #'   \link[=tCorpus$get]{$get()} \tab Get token data, with the possibility to select columns and subset  \cr
 #'   \link[=tCorpus$get]{$get_meta()} \tab Get meta data, with the possibility to select columns and subset  \cr
 #'   \link[=tCorpus$dtm]{$dtm()} \tab Create a document term matrix \cr
-#'   \link[=tCorpus$feature_index]{$feature_index()} \tab Create or load a feature index. Used for fast lookup of features. \cr
 #'   \link[=tCorpus$context]{$context()} \tab Get a context vector. Currently supports documents or globally unique sentences.
 #' }
 #'

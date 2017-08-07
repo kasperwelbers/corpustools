@@ -43,6 +43,7 @@ test_that("Semnet works", {
   tc$search_features('Rutte OR Renewable')
   ## also works with NA's (which are ignored)
   tc_withNA = tc$copy()$search_recode('token', NA, 'Rutte OR Renewable')
+  tc_withNA$get()
 
   g = tc_withNA$semnet('token', measure = 'count_undirected')
   expect_true(!'Rutte' %in% igraph::V(g)$name)

@@ -1,11 +1,11 @@
 featureHits <- function(hits, queries) {
   ## S3 class
-  if(is.null(hits)) hits = data.frame(code=character(), feature=character(), doc_id=character(), sent_i = numeric(), hit_id=numeric(), i=numeric())
+  if(is.null(hits)) hits = data.frame(code=character(), feature=character(), doc_id=character(), sent_i = numeric(), hit_id=numeric())
   hits = as.data.frame(hits)
   if (!'sent_i' %in% colnames(hits)) {
     hits$sent_i = if(nrow(hits) == 0) numeric() else NA
   }
-  hits = hits[,c('code','feature','doc_id','sent_i','token_i', 'hit_id','i')]
+  hits = hits[,c('code','feature','doc_id','sent_i','token_i', 'hit_id')]
   fh = list(hits=hits, queries=queries)
   class(fh) = c('featureHits', class(fh))
   if(!is.featureHits(fh)) stop('Not a proper featureHits object')
@@ -14,8 +14,8 @@ featureHits <- function(hits, queries) {
 
 is.featureHits <- function(fh, ...) {
   if (!methods::is(fh$hits, 'data.frame')) return(FALSE)
-  if (!all(c('code','feature','i','doc_id','hit_id', 'sent_i', 'token_i') %in% colnames(fh$hits))) return(FALSE)
-  if (!all(c('keyword','condition','code','condition_once','subset_tokens','subset_meta') %in% colnames(fh$queries))) return(FALSE)
+  if (!all(c('code','feature','doc_id','hit_id', 'sent_i', 'token_i') %in% colnames(fh$hits))) return(FALSE)
+  if (!all(c('keyword','condition','code','condition_once') %in% colnames(fh$queries))) return(FALSE)
   return(TRUE)
 }
 

@@ -81,8 +81,6 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
   windows = stats::na.omit(get_feature_regex(query, default_window = NA)$window)
   max_window_size = if (length(windows) > 0) max(windows) else 0
 
-  fi = tc$feature_index(feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=T)
-
   if (!is.null(code)){
     code = as.character(code)
     code = if (length(code) == length(query)) code else rep(code, length(query))
@@ -98,12 +96,12 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
     q = queries[i,]
     qm = Matrix::spMatrix(max(context_i), length(q$terms), x=logical())
     colnames(qm) = q$terms
-    #rownames(qm) = context_label # for reference
 
     for(term in q$terms){
-      hits = search_string(fi, term, unique_i=F)
+      subcontext = if(context_level == 'sentence') 'sent_i' else NULL
+      hits = search_string(tc, term, unique_i=F, with_i=T, subcontext=subcontext)
       context_hits = unique(context_i[hits$i])
-      qm[,term][context_hits] = T
+      if (length(context_hits) > 0) qm[context_hits,term] = T
     }
     queryhit = eval_query_matrix(qm, q$terms, q$form)
     first_context_row = match(context_label[queryhit], context)
@@ -112,7 +110,6 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
     code_label = code[[i]]
     res[[code_label]] = unique(tc$get(context_columns, keep_df = T)[first_context_row,])
   }
-  #hits = plyr::ldply(res, function(x) x, .id='code')
   hits = data.table::rbindlist(res)
   hits$code = rep(names(res), sapply(res, nrow))
   if (nrow(hits) == 0) hits = NULL

@@ -1,25 +1,3 @@
-subset_window <- function(tc, i, window, context_level=c('document','sentence')){
-  context_level = match.arg(context_level)
-  subset(tc, i_window(tc, i, window=window, context_level=context_level))
-}
-
-i_window <- function(tc, i, window, context_level=c('document','sentence')){
-  context_level = match.arg(context_level)
-  gi = get_global_i(tc, context_level, max_window_size = window)
-  gi_i = gi[i]
-  gi_window = rep(gi_i, window*2 + 1) + rep(-window:window, each=length(gi_i))
-  window_i = stats::na.omit(match(gi_window, gi))
-  data.table::fsort(unique(window_i))
-}
-
-subset_query_window <- function(tc, window, keyword=NA, condition=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, verbose=F){
-  hits = search_features(tc, keyword=keyword, condition=condition, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, verbose=verbose)
-  tc = subset_window(tc, i=hits$i, window=window, context_level = 'document')
-  tc
-}
-
-## subset functions ##
-
 x_filter <- function(ft, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
   select = names(ft[ft >= min & ft <= max])
   if (!is.null(top)) {

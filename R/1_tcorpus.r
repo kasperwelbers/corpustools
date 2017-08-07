@@ -11,21 +11,9 @@ tCorpus <- R6::R6Class("tCorpus",
    private = list(
      .data = NULL,
      .meta = NULL,
-     .feature_index = NULL,
      .p = list(),
 
-     set_provenance = function(...){
-       p = list(...)
-       for(key in names(p)) private$.p[[key]] = p[[key]]
-     },
-     is_provenance = function(...){
-       p = list(...)
-       for(key in names(p)) {
-         if (!key %in% names(private$.p)) return(FALSE)
-         if (!private$.p[[key]] == p[[key]]) return(FALSE)
-       }
-       return(TRUE)
-     },
+
 
      match_data_to_meta = function(){
        doc_ids = intersect(unique(private$.data$doc_id), unique(private$.meta$doc_id))
@@ -45,9 +33,6 @@ tCorpus <- R6::R6Class("tCorpus",
      set_keys = function(){
        if (!identical(key(private$.data), c('doc_id', 'token_i'))) setkey(private$.data, 'doc_id', 'token_i')
        if (!identical(key(private$.meta), c('doc_id'))) setkey(private$.meta, 'doc_id')
-       if (!is.null(private$.feature_index)) {
-         if (!identical(key(private$.feature_index), c('feature'))) setkey(private$.feature_index, 'feature')
-       }
      },
 
      droplevels = function(){
@@ -61,11 +46,9 @@ tCorpus <- R6::R6Class("tCorpus",
    public = list(
      help = function() ?tCorpus,
 
-     initialize = function(data, meta, feature_index=NULL, p=NULL) {
+     initialize = function(data, meta) {
        private$.data = data.table(data)
        private$.meta = data.table(meta)
-       private$.p = if (!is.null(p)) p else list()
-       private$.feature_index = if (!is.null(feature_index)) feature_index else NULL
        private$set_keys()
      },
 
@@ -138,26 +121,6 @@ tCorpus <- R6::R6Class("tCorpus",
       data.table::copy(levels(private$.meta[[column]]))
     },
 
-    provenance = function(name=NULL) if (is.null(name)) private$.p else private$.p[[name]],
-
-    feature_index = function(feature='token', context_level=c('document','sentence'), max_window_size=100, as_ascii=F){
-       context_level = match.arg(context_level)
-       if (max_window_size < 100) max_window_size = 100 ## always use a window of at least 100,
-       prov = private$.p
-       if (is.null(private$.feature_index)){
-         private$.feature_index = create_feature_index(self, feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=as_ascii)
-         private$set_provenance(index_feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=as_ascii)
-         message('Created feature index')
-       } else {
-         if (!private$is_provenance(index_feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=as_ascii)) {
-           private$.feature_index = create_feature_index(self, feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=as_ascii)
-           private$set_provenance(index_feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=as_ascii)
-           message('Created new feature index')
-         }
-       }
-       private$.feature_index
-     },
-
      context = function(context_level = c('document','sentence'), with_labels=T){
        get_context(self, context_level = context_level, with_labels=with_labels)
      },
@@ -165,13 +128,42 @@ tCorpus <- R6::R6Class("tCorpus",
      eval = function(x, enclos=parent.frame()) eval(x, private$.data, enclos),
      eval_meta = function(x, enclos=parent.frame()) eval(x, private$.meta, enclos),
 
+     token_i = function(doc_id=NULL, token_i=NULL, subset=NULL, subset_meta=NULL, window=NULL, inverse=F){
+      if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
+      if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = self$eval_meta(substitute(subset_meta), parent.frame())
+      if (is.null(doc_id) & !is.null(token_i)) stop('token_i can only be given in pairs with doc_id')
+
+      ## enable subset to be called from a character string. (e.g. used in search_features)
+      if(methods::is(subset, 'character')) subset_meta = eval(parse(text=subset_meta), private$.meta, parent.frame())
+      if(methods::is(subset_meta, 'character')) subset_meta = eval(parse(text=subset_meta), private$.meta, parent.frame())
+
+      i = NULL
+      if (!is.null(doc_id)) {
+        pos = if (is.null(token_i)) list(doc_id) else list(doc_id, token_i)
+        i = private$.data[pos, which=T]
+      }
+      if (!is.null(subset)) {
+        subset[is.na(subset)] = F
+        i = if (is.null(i)) which(subset) else intersect(i, which(subset))
+      }
+      if (!is.null(subset_meta)) {
+        subset_meta[is.na(subset_meta)] = F
+        doc_ids = self$get_meta('doc_id')[subset_meta]
+        meta_i = private$.data[list(doc_ids), which=T]
+        i = if (is.null(i)) meta_i else intersect(i, meta_i)
+      }
+
+      if (!is.null(window)) i = which(i_window(self, i=i, window=window))
+      if (inverse) i = !1:self$n %in% i
+      i
+    },
+
+
 ## DATA MODIFICATION METHODS ##
 
      copy = function(){
        tCorpus$new(data = data.table::copy(private$.data),
-                   meta = data.table::copy(private$.meta),
-                   feature_index = private$.feature_index,
-                   p = private$.p)
+                   meta = data.table::copy(private$.meta))
      },
 
      set = function(column, value, subset=NULL, subset_value=T){
@@ -216,7 +208,6 @@ tCorpus <- R6::R6Class("tCorpus",
          ## ugly suppress. Should look into why data.table give the (seemingly harmless) internal.selfref warning
          suppressWarnings(private$.data[,(column) := value])
        }
-       if (identical(self$provenance()$index_feature, column)) self$reset_feature_index # reset feature index if necessary
 
        ## strangely, the assign by reference in data.table sometimes adds NA as a factor level...
        if (anyNA(levels(private$.data[[column]]))) {
@@ -313,7 +304,6 @@ tCorpus <- R6::R6Class("tCorpus",
           private$.meta = private$.meta[as.character(unique(private$.data$doc_id)),,nomatch=0]
           private$.meta$doc_id = as.character(private$.meta$doc_id)
         }
-        self$reset_feature_index()
         private$set_keys()
       },
 
@@ -322,7 +312,6 @@ tCorpus <- R6::R6Class("tCorpus",
         private$.meta = subset(private$.meta, selection)
         private$.meta$doc_id = as.character(private$.meta$doc_id)
         if (!keep_data) private$.data = private$.data[as.character(unique(private$.meta$doc_id)),,nomatch=0]
-        self$reset_feature_index()
         private$set_keys()
       },
 
@@ -371,39 +360,6 @@ tCorpus <- R6::R6Class("tCorpus",
         self$subset(subset_meta = evalhere_subset, copy=copy)
       },
 
-      subset_i = function(subset=NULL, subset_meta=NULL, window=NULL, inverse=F){
-        if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
-        if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = self$eval_meta(substitute(subset_meta), parent.frame())
-
-        ## enable subset_i to be called from a character string. (e.g. used in search_features)
-        if(methods::is(subset, 'character')) subset_meta = eval(parse(text=subset_meta), private$.meta, parent.frame())
-        if(methods::is(subset_meta, 'character')) subset_meta = eval(parse(text=subset_meta), private$.meta, parent.frame())
-
-        d = private$.data[,c('doc_id')]
-
-        if (!is.null(subset)) {
-          subset[is.na(subset)] = F
-          d[ , subset := F]
-          d[subset, subset := T]
-        } else d[ , subset := T]
-
-        if (!is.null(subset_meta)){
-          subset_meta[is.na(subset_meta)] = F
-          d[ , subset_meta := F]
-          keyval = as.character(private$.meta$doc_id[subset_meta])
-          d[list(keyval), subset_meta := T]
-        } else d[, subset_meta := T]
-
-        i = which(d$subset & d$subset_meta)
-
-        if (!inverse) i else !1:self$n %in% i
-      },
-
-     reset_feature_index = function(){
-       private$.feature_index = NULL
-       private$set_provenance(index_feature=NULL, context_level=NULL, max_window_size=NULL, as_ascii=NULL)
-     },
-
      aggregate = function(meta_cols=NULL, hits=NULL, feature=NULL, count=c('documents','tokens'), wide=T){
         count = match.arg(count)
 
@@ -447,13 +403,30 @@ tCorpus <- R6::R6Class("tCorpus",
 
         }
         as.data.frame(d)
-      }
+      },
 
-      #regex = function(x, feature='token', context_level=c('document','sentence'), max_window_size=100, as_ascii=F, ...){
-      #  fi = self$feature_index(feature=feature, context_level=context_level, max_window_size=max_window_size, as_ascii=as_ascii)
-      #  exact_feature = levels(fi$feature)[grepl(x, levels(fi$feature), ...)]
-      #  fi[list(exact_feature),,nomatch=0]$global_i
-      #}
+      lookup = function(x, feature='token', ignore_case=TRUE, perl=FALSE, batchsize=25, fixed=FALSE, with_i=FALSE, only_i=FALSE){
+        ## prepare lookup table: set a (secondary) data.table index
+        if (!feature %in% indices(private$.data)) {
+          data.table::setindexv(private$.data, feature)
+          message(sprintf('created index for "%s" column', feature))
+        }
+
+        ## if not fixed (exact value matching), first lookup x as regex in unique values
+        if (!fixed) {
+          uval = if (is.factor(private$.data[[feature]])) levels(private$.data[[feature]]) else unique(private$.data[[feature]])
+          x = batch_grep(x, uval, ignore_case=ignore_case, perl=perl, batchsize=batchsize, useBytes=T)
+        }
+
+        if (with_i) {
+          return(dt_get_with_i(private$.data, x, feature))
+        } else {
+          return(private$.data[x, on=feature, which=only_i])
+        }
+      },
+
+      indices = function() data.table::indices(private$.data),
+      clear_indices = function() data.table::setindex(private$.data, NULL)
    ),
 
    active = list(
@@ -607,4 +580,23 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
     }
   }
   context
+}
+
+dt_get_with_i <- function(d, x, on) {
+  i = d[x, on=on, which=T]
+  out = d[i,]
+  out[,i:=i]
+  out
+}
+
+batch_grep <- function(patterns, x, ignore_case=T, perl=F, batchsize=25, useBytes=T){
+  ## make batches of terms and turn each batch into a single regex
+  patterns = split(patterns, ceiling(seq_along(patterns)/batchsize))
+  patterns = sapply(patterns, stringi::stri_paste, collapse='|')
+
+  out = rep(F, length(x))
+  for(pattern in patterns){
+    out = out | grepl(pattern, x, ignore.case=ignore_case, perl=perl, useBytes=useBytes)
+  }
+  x[out]
 }

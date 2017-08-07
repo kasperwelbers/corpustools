@@ -11,7 +11,6 @@
 #' \preformatted{
 #' search_features(keyword = NA, condition = NA, code = NA,
 #'                 queries = NULL, feature = 'token', condition_once=F,
-#'                 subset_tokens = NA, subset_meta = NA,
 #'                 keep_false_condition = F, verbose = F)
 #'              }
 #'
@@ -21,8 +20,6 @@
 #' @param queries Alternatively, a data.frame can be given that contains a "keyword" column, and optionally columns for the "condition", "code" and "condition_once" paramters.
 #' @param feature The name of the feature column within which to search.
 #' @param condition_once logical. If TRUE, then if an keyword satisfies its conditions once in an article, all keywords within that article are coded.
-#' @param subset_tokens A call (or character string of a call) as one would normally pass to subset.tCorpus. If given, the keyword has to occur within the subset. This is for instance usefull to only look in named entity POS tags when searching for people or organization. Note that the condition does not have to occur within the subset.
-#' @param subset_meta A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).
 #' @param keep_false_condition if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives
 #' @param unique_i Queries can overlap. For example "mark rutte" also contains "rutte". For some purposes (e.g., counting how often certain queries occur) its better to ignore these overlapping queries. By setting unique_i to TRUE, features will only be assigned to 1 hit_id.
 #' @param verbose If TRUE, progress messages will be printed
@@ -57,20 +54,14 @@
 #'
 #' @name tCorpus$search_features
 #' @aliases search_features.tCorpus
-tCorpus$set('public', 'search_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, unique_i=F, verbose=F){
-  subset_tokens = if (class(substitute(subset_tokens)) %in% c('call')) deparse(substitute(subset_tokens)) else subset_tokens
-  subset_meta = if (class(substitute(subset_meta)) %in% c('call')) deparse(substitute(subset_meta)) else subset_meta
-
-  search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=keep_false_condition, unique_i=unique_i, verbose=verbose)
+tCorpus$set('public', 'search_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, keep_false_condition=F, unique_i=F, verbose=F){
+  search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, keep_false_condition=keep_false_condition, unique_i=unique_i, verbose=verbose)
 })
 
-tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', column='code', condition_once=F, subset_tokens=NA, subset_meta=NA, unique_i=F, verbose=F){
-  subset = if (class(substitute(subset)) %in% c('call')) deparse(substitute(subset)) else subset
-  subset_meta = if (class(substitute(subset_meta)) %in% c('call')) deparse(substitute(subset_meta)) else subset_meta
+tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', column='code', condition_once=F, unique_i=F, verbose=F){
+  hits = search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, keep_false_condition=F, unique_i=unique_i, verbose=verbose)
 
-  hits = search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, keep_false_condition=F, unique_i=unique_i, verbose=verbose)
-
-  evalhere_i = hits$hits$i
+  evalhere_i = self$token_i(doc_id = hits$hits$doc_id, token_i = hits$hits$token_i)
   evalhere_value = hits$hits$code
   self$set(column=column, subset=evalhere_i, value=evalhere_value, subset_value=F)
 
@@ -86,8 +77,7 @@ tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=N
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{
-#' search_recode(feature, new_value, keyword, condition = NA,
-#'               condition_once = F, subset_tokens = NA, subset_meta = NA)
+#' search_recode(feature, new_value, keyword, condition = NA, condition_once = F)
 #' }
 #'
 #' @param feature The feature in which to search
@@ -96,27 +86,22 @@ tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=N
 #'
 #' @name tCorpus$search_recode
 #' @aliases search_recode.tCorpus
-tCorpus$set('public', 'search_recode', function(feature, new_value, keyword, condition=NA, condition_once=F, subset_tokens=NA, subset_meta=NA, unique_i=F){
-  subset = if (class(substitute(subset_tokens)) %in% c('call')) deparse(substitute(subset_tokens)) else subset_tokens
-  subset_meta = if (class(substitute(subset_meta)) %in% c('call')) deparse(substitute(subset_meta)) else subset_meta
-
-  hits = self$search_features(keyword=keyword, condition=condition, condition_once=condition_once, subset_tokens=subset_tokens, subset_meta=subset_meta, unique_i=unique_i)
-  evalhere_x = as.numeric(as.character(hits$hits$i))
+tCorpus$set('public', 'search_recode', function(feature, new_value, keyword, condition=NA, condition_once=F, unique_i=F){
+  hits = self$search_features(keyword=keyword, condition=condition, condition_once=condition_once, unique_i=unique_i)
+  evalhere_i = self$token_i(doc_id = hits$hits$doc_id, token_i = hits$hits$token_i)
   evalhere_new_value = new_value
-  self$set(feature, evalhere_new_value, subset = evalhere_x)
+  self$set(feature, evalhere_new_value, subset = evalhere_i)
   invisible(self)
 })
 
 
-search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, subset_tokens=NA, subset_meta=NA, keep_false_condition=F, unique_i=T, verbose=F){
+search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, keep_false_condition=F, unique_i=T, verbose=F){
   is_tcorpus(tc, T)
 
   if (is.null(queries)) queries = data.frame(keyword=keyword)
   if (!'condition' %in% colnames(queries)) queries$condition = condition
   if (!'code' %in% colnames(queries)) queries$code = code
   if (!'condition_once' %in% colnames(queries)) queries$condition_once = condition_once
-  if (!'subset_tokens' %in% colnames(queries)) queries$subset_tokens = if (methods::is(substitute(subset_tokens), 'call')) deparse(substitute(subset_tokens)) else subset_tokens
-  if (!'subset_meta' %in% colnames(queries)) queries$subset_meta = if (methods::is(substitute(subset_meta), 'call')) deparse(substitute(subset_meta)) else subset_meta
 
   if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(tc$feature_names, collapse=', ')))
   if (any(is.na(queries$keyword))) stop('keyword cannot be NA. Provide either the keyword or queries argument')
@@ -128,79 +113,63 @@ search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL,
   windows = stats::na.omit(c(windows$window, windows$condition_window))
   max_window_size = if (length(windows) > 0) max(windows) else 0
 
-  fi = tc$feature_index(feature=feature, context_level='document', max_window_size=max_window_size, as_ascii=T)
-  hits = search_features_loop(tc, fi=fi, queries=queries, feature=feature, keep_false_condition=keep_false_condition, unique_i=unique_i, verbose=verbose)
+  hits = search_features_loop(tc, queries=queries, feature=feature, keep_false_condition=keep_false_condition, unique_i=unique_i, verbose=verbose)
 
   featureHits(hits, queries)
 }
 
-search_features_loop <- function(tc, fi, queries, feature, keep_false_condition, unique_i, verbose){
+search_features_loop <- function(tc, queries, feature, keep_false_condition, unique_i, verbose){
+  sent_i = NULL; condition = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
+
   n = nrow(queries)
   res = vector('list', n)
   for (i in 1:n){
     code = queries$code[i]
     if (verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
     kw = queries$keyword[i]
-    hit = search_string(fi, kw, unique_i=unique_i)
+
+    hit = search_string(tc, kw, unique_i=unique_i)
     if(is.null(hit)) next
-
-    hit$doc_id = tc$get('doc_id')[hit$i]
-
-    ## take subset into account
-    evalhere_subset_tokens = queries$subset_tokens[i]
-    evalhere_subset_meta = queries$subset_meta[i]
-    if (is.na(evalhere_subset_tokens)) evalhere_subset_tokens = NULL
-    if (is.na(evalhere_subset_meta)) evalhere_subset_meta = NULL
-
-    if (!is.null(evalhere_subset_tokens) | !is.null(evalhere_subset_meta)){
-      if (i == 1) {
-        i_filter = tc$subset_i(subset=evalhere_subset_tokens, subset_meta=evalhere_subset_meta)
-      } else { # if evalhere_subset_tokens and evalhere_subset_meta are identical to previous query, i_filter does not need to be calculated again (this is easily the case, since its convenient to give a subset globally by passing a single value)
-
-        if (!identical(evalhere_subset_tokens, queries$subset_tokens[i-1]) | !identical(evalhere_subset_meta, queries$subset_meta[i-1])) {
-          i_filter = tc$subset_i(subset=evalhere_subset_tokens, subset_meta=evalhere_subset_meta)
-        }
-      }
-      hit = hit[hit$i %in% i_filter,,drop=F]
-    }
-
     if (nrow(hit) == 0) next
 
+    hit = subset(hit, select = c('doc_id', 'token_i', 'hit_id', feature))
+    data.table::setnames(hit, feature, 'feature')
+
     if (!is.na(queries$condition[i]) & !queries$condition[i] == ''){
-      hit$condition = evaluate_condition(tc, fi, hit, queries$condition[i])
-    } else {
-      hit$condition = T
-    }
+      hit$condition = evaluate_condition(tc, hit, queries$condition[i])
 
-    if (queries$condition_once[i]){
-      doc_with_condition = unique(hit$doc_id[hit$condition])
-      hit$condition[hit$doc_id %in% doc_with_condition] = T
+      if (queries$condition_once[i]){
+        doc_with_condition = unique(hit$doc_id[hit$condition])
+        hit$condition[hit$doc_id %in% doc_with_condition] = T
+      }
+      if (!keep_false_condition) {
+        keep_ids = hit[['hit_id']][hit$condition]
+        hit = subset(hit, hit_id %in% keep_ids)
+        hit[, condition := NULL]
+      }
     }
-
-    if (!keep_false_condition) {
-      res[[i]] = hit[hit$condition, c('feature','i','doc_id', 'hit_id')]
-    } else {
-      res[[i]] = hit[,c('feature','i','doc_id','condition', 'hit_id')]
-    }
+    res[[i]] = hit
   }
-  names(res) = queries$code
 
+  names(res) = queries$code
   hits = data.table::rbindlist(res)
   if (nrow(hits) > 0) {
     hits$code = rep(names(res), sapply(res, nrow))
-    position_cols = if ('sent_i' %in% tc$names) c('sent_i', 'token_i') else c('token_i')
-    hits = cbind(hits, tc$get(position_cols, keep_df = T)[hits$i,])
-    hits = hits[order(hits$i),]
+    data.table::setorderv(hits, c('doc_id','token_i'))
     hits$hit_id = match(hits$hit_id, unique(hits$hit_id))
+    if (!'sent_i' %in% colnames(hits)) hits[,sent_i := NA]
+    hits = as.data.frame(hits[, c('code','feature','doc_id','sent_i','token_i','hit_id')])
   } else {
-    hits = data.frame(code=factor(), feature=factor(), i=numeric(), doc_id=factor(), sent_i=numeric(), token_i = numeric(), hit_id=numeric())
+    hits = data.frame(code=factor(), feature=factor(), doc_id=factor(), sent_i=numeric(), token_i = numeric(), hit_id=numeric())
   }
 
   hits
 }
 
-evaluate_condition <- function(tc, fi, hit, condition){
+evaluate_condition <- function(tc, hit, condition){
   con_query = parse_queries(condition)[1,] ## can only be 1 query
+  setkeyv(hit, c('doc_id','token_i'))
+
   if (length(con_query$terms) == 0){
     return(hit)
   } else {
@@ -208,28 +177,25 @@ evaluate_condition <- function(tc, fi, hit, condition){
     colnames(qm) = con_query$terms
 
     for (j in 1:length(con_query$terms)){
-      con_hit = search_string(fi, con_query$terms[j], unique_i = F)
+      con_hit = search_string(tc, con_query$terms[j], unique_i = F)
 
       con_regex = get_feature_regex(con_query$terms[j])
       direction = con_regex$direction
       window = con_regex$condition_window
       if (is.na(window)) {
-        con_doc = tc$get('doc_id')[con_hit$i]
-        qm[,j] = hit$doc_id %in% con_doc
+        hit_in_con = hit[list(doc_id=as.character(con_hit$doc_id)),,which=T]
       } else {
         if(direction == '<') shifts = 0:window
         if(direction == '>') shifts = -window:0
         if(direction == '<>') shifts = -window:window
 
-        if (direction == '<>') {
-          shift = rep(shifts, times=nrow(con_hit))
-          con_window = rep(con_hit$global_i, each = length(shifts)) + shift
-        } else {
-          shift = rep(shifts, times=nrow(con_hit))
-          con_window = rep(con_hit$global_i, each = length(shifts)) + shift
-        }
-        qm[,j] = hit$global_i %in% unique(con_window)
+        in_con = con_hit[rep(1:nrow(con_hit), length(shifts)), c('doc_id','token_i')]
+        in_con$token_i = in_con$token_i + shifts
+        hit_in_con = hit[as.list(unique(in_con)),,which=T]
       }
+
+      hit_in_con = unique(stats::na.omit(hit_in_con))
+      if (length(hit_in_con) > 0) qm[hit_in_con, j] = T
     }
   }
   eval_query_matrix(qm, con_query$terms, con_query$form)

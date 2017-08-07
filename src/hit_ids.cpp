@@ -3,7 +3,7 @@ using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]
 
 // [[Rcpp::export]]
-IntegerVector proximity_hit_ids(IntegerVector pos, IntegerVector value, int n_unique, int window) {
+IntegerVector proximity_hit_ids(IntegerVector con, IntegerVector pos, IntegerVector value, int n_unique, int window) {
   int n = pos.size();
   IntegerVector out(n);
   std::map<int,int> tracker;
@@ -13,8 +13,8 @@ IntegerVector proximity_hit_ids(IntegerVector pos, IntegerVector value, int n_un
   int hit_id = 1;
   for (int i = 0; i < n; i++) {
     for (iw = i; iw < n; iw++) {
-      if (pos[iw] - pos[i] > window) {      // OR doc[iw] != doc[i] ... // implement in future: prevents need for global_i.
-        tracker.clear();                    // break if position out of window
+      if (pos[iw] - pos[i] > window | con[iw] != con[i]) {
+        tracker.clear();                    // break if position out of window or different context
         break;
       }
       if (out[iw] > 0) continue;            // skip already assigned
@@ -38,7 +38,7 @@ IntegerVector proximity_hit_ids(IntegerVector pos, IntegerVector value, int n_un
 
 
 // [[Rcpp::export]]
-IntegerVector sequence_hit_ids(IntegerVector pos, IntegerVector value, int length) {
+IntegerVector sequence_hit_ids(IntegerVector con, IntegerVector pos, IntegerVector value, int length) {
   int n = pos.size();
   IntegerVector out(n);
 
@@ -47,7 +47,7 @@ IntegerVector sequence_hit_ids(IntegerVector pos, IntegerVector value, int lengt
   int hit_id = 1;
   for (int i = 0; i < n; i++) {
     for (seq_i = 0; seq_i < length; seq_i++) {
-      if (pos[i+seq_i] - pos[i] > 2) break;      // there cant be a gap         // OR doc[i+seq_i] != doc[i] ... // implement in future: prevents need for global_i.
+      if (pos[i+seq_i] - pos[i] > 2 | con[i+seq_i] != con[i]) break;      // there cant be a gap (or same context)
       if (out[i+seq_i] > 0) continue;            // skip already assigned
       if (value[i+seq_i] != seq_i+1) continue;   // seq_i (starting at 0) should match the number of the word in the sequence (starting at 1)
 

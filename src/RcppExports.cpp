@@ -18,29 +18,31 @@ BEGIN_RCPP
 END_RCPP
 }
 // proximity_hit_ids
-IntegerVector proximity_hit_ids(IntegerVector pos, IntegerVector value, int n_unique, int window);
-RcppExport SEXP corpustools_proximity_hit_ids(SEXP posSEXP, SEXP valueSEXP, SEXP n_uniqueSEXP, SEXP windowSEXP) {
+IntegerVector proximity_hit_ids(IntegerVector con, IntegerVector pos, IntegerVector value, int n_unique, int window);
+RcppExport SEXP corpustools_proximity_hit_ids(SEXP conSEXP, SEXP posSEXP, SEXP valueSEXP, SEXP n_uniqueSEXP, SEXP windowSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type con(conSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type pos(posSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type value(valueSEXP);
     Rcpp::traits::input_parameter< int >::type n_unique(n_uniqueSEXP);
     Rcpp::traits::input_parameter< int >::type window(windowSEXP);
-    rcpp_result_gen = Rcpp::wrap(proximity_hit_ids(pos, value, n_unique, window));
+    rcpp_result_gen = Rcpp::wrap(proximity_hit_ids(con, pos, value, n_unique, window));
     return rcpp_result_gen;
 END_RCPP
 }
 // sequence_hit_ids
-IntegerVector sequence_hit_ids(IntegerVector pos, IntegerVector value, int length);
-RcppExport SEXP corpustools_sequence_hit_ids(SEXP posSEXP, SEXP valueSEXP, SEXP lengthSEXP) {
+IntegerVector sequence_hit_ids(IntegerVector con, IntegerVector pos, IntegerVector value, int length);
+RcppExport SEXP corpustools_sequence_hit_ids(SEXP conSEXP, SEXP posSEXP, SEXP valueSEXP, SEXP lengthSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type con(conSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type pos(posSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type value(valueSEXP);
     Rcpp::traits::input_parameter< int >::type length(lengthSEXP);
-    rcpp_result_gen = Rcpp::wrap(sequence_hit_ids(pos, value, length));
+    rcpp_result_gen = Rcpp::wrap(sequence_hit_ids(con, pos, value, length));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -73,8 +75,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"corpustools_fast_factor", (DL_FUNC) &corpustools_fast_factor, 2},
-    {"corpustools_proximity_hit_ids", (DL_FUNC) &corpustools_proximity_hit_ids, 4},
-    {"corpustools_sequence_hit_ids", (DL_FUNC) &corpustools_sequence_hit_ids, 3},
+    {"corpustools_proximity_hit_ids", (DL_FUNC) &corpustools_proximity_hit_ids, 5},
+    {"corpustools_sequence_hit_ids", (DL_FUNC) &corpustools_sequence_hit_ids, 4},
     {"corpustools_ngrams", (DL_FUNC) &corpustools_ngrams, 5},
     {"corpustools_test", (DL_FUNC) &corpustools_test, 1},
     {NULL, NULL, 0}
