@@ -17,7 +17,3 @@ ngrams <- function(tokens, group, n, sep, empty) {
     .Call('corpustools_ngrams', PACKAGE = 'corpustools', tokens, group, n, sep, empty)
 }
 
-test <- function(v) {
-    .Call('corpustools_test', PACKAGE = 'corpustools', v)
-}
-

@@ -61,24 +61,12 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// test
-CharacterVector test(CharacterVector v);
-RcppExport SEXP corpustools_test(SEXP vSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< CharacterVector >::type v(vSEXP);
-    rcpp_result_gen = Rcpp::wrap(test(v));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
     {"corpustools_fast_factor", (DL_FUNC) &corpustools_fast_factor, 2},
     {"corpustools_proximity_hit_ids", (DL_FUNC) &corpustools_proximity_hit_ids, 5},
     {"corpustools_sequence_hit_ids", (DL_FUNC) &corpustools_sequence_hit_ids, 4},
     {"corpustools_ngrams", (DL_FUNC) &corpustools_ngrams, 5},
-    {"corpustools_test", (DL_FUNC) &corpustools_test, 1},
     {NULL, NULL, 0}
 };
 

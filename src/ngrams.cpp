@@ -30,17 +30,3 @@ CharacterVector ngrams(CharacterVector tokens, CharacterVector group, int n, std
 
   return out;
 }
-
-
-// [[Rcpp::export]]
-CharacterVector test(CharacterVector v)
-{
-  int n = v.size();
-  CharacterVector out(n);
-  for (int i = 0; i < n; i++)
-  {
-    out[i] = std::string(v[i]) + "@@@";
-  }
-
-  return out;
-}

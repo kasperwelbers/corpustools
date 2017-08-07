@@ -86,33 +86,41 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
     code = if (length(code) == length(query)) code else rep(code, length(query))
   } else code = sprintf('query_%s', 1:length(query))
 
-  context = tc$context(context_level, with_labels = F)
-  context_i = as.numeric(context)
-  context_label = levels(context)
-  queries = parse_queries(query) ## add argument merge_or_groups = T
+  context_i = tc$context(context_level, with_labels = F)
+  context_i = as.numeric(context_i)
+
+  if (context_level == 'document') context_columns = c('doc_id')
+  if (context_level == 'sentence') context_columns = c('doc_id', 'sent_i')
+  evalhere_i = !duplicated(context_i)
+  first_context_row = tc$get(context_columns, subset = evalhere_i, keep_df = T)
+
+  subcontext = if(context_level == 'sentence') 'sent_i' else NULL
 
   res = list()
-  for(i in 1:nrow(queries)){
-    q = queries[i,]
-    qm = Matrix::spMatrix(max(context_i), length(q$terms), x=logical())
-    colnames(qm) = q$terms
-
-    for(term in q$terms){
-      subcontext = if(context_level == 'sentence') 'sent_i' else NULL
-      hits = search_string(tc, term, unique_i=F, with_i=T, subcontext=subcontext, feature=feature)
-      context_hits = unique(context_i[hits$i])
-      if (length(context_hits) > 0) qm[context_hits,term] = T
-    }
-    queryhit = eval_query_matrix(qm, q$terms, q$form)
-    first_context_row = match(context_label[queryhit], context)
-    if (context_level == 'document') context_columns = c('doc_id')
-    if (context_level == 'sentence') context_columns = c('doc_id', 'sent_i')
+  for(i in 1:length(query)){
     code_label = code[[i]]
-    res[[code_label]] = unique(tc$get(context_columns, keep_df = T)[first_context_row,])
-  }
-  hits = data.table::rbindlist(res)
-  hits$code = rep(names(res), sapply(res, nrow))
-  if (nrow(hits) == 0) hits = NULL
+    simple_query = !any(grepl('\\b(AND|NOT)\\b', query[i]))
 
+    if (simple_query) {
+      hits = search_string(tc, query[i], unique_i=F, with_i=T, subcontext=subcontext, feature=feature)
+      if (nrow(hits) > 0) res[[code_label]] = unique(subset(hits, select=context_columns)) else res[[code_label]] = NULL
+    } else {
+      q = parse_queries(query[i])[1,] ## add argument merge_or_groups = T
+      qm = Matrix::spMatrix(max(context_i), length(q$terms), x=logical())
+      colnames(qm) = q$terms
+      for(term in q$terms){
+        hits = search_string(tc, term, unique_i=F, with_i=T, subcontext=subcontext, feature=feature)
+        context_hits = unique(context_i[hits$i])
+        if (length(context_hits) > 0) qm[context_hits,term] = T
+      }
+      queryhit = eval_query_matrix(qm, q$terms, q$form)
+      res[[code_label]] = first_context_row[queryhit]
+    }
+  }
+
+  hits = data.table::rbindlist(res)
+  if (nrow(hits) == 0) {
+    hits = NULL
+  } else hits$code = rep(names(res), sapply(res, nrow))
   contextHits(hits, data.frame(code=code, query=query))
 }

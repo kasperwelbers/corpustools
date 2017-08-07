@@ -3,6 +3,7 @@ test_that("Query document search works", {
   start_time = Sys.time()
 
   library(corpustools)
+  library(testthat)
 
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
