@@ -99,7 +99,7 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
 
     for(term in q$terms){
       subcontext = if(context_level == 'sentence') 'sent_i' else NULL
-      hits = search_string(tc, term, unique_i=F, with_i=T, subcontext=subcontext)
+      hits = search_string(tc, term, unique_i=F, with_i=T, subcontext=subcontext, feature=feature)
       context_hits = unique(context_i[hits$i])
       if (length(context_hits) > 0) qm[context_hits,term] = T
     }

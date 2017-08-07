@@ -128,7 +128,7 @@ search_features_loop <- function(tc, queries, feature, keep_false_condition, uni
     if (verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
     kw = queries$keyword[i]
 
-    hit = search_string(tc, kw, unique_i=unique_i)
+    hit = search_string(tc, kw, unique_i=unique_i, feature=feature)
     if(is.null(hit)) next
     if (nrow(hit) == 0) next
 
@@ -136,7 +136,7 @@ search_features_loop <- function(tc, queries, feature, keep_false_condition, uni
     data.table::setnames(hit, feature, 'feature')
 
     if (!is.na(queries$condition[i]) & !queries$condition[i] == ''){
-      hit$condition = evaluate_condition(tc, hit, queries$condition[i])
+      hit$condition = evaluate_condition(tc, hit, queries$condition[i], feature=feature)
 
       if (queries$condition_once[i]){
         doc_with_condition = unique(hit$doc_id[hit$condition])
@@ -166,7 +166,7 @@ search_features_loop <- function(tc, queries, feature, keep_false_condition, uni
   hits
 }
 
-evaluate_condition <- function(tc, hit, condition){
+evaluate_condition <- function(tc, hit, condition, feature='token'){
   con_query = parse_queries(condition)[1,] ## can only be 1 query
   setkeyv(hit, c('doc_id','token_i'))
 
@@ -177,7 +177,7 @@ evaluate_condition <- function(tc, hit, condition){
     colnames(qm) = con_query$terms
 
     for (j in 1:length(con_query$terms)){
-      con_hit = search_string(tc, con_query$terms[j], unique_i = F)
+      con_hit = search_string(tc, con_query$terms[j], unique_i = F, feature=feature)
 
       con_regex = get_feature_regex(con_query$terms[j])
       direction = con_regex$direction

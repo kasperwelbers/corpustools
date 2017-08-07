@@ -1,4 +1,4 @@
-search_string <- function(tc, string, unique_i=F, skip_i=c(), with_i=F, subcontext=NULL){
+search_string <- function(tc, string, unique_i=F, skip_i=c(), with_i=F, subcontext=NULL, feature='token'){
   ## supports single token strings, multitoken strings demarcated with quotes (e.g., "this string") and token proximities (e.g., "marco polo"~10)
   ## This function does not manage complex boolean queries (AND, NOT, parentheses).
   ## If multiple strings are given, results are added together as if they were connected with OR statements
@@ -30,9 +30,9 @@ search_string <- function(tc, string, unique_i=F, skip_i=c(), with_i=F, subconte
     for (i in 1:nrow(multi)) {
       regexterms = stringi::stri_split(multi$regex[i], fixed = ' ')[[1]]
       if (multi$proximity[i]) {
-        hits = multi_lookup(tc, regexterms, window=multi$window[i], ignore_case=multi$ignore_case[i], skip_i = skip_i, with_i=with_i, subcontext=subcontext)
+        hits = multi_lookup(tc, regexterms, window=multi$window[i], ignore_case=multi$ignore_case[i], skip_i = skip_i, with_i=with_i, subcontext=subcontext, feature=feature)
       } else {
-        hits = multi_lookup(tc, regexterms, window=NULL, ignore_case=multi$ignore_case[i], skip_i = skip_i, with_i=with_i, subcontext=subcontext)
+        hits = multi_lookup(tc, regexterms, window=NULL, ignore_case=multi$ignore_case[i], skip_i = skip_i, with_i=with_i, subcontext=subcontext, feature=feature)
       }
       if (!is.null(hits)) {
         hits[, hit_id := hit_id + offset_id] ## offset the hit id (by reference)
@@ -45,7 +45,7 @@ search_string <- function(tc, string, unique_i=F, skip_i=c(), with_i=F, subconte
 
   ## single token queries (no loop required. single_lookup combines terms in batches for efficiency)
   if (nrow(single) > 0) {
-    hits = single_lookup(tc, x=single$regex, ignore_case=single$ignore_case, skip_i=skip_i, with_i=with_i)
+    hits = single_lookup(tc, x=single$regex, ignore_case=single$ignore_case, skip_i=skip_i, with_i=with_i, feature=feature)
     if (!is.null(hits)) {
       hits[, hit_id := hit_id + offset_id]
       all_hits[[length(all_hits) + 1]] = hits
@@ -55,12 +55,12 @@ search_string <- function(tc, string, unique_i=F, skip_i=c(), with_i=F, subconte
   droplevels(unique(data.table::rbindlist(all_hits)))
 }
 
-single_lookup <- function(tc, x, ignore_case, perl=F, skip_i=c(), with_i=F) {
+single_lookup <- function(tc, x, ignore_case, perl=F, skip_i=c(), with_i=F, feature='token') {
   i = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
 
   hit_list = list()
-  if(!all(ignore_case)) hit_list[['']] = tc$lookup(x[!ignore_case], ignore_case=F, perl=perl, with_i=with_i)
-  if(any(ignore_case))  hit_list[['']] = tc$lookup(x[ignore_case], ignore_case=T, perl=perl, with_i=with_i)
+  if(!all(ignore_case)) hit_list[['']] = tc$lookup(x[!ignore_case], feature=feature, ignore_case=F, perl=perl, with_i=with_i)
+  if(any(ignore_case))  hit_list[['']] = tc$lookup(x[ignore_case], feature=feature, ignore_case=T, perl=perl, with_i=with_i)
 
   hits = data.table::rbindlist(hit_list)
   if (length(skip_i) > 0) hits = subset(hits, !i %in% skip_i)
@@ -70,7 +70,7 @@ single_lookup <- function(tc, x, ignore_case, perl=F, skip_i=c(), with_i=F) {
   hits
 }
 
-multi_lookup <- function(tc, x, window=NULL, ignore_case, perl=F, skip_i = c(), with_i=F, subcontext=NULL){
+multi_lookup <- function(tc, x, window=NULL, ignore_case, perl=F, skip_i = c(), with_i=F, subcontext=NULL, feature='token'){
   ## keywords with underscores are considered word sequence strings. These can occur both in one row of the tcorpus features, or multiple
   ## this function doesn't care, and captures both, by walking over the tokens and checking whether they occur in the same or subsequent (i.e. next global_i) position
   ## if window is NULL, x is considered to be a sequence (i.e. each next value of x has to occur on the next (or same) location)
@@ -80,7 +80,7 @@ multi_lookup <- function(tc, x, window=NULL, ignore_case, perl=F, skip_i = c(), 
 
   hit_list = vector('list', length(x))
   for(j in 1:length(x)){
-    hits = tc$lookup(x[j], ignore_case=ignore_case, perl=perl, with_i=with_i)
+    hits = tc$lookup(x[j], feature=feature, ignore_case=ignore_case, perl=perl, with_i=with_i)
     if (length(hits) > 0) hit_list[[j]] = hits
   }
   hits = data.table::rbindlist(hit_list)
