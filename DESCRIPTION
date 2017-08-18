@@ -9,6 +9,7 @@ Depends:
     Matrix, 
     data.table
 Imports: 
+    memoise,
     methods, 
     plyr, 
     wordcloud, 

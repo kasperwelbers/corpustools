@@ -2,18 +2,22 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 fast_factor <- function(x, levs) {
-    .Call('corpustools_fast_factor', PACKAGE = 'corpustools', x, levs)
+    .Call('_corpustools_fast_factor', PACKAGE = 'corpustools', x, levs)
 }
 
-proximity_hit_ids <- function(con, pos, value, n_unique, window) {
-    .Call('corpustools_proximity_hit_ids', PACKAGE = 'corpustools', con, pos, value, n_unique, window)
+proximity_hit_ids <- function(con, subcon, pos, value, n_unique, window, group_id, assign_once) {
+    .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', con, subcon, pos, value, n_unique, window, group_id, assign_once)
 }
 
-sequence_hit_ids <- function(con, pos, value, length) {
-    .Call('corpustools_sequence_hit_ids', PACKAGE = 'corpustools', con, pos, value, length)
+sequence_hit_ids <- function(con, subcon, pos, value, length) {
+    .Call('_corpustools_sequence_hit_ids', PACKAGE = 'corpustools', con, subcon, pos, value, length)
 }
 
 ngrams <- function(tokens, group, n, sep, empty) {
-    .Call('corpustools_ngrams', PACKAGE = 'corpustools', tokens, group, n, sep, empty)
+    .Call('_corpustools_ngrams', PACKAGE = 'corpustools', tokens, group, n, sep, empty)
+}
+
+parse_query <- function(x) {
+    .Call('_corpustools_parse_query', PACKAGE = 'corpustools', x)
 }
 

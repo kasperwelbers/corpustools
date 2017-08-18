@@ -6,13 +6,13 @@ FORM_REGEX = sprintf('([^%s]+)', FORM_SYMBOLS)
 ## perhaps better to use switch to a (shorter) list of REGEX symbols that is not allowed (i.e. the symbols used in the R logical expression).
 
 parse_queries <- function(query){
-  queries = plyr::llply(query, parse_query)
+  queries = plyr::llply(query, parse_queries_loop)
   do.call(rbind, queries)
 }
 
 
 
-parse_query <- function(query){
+parse_queries_loop <- function(query){
   query = iconv(query, to='ASCII//TRANSLIT') # remove accented characters
 
   query = gsub('\\{|\\}', '', query) ## drop curly brackets, which are used here for escaping
@@ -173,7 +173,7 @@ case_insensitive_flags <- function(term, regex){
       r = regmatches(regex[[i]], gregexpr(FORM_REGEX, regex[i]))[[1]]
       s_flag = grepl('~[0-9]*s', t)
       for (sreg in r[!s_flag]) {
-        regex[i] = gsub(sreg, sprintf('(?i)%s(?-i)', sreg), regex[i], fixed = T)
+        regex[i] = gsub(sreg, sprintf('((?i)%s(?-i))', sreg), regex[i], fixed = T)
       }
     }
   }

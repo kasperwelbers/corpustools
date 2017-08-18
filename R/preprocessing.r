@@ -104,7 +104,8 @@ preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=
   if (!methods::is(x, 'factor')) x = fast_factor(x)
   if (replace_whitespace) levels(x) = gsub(' ', '_', levels(x), fixed=T)
   if (lowercase) levels(x) = tolower(levels(x))
-  if (as_ascii) levels(x) = iconv(levels(x), to='ASCII//TRANSLIT')
+  #if (as_ascii) levels(x) = iconv(levels(x), to='ASCII//TRANSLIT')
+  if (as_ascii) levels(x) = stringi::stri_trans_general(levels(x), "Latin-ASCII")
   if (remove_stopwords) levels(x)[levels(x) %in% get_stopwords(language)] = NA
   if (remove_punctuation) levels(x)[!grepl("[[:alnum:]]", levels(x))] = NA
   if (use_stemming) levels(x) = SnowballC::wordStem(levels(x), language=language)
@@ -118,7 +119,7 @@ preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=
 
 create_ngrams <- function(tokens, group, n, label=T, sep = '/', empty='') {
   if (!length(tokens) == length(group)) stop("tokens has to be of same length as group")
-  ng = .Call('corpustools_ngrams', PACKAGE = 'corpustools', tokens, group, n, sep, empty)
+  ng = .Call('_corpustools_ngrams', PACKAGE = 'corpustools', tokens, group, n, sep, empty)
   ng = fast_factor(ng)
   if (label) return(ng) else return(as.numeric(ng))
 }

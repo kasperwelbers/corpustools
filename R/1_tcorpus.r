@@ -6,6 +6,7 @@
 ## note that this file has to be named 1_*, because r files are processed in order by name,
 ## and the tCorpus class has to be created before the additional methods
 
+
 tCorpus <- R6::R6Class("tCorpus",
    cloneable=FALSE,
    private = list(
@@ -13,21 +14,15 @@ tCorpus <- R6::R6Class("tCorpus",
      .meta = NULL,
      .p = list(),
 
-
-
-     match_data_to_meta = function(){
+     sync = function(){
        doc_ids = intersect(unique(private$.data$doc_id), unique(private$.meta$doc_id))
-       private$.data = private$.data[doc_ids,]
-       private$.meta = private$.meta[doc_ids,]
+       private$.data = private$.data[list(doc_ids),]
+       private$.meta = private$.meta[list(doc_ids),]
        private$set_keys()
      },
 
      check_unique_rows = function(d){
-       if ('sent_i' %in% colnames(d)) {
-         if (anyDuplicated(d, by = c('doc_id', 'sent_i', 'token_i'))) stop('After transformation, token_i is not unique within documents')
-       } else {
-         if (anyDuplicated(d, by = c('doc_id','token_i'))) stop('After transformation, token_i is not unique within documents')
-       }
+       if (anyDuplicated(d, by = c('doc_id','token_i'))) stop('After transformation, token_i is not unique within documents')
      },
 
      set_keys = function(){
@@ -50,6 +45,11 @@ tCorpus <- R6::R6Class("tCorpus",
        private$.data = data.table(data)
        private$.meta = data.table(meta)
        private$set_keys()
+     },
+
+     copy = function(){
+       tCorpus$new(data = data.table::copy(private$.data),
+                   meta = data.table::copy(private$.meta))
      },
 
 ## SHOW/GET DATA METHODS ##
@@ -160,12 +160,6 @@ tCorpus <- R6::R6Class("tCorpus",
 
 
 ## DATA MODIFICATION METHODS ##
-
-     copy = function(){
-       tCorpus$new(data = data.table::copy(private$.data),
-                   meta = data.table::copy(private$.meta))
-     },
-
      set = function(column, value, subset=NULL, subset_value=T){
        if (column == 'doc_id') stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
        if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
@@ -205,6 +199,7 @@ tCorpus <- R6::R6Class("tCorpus",
            suppressWarnings(mod[, (column) := value])
            check_unique_rows(mod)
          }
+         if (is.character(value)) value = fast_factor(value)  ## force the use of factors for character vectors.
          ## ugly suppress. Should look into why data.table give the (seemingly harmless) internal.selfref warning
          suppressWarnings(private$.data[,(column) := value])
        }
@@ -340,7 +335,7 @@ tCorpus <- R6::R6Class("tCorpus",
        if (!is.null(subset_meta) & !is.null(subset)) {
          self$select_meta_rows(subset_meta, keep_data = T) ## if both subsets are used, first perform both without subseting the other, then match on doc_ids.
          self$select_rows(subset, keep_meta = T)           ## (we cannot subset one before the other, because subset call's can contains vectors for which the rows should match)
-         private$match_data_to_meta()
+         private$sync()
        }
        if (!is.null(subset_meta) & is.null(subset)) {
          self$select_meta_rows(subset_meta, keep_data = F)
@@ -405,26 +400,39 @@ tCorpus <- R6::R6Class("tCorpus",
         as.data.frame(d)
       },
 
-      lookup = function(x, feature='token', ignore_case=TRUE, perl=FALSE, batchsize=25, fixed=FALSE, with_i=FALSE, only_i=FALSE){
+
+
+      lookup = function(x, feature='token', ignore_case=TRUE, perl=FALSE, batchsize=25, fixed=FALSE, with_i=FALSE, only_i=FALSE, as_ascii=FALSE){
         ## prepare lookup table: set a (secondary) data.table index
         if (!feature %in% indices(private$.data)) {
           data.table::setindexv(private$.data, feature)
           message(sprintf('created index for "%s" column', feature))
         }
 
+        forget_if_new(private$.data[[feature]]) ## hacky use of memoise. If input is not in cache because the feature column changed, reset cache
+
         ## if not fixed (exact value matching), first lookup x as regex in unique values
+        ## note that mem_batch_grep is memoised, and returns indices to be low on memory
         if (!fixed) {
           uval = if (is.factor(private$.data[[feature]])) levels(private$.data[[feature]]) else unique(private$.data[[feature]])
-          x = batch_grep(x, uval, ignore_case=ignore_case, perl=perl, batchsize=batchsize, useBytes=T)
+          x = uval[mem_batch_grep(x, uval, ignore_case=ignore_case, perl=perl, batchsize=batchsize, useBytes=T, as_ascii=as_ascii)]
         }
 
-        if (with_i) {
-          return(dt_get_with_i(private$.data, x, feature))
+        if (length(x) == 0) return(NULL)
+        if (with_i | only_i) {
+          i = na.omit(private$.data[x, on=feature, which=T])
+          if (only_i) return(i)
+          out = private$.data[i,]
+          out[,i:=i]
         } else {
-          return(private$.data[x, on=feature, which=only_i])
+          out = private$.data[x, on=feature, which=F]
         }
+        if (nrow(out) == 0) return(NULL)
+        return(out)
       },
 
+
+      forget_memoise = function() forget_all_mem(),
       indices = function() data.table::indices(private$.data),
       clear_indices = function() data.table::setindex(private$.data, NULL)
    ),
@@ -444,6 +452,7 @@ tCorpus <- R6::R6Class("tCorpus",
        if (!is.null(e)) stop('Cannot change tcorpus$meta_names by assignment. Instead, use the set_meta_colname() function')
        colnames(private$.meta)
      },
+
 
      doc_id_levels = function(mod=NULL) {
        if (!is.null(mod)){
@@ -582,21 +591,35 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
   context
 }
 
-dt_get_with_i <- function(d, x, on) {
-  i = d[x, on=on, which=T]
-  out = d[i,]
-  out[,i:=i]
-  out
-}
+### memoised regex search
 
-batch_grep <- function(patterns, x, ignore_case=T, perl=F, batchsize=25, useBytes=T){
-  ## make batches of terms and turn each batch into a single regex
-  patterns = split(patterns, ceiling(seq_along(patterns)/batchsize))
-  patterns = sapply(patterns, stringi::stri_paste, collapse='|')
-
-  out = rep(F, length(x))
-  for(pattern in patterns){
-    out = out | grepl(pattern, x, ignore.case=ignore_case, perl=perl, useBytes=useBytes)
+batch_grep <- function(patterns, x, ignore_case=T, perl=F, batchsize=25, useBytes=T, as_ascii=FALSE){
+  if (as_ascii) x = mem_transform_ascii(x)
+  if (length(patterns) > 1) { ## if there are multiple terms, make batches of terms and turn each batch into a single regex
+    patterns = split(patterns, ceiling(seq_along(patterns)/batchsize))
+    patterns = sapply(patterns, stringi::stri_paste, collapse='|')
+    out = rep(F, length(x))
+    for(pattern in patterns){
+      out = out | grepl(pattern, x, ignore.case=ignore_case, perl=perl, useBytes=useBytes)
+    }
+  } else {
+    out = grepl(patterns, x, ignore.case=ignore_case, perl=perl, useBytes=useBytes)
   }
-  x[out]
+  which(out) ## use which to save memory in memoise
 }
+
+mem_batch_grep <- memoise::memoise(batch_grep)
+mem_transform_ascii <- memoise::memoise(function(x) stringi::stri_trans_general(x, "Latin-ASCII"))
+
+forget_if_new <- memoise::memoise(function(x){  ## the forget calls will only be performed if x changes
+  forget_all_mem()                              ## otherwise the invisible NULL is simply returned from cache
+  invisible(NULL)
+})
+
+forget_all_mem <- function(){
+  memoise::forget(mem_batch_grep)
+  memoise::forget(mem_transform_ascii)
+  memoise::forget(forget_if_new)
+  invisible(NULL)
+}
+

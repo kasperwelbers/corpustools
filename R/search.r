@@ -85,31 +85,52 @@ multi_lookup <- function(tc, x, window=NULL, ignore_case, perl=F, skip_i = c(), 
   }
   hits = data.table::rbindlist(hit_list)
 
+  if (nrow(hits) == 0) return(NULL)
   evalhere_j = rep(1:length(hit_list), sapply(hit_list, nrow))
   if (nrow(hits) > 0) hits[,j := evalhere_j]
   if (length(skip_i) > 0) hits = subset(hits, !i %in% skip_i)
   if (nrow(hits) == 0) return(NULL)
 
   if (is.null(window)) {
-    hits[, hit_id := sequence_hit_ids(hits, seq_length = length(x), subcontext=subcontext)] ## assign hit ids to valid sequences
+    hits[, hit_id := get_sequence_hit(hits, seq_length = length(x), subcontext=subcontext)] ## assign hit ids to valid sequences
   } else {
-    hits[, hit_id := proximity_hit_ids(hits, n_unique = length(x), window=window, subcontext=subcontext)] ## assign hit_ids to groups of tokens within the given window
+    hits[, hit_id := get_proximity_hit(hits, n_unique = length(x), window=window, subcontext=subcontext)] ## assign hit_ids to groups of tokens within the given window
   }
+
   hits[, j := NULL]
   hits = subset(hits, hit_id > 0)
   if (nrow(hits) > 0) hits else NULL
 }
 
-sequence_hit_ids <- function(d, seq_length, context='doc_id', position='token_i', value='j', subcontext=NULL){
+#AND_hit_ids <- function(d, n_unique, context='doc_id', value='j', subcontext=NULL){
+#  setorderv(d, c(context, value))
+#  context = if(is.null(subcontext)) d[[context]] else  global_position(d[[subcontext]], d[[context]], presorted = T, position_is_local=T)
+#  .Call('_corpustools_AND_hit_ids', PACKAGE = 'corpustools', as.integer(context), as.integer(d[[value]]), n_unique)
+#}
+
+get_sequence_hit <- function(d, seq_length, context='doc_id', position='token_i', value='j', subcontext=NULL){
   setorderv(d, c(context, position, value))
-  context = if(is.null(subcontext)) d[[context]] else  global_position(d[[subcontext]], d[[context]], presorted = T, position_is_local=T)
-  .Call('corpustools_sequence_hit_ids', PACKAGE = 'corpustools', as.integer(context), as.integer(d[[position]]), as.integer(d[[value]]), seq_length)
+  if (!is.null(subcontext)) subcontext = d[[subcontext]]
+  .Call('_corpustools_sequence_hit_ids', PACKAGE = 'corpustools', as.integer(d[[context]]), as.integer(subcontext), as.integer(d[[position]]), as.integer(d[[value]]), seq_length)
 }
 
-proximity_hit_ids <- function(d, n_unique, window, context='doc_id', position='token_i', value='j', subcontext=NULL){
+get_proximity_hit <- function(d, n_unique, window=NA, context='doc_id', position='token_i', value='j', subcontext=NULL, group_id=NULL, assign_once=T){
   setorderv(d, c(context, position, value))
-  context = if(is.null(subcontext)) d[[context]] else  global_position(d[[subcontext]], d[[context]], presorted = T, position_is_local=T)
-  .Call('corpustools_proximity_hit_ids', PACKAGE = 'corpustools', as.integer(context), as.integer(d[[position]]), as.integer(d[[value]]), n_unique, window)
+  if (!is.null(subcontext)) subcontext = d[[subcontext]]
+  if (!is.null(group_id)) group_id = d[[group_id]]
+  .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', as.integer(d[[context]]), as.integer(subcontext), as.integer(d[[position]]), as.integer(d[[value]]), n_unique, window, as.numeric(group_id), assign_once)
+}
+
+get_OR_hit <- function(d) {
+  if (!'hit_id' %in% colnames(d)) {
+    i = 1:nrow(d)
+  } else i = d$hit_id
+  isna = is.na(i)
+  if (any(isna)) {
+    if (all(isna)) na_ids = 1:length(i) else na_ids = 1:sum(isna) + max(i, na.rm = T)
+    i[isna] = na_ids
+  }
+  i
 }
 
 grep_global_i <- function(fi, regex, ...) {

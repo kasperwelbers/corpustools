@@ -7,7 +7,7 @@ using namespace Rcpp;
 
 // fast_factor
 SEXP fast_factor(SEXP x, SEXP levs);
-RcppExport SEXP corpustools_fast_factor(SEXP xSEXP, SEXP levsSEXP) {
+RcppExport SEXP _corpustools_fast_factor(SEXP xSEXP, SEXP levsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -18,37 +18,41 @@ BEGIN_RCPP
 END_RCPP
 }
 // proximity_hit_ids
-IntegerVector proximity_hit_ids(IntegerVector con, IntegerVector pos, IntegerVector value, int n_unique, int window);
-RcppExport SEXP corpustools_proximity_hit_ids(SEXP conSEXP, SEXP posSEXP, SEXP valueSEXP, SEXP n_uniqueSEXP, SEXP windowSEXP) {
+IntegerVector proximity_hit_ids(IntegerVector con, IntegerVector subcon, IntegerVector pos, IntegerVector value, double n_unique, double window, NumericVector group_id, bool assign_once);
+RcppExport SEXP _corpustools_proximity_hit_ids(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP valueSEXP, SEXP n_uniqueSEXP, SEXP windowSEXP, SEXP group_idSEXP, SEXP assign_onceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< IntegerVector >::type con(conSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type subcon(subconSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type pos(posSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type value(valueSEXP);
-    Rcpp::traits::input_parameter< int >::type n_unique(n_uniqueSEXP);
-    Rcpp::traits::input_parameter< int >::type window(windowSEXP);
-    rcpp_result_gen = Rcpp::wrap(proximity_hit_ids(con, pos, value, n_unique, window));
+    Rcpp::traits::input_parameter< double >::type n_unique(n_uniqueSEXP);
+    Rcpp::traits::input_parameter< double >::type window(windowSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type group_id(group_idSEXP);
+    Rcpp::traits::input_parameter< bool >::type assign_once(assign_onceSEXP);
+    rcpp_result_gen = Rcpp::wrap(proximity_hit_ids(con, subcon, pos, value, n_unique, window, group_id, assign_once));
     return rcpp_result_gen;
 END_RCPP
 }
 // sequence_hit_ids
-IntegerVector sequence_hit_ids(IntegerVector con, IntegerVector pos, IntegerVector value, int length);
-RcppExport SEXP corpustools_sequence_hit_ids(SEXP conSEXP, SEXP posSEXP, SEXP valueSEXP, SEXP lengthSEXP) {
+IntegerVector sequence_hit_ids(IntegerVector con, IntegerVector subcon, IntegerVector pos, IntegerVector value, double length);
+RcppExport SEXP _corpustools_sequence_hit_ids(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP valueSEXP, SEXP lengthSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< IntegerVector >::type con(conSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type subcon(subconSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type pos(posSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type value(valueSEXP);
-    Rcpp::traits::input_parameter< int >::type length(lengthSEXP);
-    rcpp_result_gen = Rcpp::wrap(sequence_hit_ids(con, pos, value, length));
+    Rcpp::traits::input_parameter< double >::type length(lengthSEXP);
+    rcpp_result_gen = Rcpp::wrap(sequence_hit_ids(con, subcon, pos, value, length));
     return rcpp_result_gen;
 END_RCPP
 }
 // ngrams
 CharacterVector ngrams(CharacterVector tokens, CharacterVector group, int n, std::string sep, std::string empty);
-RcppExport SEXP corpustools_ngrams(SEXP tokensSEXP, SEXP groupSEXP, SEXP nSEXP, SEXP sepSEXP, SEXP emptySEXP) {
+RcppExport SEXP _corpustools_ngrams(SEXP tokensSEXP, SEXP groupSEXP, SEXP nSEXP, SEXP sepSEXP, SEXP emptySEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -61,12 +65,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// parse_query
+List parse_query(std::string x);
+RcppExport SEXP _corpustools_parse_query(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(parse_query(x));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"corpustools_fast_factor", (DL_FUNC) &corpustools_fast_factor, 2},
-    {"corpustools_proximity_hit_ids", (DL_FUNC) &corpustools_proximity_hit_ids, 5},
-    {"corpustools_sequence_hit_ids", (DL_FUNC) &corpustools_sequence_hit_ids, 4},
-    {"corpustools_ngrams", (DL_FUNC) &corpustools_ngrams, 5},
+    {"_corpustools_fast_factor", (DL_FUNC) &_corpustools_fast_factor, 2},
+    {"_corpustools_proximity_hit_ids", (DL_FUNC) &_corpustools_proximity_hit_ids, 8},
+    {"_corpustools_sequence_hit_ids", (DL_FUNC) &_corpustools_sequence_hit_ids, 5},
+    {"_corpustools_ngrams", (DL_FUNC) &_corpustools_ngrams, 5},
+    {"_corpustools_parse_query", (DL_FUNC) &_corpustools_parse_query, 1},
     {NULL, NULL, 0}
 };
 

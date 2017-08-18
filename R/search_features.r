@@ -129,6 +129,7 @@ search_features_loop <- function(tc, queries, feature, keep_false_condition, uni
     kw = queries$keyword[i]
 
     hit = search_string(tc, kw, unique_i=unique_i, feature=feature)
+
     if(is.null(hit)) next
     if (nrow(hit) == 0) next
 
@@ -162,7 +163,6 @@ search_features_loop <- function(tc, queries, feature, keep_false_condition, uni
   } else {
     hits = data.frame(code=factor(), feature=factor(), doc_id=factor(), sent_i=numeric(), token_i = numeric(), hit_id=numeric())
   }
-
   hits
 }
 

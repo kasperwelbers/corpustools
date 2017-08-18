@@ -4,7 +4,13 @@
 tokenize_to_dataframe <- function(x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_tokens=NULL, verbose=F){
   batch_i = get_batch_i(length(doc_id), batchsize=5000, return_list=T)
   prog = if (verbose) 'text' else 'none'
-  plyr::ldply(batch_i, tokenize_to_dataframe_batch, x=x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, .progress=prog)
+
+  tokens = vector('list', length(batch_i))
+  for (i in 1:length(batch_i)){
+    tokens[[i]] = tokenize_to_dataframe_batch(x[batch_i[[i]]], doc_id=doc_id[batch_i[[i]]],
+                                              split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens)
+  }
+  data.table::rbindlist(tokens)
 }
 
 custom_dot_abbreviations <- function(){
@@ -37,9 +43,7 @@ split_tokens <- function(x, max_tokens) {
   x
 }
 
-tokenize_to_dataframe_batch <- function(batch_i, x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_tokens=NULL){
-  x = x[batch_i]
-  doc_id = doc_id[batch_i]
+tokenize_to_dataframe_batch <- function(x, doc_id, split_sentences=F, max_sentences=NULL, max_tokens=NULL){
   x = gsub('_', ' ', x, fixed=T)
   if (split_sentences | !is.null(max_sentences)) {
     x = escape_custom_dot_abbreviations(x)
@@ -49,22 +53,21 @@ tokenize_to_dataframe_batch <- function(batch_i, x, doc_id=1:length(x), split_se
     x = lapply(x, function(x) unlist_to_df(split_tokens(x, max_tokens),
                                            global_position=T))
     doclen = sapply(x, function(x) length(x$id))
-    x = rbindlist(x)
-    colnames(x) = c('sent_i','token_i','token')
+    x = data.table::rbindlist(x)
+    data.table::setnames(x, c('sent_i','token_i','token'))
 
     x$doc_id = rep(doc_id, doclen)
     data.table::setcolorder(x, c('doc_id','sent_i','token_i','token'))
 
     if (!is.null(max_tokens)) x = x[x$position <= max_tokens,]
-    x$token = unescape_custom_dot_abbreviation(x$token)
+    x[, token := unescape_custom_dot_abbreviation(x$token)]
   } else {
     x = split_tokens(x, max_tokens)
     x = as.data.table(unlist_to_df(x, doc_id))
     colnames(x) = c('doc_id', 'token_i', 'token')
   }
-
-  x$token = as.factor(x$token)
-  x$doc_id = as.factor(x$doc_id)
+  x[, token := fast_factor(x$token)]
+  x[, doc_id := fast_factor(x$doc_id)]
   x
 }
 
