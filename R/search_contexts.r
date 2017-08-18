@@ -91,8 +91,8 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
 
   if (context_level == 'document') context_columns = c('doc_id')
   if (context_level == 'sentence') context_columns = c('doc_id', 'sent_i')
-  evalhere_i = !duplicated(context_i)
-  first_context_row = tc$get(context_columns, subset = evalhere_i, keep_df = T)
+  .i = !duplicated(context_i)
+  first_context_row = tc$get(context_columns, subset = .i, keep_df = T)
 
   subcontext = if(context_level == 'sentence') 'sent_i' else NULL
 

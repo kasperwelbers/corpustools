@@ -14,6 +14,8 @@ recursive_print <- function(qlist, level=1) {
 }
 
 recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode = c('unique_hits','features'), parent_relation='') {
+  .invisible = NULL; .term_i = NULL; .seq_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
+
   mode = match.arg(mode) ## 'unique_hit' mode makes nice sets of unique occurences (needed for counting) but doesn't assign all features
                          ## 'features' mode does not assign hit_id, but returns all features for which the query is true (needed for coding/dictionaries)
   i = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)

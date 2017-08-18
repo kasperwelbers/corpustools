@@ -12,9 +12,9 @@ tCorpus$set('public', 'compare_subset', function(feature, subset_x=NULL, subset_
 
   if(is.null(subset_x) & is.null(subset_meta_x) & is.null(query_x)) stop("at least one of subset_x, subset_meta_x or query_x has to be specified")
   if(!is.null(subset_x) | !is.null(subset_meta_x)) {
-    evalhere_subset_x = subset_x
-    evalhere_subset_meta_x = subset_meta_x
-    tc_x = self$subset(subset=evalhere_subset_x, subset_meta = evalhere_subset_meta_x, copy=T)
+    .subset_x = subset_x
+    .subset_meta_x = subset_meta_x
+    tc_x = self$subset(subset=.subset_x, subset_meta = .subset_meta_x, copy=T)
   }
   if(!is.null(query_x)) tc_x = self$subset_query(query_x, feature=query_feature, copy=T)
 

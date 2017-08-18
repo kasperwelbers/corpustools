@@ -86,8 +86,8 @@ multi_lookup <- function(tc, x, window=NULL, ignore_case, perl=F, skip_i = c(), 
   hits = data.table::rbindlist(hit_list)
 
   if (nrow(hits) == 0) return(NULL)
-  evalhere_j = rep(1:length(hit_list), sapply(hit_list, nrow))
-  if (nrow(hits) > 0) hits[,j := evalhere_j]
+  .j = rep(1:length(hit_list), sapply(hit_list, nrow))
+  if (nrow(hits) > 0) hits[,j := .j]
   if (length(skip_i) > 0) hits = subset(hits, !i %in% skip_i)
   if (nrow(hits) == 0) return(NULL)
 

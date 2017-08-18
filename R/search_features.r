@@ -61,9 +61,9 @@ tCorpus$set('public', 'search_features', function(keyword=NA, condition=NA, code
 tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', column='code', condition_once=F, unique_i=F, verbose=F){
   hits = search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, keep_false_condition=F, unique_i=unique_i, verbose=verbose)
 
-  evalhere_i = self$token_i(doc_id = hits$hits$doc_id, token_i = hits$hits$token_i)
-  evalhere_value = hits$hits$code
-  self$set(column=column, subset=evalhere_i, value=evalhere_value, subset_value=F)
+  .i = self$token_i(doc_id = hits$hits$doc_id, token_i = hits$hits$token_i)
+  .value = hits$hits$code
+  self$set(column=column, subset=.i, value=.value, subset_value=F)
 
   invisible(self)
 })
@@ -88,9 +88,9 @@ tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=N
 #' @aliases search_recode.tCorpus
 tCorpus$set('public', 'search_recode', function(feature, new_value, keyword, condition=NA, condition_once=F, unique_i=F){
   hits = self$search_features(keyword=keyword, condition=condition, condition_once=condition_once, unique_i=unique_i)
-  evalhere_i = self$token_i(doc_id = hits$hits$doc_id, token_i = hits$hits$token_i)
-  evalhere_new_value = new_value
-  self$set(feature, evalhere_new_value, subset = evalhere_i)
+  .i = self$token_i(doc_id = hits$hits$doc_id, token_i = hits$hits$token_i)
+  .new_value = new_value
+  self$set(feature, .new_value, subset = .i)
   invisible(self)
 })
 

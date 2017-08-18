@@ -56,14 +56,14 @@ tCorpus$set('public', 'feature_subset', function(column, new_column=column, subs
 
   if (is(subset, 'numeric')) subset = 1:self$n %in% subset ## this can be the case if a vector of indices is passed to subset (which is not a valid call, but is allowed for convenience because it is a common way of subsetting)
 
-  evalhere_subset = if (inverse) !subset else subset
+  .subset = if (inverse) !subset else subset
 
   if (new_column %in% self$names) {
     old_column = self$get(column)
     self$set(new_column, NA)
-    self$set(new_column, old_column, subset = evalhere_subset)
+    self$set(new_column, old_column, subset = .subset)
   } else {
-    self$set(new_column, self$get(column), subset = evalhere_subset)
+    self$set(new_column, self$get(column), subset = .subset)
   }
 
   invisible(self)
@@ -76,12 +76,12 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
   if (!methods::is(feature, 'factor')) feature = factor(feature)
 
   if (ngrams == 1) {
-    evalhere_feature = preprocess_tokens(feature, context=NA, language=language, use_stemming=use_stemming, lowercase=lowercase, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords)
+    .feature = preprocess_tokens(feature, context=NA, language=language, use_stemming=use_stemming, lowercase=lowercase, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords)
   } else {
     context = tc$context(context_level=ngram_context, with_labels = F)
-    evalhere_feature = preprocess_tokens(feature, context=context, language=language, use_stemming=use_stemming, lowercase=lowercase, ngrams = ngrams, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords)
+    .feature = preprocess_tokens(feature, context=context, language=language, use_stemming=use_stemming, lowercase=lowercase, ngrams = ngrams, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords)
   }
-  tc$set(column = new_column, value = evalhere_feature)
+  tc$set(column = new_column, value = .feature)
 }
 
 

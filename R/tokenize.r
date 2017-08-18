@@ -44,6 +44,7 @@ split_tokens <- function(x, max_tokens) {
 }
 
 tokenize_to_dataframe_batch <- function(x, doc_id, split_sentences=F, max_sentences=NULL, max_tokens=NULL){
+  token = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
   x = gsub('_', ' ', x, fixed=T)
   if (split_sentences | !is.null(max_sentences)) {
     x = escape_custom_dot_abbreviations(x)

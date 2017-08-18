@@ -17,12 +17,12 @@ tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, me
   }
 
   ## adding DEDUPLICATE_FEATURE is not very elegant and memory efficient. Better alternative, perhaps, is to pass docfreq_filter results to compare_documents_fun.
-  evalhere_feature = feature
-  self$set('DEDUPLICATE_FEATURE', self$get(evalhere_feature))
+  .feature = feature
+  self$set('DEDUPLICATE_FEATURE', self$get(.feature))
   self$feature_subset('DEDUPLICATE_FEATURE', 'DEDUPLICATE_FEATURE', subset = docfreq_filter('DEDUPLICATE_FEATURE', min=min_docfreq, max=self$n * max_docfreq_pct), copy=F)
 
-  evalhere_duplicates = get_duplicates(self, feature='DEDUPLICATE_FEATURE', date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
-  self$subset(subset_meta = !doc_id %in% evalhere_duplicates, copy=F)
+  .duplicates = get_duplicates(self, feature='DEDUPLICATE_FEATURE', date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
+  self$subset(subset_meta = !doc_id %in% .duplicates, copy=F)
   self$set('DEDUPLICATE_FEATURE', NULL)
   invisible(self)
 })

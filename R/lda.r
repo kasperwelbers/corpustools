@@ -8,8 +8,8 @@ tCorpus$set('public', 'lda_fit', function(feature, create_feature=NULL, K=50, nu
 })
 
 tCorpus$set('public', 'lda_topic_features', function(m, feature, new_feature='LDA_topic', context_level=c('document','sentence')){
-  evalhere_d = lda_features(tc=self, m=m, feature=feature, new_feature=new_feature, context_level=context_level)
-  self$set(new_feature, evalhere_d$v[order(evalhere_d$i)])
+  .d = lda_features(tc=self, m=m, feature=feature, new_feature=new_feature, context_level=context_level)
+  self$set(new_feature, .d$v[order(.d$i)])
   invisible(self)
 })
 

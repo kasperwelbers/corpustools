@@ -164,7 +164,7 @@ tCorpus <- R6::R6Class("tCorpus",
        if (column == 'doc_id') stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
        if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
        if (class(substitute(value)) %in% c('call', 'name')) value = self$eval(substitute(value), parent.frame())
-       if (grepl('^evalhere_', column)) stop('column names in a tCorpus cannot start with evalhere_')
+       if (grepl('^\\.', column)) stop('column names in a tCorpus cannot start with a dot')
 
        if (!is.null(subset)){
          if (subset_value & length(value) > 1) value = value[subset]
@@ -231,7 +231,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
      set_colname = function(oldname, newname) {
        if (oldname %in% c('doc_id','sent_i','token_i')) stop('The position columns (doc_id, sent_i, token_i) cannot be set or changed')
-       if (grepl('^evalhere_', newname)) stop('column names in a tCorpus cannot start with evalhere_')
+       if (grepl('^\\.', newname)) stop('column names in a tCorpus cannot start with a dot')
 
        data.table::setnames(private$.data, oldname, newname)
        invisible(self)
@@ -242,7 +242,7 @@ tCorpus <- R6::R6Class("tCorpus",
        if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval_meta(substitute(subset), parent.frame())
        if (class(substitute(value)) %in% c('call', 'name')) value = self$eval_meta(substitute(value), parent.frame())
 
-       if (grepl('^evalhere_', column)) stop('column names in a tCorpus cannot start with evalhere_')
+       if (grepl('^\\.', column)) stop('column names in a tCorpus cannot start with a dot')
 
        if (!is.null(subset)){
          if (subset_value & length(value) > 1) value = value[subset]
@@ -287,7 +287,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
      set_meta_colname = function(oldname, newname) {
        if (oldname %in% c('doc_id')) stop('The doc_id column cannot be set or changed')
-       if (grepl('^evalhere_', newname)) stop('column names in a tCorpus cannot start with evalhere_')
+       if (grepl('^\\.', newname)) stop('column names in a tCorpus cannot start with a dot')
        setnames(private$.meta, oldname, newname)
        invisible(self)
      },
@@ -351,8 +351,8 @@ tCorpus <- R6::R6Class("tCorpus",
       subset_meta = function(subset=NULL, copy=F){
         ## subset also has a subset_meta argument, but we add this for consistency with other _meta methods
         if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval_meta(substitute(subset), parent.frame())
-        evalhere_subset = subset
-        self$subset(subset_meta = evalhere_subset, copy=copy)
+        .subset = subset
+        self$subset(subset_meta = .subset, copy=copy)
       },
 
      aggregate = function(meta_cols=NULL, hits=NULL, feature=NULL, count=c('documents','tokens'), wide=T){
