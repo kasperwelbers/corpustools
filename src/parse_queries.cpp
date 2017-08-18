@@ -1,7 +1,9 @@
 #include <Rcpp.h>
-#include <regex>
 using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]
+#include <regex>
+#include <string>
+
 
 bool is_lpar(char x) {return x == '(';}
 bool is_rpar(char x) {return x == ')';}
@@ -38,15 +40,13 @@ bool char_in_string(std::string s, char c) {
 }
 
 std::string escape_special(std::string x) {
-  std::regex e ("([^0-9a-zA-Z])");
-  x = std::regex_replace(x, e, "\\$1");
-  return x;
+  std::regex e("([^0-9a-zA-Z])");
+  return std::regex_replace(x, e, "\\$1");
 }
 
 std::string wildcard_as_regex(std::string x){
-  std::regex e ("([*?])");
-  x = std::regex_replace(x, e, ".$1");
-  return x;
+  std::regex e("([*?])");
+  return std::regex_replace(x, e, ".$1");
 }
 
 std::string extract_flag(std::string &x){
