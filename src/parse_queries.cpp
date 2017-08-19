@@ -1,9 +1,6 @@
 #include <Rcpp.h>
 using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]
-#include <regex>
-#include <string>
-
 
 bool is_lpar(char x) {return x == '(';}
 bool is_rpar(char x) {return x == ')';}
@@ -39,15 +36,15 @@ bool char_in_string(std::string s, char c) {
   return (i >= 0);
 }
 
-std::string escape_special(std::string x) {
-  std::regex e("([^0-9a-zA-Z])");
-  return std::regex_replace(x, e, "\\$1");
-}
-
-std::string wildcard_as_regex(std::string x){
-  std::regex e("([*?])");
-  return std::regex_replace(x, e, ".$1");
-}
+// Travis breaks on regex_replace, probably due to older gcc compiler (which is probably a good reason not to use this)
+//std::string escape_special(std::string x) {
+//  std::regex e("([^0-9a-zA-Z])");
+//  return std::regex_replace(x, e, "\\$1");
+//}
+//std::string wildcard_as_regex(std::string x){
+//  std::regex e("([*?])");
+//  return std::regex_replace(x, e, ".$1");
+//}
 
 std::string extract_flag(std::string &x){
   int i = x.find("~");
@@ -111,16 +108,16 @@ List parse_terms(List terms) {
       std::string term = terms[i];
       if (is_bool(term)) continue;
 
-      std::string reg = term;
-      reg = escape_special(reg);
-      reg = wildcard_as_regex(reg);
-      std::string flag = extract_flag(reg); // also removes flag from term
+      //std::string reg = term;
+      //reg = escape_special(reg);
+      //reg = wildcard_as_regex(reg);
+      std::string flag = extract_flag(term); // also removes flag from term
 
       List tlist;
       tlist["case_sensitive"] = char_in_string(flag, 's');
       tlist["invisible"] = char_in_string(flag, 'i');
       tlist["term"] = term;
-      tlist["regex"] = "\\b" + reg + "\\b";
+      //tlist["regex"] = "\\b" + reg + "\\b";
       out.push_back(tlist);
 
     } else {

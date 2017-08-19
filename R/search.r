@@ -55,12 +55,12 @@ search_string <- function(tc, string, unique_i=F, skip_i=c(), with_i=F, subconte
   droplevels(unique(data.table::rbindlist(all_hits)))
 }
 
-single_lookup <- function(tc, x, ignore_case, perl=F, skip_i=c(), with_i=F, feature='token') {
+single_lookup <- function(tc, x, ignore_case, skip_i=c(), with_i=F, feature='token') {
   i = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
 
   hit_list = list()
-  if(!all(ignore_case)) hit_list[['']] = tc$lookup(x[!ignore_case], feature=feature, ignore_case=F, perl=perl, with_i=with_i)
-  if(any(ignore_case))  hit_list[['']] = tc$lookup(x[ignore_case], feature=feature, ignore_case=T, perl=perl, with_i=with_i)
+  if(!all(ignore_case)) hit_list[['']] = tc$lookup(x[!ignore_case], feature=feature, ignore_case=F, raw_regex=T, with_i=with_i)
+  if(any(ignore_case))  hit_list[['']] = tc$lookup(x[ignore_case], feature=feature, ignore_case=T, raw_regex=T, with_i=with_i)
 
   hits = data.table::rbindlist(hit_list)
   if (length(skip_i) > 0) hits = subset(hits, !i %in% skip_i)
@@ -70,7 +70,7 @@ single_lookup <- function(tc, x, ignore_case, perl=F, skip_i=c(), with_i=F, feat
   hits
 }
 
-multi_lookup <- function(tc, x, window=NULL, ignore_case, perl=F, skip_i = c(), with_i=F, subcontext=NULL, feature='token'){
+multi_lookup <- function(tc, x, window=NULL, ignore_case, skip_i = c(), with_i=F, subcontext=NULL, feature='token'){
   ## keywords with underscores are considered word sequence strings. These can occur both in one row of the tcorpus features, or multiple
   ## this function doesn't care, and captures both, by walking over the tokens and checking whether they occur in the same or subsequent (i.e. next global_i) position
   ## if window is NULL, x is considered to be a sequence (i.e. each next value of x has to occur on the next (or same) location)
@@ -80,7 +80,7 @@ multi_lookup <- function(tc, x, window=NULL, ignore_case, perl=F, skip_i = c(), 
 
   hit_list = vector('list', length(x))
   for(j in 1:length(x)){
-    hits = tc$lookup(x[j], feature=feature, ignore_case=ignore_case, perl=perl, with_i=with_i)
+    hits = tc$lookup(x[j], feature=feature, ignore_case=ignore_case, raw_regex=T, with_i=with_i)
     if (length(hits) > 0) hit_list[[j]] = hits
   }
   hits = data.table::rbindlist(hit_list)
@@ -92,9 +92,9 @@ multi_lookup <- function(tc, x, window=NULL, ignore_case, perl=F, skip_i = c(), 
   if (nrow(hits) == 0) return(NULL)
 
   if (is.null(window)) {
-    hits[, hit_id := get_sequence_hit(hits, seq_length = length(x), subcontext=subcontext)] ## assign hit ids to valid sequences
+    get_sequence_hit(hits, seq_length = length(x), subcontext=subcontext) ## assign hit ids to valid sequences
   } else {
-    hits[, hit_id := get_proximity_hit(hits, n_unique = length(x), window=window, subcontext=subcontext)] ## assign hit_ids to groups of tokens within the given window
+    get_proximity_hit(hits, n_unique = length(x), window=window, subcontext=subcontext) ## assign hit_ids to groups of tokens within the given window
   }
 
   hits[, j := NULL]
@@ -111,14 +111,16 @@ multi_lookup <- function(tc, x, window=NULL, ignore_case, perl=F, skip_i = c(), 
 get_sequence_hit <- function(d, seq_length, context='doc_id', position='token_i', value='j', subcontext=NULL){
   setorderv(d, c(context, position, value))
   if (!is.null(subcontext)) subcontext = d[[subcontext]]
-  .Call('_corpustools_sequence_hit_ids', PACKAGE = 'corpustools', as.integer(d[[context]]), as.integer(subcontext), as.integer(d[[position]]), as.integer(d[[value]]), seq_length)
+  .hit_id = .Call('_corpustools_sequence_hit_ids', PACKAGE = 'corpustools', as.integer(d[[context]]), as.integer(subcontext), as.integer(d[[position]]), as.integer(d[[value]]), seq_length)
+  d[,hit_id := .hit_id]
 }
 
 get_proximity_hit <- function(d, n_unique, window=NA, context='doc_id', position='token_i', value='j', subcontext=NULL, group_id=NULL, assign_once=T){
   setorderv(d, c(context, position, value))
   if (!is.null(subcontext)) subcontext = d[[subcontext]]
   if (!is.null(group_id)) group_id = d[[group_id]]
-  .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', as.integer(d[[context]]), as.integer(subcontext), as.integer(d[[position]]), as.integer(d[[value]]), n_unique, window, as.numeric(group_id), assign_once)
+  .hit_id = .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', as.integer(d[[context]]), as.integer(subcontext), as.integer(d[[position]]), as.integer(d[[value]]), n_unique, window, as.numeric(group_id), assign_once)
+  d[,hit_id := .hit_id]
 }
 
 get_OR_hit <- function(d) {
@@ -130,7 +132,8 @@ get_OR_hit <- function(d) {
     if (all(isna)) na_ids = 1:length(i) else na_ids = 1:sum(isna) + max(i, na.rm = T)
     i[isna] = na_ids
   }
-  i
+  .hit_id = i
+  d[,hit_id := .hit_id]
 }
 
 grep_global_i <- function(fi, regex, ...) {

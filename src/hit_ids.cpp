@@ -73,13 +73,13 @@ IntegerVector sequence_hit_ids(IntegerVector con, IntegerVector subcon, IntegerV
   int hit_id = 1;
   for (int i = 0; i < n; i++) {
     for (seq_i = 0; seq_i < length; seq_i++) {
+      if (out[i+seq_i] > 0) continue;            // skip already assigned
+      if (value[i+seq_i] != seq_i+1) break;   // seq_i (starting at 0) should match the number of the word in the sequence (starting at 1)
+
       if (pos[i+seq_i] - pos[i] > 2 | con[i+seq_i] != con[i]) break;      // there cant be a gap (or same context)
       if (use_subcon) {                            // check first value
         if (subcon[i+seq_i] != subcon[i]) break;
       }
-
-      if (out[i+seq_i] > 0) continue;            // skip already assigned
-      if (value[i+seq_i] != seq_i+1) continue;   // seq_i (starting at 0) should match the number of the word in the sequence (starting at 1)
 
       if (seq_i == length-1) {
         for (fill_i = 0; fill_i < length; fill_i++) {

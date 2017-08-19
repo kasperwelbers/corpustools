@@ -402,20 +402,21 @@ tCorpus <- R6::R6Class("tCorpus",
 
 
 
-      lookup = function(x, feature='token', ignore_case=TRUE, perl=FALSE, batchsize=25, fixed=FALSE, with_i=FALSE, only_i=FALSE, as_ascii=FALSE){
+      lookup = function(x, feature='token', ignore_case=TRUE, batchsize=25, raw_regex=FALSE, fixed=FALSE, with_i=FALSE, only_i=FALSE, as_ascii=FALSE){
         ## prepare lookup table: set a (secondary) data.table index
         if (!feature %in% indices(private$.data)) {
           data.table::setindexv(private$.data, feature)
           message(sprintf('created index for "%s" column', feature))
         }
 
+
         forget_if_new(private$.data[[feature]]) ## hacky use of memoise. If input is not in cache because the feature column changed, reset cache
 
         ## if not fixed (exact value matching), first lookup x as regex in unique values
-        ## note that mem_batch_grep is memoised, and returns indices to be low on memory
+        ## note that mem_lookup_terms is memoised, and returns indices to be low on memory
         if (!fixed) {
           uval = if (is.factor(private$.data[[feature]])) levels(private$.data[[feature]]) else unique(private$.data[[feature]])
-          x = uval[mem_batch_grep(x, uval, ignore_case=ignore_case, perl=perl, batchsize=batchsize, useBytes=T, as_ascii=as_ascii)]
+          x = uval[mem_lookup_terms(x, uval, ignore_case=ignore_case, raw_regex=raw_regex, batchsize=batchsize, useBytes=T, as_ascii=as_ascii)]
         }
 
         if (length(x) == 0) return(NULL)
@@ -593,7 +594,12 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
 
 ### memoised regex search
 
-batch_grep <- function(patterns, x, ignore_case=T, perl=F, batchsize=25, useBytes=T, as_ascii=FALSE){
+lookup_terms <- function(patterns, x, ignore_case=T, raw_regex=T, perl=F, batchsize=25, useBytes=T, as_ascii=FALSE){
+  if (!raw_regex) {
+    patterns = gsub("([^0-9a-zA-Z])", '\\\\\\1', x=patterns) # escape special characters
+    patterns = gsub('\\\\(*)|\\\\(?)', '.\\1', patterns)     # process wildcards
+    patterns = paste0('\\b',patterns,'\\b')                  # set word boundaries
+  }
   if (as_ascii) x = mem_transform_ascii(x)
   if (length(patterns) > 1) { ## if there are multiple terms, make batches of terms and turn each batch into a single regex
     patterns = split(patterns, ceiling(seq_along(patterns)/batchsize))
@@ -608,7 +614,7 @@ batch_grep <- function(patterns, x, ignore_case=T, perl=F, batchsize=25, useByte
   which(out) ## use which to save memory in memoise
 }
 
-mem_batch_grep <- memoise::memoise(batch_grep)
+mem_lookup_terms <- memoise::memoise(lookup_terms)
 mem_transform_ascii <- memoise::memoise(function(x) stringi::stri_trans_general(x, "Latin-ASCII"))
 
 forget_if_new <- memoise::memoise(function(x){  ## the forget calls will only be performed if x changes
@@ -617,7 +623,7 @@ forget_if_new <- memoise::memoise(function(x){  ## the forget calls will only be
 })
 
 forget_all_mem <- function(){
-  memoise::forget(mem_batch_grep)
+  memoise::forget(mem_lookup_terms)
   memoise::forget(mem_transform_ascii)
   memoise::forget(forget_if_new)
   invisible(NULL)
