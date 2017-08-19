@@ -115,11 +115,11 @@ get_sequence_hit <- function(d, seq_length, context='doc_id', position='token_i'
   d[,hit_id := .hit_id]
 }
 
-get_proximity_hit <- function(d, n_unique, window=NA, context='doc_id', position='token_i', value='j', subcontext=NULL, group_id=NULL, assign_once=T){
+get_proximity_hit <- function(d, n_unique, window=NA, context='doc_id', position='token_i', value='j', subcontext=NULL, seq_i=NULL, assign_once=T){
   setorderv(d, c(context, position, value))
   if (!is.null(subcontext)) subcontext = d[[subcontext]]
-  if (!is.null(group_id)) group_id = d[[group_id]]
-  .hit_id = .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', as.integer(d[[context]]), as.integer(subcontext), as.integer(d[[position]]), as.integer(d[[value]]), n_unique, window, as.numeric(group_id), assign_once)
+  if (!is.null(seq_i)) seq_i = d[[seq_i]]
+  .hit_id = .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', as.integer(d[[context]]), as.integer(subcontext), as.integer(d[[position]]), as.integer(d[[value]]), n_unique, window, as.numeric(seq_i), assign_once)
   d[,hit_id := .hit_id]
 }
 

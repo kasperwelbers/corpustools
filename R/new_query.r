@@ -14,7 +14,7 @@ recursive_print <- function(qlist, level=1) {
 }
 
 recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode = c('unique_hits','features'), parent_relation='') {
-  .invisible = NULL; .term_i = NULL; .seq_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
+  .invisible = NULL; .term_i = NULL; .seq_i = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
 
   mode = match.arg(mode) ## 'unique_hit' created complete and unique sets of hits (needed for counting) but doesn't assign all features
                          ## 'features' mode does not make full sets of hits, but returns all features for which the query is true (needed for coding/dictionaries)
@@ -29,7 +29,7 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
       jhits = recursive_search(tc, q, subcontext=NULL, feature='token', mode=mode, parent_relation=qlist$relation)
       if (nterms == 1) return(jhits)
       if (qlist$relation == 'proximity' & q$relation %in% c('proximity','AND')) stop("Cannot nest proximity or AND search within a proximity search")
-      if (qlist$relation == 'proximity' & q$relation == 'sequence' & !is.null(jhits)) jhits[, .seq_id = hit_id]  # Given to group_id argument in get_proximity_hit. If any seq term in prox, all seq are used.
+      if (qlist$relation == 'proximity' & q$relation == 'sequence' & !is.null(jhits)) jhits[, .seq_i := .term_i]
     } else {
       ## add alternative for OR statements, where all terms are combined into single term for more efficient regex
       jhits = tc$lookup(q$term, feature=feature, ignore_case=!q$case_sensitive)
@@ -52,21 +52,32 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
 
   hits = hits[order(as.numeric(as.character(hits$doc_id)), hits$token_i, hits$.term_i),]
 
+
   if (qlist$relation == 'AND') get_proximity_hit(hits, value = '.term_i', n_unique = nterms, window=NA, subcontext=subcontext, assign_once=assign_once) ## assign hit_ids to groups of tokens within the same context
-  if (qlist$relation == 'proximity') get_proximity_hit(hits, value = '.term_i', n_unique = nterms, window=qlist$window, subcontext=subcontext, group_id = '.seq_id', assign_once=assign_once) ## assign hit_ids to groups of tokens within the given window
-  #if (qlist$relation %in% c('OR', '')) get_OR_hit(hits)
+  if (qlist$relation == 'proximity') get_proximity_hit(hits, value = '.term_i', n_unique = nterms, window=qlist$window, subcontext=subcontext, seq_i = '.seq_i', assign_once=assign_once) ## assign hit_ids to groups of tokens within the given window
+  if (qlist$relation %in% c('OR', '')) get_OR_hit(hits)
   if (qlist$relation == 'sequence') get_sequence_hit(hits, value = '.term_i', seq_length = nterms, subcontext=subcontext) ## assign hit ids to valid sequences
 
+  print(hits)
   hits = subset(hits, hit_id > 0)
-  if ('.seq_id' %in% colnames(hits)) hits[, .seq_id := NULL]
+  if ('.seq_i' %in% colnames(hits)) hits[, .seq_i := NULL]
   if (nrow(hits) > 0) hits else NULL
 }
 
 function(){
   tc = create_tcorpus(sotu_texts)
-  q = parse_query('"and i*"~20')
-  x = recursive_search(tc, q, mode='features')
+  q = parse_query('<and <i have>>~5')
+  x = recursive_search(tc, q)
   x
+  x[x$hit_id == 1,]
+  tc$get('token')[1:40]
+
+  q = parse_query('<and i* <have been>~4>~20')
+  q = parse_query('<and i*> <have been>~20')
+
+  q = parse_query('<and i* <have been>>~d20')
+  x = recursive_search(tc, q, mode='features')
+  x[x$.term_i == 2,]
   x = recursive_search(tc, q)
   x
 

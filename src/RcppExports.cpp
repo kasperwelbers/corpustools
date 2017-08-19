@@ -18,33 +18,33 @@ BEGIN_RCPP
 END_RCPP
 }
 // proximity_hit_ids
-IntegerVector proximity_hit_ids(IntegerVector con, IntegerVector subcon, IntegerVector pos, IntegerVector value, double n_unique, double window, NumericVector group_id, bool assign_once);
-RcppExport SEXP _corpustools_proximity_hit_ids(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP valueSEXP, SEXP n_uniqueSEXP, SEXP windowSEXP, SEXP group_idSEXP, SEXP assign_onceSEXP) {
+NumericVector proximity_hit_ids(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector value, double n_unique, double window, NumericVector seq_i, bool assign_once);
+RcppExport SEXP _corpustools_proximity_hit_ids(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP valueSEXP, SEXP n_uniqueSEXP, SEXP windowSEXP, SEXP seq_iSEXP, SEXP assign_onceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector >::type con(conSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type subcon(subconSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type pos(posSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type value(valueSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type con(conSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type subcon(subconSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type pos(posSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type value(valueSEXP);
     Rcpp::traits::input_parameter< double >::type n_unique(n_uniqueSEXP);
     Rcpp::traits::input_parameter< double >::type window(windowSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type group_id(group_idSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type seq_i(seq_iSEXP);
     Rcpp::traits::input_parameter< bool >::type assign_once(assign_onceSEXP);
-    rcpp_result_gen = Rcpp::wrap(proximity_hit_ids(con, subcon, pos, value, n_unique, window, group_id, assign_once));
+    rcpp_result_gen = Rcpp::wrap(proximity_hit_ids(con, subcon, pos, value, n_unique, window, seq_i, assign_once));
     return rcpp_result_gen;
 END_RCPP
 }
 // sequence_hit_ids
-IntegerVector sequence_hit_ids(IntegerVector con, IntegerVector subcon, IntegerVector pos, IntegerVector value, double length);
+NumericVector sequence_hit_ids(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector value, double length);
 RcppExport SEXP _corpustools_sequence_hit_ids(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP valueSEXP, SEXP lengthSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector >::type con(conSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type subcon(subconSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type pos(posSEXP);
-    Rcpp::traits::input_parameter< IntegerVector >::type value(valueSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type con(conSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type subcon(subconSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type pos(posSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type value(valueSEXP);
     Rcpp::traits::input_parameter< double >::type length(lengthSEXP);
     rcpp_result_gen = Rcpp::wrap(sequence_hit_ids(con, subcon, pos, value, length));
     return rcpp_result_gen;

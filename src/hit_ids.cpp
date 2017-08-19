@@ -2,17 +2,26 @@
 using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]
 
-
+std::set<int> get_sequence(int &iw, NumericVector &seq_i){
+  std::set<int> seq_i_set;
+  int lag_seq_i = 0;
+  for (int si = iw; si < seq_i.size(); si++) {
+    if (NumericVector::is_na(seq_i[si])) break;
+    if (seq_i[si] <= lag_seq_i) break;
+    seq_i_set.insert(si);
+    lag_seq_i = seq_i[si];
+  }
+  return seq_i_set;
+}
 
 // [[Rcpp::export]]
-IntegerVector proximity_hit_ids(IntegerVector con, IntegerVector subcon, IntegerVector pos, IntegerVector value, double n_unique, double window, NumericVector group_id, bool assign_once) { // note that double is required for is_na()
-  int n = pos.size();
-  bool use_subcon = subcon.size() > 0;  // use the fact that as.integer(NULL) in R returns a vector of length 0 (NULL handling in Rcpp is cumbersome)
-  bool use_group = group_id.size() > 0;
-  IntegerVector out(n);
+NumericVector proximity_hit_ids(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector value, double n_unique, double window, NumericVector seq_i, bool assign_once) { // note that double is required for is_na()
+  double n = pos.size();
+  bool use_subcon = subcon.size() > 0;  // use the fact that as.Numeric(NULL) in R returns a vector of length 0 (NULL handling in Rcpp is cumbersome)
+  bool use_seq = seq_i.size() > 0;
+  NumericVector out(n);
 
   std::map<int,std::set<int>> tracker;       // keeps track of new unique values and their position. When n_unique is reached: returns hit_id and resets
-  //std::map<int,std::map<int,int>> sub_tracker;   // if a value
   std::map<int,std::set<int>>::iterator it;
 
   int iw = 0;
@@ -35,11 +44,10 @@ IntegerVector proximity_hit_ids(IntegerVector con, IntegerVector subcon, Integer
 
       tracker[value[iw]].insert(iw);
 
-      if (use_group) {
-        if (!NumericVector::is_na(group_id[iw])) {
-          NumericVector this_id = group_id[iw];
-          IntegerVector gi = match(this_id, group_id);
-          tracker[value[iw]].insert(gi.begin(), gi.end());
+      if (use_seq) {
+        if (!NumericVector::is_na(seq_i[iw])) {
+          std::set<int> seq_i_set = get_sequence(iw, seq_i);   // a simple get sequence that doesn't check for context/window (this is already done to get the seq_i)
+          tracker[value[iw]].insert(seq_i_set.begin(), seq_i_set.end());
         }
       }
 
@@ -63,15 +71,15 @@ IntegerVector proximity_hit_ids(IntegerVector con, IntegerVector subcon, Integer
 
 
 // [[Rcpp::export]]
-IntegerVector sequence_hit_ids(IntegerVector con, IntegerVector subcon, IntegerVector pos, IntegerVector value, double length) {
-  int n = pos.size();
-  bool use_subcon = subcon.size() > 0;  // use the fact that as.integer(NULL) in R returns a vector of length 0 (NULL handling in Rcpp is cumbersome)
-  IntegerVector out(n);
+NumericVector sequence_hit_ids(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector value, double length) {
+  double n = pos.size();
+  bool use_subcon = subcon.size() > 0;  // use the fact that as.Numeric(NULL) in R returns a vector of length 0 (NULL handling in Rcpp is cumbersome)
+  NumericVector out(n);
 
-  int seq_i;
-  int fill_i;
-  int hit_id = 1;
-  for (int i = 0; i < n; i++) {
+  double seq_i;
+  double fill_i;
+  double hit_id = 1;
+  for (double i = 0; i < n; i++) {
     for (seq_i = 0; seq_i < length; seq_i++) {
       if (out[i+seq_i] > 0) continue;            // skip already assigned
       if (value[i+seq_i] != seq_i+1) break;   // seq_i (starting at 0) should match the number of the word in the sequence (starting at 1)
