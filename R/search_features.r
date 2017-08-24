@@ -14,52 +14,35 @@
 #'                 keep_false_condition = F, verbose = F)
 #'              }
 #'
-#' @param keyword The keyword part of the query, see explanation in query_tutorial markdown or in details below
-#' @param condition The condition part of the query, see explanation in query_tutorial markdown or in details below
+#' @param query A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.
 #' @param code The code given to the tokens that match the query (usefull when looking for multiple queries)
-#' @param queries Alternatively, a data.frame can be given that contains a "keyword" column, and optionally columns for the "condition", "code" and "condition_once" paramters.
 #' @param feature The name of the feature column within which to search.
-#' @param condition_once logical. If TRUE, then if an keyword satisfies its conditions once in an article, all keywords within that article are coded.
-#' @param keep_false_condition if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives
-#' @param unique_i Queries can overlap. For example "mark rutte" also contains "rutte". For some purposes (e.g., counting how often certain queries occur) its better to ignore these overlapping queries. By setting unique_i to TRUE, features will only be assigned to 1 hit_id.
+#' @param mode There are two modes: "unique_hits" and "features". The "unique_hits" mode prioritizes finding full and unique matches., which is recommended for counting how often a query occurs. However, this also means that some tokens for which the query is satisfied might not assigned a hit_id. The "features" mode, instead, prioritizes finding all tokens, which is recommended for coding coding features (the code_features and search_recode methods always use features mode).
 #' @param verbose If TRUE, progress messages will be printed
 #'
 #' @details
 #' Brief summary of the query language
 #'
-#' The keyword:
+#' The following operators and modifiers are supported:
 #' \itemize{
-#'    \item{is the actual feature that has to be found in the token}
-#'    \item{can contain multiple tokens with OR statement (and empty spaces are also considered OR statements)}
-#'    \item{can contain multitoken strings, using quotes. e.g. "united states"}
-#'    \item{can contain token proximities, using quotes plus tilde and a number specifiying the token distance. e.g. "climate chang*"~10}
-#'    \item{accepts the ? wildcard, which means that any single character can be used in this place}
-#'    \item{accepts the * wildcard, which means that any number of characters can be used in this place}
-#'    \item{is be default not case sensitive, but can be made so by adding ~s. e.g. COP~s}
+#'    \item{The standaard Boolean operators: AND, OR and NOT. As a shorthand, an empty space can be used as an OR statement, so that "this that those" means "this OR that OR those". NOT statements stricly mean AND NOT, so should only be used between terms. If you want to find \emph{everything except} certain terms, you can use * (wildcard for \emph{anything}) like this: "* NOT (this that those)".}
+#'    \item{For complex queries parentheses can (and should) be used. e.g. '(spam AND eggs) NOT (fish and (chips OR albatros))}
+#'    \item{Wildcards ? and *. The questionmark can be used to match 1 unknown character or no character at all, e.g. "?at" would find "cat", "hat" and "at". The asterisk can be used to match any number of unknown characters. Both the asterisk and questionmark can be used at the start, end and within a term.}
+#'    \item{Multitoken strings, or exact strings, can be specified using quotes. e.g. "united states"}
+#'    \item{tokens within a given token distance can be found using quotes plus tilde and a number specifiying the token distance. e.g. "climate chang*"~10}
+#'    \item{Alternatively, angle brackets (<>) can be used instead of quotes, which also enables nesting exact strings in proximity/window search}
+#'    \item{Queries are not case sensitive, but can be made so by adding the ~s flag. e.g. COP~s only finds "COP" in uppercase. The ~s flag can also be used on parentheses or quotes to make all terms within case sensitive, and this can be combined with the token proximity flag. e.g. "Marco Polo"~s10}
+#'    \item{The ~i (invisible) flag can be used to ignore a feature in the results. This is usefull if a certain term is important for getting reliable search results, but not conceptually relevant. This flag can also be used on parentheses or quotes}
 #'  }
-#'
-#' The condition:
-#' \itemize{
-#'    \item{has to be TRUE for the keyword to be accepted. Thus, if a condition is given, the query can be interpreted as: keyword AND condition}
-#'    \item{works identical to the keyword, but with several additional options:}
-#'    \item{- can also contain complex boolean statements, using AND, OR and NOT statements, and using parentheses}
-#'    \item{- can be specified for a maximum token distance of the keyword using the ^ (caret) symbol, where "token^50" means that "token" is looked up within 50 tokens of the keyword. This can also be used after multitoken strings, and in combination with the tilde. e.g. "climate chang*"~5^10 will check if the tokens climate and change/changing/etc. co-occur within 5 tokens, and if so, at least on token should occur within 10 tokens of the keyword}
-#'    \item{- the case sensitive and token distance flags can be used together. e.g. COP~s^50 means that all capital COP must be found within 50 tokens of the keyword}
-#' }
-#'
-#' Parameters:
-#' \itemize{
-#'    \item{condition_once -> if TRUE, then if the condition is satisfied at least once in an article, all occurences of the keyword are accepted. }
-#' }
 #'
 #' @name tCorpus$search_features
 #' @aliases search_features.tCorpus
-tCorpus$set('public', 'search_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, keep_false_condition=F, unique_i=F, verbose=F){
-  search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, keep_false_condition=keep_false_condition, unique_i=unique_i, verbose=verbose)
+tCorpus$set('public', 'search_features', function(query, code=NULL, feature='token', mode = c('unique_hits','features'), verbose=F){
+  search_features(self, query, code=code, feature=feature, mode=mode, verbose=verbose)
 })
 
-tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', column='code', condition_once=F, unique_i=F, verbose=F){
-  hits = search_features(self, keyword=keyword, condition=condition, code=code, queries=queries, feature=feature, condition_once=condition_once, keep_false_condition=F, unique_i=unique_i, verbose=verbose)
+tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token', column='code', verbose=F){
+  hits = search_features(self, query, code=code, feature=feature, mode='features', verbose=verbose)
 
   .i = self$token_i(doc_id = hits$hits$doc_id, token_i = hits$hits$token_i)
   .value = hits$hits$code
@@ -86,118 +69,43 @@ tCorpus$set('public', 'code_features', function(keyword=NA, condition=NA, code=N
 #'
 #' @name tCorpus$search_recode
 #' @aliases search_recode.tCorpus
-tCorpus$set('public', 'search_recode', function(feature, new_value, keyword, condition=NA, condition_once=F, unique_i=F){
-  hits = self$search_features(keyword=keyword, condition=condition, condition_once=condition_once, unique_i=unique_i)
+tCorpus$set('public', 'search_recode', function(feature, new_value, query){
+  hits = search_features(self, query, feature=feature, mode='features')
   .i = self$token_i(doc_id = hits$hits$doc_id, token_i = hits$hits$token_i)
   .new_value = new_value
   self$set(feature, .new_value, subset = .i)
   invisible(self)
 })
 
-
-search_features <- function(tc, keyword=NA, condition=NA, code=NA, queries=NULL, feature='token', condition_once=F, keep_false_condition=F, unique_i=T, verbose=F){
+search_features <- function(tc, query, code=NULL, feature='token', mode = c('unique_hits','features'), verbose=F){
+  .invisible = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
   is_tcorpus(tc, T)
-
-  if (is.null(queries)) queries = data.frame(keyword=keyword)
-  if (!'condition' %in% colnames(queries)) queries$condition = condition
-  if (!'code' %in% colnames(queries)) queries$code = code
-  if (!'condition_once' %in% colnames(queries)) queries$condition_once = condition_once
+  mode = match.arg(mode)
 
   if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(tc$feature_names, collapse=', ')))
-  if (any(is.na(queries$keyword))) stop('keyword cannot be NA. Provide either the keyword or queries argument')
+  codelabel = get_query_code(query, code)
 
-  queries$code = as.character(queries$code)
-  queries$code = ifelse(is.na(queries$code), sprintf('query_%s', 1:nrow(queries)), queries$code)
-
-  windows = get_feature_regex(queries$condition, default_window = NA)
-  windows = stats::na.omit(c(windows$window, windows$condition_window))
-  max_window_size = if (length(windows) > 0) max(windows) else 0
-
-  hits = search_features_loop(tc, queries=queries, feature=feature, keep_false_condition=keep_false_condition, unique_i=unique_i, verbose=verbose)
-
-  featureHits(hits, queries)
-}
-
-search_features_loop <- function(tc, queries, feature, keep_false_condition, unique_i, verbose){
-  sent_i = NULL; condition = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
-
-  n = nrow(queries)
-  res = vector('list', n)
-  for (i in 1:n){
-    code = queries$code[i]
-    if (verbose) print(sprintf('%s / %s: %s', i, n, as.character(code)))
-    kw = queries$keyword[i]
-
-    hit = search_string(tc, kw, unique_i=unique_i, feature=feature)
-
-    if(is.null(hit)) next
-    if (nrow(hit) == 0) next
-
-    hit = subset(hit, select = c('doc_id', 'token_i', 'hit_id', feature))
-    data.table::setnames(hit, feature, 'feature')
-
-    if (!is.na(queries$condition[i]) & !queries$condition[i] == ''){
-      hit$condition = evaluate_condition(tc, hit, queries$condition[i], feature=feature)
-
-      if (queries$condition_once[i]){
-        doc_with_condition = unique(hit$doc_id[hit$condition])
-        hit$condition[hit$doc_id %in% doc_with_condition] = T
-      }
-      if (!keep_false_condition) {
-        keep_ids = hit[['hit_id']][hit$condition]
-        hit = subset(hit, hit_id %in% keep_ids)
-        hit[, condition := NULL]
-      }
+  hits = vector('list', length(query))
+  for (i in 1:length(query)) {
+    if (verbose) print(code[i])
+    q = parse_query(as.character(query[i]))
+    h = recursive_search(tc, q, subcontext=NULL, feature=feature, mode = mode)
+    if (!is.null(h)) {
+      h[, code := codelabel[i]]
+      hits[[i]] = h
     }
-    res[[i]] = hit
   }
+  hits = data.table::rbindlist(hits)
 
-  names(res) = queries$code
-  hits = data.table::rbindlist(res)
+
   if (nrow(hits) > 0) {
-    hits$code = rep(names(res), sapply(res, nrow))
-    data.table::setorderv(hits, c('doc_id','token_i'))
-    hits$hit_id = match(hits$hit_id, unique(hits$hit_id))
-    if (!'sent_i' %in% colnames(hits)) hits[,sent_i := NA]
-    hits = as.data.frame(hits[, c('code','feature','doc_id','sent_i','token_i','hit_id')])
+    data.table::setnames(hits, feature, 'feature')
+    setorderv(hits, c('doc_id','token_i'))
+    hits = subset(hits, subset=!.invisible)
   } else {
     hits = data.frame(code=factor(), feature=factor(), doc_id=factor(), sent_i=numeric(), token_i = numeric(), hit_id=numeric())
   }
-  hits
-}
-
-evaluate_condition <- function(tc, hit, condition, feature='token'){
-  con_query = parse_queries(condition)[1,] ## can only be 1 query
-  setkeyv(hit, c('doc_id','token_i'))
-
-  if (length(con_query$terms) == 0){
-    return(hit)
-  } else {
-    qm = Matrix::spMatrix(nrow(hit), length(con_query$terms), x=logical())
-    colnames(qm) = con_query$terms
-
-    for (j in 1:length(con_query$terms)){
-      con_hit = search_string(tc, con_query$terms[j], unique_i = F, feature=feature)
-
-      con_regex = get_feature_regex(con_query$terms[j])
-      direction = con_regex$direction
-      window = con_regex$condition_window
-      if (is.na(window)) {
-        hit_in_con = hit[list(doc_id=as.character(con_hit$doc_id)),,which=T]
-      } else {
-        if(direction == '<') shifts = 0:window
-        if(direction == '>') shifts = -window:0
-        if(direction == '<>') shifts = -window:window
-
-        in_con = con_hit[rep(1:nrow(con_hit), length(shifts)), c('doc_id','token_i')]
-        in_con$token_i = in_con$token_i + shifts
-        hit_in_con = hit[as.list(unique(in_con)),,which=T]
-      }
-
-      hit_in_con = unique(stats::na.omit(hit_in_con))
-      if (length(hit_in_con) > 0) qm[hit_in_con, j] = T
-    }
-  }
-  eval_query_matrix(qm, con_query$terms, con_query$form)
+  queries = data.frame(code=codelabel, query=query)
+  featureHits(hits, queries)
 }
 

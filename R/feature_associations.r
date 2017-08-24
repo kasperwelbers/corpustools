@@ -20,10 +20,10 @@
 #'
 #' @name tCorpus$feature_associations
 #' @aliases feature_associations.tCorpus
-tCorpus$set('public', 'feature_associations', function(keyword=NULL, condition=NA, hits=NULL, feature='token', window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'), subset=NULL, subset_meta=NULL) {
-  if (is.null(keyword) & is.null(hits)) stop('either keyword or hits has to be specified')
-  if (!is.null(keyword) & !is.null(hits)) stop('only keyword or hits can be specified')
-  if (!is.null(keyword)) hits = self$search_features(keyword=keyword, condition=condition)
+tCorpus$set('public', 'feature_associations', function(query=NULL, hits=NULL, feature='token', window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'), subset=NULL, subset_meta=NULL) {
+  if (is.null(query) & is.null(hits)) stop('either keyword or hits has to be specified')
+  if (!is.null(query) & !is.null(hits)) stop('only keyword or hits can be specified')
+  if (!is.null(query)) hits = self$search_features(query, mode='features')
 
   feature_associations(self, hits=hits, feature=feature, window=window, n=n, min_freq=min_freq, sort_by=sort_by, subset=subset, subset_meta=subset_meta)
 })

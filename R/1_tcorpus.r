@@ -177,11 +177,6 @@ tCorpus <- R6::R6Class("tCorpus",
            }
          }
 
-         if (methods::is(private$.data[[column]], 'factor')) {
-           value = fast_factor(value)
-           levels(private$.data[[column]]) = c(levels(private$.data[[column]]), levels(value))
-         }
-
          if (column %in% c('sent_i','token_i')) {  ## for position columns, first perform checks (inefficient, but this should be a rare case anyway)
             if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')
             value = as.integer(value)
@@ -189,7 +184,9 @@ tCorpus <- R6::R6Class("tCorpus",
             mod[subset, (column) := value]
             check_unique_rows(mod)
          }
-         private$.data[subset, (column) := value]
+
+         .value = value
+         private$.data[subset, (column) := .value]
 
        } else {
          if (column %in% c('sent_i','token_i')) {
@@ -206,7 +203,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
        ## strangely, the assign by reference in data.table sometimes adds NA as a factor level...
        if (anyNA(levels(private$.data[[column]]))) {
-         private$.data[,(column) := factor(private$.data[[column]])]
+         private$.data[,(column) := fast_factor(private$.data[[column]])]
        }
 
        private$set_keys()
@@ -255,11 +252,9 @@ tCorpus <- R6::R6Class("tCorpus",
              private$.meta[,(column) := methods::as(private$.meta[[column]], class(value))]
            }
          }
-         if (methods::is(private$.meta[[column]], 'factor')) {
-           value = fast_factor(value)
-           levels(private$.meta[[column]]) = c(levels(private$.meta[[column]]), levels(value))
-         }
-         private$.meta[subset, (column) := value]
+
+         .value = value
+         private$.meta[subset, (column) := .value]
 
        } else {
          ## ugly suppress. Should look into why data.table give the (seemingly harmless) internal.selfref warning
@@ -268,7 +263,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
        ## strangely, the assign by reference in data.table sometimes adds NA as a factor level...
        if (anyNA(levels(private$.meta[[column]]))) {
-         private$.meta[,(column) := factor(private$.meta[[column]])]
+         private$.meta[,(column) := fast_factor(private$.meta[[column]])]
        }
        invisible(self)
      },
@@ -313,7 +308,6 @@ tCorpus <- R6::R6Class("tCorpus",
      subset = function(subset=NULL, subset_meta=NULL, window=NULL, copy=F){
        if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
        if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = self$eval_meta(substitute(subset_meta), parent.frame())
-
        if (copy) {
          selfcopy = self$copy()$subset(subset=subset, subset_meta=subset_meta, window=window, copy=F)
          return(selfcopy)
@@ -409,9 +403,6 @@ tCorpus <- R6::R6Class("tCorpus",
           message(sprintf('created index for "%s" column', feature))
         }
 
-
-        forget_if_new(private$.data[[feature]]) ## hacky use of memoise. If input is not in cache because the feature column changed, reset cache
-
         ## if not fixed (exact value matching), first lookup x as regex in unique values
         ## note that mem_lookup_terms is memoised, and returns indices to be low on memory
         if (!fixed) {
@@ -431,7 +422,6 @@ tCorpus <- R6::R6Class("tCorpus",
         if (nrow(out) == 0) return(NULL)
         return(out)
       },
-
 
       forget_memoise = function() forget_all_mem(),
       indices = function() data.table::indices(private$.data),
@@ -476,7 +466,7 @@ tCorpus <- R6::R6Class("tCorpus",
 print.tCorpus <- function(x, ...) {
   sent_info = if ('sent_i' %in% x$names) paste(' and sentences (n = ', nrow(unique(x$get(c('doc_id','sent_i')))), ')', sep='') else ''
   cat('tCorpus containing ', x$n, ' tokens',
-      '\nsplit by documents (n = ', x$n_meta, ')', sent_info,
+      '\ngrouped by documents (n = ', x$n_meta, ')', sent_info,
       '\ncontains:',
       '\n  - ', length(x$names), ' data column', if (length(x$names) > 1) 's', ':\t', paste(x$names, collapse=', '),
       '\n  - ', length(x$meta_names), ' meta column', if (length(x$meta_names) > 1) 's', ': \t', paste(x$meta_names, collapse=', '),
@@ -595,9 +585,11 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
 ### memoised regex search
 
 lookup_terms <- function(patterns, x, ignore_case=T, raw_regex=T, perl=F, batchsize=25, useBytes=T, as_ascii=FALSE){
+  forget_if_new(x) ## hacky use of memoise. If input is not in cache because the feature column changed, reset cache
+
   if (!raw_regex) {
     patterns = gsub("([^0-9a-zA-Z])", '\\\\\\1', x=patterns) # escape special characters
-    patterns = gsub('\\\\(*)|\\\\(?)', '.\\1', patterns)     # process wildcards
+    patterns = gsub('\\\\(\\*)|\\\\(\\?)', '.\\1', patterns)     # process wildcards
     patterns = paste0('\\b',patterns,'\\b')                  # set word boundaries
   }
   if (as_ascii) x = mem_transform_ascii(x)

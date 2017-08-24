@@ -5,12 +5,16 @@ fast_factor <- function(x, levs) {
     .Call('_corpustools_fast_factor', PACKAGE = 'corpustools', x, levs)
 }
 
-proximity_hit_ids <- function(con, subcon, pos, value, n_unique, window, seq_i, assign_once) {
-    .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', con, subcon, pos, value, n_unique, window, seq_i, assign_once)
+proximity_hit_ids <- function(con, subcon, pos, term_i, n_unique, window, seq_i, assign_once, directed) {
+    .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', con, subcon, pos, term_i, n_unique, window, seq_i, assign_once, directed)
 }
 
-sequence_hit_ids <- function(con, subcon, pos, value, length) {
-    .Call('_corpustools_sequence_hit_ids', PACKAGE = 'corpustools', con, subcon, pos, value, length)
+AND_hit_ids <- function(con, subcon, pos, term_i, n_unique, group_i, assign_once) {
+    .Call('_corpustools_AND_hit_ids', PACKAGE = 'corpustools', con, subcon, pos, term_i, n_unique, group_i, assign_once)
+}
+
+sequence_hit_ids <- function(con, subcon, pos, term_i, length) {
+    .Call('_corpustools_sequence_hit_ids', PACKAGE = 'corpustools', con, subcon, pos, term_i, length)
 }
 
 ngrams <- function(tokens, group, n, sep, empty) {

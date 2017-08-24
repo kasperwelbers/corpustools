@@ -44,17 +44,7 @@ int get_number(std::string &x) {
     return atoi(numchar.c_str());
 }
 
-// Travis breaks on regex_replace, probably due to older gcc compiler (which is probably a good reason not to use this)
-//std::string escape_special(std::string x) {
-//  std::regex e("([^0-9a-zA-Z])");
-//  return std::regex_replace(x, e, "\\$1");
-//}
-//std::string wildcard_as_regex(std::string x){
-//  std::regex e("([*?])");
-//  return std::regex_replace(x, e, ".$1");
-//}
-
-std::string extract_flag(std::string &x){
+std::string extract_term_flag(std::string &x){
   int i = x.find("~");
   std::string flag = "";
   if (i >= 0) {
@@ -64,9 +54,30 @@ std::string extract_flag(std::string &x){
   return flag;
 }
 
+std::string extract_nested_flag(std::string &x){
+  if (!is_flag(x[0])) {
+    return "";
+  } else {
+    return get_till_break(x);
+  }
+}
+
+
+std::string strip_escaped(std::string &x){
+  std::string out = "";
+  for (int i = 0; i < x.size(); i++){
+    if (x[i] == '\\') {
+      i++;
+      continue;
+    }
+    out.push_back(x[i]);
+  }
+  return out;
+}
+
 void validate_query(std::string x){
   int lpar = std::count(x.begin(), x.end(), '(');
-  int rpar = std::count(x.begin(), x.end(), '(');
+  int rpar = std::count(x.begin(), x.end(), ')');
   int lquote = std::count(x.begin(), x.end(), '<');
   int rquote = std::count(x.begin(), x.end(), '>');
   int quote = std::count(x.begin(), x.end(), '"');
@@ -115,17 +126,14 @@ List parse_terms(List terms) {
     if (TYPEOF(terms[i]) == STRSXP) {  // non-STRSXP are the nested queries
       std::string term = terms[i];
       if (is_bool(term)) continue;
-      //std::string reg = term;
-      //reg = escape_special(reg);
-      //reg = wildcard_as_regex(reg);
-      std::string flag = extract_flag(term); // also removes flag from term
+      std::string flag = extract_term_flag(term); // also removes flag from term
       if (term == "") continue;
 
       List tlist;
       tlist["case_sensitive"] = char_in_string(flag, 's');
       tlist["invisible"] = char_in_string(flag, 'i');
+
       tlist["term"] = term;
-      //tlist["regex"] = "\\b" + reg + "\\b";
       out.push_back(tlist);
 
     } else {
@@ -135,22 +143,12 @@ List parse_terms(List terms) {
   return out;
 }
 
-List end_quoted(List out, std::string &x){
-  if (is_flag(x[0])) {              // if next char is a flag, this is a proximity query, with the flag specifying the direction and window size
-    out["relation"] = "proximity";
-    std::string flag = get_till_break(x);
-    out["directed"] = char_in_string(flag, 'd');  // the first char is the flag symbol, which can be <, > or ~ (left, right or both)
-    out["window"] = get_number(flag);    // convert int in string form to int
-  } else {                          // otherwise, this is a sequence
-    out["relation"] = "sequence";
-  }
-  return out;
-}
-
 List get_nested_terms(std::string &x, int in_quote = 0) {
   List out;
   List terms;
   std::string term = "";
+  bool all_invisible = false;
+  bool all_sensitive = false;
 
   bool lag_space = true;
   while (x.size() > 0) {
@@ -164,15 +162,31 @@ List get_nested_terms(std::string &x, int in_quote = 0) {
 
     // nesting parts within parentheses
     if (is_lpar(xi)) {
-      terms.push_back(get_nested_terms(x)); // note that x is passed by reference, so that nested get_first_char affects x at all levels
+      terms.push_back(get_nested_terms(x, in_quote)); // note that x is passed by reference, so that nested get_first_char affects x at all levels
       continue;
     }
-    if (is_rpar(xi)) break;
+    if (is_rpar(xi)) {
+      std::string flag = extract_nested_flag(x);
+      all_invisible = char_in_string(flag, 'i');
+      all_sensitive = char_in_string(flag, 's');
+      break;
+    }
 
     // nesting parts within quotes
     if (is_quote(xi)) {
       if (in_quote > 0 and !(is_lquote(xi))) {
-        out = end_quoted(out, x);
+        std::string flag = extract_nested_flag(x);
+        int window = get_number(flag); // gets number from string. if no number present, returns zero
+        all_invisible = char_in_string(flag, 'i');
+        all_sensitive = char_in_string(flag, 's');
+        if (window == 0) {
+          out["relation"] = "sequence";  // if no window is given, its a sequence query
+        } else {
+          out["relation"] = "proximity"; // otherwise, a proximity query
+          out["directed"] = char_in_string(flag, 'd');
+          out["window"] = window;    // convert int in string form to int
+        }
+
         if (in_quote > 1 and as<std::string>(out["relation"]) == "proximity") stop("Cannot nest a proximity search inside of quotes");
         break;
       } else {
@@ -183,7 +197,7 @@ List get_nested_terms(std::string &x, int in_quote = 0) {
 
     if (is_break(xi)) {      // if a break at this point, this indicates the end of a term
       if (term.size() == 0) continue;
-      if (in_quote > 0 and (is_and(term) or is_not(term))) stop("Cannot use AND or NOT operators inside of quotes");
+      if (in_quote > 0 and (is_and(term) or is_not(term))) stop("Cannot use Boolean operators inside of quotes (unless nested with parentheses)");
       terms.push_back(term);
       term = "";
     } else {
@@ -192,9 +206,12 @@ List get_nested_terms(std::string &x, int in_quote = 0) {
   }
   if (term.size() > 0) terms.push_back(term);
 
-  if (terms.size() == 1) return terms[0];
+  out["all_case_sensitive"] = all_sensitive;
+  out["all_invisible"] = all_invisible;
   out["terms"] = parse_terms(terms);
   if (in_quote == 0) out["relation"] = get_bool_operator(terms);
+  if (as<List>(out["terms"]).size() != 2 and as<std::string>(out["relation"]) == "NOT") stop("NOT operator can only be used with one term before and one term after. Note that these can be nested, for example: (a AND b) NOT (c OR d)");
+
   return out;
 }
 

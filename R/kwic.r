@@ -7,7 +7,7 @@
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{
-#' kwic(hits = NULL, i = NULL, keyword = NULL, code = '',
+#' kwic(hits = NULL, i = NULL, query = NULL, code = '',
 #'      ntokens = 10, nsample = NA, output_feature = 'token',
 #'      context_levels = c('document','sentence'),
 #'      prettypaste = T, kw_tag = c('<','>'), ...)
@@ -15,8 +15,8 @@
 #'
 #' @param hits results of feature search. see \link{tCorpus$search_features}.
 #' @param i instead of the hits argument, you can give the indices of features directly.
-#' @param keyword instead of using the hits or i arguments, a search string can be given directly. Note that this simply a convenient shorthand for first creating a hits object with \link{tCorpus$search_features}. If a keyword is given, then the ... argument is used to pass other arguments to \link{tCorpus$search_features}.
-#' @param code if 'i' or 'keyword' is used, the code argument can be used to add a code label. Should be a vector of the same length that gives the code for each i or keyword, or a vector of length 1 for a single label.
+#' @param query instead of using the hits or i arguments, a search string can be given directly. Note that this simply a convenient shorthand for first creating a hits object with \link{tCorpus$search_features}. If a query is given, then the ... argument is used to pass other arguments to \link{tCorpus$search_features}.
+#' @param code if 'i' or 'query' is used, the code argument can be used to add a code label. Should be a vector of the same length that gives the code for each i or query, or a vector of length 1 for a single label.
 #' @param ntokens an integers specifying the size of the context, i.e. the number of tokens left and right of the keyword.
 #' @param nsample optionally, get a random sample of the keywords/features. If multiple codes are used, the sample is drawn for each code individually.
 #' @param output_feature the feature column that is used to make the KWIC.
@@ -26,8 +26,8 @@
 #'
 #' @name tCorpus$kwic
 #' @aliases kwic.tCorpus
-tCorpus$set('public', 'kwic', function(hits=NULL, i=NULL, feature=NULL, keyword=NULL, code='', ntokens=10, nsample=NA, output_feature='token', keyword_feature='token', context_level=c('document','sentence'), kw_tag=c('<','>'), ...){
-  if (!is.null(keyword)) hits = self$search_features(keyword=keyword, code=code, feature = keyword_feature, ...)
+tCorpus$set('public', 'kwic', function(hits=NULL, i=NULL, feature=NULL, query=NULL, code='', ntokens=10, nsample=NA, output_feature='token', query_feature='token', context_level=c('document','sentence'), kw_tag=c('<','>'), ...){
+  if (!is.null(query)) hits = self$search_features(query=query, code=code, feature = query_feature, ...)
   keyword_in_context(self, hits=hits, i=i, code=code, ntokens=ntokens, nsample=nsample, output_feature=output_feature, context_level=context_level, kw_tag=kw_tag)
 })
 

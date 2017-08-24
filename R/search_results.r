@@ -1,11 +1,11 @@
 featureHits <- function(hits, queries) {
   ## S3 class
+  sent_i = NULL ## used in data.table syntax, but need to have bindings for R CMD check
   if(is.null(hits)) hits = data.frame(code=character(), feature=character(), doc_id=character(), sent_i = numeric(), hit_id=numeric())
-  hits = as.data.frame(hits)
   if (!'sent_i' %in% colnames(hits)) {
-    hits$sent_i = if(nrow(hits) == 0) numeric() else NA
+    if (nrow(hits) > 0) hits[, sent_i := NA] else hits$sent_i = numeric()
   }
-  hits = hits[,c('code','feature','doc_id','sent_i','token_i', 'hit_id')]
+  hits = as.data.frame(hits[,c('code','feature','doc_id','sent_i','token_i', 'hit_id')])
   fh = list(hits=hits, queries=queries)
   class(fh) = c('featureHits', class(fh))
   if(!is.featureHits(fh)) stop('Not a proper featureHits object')
@@ -15,7 +15,7 @@ featureHits <- function(hits, queries) {
 is.featureHits <- function(fh, ...) {
   if (!methods::is(fh$hits, 'data.frame')) return(FALSE)
   if (!all(c('code','feature','doc_id','hit_id', 'sent_i', 'token_i') %in% colnames(fh$hits))) return(FALSE)
-  if (!all(c('keyword','condition','code','condition_once') %in% colnames(fh$queries))) return(FALSE)
+  #if (!all(c('keyword','condition','code','condition_once') %in% colnames(fh$queries))) return(FALSE)
   return(TRUE)
 }
 
@@ -30,7 +30,7 @@ print.featureHits <- function(x, ...){
   if(!is.featureHits(x)) stop('Not a proper featureHits object')
   n_hits = nrow(unique(x$hits[,c('code', 'hit_id')]))
   n_docs = length(unique(x$hits$doc_id))
-  n_sent = if(any(is.na(x$hits$sent_i))) NULL else nrow(x$hits[,c('doc_id','sent_i')])
+  n_sent = if(any(is.na(x$hits$sent_i))) NULL else nrow(unique(x$hits[,c('doc_id','sent_i')]))
   cat(n_hits, 'hits (in', n_docs, 'documents')
   if(!is.null(n_sent)) cat(' /', n_sent, 'sentences)\n') else cat(')\n')
 }
@@ -62,12 +62,12 @@ summary.featureHits <- function(object, ...){
 
 contextHits <- function(hits, queries) {
   ## S3 class
+  sent_i = NULL ## used in data.table syntax, but need to have bindings for R CMD check
   if(is.null(hits)) hits = data.frame(code=character(), doc_id=character(), sent_i = numeric())
-  hits = as.data.frame(hits)
   if (!'sent_i' %in% colnames(hits)) {
-    hits$sent_i = if(nrow(hits) == 0) numeric() else NA
+    if (nrow(hits) > 0) hits[, sent_i := NA] else hits$sent_i = numeric()
   }
-  hits = hits[,c('code','doc_id','sent_i')]
+  hits = as.data.frame(hits[,c('code','doc_id','sent_i')])
 
   ch = list(hits=hits, queries=queries)
   class(ch) = c('contextHits', class(ch))

@@ -21,6 +21,7 @@
 #'    \item{Wildcards ? and *. The questionmark can be used to match 1 unknown character or no character at all, e.g. "?at" would find "cat", "hat" and "at". The asterisk can be used to match any number of unknown characters. Both the asterisk and questionmark can be used at the start, end and within a term.}
 #'    \item{Multitoken strings, or exact strings, can be specified using quotes. e.g. "united states"}
 #'    \item{tokens within a given token distance can be found using quotes plus tilde and a number specifiying the token distance. e.g. "climate chang*"~10}
+#'    \item{Alternatively, angle brackets (<>) can be used instead of quotes, which also enables nesting exact strings in proximity/window search}
 #'    \item{Queries are not case sensitive, but can be made so by adding the ~s flag. e.g. COP~s only finds "COP" in uppercase. The ~s flag can also be used on quotes to make all terms within quotes case sensitive, and this can be combined with the token proximity flag. e.g. "Marco Polo"~s10}
 #'  }
 #'
@@ -75,52 +76,31 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
 ## Function for the tCorpus$search_contexts method
 search_contexts <- function(tc, query, code=NULL, feature='token', context_level=c('document','sentence'), verbose=F){
   is_tcorpus(tc, T)
-
-  if(any(query == '')) stop('Query cannot be an empty string')
   context_level = match.arg(context_level)
-  windows = stats::na.omit(get_feature_regex(query, default_window = NA)$window)
-  max_window_size = if (length(windows) > 0) max(windows) else 0
+  if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(tc$feature_names, collapse=', ')))
+  codelabel = get_query_code(query, code)
 
-  if (!is.null(code)){
-    code = as.character(code)
-    code = if (length(code) == length(query)) code else rep(code, length(query))
-  } else code = sprintf('query_%s', 1:length(query))
-
-  context_i = tc$context(context_level, with_labels = F)
-  context_i = as.numeric(context_i)
-
-  if (context_level == 'document') context_columns = c('doc_id')
-  if (context_level == 'sentence') context_columns = c('doc_id', 'sent_i')
-  .i = !duplicated(context_i)
-  first_context_row = tc$get(context_columns, subset = .i, keep_df = T)
-
+  cols = if(context_level == 'sentence') c('doc_id','sent_i') else c('doc_id')
   subcontext = if(context_level == 'sentence') 'sent_i' else NULL
 
-  res = list()
-  for(i in 1:length(query)){
-    code_label = code[[i]]
-    simple_query = !any(grepl('\\b(AND|NOT)\\b', query[i]))
-
-    if (simple_query) {
-      hits = search_string(tc, query[i], unique_i=F, with_i=T, subcontext=subcontext, feature=feature)
-      if (nrow(hits) > 0) res[[code_label]] = unique(subset(hits, select=context_columns)) else res[[code_label]] = NULL
-    } else {
-      q = parse_queries(query[i])[1,] ## add argument merge_or_groups = T
-      qm = Matrix::spMatrix(max(context_i), length(q$terms), x=logical())
-      colnames(qm) = q$terms
-      for(term in q$terms){
-        hits = search_string(tc, term, unique_i=F, with_i=T, subcontext=subcontext, feature=feature)
-        context_hits = unique(context_i[hits$i])
-        if (length(context_hits) > 0) qm[context_hits,term] = T
-      }
-      queryhit = eval_query_matrix(qm, q$terms, q$form)
-      res[[code_label]] = first_context_row[queryhit]
+  hits = vector('list', length(query))
+  for (i in 1:length(query)) {
+    if (verbose) print(code[i])
+    q = parse_query(as.character(query[i]))
+    h = recursive_search(tc, q, subcontext=subcontext, feature=feature)
+    if (!is.null(h)) {
+      h = unique(subset(h, select = cols))
+      h[, code := codelabel[i]]
+      hits[[i]] = h
     }
   }
+  hits = data.table::rbindlist(hits)
 
-  hits = data.table::rbindlist(res)
-  if (nrow(hits) == 0) {
-    hits = NULL
-  } else hits$code = rep(names(res), sapply(res, nrow))
-  contextHits(hits, data.frame(code=code, query=query))
+  if (nrow(hits) > 0) {
+    setorderv(hits, cols)
+  } else {
+    hits = data.frame(code=factor(), doc_id=factor(), sent_i=numeric())
+  }
+  queries = data.frame(code=codelabel, query=query)
+  contextHits(hits, queries)
 }

@@ -5,21 +5,13 @@
 \alias{search_features.tCorpus}
 \title{Find tokens using a Lucene-like search query}
 \arguments{
-\item{keyword}{The keyword part of the query, see explanation in query_tutorial markdown or in details below}
-
-\item{condition}{The condition part of the query, see explanation in query_tutorial markdown or in details below}
+\item{query}{A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.}
 
 \item{code}{The code given to the tokens that match the query (usefull when looking for multiple queries)}
 
-\item{queries}{Alternatively, a data.frame can be given that contains a "keyword" column, and optionally columns for the "condition", "code" and "condition_once" paramters.}
-
 \item{feature}{The name of the feature column within which to search.}
 
-\item{condition_once}{logical. If TRUE, then if an keyword satisfies its conditions once in an article, all keywords within that article are coded.}
-
-\item{keep_false_condition}{if True, the keyword hits for which the condition was not satisfied are also returned, with an additional column that indicates whether the condition was satisfied. This can be used to investigate whether the condition is too strict, causing false negatives}
-
-\item{unique_i}{Queries can overlap. For example "mark rutte" also contains "rutte". For some purposes (e.g., counting how often certain queries occur) its better to ignore these overlapping queries. By setting unique_i to TRUE, features will only be assigned to 1 hit_id.}
+\item{mode}{There are two modes: "unique_hits" and "features". The "unique_hits" mode prioritizes finding full and unique matches., which is recommended for counting how often a query occurs. However, this also means that some tokens for which the query is satisfied might not assigned a hit_id. The "features" mode, instead, prioritizes finding all tokens, which is recommended for coding coding features (the code_features and search_recode methods always use features mode).}
 
 \item{verbose}{If TRUE, progress messages will be printed}
 }
@@ -31,30 +23,17 @@ Note that the query arguments (keyword, condition, code, condition_once) can be 
 \details{
 Brief summary of the query language
 
-The keyword:
+The following operators and modifiers are supported:
 \itemize{
-   \item{is the actual feature that has to be found in the token}
-   \item{can contain multiple tokens with OR statement (and empty spaces are also considered OR statements)}
-   \item{can contain multitoken strings, using quotes. e.g. "united states"}
-   \item{can contain token proximities, using quotes plus tilde and a number specifiying the token distance. e.g. "climate chang*"~10}
-   \item{accepts the ? wildcard, which means that any single character can be used in this place}
-   \item{accepts the * wildcard, which means that any number of characters can be used in this place}
-   \item{is be default not case sensitive, but can be made so by adding ~s. e.g. COP~s}
+   \item{The standaard Boolean operators: AND, OR and NOT. As a shorthand, an empty space can be used as an OR statement, so that "this that those" means "this OR that OR those". NOT statements stricly mean AND NOT, so should only be used between terms. If you want to find \emph{everything except} certain terms, you can use * (wildcard for \emph{anything}) like this: "* NOT (this that those)".}
+   \item{For complex queries parentheses can (and should) be used. e.g. '(spam AND eggs) NOT (fish and (chips OR albatros))}
+   \item{Wildcards ? and *. The questionmark can be used to match 1 unknown character or no character at all, e.g. "?at" would find "cat", "hat" and "at". The asterisk can be used to match any number of unknown characters. Both the asterisk and questionmark can be used at the start, end and within a term.}
+   \item{Multitoken strings, or exact strings, can be specified using quotes. e.g. "united states"}
+   \item{tokens within a given token distance can be found using quotes plus tilde and a number specifiying the token distance. e.g. "climate chang*"~10}
+   \item{Alternatively, angle brackets (<>) can be used instead of quotes, which also enables nesting exact strings in proximity/window search}
+   \item{Queries are not case sensitive, but can be made so by adding the ~s flag. e.g. COP~s only finds "COP" in uppercase. The ~s flag can also be used on parentheses or quotes to make all terms within case sensitive, and this can be combined with the token proximity flag. e.g. "Marco Polo"~s10}
+   \item{The ~i (invisible) flag can be used to ignore a feature in the results. This is usefull if a certain term is important for getting reliable search results, but not conceptually relevant. This flag can also be used on parentheses or quotes}
  }
-
-The condition:
-\itemize{
-   \item{has to be TRUE for the keyword to be accepted. Thus, if a condition is given, the query can be interpreted as: keyword AND condition}
-   \item{works identical to the keyword, but with several additional options:}
-   \item{- can also contain complex boolean statements, using AND, OR and NOT statements, and using parentheses}
-   \item{- can be specified for a maximum token distance of the keyword using the ^ (caret) symbol, where "token^50" means that "token" is looked up within 50 tokens of the keyword. This can also be used after multitoken strings, and in combination with the tilde. e.g. "climate chang*"~5^10 will check if the tokens climate and change/changing/etc. co-occur within 5 tokens, and if so, at least on token should occur within 10 tokens of the keyword}
-   \item{- the case sensitive and token distance flags can be used together. e.g. COP~s^50 means that all capital COP must be found within 50 tokens of the keyword}
-}
-
-Parameters:
-\itemize{
-   \item{condition_once -> if TRUE, then if the condition is satisfied at least once in an article, all occurences of the keyword are accepted. }
-}
 }
 \section{Usage}{
 

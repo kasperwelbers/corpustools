@@ -61,11 +61,9 @@ test_that("Query document search works", {
   expect_true(nrow(hits$hits) == 1)
   expect_equal(tc$search_contexts('"Wouter Bos"~10s')$hits, tc$search_contexts('"Wouter Bos"~s10')$hits) ## order of flags is irrelevant
 
-  ## escaping special characters
-  hits = tc$search_contexts('\\~')
-  expect_equal(as.character(hits$hits$doc_id), 'd')
-  hits = tc$search_features('\\?')
-  expect_equal(as.character(hits$hits$doc_id), 'd')
+  ## using special characters (other than ?, * or ~)
+  hits = tc$search_features('!')
+  expect_equal(as.character(hits$hits$doc_id), c('a','d','d'))
 
   ## query subsetting
   tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = T)
