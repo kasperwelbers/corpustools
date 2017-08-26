@@ -1,5 +1,5 @@
-recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode = c('unique_hits','features'), parent_relation='', all_case_sensitive=FALSE, all_invisible=FALSE) {
-  .invisible = NULL; .term_i = NULL; .seq_i = NULL; .group_i = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
+recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode = c('unique_hits','features'), parent_relation='', all_case_sensitive=FALSE, all_ghost=FALSE) {
+  .ghost = NULL; .term_i = NULL; .seq_i = NULL; .group_i = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
 
   mode = match.arg(mode) ## 'unique_hit' created complete and unique sets of hits (needed for counting) but doesn't assign all features
   ## 'features' mode does not make full sets of hits, but returns all features for which the query is true (needed for coding/dictionaries)
@@ -8,27 +8,27 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
 
   ## all_ conditions are passed down to nested querie
   if (qlist$all_case_sensitive) all_case_sensitive = TRUE
-  if (qlist$all_invisible) all_invisible = TRUE
+  if (qlist$all_ghost) all_ghost = TRUE
   nterms = length(qlist$terms)
   for (j in 1:nterms) {
     q = qlist$terms[[j]]
     is_nested = 'terms' %in% names(q)
     if (is_nested) {
-      jhits = recursive_search(tc, q, subcontext=subcontext, feature='token', mode=mode, parent_relation=qlist$relation, all_case_sensitive, all_invisible)
+      jhits = recursive_search(tc, q, subcontext=subcontext, feature='token', mode=mode, parent_relation=qlist$relation, all_case_sensitive, all_ghost)
       if (nterms == 1) return(jhits)
       if (qlist$relation == 'proximity' & q$relation %in% c('proximity','AND')) stop("Cannot nest proximity or AND search within a proximity search")
       if (!is.null(jhits)) {
-        if (qlist$relation == 'proximity' & q$relation == 'sequence') jhits[, .seq_i := .term_i]
-        if (qlist$relation %in% c('proximity','sequence','AND')) jhits[!is.na(.group_i), .group_i := paste(j, .group_i, sep='_')] ## for keeping track of nested multi word queries
+        if (q$relation == 'sequence') jhits[, .seq_i := .term_i]
+        if (qlist$relation %in% c('proximity','sequence','AND')) jhits[, .group_i := paste(j, .group_i, sep='_')] ## for keeping track of nested multi word queries
       }
     } else {
       ## add alternative for OR statements, where all terms are combined into single term for more efficient regex
       .case_sensitive = q$case_sensitive | all_case_sensitive
-      .invisible = q$invisible | all_invisible
+      .ghost = q$ghost | all_ghost
       jhits = tc$lookup(q$term, feature=feature, ignore_case=!.case_sensitive)
       if (!is.null(jhits)) {
-        jhits[, .invisible := .invisible]
-        if (qlist$relation %in% c('proximity','sequence','AND')) jhits[, .group_i := as.character(j)] else jhits[, .group_i := character()] ## for keeping track of nested multi word queries
+        jhits[, .ghost := .ghost]
+        if (qlist$relation %in% c('proximity','sequence','AND')) jhits[,.group_i := paste0(j, '_')] else jhits[,.group_i := ''] ## for keeping track of nested multi word queries
       }
     }
     if (is.null(jhits)) {
@@ -37,18 +37,17 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
       next
     }
     jhits[, .term_i := j]
-    ## if AND,
     if (nrow(jhits) > 0) hit_list[[j]] = jhits
   }
 
   hits = data.table::rbindlist(hit_list, fill=TRUE)
   if (nrow(hits) == 0) return(NULL)
 
-  unique_hits = mode == 'unique_hits'
-  if (parent_relation %in% c('AND','proximity','sequence')) unique_hits = F  ## with these parents, hit_id will be recalculated, and all valid features should be returned
+  feature_mode = mode == 'features'
+  if (parent_relation %in% c('AND','proximity','sequence')) feature_mode = TRUE ## with these parents, hit_id will be recalculated, and all valid features should be returned
 
-  if (qlist$relation %in% c('AND', 'NOT')) get_AND_hit(hits, n_unique = nterms, subcontext=subcontext, group_i = '.group_i', assign_once=unique_hits) ## assign hit_ids to groups of tokens within the same context
-  if (qlist$relation == 'proximity') get_proximity_hit(hits, n_unique = nterms, window=qlist$window, subcontext=subcontext, seq_i = '.seq_i', assign_once=unique_hits, directed=qlist$directed) ## assign hit_ids to groups of tokens within the given window
+  if (qlist$relation %in% c('AND', 'NOT')) get_AND_hit(hits, n_unique = nterms, subcontext=subcontext, group_i = '.group_i', replace = '.ghost', feature_mode=feature_mode) ## assign hit_ids to groups of tokens within the same context
+  if (qlist$relation == 'proximity') get_proximity_hit(hits, n_unique = nterms, window=qlist$window, subcontext=subcontext, seq_i = '.seq_i', replace='.ghost', feature_mode=feature_mode, directed=qlist$directed) ## assign hit_ids to groups of tokens within the given window
   if (qlist$relation %in% c('OR', '')) get_OR_hit(hits)
   if (qlist$relation == 'sequence') get_sequence_hit(hits, seq_length = nterms, subcontext=subcontext) ## assign hit ids to valid sequences
 
@@ -57,7 +56,7 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
   } else {
     hits = subset(hits, hit_id > 0)
   }
-  if ('.seq_i' %in% colnames(hits)) hits[, .seq_i := NULL]
+
   if (nrow(hits) > 0) hits else NULL
 }
 
@@ -85,21 +84,25 @@ get_sequence_hit <- function(d, seq_length, subcontext=NULL){
   d[,hit_id := .hit_id]
 }
 
-get_proximity_hit <- function(d, n_unique, window=NA, subcontext=NULL, seq_i=NULL, assign_once=T, directed=F){
+get_proximity_hit <- function(d, n_unique, window=NA, subcontext=NULL, seq_i=NULL, replace=NULL, feature_mode=F, directed=F){
   hit_id = NULL ## used in data.table syntax, but need to have bindings for R CMD check
   setorderv(d, c('doc_id', 'token_i', '.term_i'))
   if (!is.null(subcontext)) subcontext = d[[subcontext]]
   if (!is.null(seq_i)) seq_i = d[[seq_i]]
-  .hit_id = .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', as.integer(d[['doc_id']]), as.integer(subcontext), as.integer(d[['token_i']]), as.integer(d[['.term_i']]), n_unique, window, as.numeric(seq_i), assign_once, directed)
+  if (!is.null(replace)) replace = d[[replace]]
+
+  .hit_id = .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', as.integer(d[['doc_id']]), as.integer(subcontext), as.integer(d[['token_i']]), as.integer(d[['.term_i']]), n_unique, window, as.numeric(seq_i), replace, feature_mode, directed)
   d[,hit_id := .hit_id]
 }
 
-get_AND_hit <- function(d, n_unique, subcontext=NULL, group_i=NULL, assign_once=T){
+get_AND_hit <- function(d, n_unique, subcontext=NULL, group_i=NULL, replace=NULL, feature_mode=F){
   hit_id = NULL ## used in data.table syntax, but need to have bindings for R CMD check
   setorderv(d, c('doc_id', 'token_i', '.term_i'))
   if (!is.null(subcontext)) subcontext = d[[subcontext]]
   if (!is.null(group_i)) group_i = d[[group_i]]
-  .hit_id = .Call('_corpustools_AND_hit_ids', PACKAGE = 'corpustools', as.integer(d[['doc_id']]), as.integer(subcontext), as.integer(d[['token_i']]), as.integer(d[['.term_i']]), n_unique, as.character(group_i), assign_once)
+  if (!is.null(replace)) replace = d[[replace]]
+
+  .hit_id = .Call('_corpustools_AND_hit_ids', PACKAGE = 'corpustools', as.integer(d[['doc_id']]), as.integer(subcontext), as.integer(d[['token_i']]), as.integer(d[['.term_i']]), n_unique, as.character(group_i), replace, feature_mode)
   d[,hit_id := .hit_id]
 }
 
@@ -136,3 +139,20 @@ overlapping_windows <- function(hit_list, window=window) {
   Reduce(intersect, sapply(hit_list, expand_window, window=window, simplify = F))
 }
 
+function(){
+  tc = readRDS('~/Desktop/testmem.rds')
+  tc = refresh_tcorpus(tc)
+
+  tc$kwic(query = '<president (<barack obama> <donald trump>)>~5', nsample = 5)
+
+  tc$kwic(query = '<president~i (<barack obama> <donald trump>)>~5', nsample = 5)
+
+  tc = create_tcorpus("jan jan piet")
+  tc$search_features('jan AND piet')$hits
+  tc$search_features('jan AND piet~i')$hits
+
+  q = parse_query('<(barack president) obama>')
+  q$terms[[1]]$relation
+  q$terms[[1]]$terms[[1]]$terms
+  qt
+}

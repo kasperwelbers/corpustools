@@ -9,9 +9,8 @@
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{
-#' search_features(keyword = NA, condition = NA, code = NA,
-#'                 queries = NULL, feature = 'token', condition_once=F,
-#'                 keep_false_condition = F, verbose = F)
+#' search_features(query, code = NA, feature = 'token',
+#'                 mode = c('unique_hits','features'), verbose = F)
 #'              }
 #'
 #' @param query A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.
@@ -32,7 +31,7 @@
 #'    \item{tokens within a given token distance can be found using quotes plus tilde and a number specifiying the token distance. e.g. "climate chang*"~10}
 #'    \item{Alternatively, angle brackets (<>) can be used instead of quotes, which also enables nesting exact strings in proximity/window search}
 #'    \item{Queries are not case sensitive, but can be made so by adding the ~s flag. e.g. COP~s only finds "COP" in uppercase. The ~s flag can also be used on parentheses or quotes to make all terms within case sensitive, and this can be combined with the token proximity flag. e.g. "Marco Polo"~s10}
-#'    \item{The ~i (invisible) flag can be used to ignore a feature in the results. This is usefull if a certain term is important for getting reliable search results, but not conceptually relevant. This flag can also be used on parentheses or quotes}
+#'    \item{The ~g (ghost) flag can be used to mark a term (or all terms within parentheses/quotes) as a ghost term. This has two effects. Firstly, features that match the query term will not be in the results. This is usefull if a certain term is important for getting reliable search results, but not conceptually relevant. Secondly, ghost terms can be used multiple times, in different query hits (only relevant in unique_hits mode). For example, in the text "A B C", the query 'A~g AND (B C)' will return both B and C as separate hit, whereas 'A AND (B C)' will return A and B as a single hit.}
 #'  }
 #'
 #' @name tCorpus$search_features
@@ -78,7 +77,7 @@ tCorpus$set('public', 'search_recode', function(feature, new_value, query){
 })
 
 search_features <- function(tc, query, code=NULL, feature='token', mode = c('unique_hits','features'), verbose=F){
-  .invisible = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
+  .ghost = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
   is_tcorpus(tc, T)
   mode = match.arg(mode)
 
@@ -101,7 +100,7 @@ search_features <- function(tc, query, code=NULL, feature='token', mode = c('uni
   if (nrow(hits) > 0) {
     data.table::setnames(hits, feature, 'feature')
     setorderv(hits, c('doc_id','token_i'))
-    hits = subset(hits, subset=!.invisible)
+    hits = subset(hits, subset=!.ghost)
   } else {
     hits = data.frame(code=factor(), feature=factor(), doc_id=factor(), sent_i=numeric(), token_i = numeric(), hit_id=numeric())
   }

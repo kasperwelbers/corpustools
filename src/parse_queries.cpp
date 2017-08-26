@@ -131,7 +131,7 @@ List parse_terms(List terms) {
 
       List tlist;
       tlist["case_sensitive"] = char_in_string(flag, 's');
-      tlist["invisible"] = char_in_string(flag, 'i');
+      tlist["ghost"] = char_in_string(flag, 'g');
 
       tlist["term"] = term;
       out.push_back(tlist);
@@ -147,8 +147,8 @@ List get_nested_terms(std::string &x, int in_quote = 0) {
   List out;
   List terms;
   std::string term = "";
-  bool all_invisible = false;
   bool all_sensitive = false;
+  bool all_ghost = false;  // ghost terms  are taken into account in the query (e.g., x and y~i) but are not returned in the results
 
   bool lag_space = true;
   while (x.size() > 0) {
@@ -167,7 +167,7 @@ List get_nested_terms(std::string &x, int in_quote = 0) {
     }
     if (is_rpar(xi)) {
       std::string flag = extract_nested_flag(x);
-      all_invisible = char_in_string(flag, 'i');
+      all_ghost = char_in_string(flag, 'g');
       all_sensitive = char_in_string(flag, 's');
       break;
     }
@@ -177,7 +177,7 @@ List get_nested_terms(std::string &x, int in_quote = 0) {
       if (in_quote > 0 and !(is_lquote(xi))) {
         std::string flag = extract_nested_flag(x);
         int window = get_number(flag); // gets number from string. if no number present, returns zero
-        all_invisible = char_in_string(flag, 'i');
+        all_ghost = char_in_string(flag, 'g');
         all_sensitive = char_in_string(flag, 's');
         if (window == 0) {
           out["relation"] = "sequence";  // if no window is given, its a sequence query
@@ -207,9 +207,9 @@ List get_nested_terms(std::string &x, int in_quote = 0) {
   if (term.size() > 0) terms.push_back(term);
 
   out["all_case_sensitive"] = all_sensitive;
-  out["all_invisible"] = all_invisible;
+  out["all_ghost"] = all_ghost;
   out["terms"] = parse_terms(terms);
-  if (in_quote == 0) out["relation"] = get_bool_operator(terms);
+  if (!out.containsElementNamed("relation")) out["relation"] = get_bool_operator(terms);
   if (as<List>(out["terms"]).size() != 2 and as<std::string>(out["relation"]) == "NOT") stop("NOT operator can only be used with one term before and one term after. Note that these can be nested, for example: (a AND b) NOT (c OR d)");
 
   return out;

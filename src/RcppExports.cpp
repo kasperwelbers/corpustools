@@ -18,8 +18,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // proximity_hit_ids
-NumericVector proximity_hit_ids(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector term_i, double n_unique, double window, NumericVector seq_i, bool assign_once, bool directed);
-RcppExport SEXP _corpustools_proximity_hit_ids(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP term_iSEXP, SEXP n_uniqueSEXP, SEXP windowSEXP, SEXP seq_iSEXP, SEXP assign_onceSEXP, SEXP directedSEXP) {
+NumericVector proximity_hit_ids(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector term_i, double n_unique, double window, NumericVector seq_i, LogicalVector replace, bool feature_mode, bool directed);
+RcppExport SEXP _corpustools_proximity_hit_ids(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP term_iSEXP, SEXP n_uniqueSEXP, SEXP windowSEXP, SEXP seq_iSEXP, SEXP replaceSEXP, SEXP feature_modeSEXP, SEXP directedSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -30,15 +30,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type n_unique(n_uniqueSEXP);
     Rcpp::traits::input_parameter< double >::type window(windowSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type seq_i(seq_iSEXP);
-    Rcpp::traits::input_parameter< bool >::type assign_once(assign_onceSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type replace(replaceSEXP);
+    Rcpp::traits::input_parameter< bool >::type feature_mode(feature_modeSEXP);
     Rcpp::traits::input_parameter< bool >::type directed(directedSEXP);
-    rcpp_result_gen = Rcpp::wrap(proximity_hit_ids(con, subcon, pos, term_i, n_unique, window, seq_i, assign_once, directed));
+    rcpp_result_gen = Rcpp::wrap(proximity_hit_ids(con, subcon, pos, term_i, n_unique, window, seq_i, replace, feature_mode, directed));
     return rcpp_result_gen;
 END_RCPP
 }
 // AND_hit_ids
-NumericVector AND_hit_ids(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector term_i, double n_unique, std::vector<std::string> group_i, bool assign_once);
-RcppExport SEXP _corpustools_AND_hit_ids(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP term_iSEXP, SEXP n_uniqueSEXP, SEXP group_iSEXP, SEXP assign_onceSEXP) {
+NumericVector AND_hit_ids(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector term_i, double n_unique, std::vector<std::string> group_i, LogicalVector replace, bool feature_mode);
+RcppExport SEXP _corpustools_AND_hit_ids(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP term_iSEXP, SEXP n_uniqueSEXP, SEXP group_iSEXP, SEXP replaceSEXP, SEXP feature_modeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -48,8 +49,9 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type term_i(term_iSEXP);
     Rcpp::traits::input_parameter< double >::type n_unique(n_uniqueSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type group_i(group_iSEXP);
-    Rcpp::traits::input_parameter< bool >::type assign_once(assign_onceSEXP);
-    rcpp_result_gen = Rcpp::wrap(AND_hit_ids(con, subcon, pos, term_i, n_unique, group_i, assign_once));
+    Rcpp::traits::input_parameter< LogicalVector >::type replace(replaceSEXP);
+    Rcpp::traits::input_parameter< bool >::type feature_mode(feature_modeSEXP);
+    rcpp_result_gen = Rcpp::wrap(AND_hit_ids(con, subcon, pos, term_i, n_unique, group_i, replace, feature_mode));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -97,8 +99,8 @@ END_RCPP
 
 static const R_CallMethodDef CallEntries[] = {
     {"_corpustools_fast_factor", (DL_FUNC) &_corpustools_fast_factor, 2},
-    {"_corpustools_proximity_hit_ids", (DL_FUNC) &_corpustools_proximity_hit_ids, 9},
-    {"_corpustools_AND_hit_ids", (DL_FUNC) &_corpustools_AND_hit_ids, 7},
+    {"_corpustools_proximity_hit_ids", (DL_FUNC) &_corpustools_proximity_hit_ids, 10},
+    {"_corpustools_AND_hit_ids", (DL_FUNC) &_corpustools_AND_hit_ids, 8},
     {"_corpustools_sequence_hit_ids", (DL_FUNC) &_corpustools_sequence_hit_ids, 5},
     {"_corpustools_ngrams", (DL_FUNC) &_corpustools_ngrams, 5},
     {"_corpustools_parse_query", (DL_FUNC) &_corpustools_parse_query, 1},

@@ -63,14 +63,14 @@ test_that("Query search works", {
   hits = tc$search_features('fuel* AND (renewable green clean)', mode = 'features')  ##  in feature mode, all features for which the query is satisfied are returned
   expect_equal(as.character(hits$hits$feature), c('Renewable','fuel','fuels')) ## second fuel not matched, because it looks for full unique query matches
 
-  hits = tc$search_features('fuel* AND (renewable~i green~i clean~i)')  ## use ~i for invisible search. has to match, but will not be returned as feature
-  expect_equal(as.character(hits$hits$feature), c('fuel'))
+  hits = tc$search_features('fuel* AND (renewable~g green~g clean~g)')  ## use ~i for ghost search. has to match, but will not be returned as feature
+  expect_equal(as.character(hits$hits$feature), c('fuel', 'fuels'))
 
-  hits = tc$search_features('fuel* AND (renewable green clean)~i')  ## use ~i or ~s flags on parentheses to use them on all nested terms
-  expect_equal(as.character(hits$hits$feature), c('fuel'))
+  hits = tc$search_features('fuel* AND (renewable green clean)~g')  ## use ~g or ~s flags on parentheses to use them on all nested terms
+  expect_equal(as.character(hits$hits$feature), c('fuel','fuels'))
 
   ## multitoken and proximity conditions
-  hits = tc$search_features('fuel AND ("renewable fuel" OR "a debate"~3)~i')
+  hits = tc$search_features('fuel AND ("renewable fuel" OR "a debate"~3)~g')
   expect_equal(as.character(hits$hits$feature), c('fuel','fuel'))
 
   ## Normally, only full and unique matches for queries are returned, which is best for accurate counting of hits
@@ -110,6 +110,18 @@ test_that("Query search works", {
   kw = tc$kwic(query = c('"renewable fuels"~10'), ntokens = 2) ## with gap
   expect_true(grepl('[...]', kw$kwic))
 
+  ## complex BOOLEAN unique hits
+  tc = create_tcorpus("A B C")
+
+  ## doesn't work!!!!!!
+  f = tc$search_features('A AND (B C)', mode = 'features')$hits$feature  ## feature mode matches everything
+  expect_equal(as.character(f), c('A','B','C'))
+  f = tc$search_features('(B C) AND A')$hits$feature                     ## in unique_hits mode, only one hits is found, because there is only one A.
+  expect_equal(as.character(f), c('A','B'))
+  f = tc$search_features('(B C) AND A~g')$hits$feature                   ## ghost terms can be reused
+  expect_equal(as.character(f), c('B','C'))
+  f = tc$search_features('A~g AND (B C)')$hits$feature                   ## check whether ghost term can be first term (requires repeating of loop)
+  expect_equal(as.character(f), c('B','C'))
 
   cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 

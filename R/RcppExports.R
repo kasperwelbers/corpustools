@@ -5,12 +5,12 @@ fast_factor <- function(x, levs) {
     .Call('_corpustools_fast_factor', PACKAGE = 'corpustools', x, levs)
 }
 
-proximity_hit_ids <- function(con, subcon, pos, term_i, n_unique, window, seq_i, assign_once, directed) {
-    .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', con, subcon, pos, term_i, n_unique, window, seq_i, assign_once, directed)
+proximity_hit_ids <- function(con, subcon, pos, term_i, n_unique, window, seq_i, replace, feature_mode, directed) {
+    .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', con, subcon, pos, term_i, n_unique, window, seq_i, replace, feature_mode, directed)
 }
 
-AND_hit_ids <- function(con, subcon, pos, term_i, n_unique, group_i, assign_once) {
-    .Call('_corpustools_AND_hit_ids', PACKAGE = 'corpustools', con, subcon, pos, term_i, n_unique, group_i, assign_once)
+AND_hit_ids <- function(con, subcon, pos, term_i, n_unique, group_i, replace, feature_mode) {
+    .Call('_corpustools_AND_hit_ids', PACKAGE = 'corpustools', con, subcon, pos, term_i, n_unique, group_i, replace, feature_mode)
 }
 
 sequence_hit_ids <- function(con, subcon, pos, term_i, length) {
