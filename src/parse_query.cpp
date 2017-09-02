@@ -16,7 +16,7 @@ public:
   bool done () {return position >= query.size();} // not more chars left
   bool is (char);                          // check if char at current position is [argument]
   bool is_in (std::string);                // check if char at current position is in [argument]
-  bool is_break () {return is_in("() \"<>");}
+  bool is_break () {return is_in("() \"<>");} // any term/context breaking character used in query parser
   std::string get_from (int);              // get string from given position till current position (used for error messages)
   std::string pop_till_break ();           // get string till next break (spaces, parentheses, angle brackets, quotes)
   std::string pop_flag ();                 // get string till next break if its a flag (i.e. starts with ~)
@@ -49,7 +49,7 @@ bool QueryIter::is_in (std::string breaks) {
 }
 
 std::string QueryIter::get_from(int from) {
-  return query.substr(from, position);
+  return query.substr(from, position-from);
 }
 
 std::string QueryIter::pop_till_break () {
@@ -154,10 +154,12 @@ List parse_terms(List terms, std::vector<std::string> flags) {
 }
 
 void add_term(QueryIter &q, List &terms, std::vector<std::string> &term_flags, std::string &term) {
-  terms.push_back(term);
-  std::string term_flag = q.pop_flag();
-  term_flags.push_back(term_flag);
-  term = "";
+  if (term.size() > 0) {
+    terms.push_back(term);
+    std::string term_flag = q.pop_flag();
+    term_flags.push_back(term_flag);
+    term = "";
+  }
 }
 
 void add_nested(QueryIter &q, List &terms, std::vector<std::string> &term_flags, List nested) {
@@ -165,7 +167,13 @@ void add_nested(QueryIter &q, List &terms, std::vector<std::string> &term_flags,
   term_flags.push_back(""); // no flags for nested terms
 }
 
-List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0) {
+void mismatch_error(QueryIter q, int nested_i, std::string end_char) {
+  std::string mismatch = q.get_from(nested_i);
+  stop("mismatch: trying to close with '" + end_char + "' but opened with '" + mismatch.substr(0,1) + "'\n  -->\t" + mismatch);
+
+}
+
+List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_quotemark = false) {
   List out;
   List terms;
   std::vector<std::string> term_flags;
@@ -187,24 +195,34 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0) {
       lag_space = true;
     } else lag_space = false;
 
-    // nesting parts within parentheses
+    // nesting within parentheses
     if (x == '(') {
-      if (term.size() > 0) add_term(q, terms, term_flags, term);
-      List nested = get_nested_terms(q, q.get_position()-1, in_quote);
+      add_term(q, terms, term_flags, term); // in case that there is not space between a term and the parentheses
+      List nested = get_nested_terms(q, q.get_position()-1, in_quote, in_quotemark);
       add_nested(q, terms, term_flags, nested);
       continue;
     }
+    // ending part between parentheses
     if (x == ')') {
-      if (!q.get_i(nested_i) == '(') stop("mismatch in parentheses: " + q.get_from(nested_i));
+      if (q.get_i(nested_i) != '(') mismatch_error(q, nested_i, ")");
       std::string flag = q.pop_flag();
       all_ghost = char_in_string(flag, 'g');
       all_sensitive = char_in_string(flag, 's');
       break;
     }
 
-    // nesting parts within quotes
-    if ((x == '"' and (q.get_i(nested_i) == '"')) or x == '>') {
-      if (x == '>' and !q.get_i(nested_i) == '<') stop("mismatch in quotes / angle brackets: " + q.get_from(nested_i));
+    // nesting within quotes
+    if ((x == '"' and !(q.get_i(nested_i) == '"')) or x == '<') {
+      add_term(q, terms, term_flags, term);
+      bool quotemark = x == '"';  // when using quotemarks (that do not have separate open and close symbols) remember opening
+      List nested = get_nested_terms(q, q.get_position()-1, in_quote+1, quotemark);
+      add_nested(q, terms, term_flags, nested);
+      continue;
+    }
+    // ending part between quotes
+    if ((x == '"' and in_quotemark) or x == '>') {
+      if (x == '"' and (q.get_i(nested_i) != '"'))  mismatch_error(q, nested_i, "\"");
+      if (x == '>' and (q.get_i(nested_i) != '<')) mismatch_error(q, nested_i, ">");
       std::string flag = q.pop_flag();
       int window = get_number(flag); // gets number from string. if no number present, returns zero
       all_ghost = char_in_string(flag, 'g');
@@ -219,28 +237,20 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0) {
       break;
     }
 
-    // ending quotes
-    if ((x == '"' and !(q.get_i(nested_i) == '"')) or x == '<') {
-      List nested = get_nested_terms(q, q.get_position()-1, in_quote+1);
-      add_nested(q, terms, term_flags, nested);
-      continue;
-    }
-
     // a space at this point indicates the end of a term
     if (x == ' ') {
-      if (term.size() == 0) continue;
       add_term(q, terms, term_flags, term);
     } else {
       term = term + x;
     }
 
-    // if next in line is a flag, this is also the end of a term
+    // if next in line is a flag, this is a term with a flag
     if (q.is('~')) {
       add_term(q, terms, term_flags, term);
     }
 
   }
-  if (term.size() > 0) add_term(q, terms, term_flags, term);
+  add_term(q, terms, term_flags, term);
 
 
   out["all_case_sensitive"] = all_sensitive;
@@ -249,11 +259,11 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0) {
   if (relation == "") relation = get_bool_operator(terms);
   out["relation"] = relation;
 
-  if (in_quote > 0) {
+  if (in_quote > 0) { // current level is within quotes
     if (relation == "AND") stop("Cannot use AND inside of quotes");
     if (relation == "NOT") stop("Cannot use NOT inside of quotes");
   }
-  if (in_quote > 1) {
+  if (in_quote > 1) { // current level is nested within quotes
     if (relation == "proximity") stop("Cannot nest a proximity search inside of quotes");
   }
 
@@ -271,5 +281,5 @@ List parse_query(std::string x) {
 
 
 /*** R
-#parse_query('"renewable fuel" AND better')
+x = parse_query('<renewable (fuel tank>)')
 */
