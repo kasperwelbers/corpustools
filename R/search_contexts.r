@@ -87,9 +87,8 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
   for (i in 1:length(query)) {
     if (verbose) print(code[i])
     q = parse_query(as.character(query[i]))
-    h = recursive_search(tc, q, subcontext=subcontext, feature=feature)
+    h = recursive_search(tc, q, subcontext=subcontext, feature=feature, mode = 'contexts')
     if (!is.null(h)) {
-      h = unique(subset(h, select = cols))
       h[, code := codelabel[i]]
       hits[[i]] = h
     }

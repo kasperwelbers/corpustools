@@ -17,6 +17,7 @@
 #' @param code The code given to the tokens that match the query (usefull when looking for multiple queries)
 #' @param feature The name of the feature column within which to search.
 #' @param mode There are two modes: "unique_hits" and "features". The "unique_hits" mode prioritizes finding full and unique matches., which is recommended for counting how often a query occurs. However, this also means that some tokens for which the query is satisfied might not assigned a hit_id. The "features" mode, instead, prioritizes finding all tokens, which is recommended for coding coding features (the code_features and search_recode methods always use features mode).
+#' @param context_level Select whether the queries should occur within while "documents" or specific "sentences".
 #' @param verbose If TRUE, progress messages will be printed
 #'
 #' @details
@@ -36,8 +37,8 @@
 #'
 #' @name tCorpus$search_features
 #' @aliases search_features.tCorpus
-tCorpus$set('public', 'search_features', function(query, code=NULL, feature='token', mode = c('unique_hits','features'), verbose=F){
-  search_features(self, query, code=code, feature=feature, mode=mode, verbose=verbose)
+tCorpus$set('public', 'search_features', function(query, code=NULL, feature='token', mode = c('unique_hits','features'), context_level = c('document','sentence'), verbose=F){
+  search_features(self, query, code=code, feature=feature, mode=mode, context_level=context_level, verbose=verbose)
 })
 
 tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token', column='code', verbose=F){
@@ -76,19 +77,21 @@ tCorpus$set('public', 'search_recode', function(feature, new_value, query){
   invisible(self)
 })
 
-search_features <- function(tc, query, code=NULL, feature='token', mode = c('unique_hits','features'), verbose=F){
+search_features <- function(tc, query, code=NULL, feature='token', mode = c('unique_hits','features'), context_level=c('document','sentence'), verbose=F){
   .ghost = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
   is_tcorpus(tc, T)
   mode = match.arg(mode)
+  context_level = match.arg(context_level)
 
   if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(tc$feature_names, collapse=', ')))
   codelabel = get_query_code(query, code)
 
+  subcontext = if(context_level == 'sentence') 'sent_i' else NULL
   hits = vector('list', length(query))
   for (i in 1:length(query)) {
     if (verbose) print(code[i])
     q = parse_query(as.character(query[i]))
-    h = recursive_search(tc, q, subcontext=NULL, feature=feature, mode = mode)
+    h = recursive_search(tc, q, subcontext=subcontext, feature=feature, mode = mode)
     if (!is.null(h)) {
       h[, code := codelabel[i]]
       hits[[i]] = h

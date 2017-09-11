@@ -9,6 +9,7 @@
 
 tCorpus <- R6::R6Class("tCorpus",
    cloneable=FALSE,
+
    private = list(
      .data = NULL,
      .meta = NULL,
@@ -45,6 +46,10 @@ tCorpus <- R6::R6Class("tCorpus",
        private$.data = data.table(data)
        private$.meta = data.table(meta)
        private$set_keys()
+     },
+
+     finalize = function() {
+       forget_all_mem()
      },
 
      copy = function(){
@@ -394,9 +399,32 @@ tCorpus <- R6::R6Class("tCorpus",
         as.data.frame(d)
       },
 
+      lookup = function(x, feature='token', ignore_case=TRUE, batchsize=25, raw_regex=FALSE, fixed=FALSE, with_i=FALSE, as_ascii=FALSE, sub_query=list(), only_context=F, subcontext=NULL){
+        forget_if_new(self$n) ## reset cache if n changes (possibly add some more indicators?)
 
+        has_sub_query = length(sub_query) > 0
+        if (has_sub_query) {
+          sub_feature = names(sub_query)[1]
+          sub_x = sub_query[[sub_feature]]
+          sub_query[[sub_feature]] = NULL
+          sub_out = self$lookup(sub_x, feature=sub_feature, ignore_case=TRUE, sub_query=sub_query, only_context=F)
+        }
 
-      lookup = function(x, feature='token', ignore_case=TRUE, batchsize=25, raw_regex=FALSE, fixed=FALSE, with_i=FALSE, only_i=FALSE, as_ascii=FALSE){
+        if (any(x == '*')) {
+          if (only_context) {
+            out = unique(private$.data, by = c('doc_id', subcontext))
+          } else {
+            out = data.table::copy(private$.data)
+          }
+          if (with_i & !only_context) out[, i:=1:nrow(out)]
+          if (has_sub_query) {
+            if (is.null(sub_out)) return(NULL)
+            out = data.table::fintersect(out, sub_out)
+            if (is.null(out)) return(NULL)
+          }
+          return(out)
+        }
+
         ## prepare lookup table: set a (secondary) data.table index
         if (!feature %in% indices(private$.data)) {
           data.table::setindexv(private$.data, feature)
@@ -411,15 +439,22 @@ tCorpus <- R6::R6Class("tCorpus",
         }
 
         if (length(x) == 0) return(NULL)
-        if (with_i | only_i) {
-          i = na.omit(private$.data[x, on=feature, which=T])
-          if (only_i) return(i)
+        if (with_i & !only_context) {
+          i = na.omit(private$.data[list(x), on=feature, which=T])
           out = private$.data[i,]
           out[,i:=i]
         } else {
-          out = private$.data[x, on=feature, which=F]
+          out = private$.data[list(x), on=feature, which=F]
         }
+        if (only_context) out = unique(out, by=c('doc_id',subcontext))
+
+        #if (length(sub_query) > 0) out = filter_sub_query(out, sub_query)
         if (nrow(out) == 0) return(NULL)
+        if (has_sub_query) {
+          if (is.null(sub_out)) return(NULL)
+          out = data.table::fintersect(out, sub_out)
+          if (is.null(out)) return(NULL)
+        }
         return(out)
       },
 
@@ -584,14 +619,15 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
 
 ### memoised regex search
 
-lookup_terms <- function(patterns, x, ignore_case=T, raw_regex=T, perl=F, batchsize=25, useBytes=T, as_ascii=FALSE){
-  forget_if_new(x) ## hacky use of memoise. If input is not in cache because the feature column changed, reset cache
+search_term_regex <- function(patterns) {
+  patterns = gsub("([^0-9a-zA-Z])", '\\\\\\1', x=patterns)  # escape special characters
+  patterns = gsub('\\\\(\\*)|\\\\(\\?)', '.\\1', patterns)  # process wildcards
+  paste0('\\b',patterns,'\\b')                              # set word boundaries
+}
 
-  if (!raw_regex) {
-    patterns = gsub("([^0-9a-zA-Z])", '\\\\\\1', x=patterns) # escape special characters
-    patterns = gsub('\\\\(\\*)|\\\\(\\?)', '.\\1', patterns)     # process wildcards
-    patterns = paste0('\\b',patterns,'\\b')                  # set word boundaries
-  }
+lookup_terms <- function(patterns, x, ignore_case=T, raw_regex=T, perl=F, batchsize=25, useBytes=T, as_ascii=FALSE){
+  #forget_if_new(x) ## hacky use of memoise. If input is not in cache because the feature column changed, reset cache
+  if (!raw_regex) patterns = search_term_regex(patterns)
   if (as_ascii) x = mem_transform_ascii(x)
   if (length(patterns) > 1) { ## if there are multiple terms, make batches of terms and turn each batch into a single regex
     patterns = split(patterns, ceiling(seq_along(patterns)/batchsize))
@@ -621,3 +657,22 @@ forget_all_mem <- function(){
   invisible(NULL)
 }
 
+## sub query filtering. (in lookup method)
+
+#filter_sub_query <- function(hits, sub_query) {
+#  if (nrow(hits) == 0) return(hits)
+#  .filter = !vector('logical', nrow(hits))
+#  for (n in names(sub_query)) {
+#    if (!n %in% colnames(hits)) stop(sprintf('sub query column %s is not a valid column in the token data', n))
+#    patterns = sub_query[[n]]
+#    is_not = grepl('^\\!', patterns)
+#    patterns = gsub('^\\!', '', patterns)
+#    patterns = search_term_regex(patterns)
+#
+#    regex = paste(patterns[!is_not], collapse='|')
+#    not_regex = paste(patterns[is_not], collapse='|')
+#    if (!regex == "") .filter = .filter & grepl(regex, hits[[n]])
+#    if (!not_regex == "") .filter = .filter & !grepl(not_regex, hits[[n]])
+#  }
+#  subset(hits, .filter)
+#}

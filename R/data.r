@@ -5,6 +5,13 @@
 #' @format data.frame
 'sotu_texts'
 
+#' coreNLP example sentences
+#'
+#' @docType data
+#' @usage data(corenlp_tokens)
+#' @format data.frame
+'corenlp_tokens'
+
 #' Basic stopword lists
 #'
 #' @docType data

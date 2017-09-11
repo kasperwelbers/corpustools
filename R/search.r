@@ -1,4 +1,4 @@
-recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode = c('unique_hits','features'), parent_relation='', all_case_sensitive=FALSE, all_ghost=FALSE) {
+recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode = c('unique_hits','features','contexts'), parent_relation='', all_case_sensitive=FALSE, all_ghost=FALSE, all_flag_query=list(), level=1) {
   .ghost = NULL; .term_i = NULL; .seq_i = NULL; .group_i = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
 
   mode = match.arg(mode) ## 'unique_hit' created complete and unique sets of hits (needed for counting) but doesn't assign all features
@@ -9,13 +9,20 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
   ## all_ conditions are passed down to nested querie
   if (qlist$all_case_sensitive) all_case_sensitive = TRUE
   if (qlist$all_ghost) all_ghost = TRUE
+  if (!qlist$feature == "") feature = qlist[['feature']]  ## if the query specifies a feature column, override the feature parameter
+  for (n in names(qlist$all_flag_query)) all_flag_query[[n]] = unique(c(all_flag_query[[n]], qlist$all_flag_query[[n]]))
+
+
   nterms = length(qlist$terms)
   for (j in 1:nterms) {
     q = qlist$terms[[j]]
     is_nested = 'terms' %in% names(q)
     if (is_nested) {
-      jhits = recursive_search(tc, q, subcontext=subcontext, feature='token', mode=mode, parent_relation=qlist$relation, all_case_sensitive, all_ghost)
-      if (nterms == 1) return(jhits)
+      jhits = recursive_search(tc, q, subcontext=subcontext, feature='token', mode=mode, parent_relation=qlist$relation, all_case_sensitive, all_ghost, level=level+1)
+      if (nterms == 1) {
+        if (level == 1 & mode == 'contexts' & !is.null(jhits)) jhits = unique(subset(jhits, select=c('doc_id',subcontext)))
+        return(jhits)
+      }
       if (qlist$relation == 'proximity' & q$relation %in% c('proximity','AND')) stop("Cannot nest proximity or AND search within a proximity search")
       if (!is.null(jhits)) {
         if (q$relation == 'sequence') jhits[, .seq_i := .term_i]
@@ -25,7 +32,12 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
       ## add alternative for OR statements, where all terms are combined into single term for more efficient regex
       .case_sensitive = q$case_sensitive | all_case_sensitive
       .ghost = q$ghost | all_ghost
-      jhits = tc$lookup(q$term, feature=feature, ignore_case=!.case_sensitive)
+
+      flag_query = q$flag_query
+      for (n in names(all_flag_query)) flag_query[[n]] = unique(c(flag_query[[n]], all_flag_query[[n]]))
+
+      only_context = mode == 'contexts' & qlist$relation %in% c('AND','NOT')  ## only for AND and NOT, because proximity and sequence require feature positions (and OR can be nested in them)
+      jhits = tc$lookup(q$term, feature=feature, ignore_case=!.case_sensitive, sub_query=flag_query, only_context=only_context, subcontext=subcontext)
       if (!is.null(jhits)) {
         jhits[, .ghost := .ghost]
         if (qlist$relation %in% c('proximity','sequence','AND')) jhits[,.group_i := paste0(j, '_')] else jhits[,.group_i := ''] ## for keeping track of nested multi word queries
@@ -46,7 +58,8 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
   feature_mode = mode == 'features'
   if (parent_relation %in% c('AND','proximity','sequence')) feature_mode = TRUE ## with these parents, hit_id will be recalculated, and all valid features should be returned
 
-  if (qlist$relation %in% c('AND', 'NOT')) get_AND_hit(hits, n_unique = nterms, subcontext=subcontext, group_i = '.group_i', replace = '.ghost', feature_mode=feature_mode) ## assign hit_ids to groups of tokens within the same context
+  if (qlist$relation %in% c('AND')) get_AND_hit(hits, n_unique = nterms, subcontext=subcontext, group_i = '.group_i', replace = '.ghost', feature_mode=feature_mode) ## assign hit_ids to groups of tokens within the same context
+  if (qlist$relation %in% c('NOT')) get_AND_hit(hits, n_unique = nterms, subcontext=subcontext, group_i = '.group_i', replace = '.ghost', feature_mode=T)
   if (qlist$relation == 'proximity') get_proximity_hit(hits, n_unique = nterms, window=qlist$window, subcontext=subcontext, seq_i = '.seq_i', replace='.ghost', feature_mode=feature_mode, directed=qlist$directed) ## assign hit_ids to groups of tokens within the given window
   if (qlist$relation %in% c('OR', '')) get_OR_hit(hits)
   if (qlist$relation == 'sequence') get_sequence_hit(hits, seq_length = nterms, subcontext=subcontext) ## assign hit ids to valid sequences
@@ -56,9 +69,13 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
   } else {
     hits = subset(hits, hit_id > 0)
   }
-
-  if (nrow(hits) > 0) hits else NULL
+  if (nrow(hits) == 0) return(NULL)
+  if (level == 1 & mode == 'contexts') hits = unique(subset(hits, select=c('doc_id',subcontext)))
+  return(hits)
 }
+
+
+
 
 get_query_code <- function(query, code=NULL) {
   hashcount = stringi::stri_count(query, regex='[^\\\\]#')
@@ -73,7 +90,6 @@ get_query_code <- function(query, code=NULL) {
   if (anyDuplicated(code)) stop('Cannot have duplicate codes')
   code
 }
-
 
 
 get_sequence_hit <- function(d, seq_length, subcontext=NULL){

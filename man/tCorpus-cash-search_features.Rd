@@ -13,6 +13,8 @@
 
 \item{mode}{There are two modes: "unique_hits" and "features". The "unique_hits" mode prioritizes finding full and unique matches., which is recommended for counting how often a query occurs. However, this also means that some tokens for which the query is satisfied might not assigned a hit_id. The "features" mode, instead, prioritizes finding all tokens, which is recommended for coding coding features (the code_features and search_recode methods always use features mode).}
 
+\item{context_level}{Select whether the queries should occur within while "documents" or specific "sentences".}
+
 \item{verbose}{If TRUE, progress messages will be printed}
 }
 \description{

@@ -20,11 +20,10 @@ public:
   std::string get_from (int);              // get string from given position till current position (used for error messages)
   std::string pop_till_break ();           // get string till next break (spaces, parentheses, angle brackets, quotes)
   std::string pop_flag ();                 // get string till next break if its a flag (i.e. starts with ~)
-  void validate_query();                   // check for common errors in query syntax
 };
 
 QueryIter::QueryIter (std::string x) {
-  query = " " + x;  // start with empty space to prevent issues with nested_i
+  query = " " + x + " ";  // start with empty space to prevent issues with nested_i
   position = 0;
 }
 
@@ -54,8 +53,11 @@ std::string QueryIter::get_from(int from) {
 
 std::string QueryIter::pop_till_break () {
   std::string out = "";
+  bool escaped = false;
   while (!done()) {
-    if (is_break()) break;
+    if (is('{')) escaped = true;
+    if (is_break() and !escaped) break;
+    if (is('}')) escaped = false;
     out.push_back(pop());
   }
   return out;
@@ -69,24 +71,16 @@ std::string QueryIter::pop_flag () {
   return "";
 }
 
-void QueryIter::validate_query(){
 
-  int lpar = std::count(query.begin(), query.end(), '(');
-  int rpar = std::count(query.begin(), query.end(), ')');
-  int lquote = std::count(query.begin(), query.end(), '<');
-  int rquote = std::count(query.begin(), query.end(), '>');
-  int quote = std::count(query.begin(), query.end(), '"');
-
-  if (!(quote % 2 == 0)) stop("Number of quotes is not even (can't have a quote without an unquote)");
-  if (lpar != rpar) stop("Number of opening and closing parentheses does not match");
-  if (lquote != rquote) stop("Number of opening and closing angle brackets (<>) does not match");
-}
-
-// PARSE QUERY
-
-bool char_in_string(std::string s, char c) {
-  int i = s.find(c);
-  return (i >= 0);
+// process flag
+bool char_in_flag(std::string flag, char c) {
+  bool opened = false; // for ignoring flag between curly brackets (used for sub query)
+  for (char &flag_c : flag) {
+    if (flag_c == '{') opened = true;
+    if (flag_c == '}') opened = false;
+    if (!opened and flag_c == c) return (true);
+  }
+  return (false);
 }
 
 int get_number(std::string &x) {
@@ -96,6 +90,67 @@ int get_number(std::string &x) {
   }
   return atoi(numchar.c_str());
 }
+
+void rstrip(std::string &x){
+  while (x[x.size()-1] == ' ') x.erase(x.size()-1);
+}
+
+List get_flag_query(std::string flag) {
+  // the sub query allows the user to specify additional conditions for a term based on any available column (e.g., POS tag, dependency relation)
+  // the format is {column1: query1, column2: query2}, where the second query is optional.
+  // the query can only contain OR statemens.
+  // (note that QueryIter is not used here)
+  std::map<std::string, std::vector<std::string> > out;
+
+  std::string name = "";
+  std::string term = "";
+
+  int part = 1;
+  bool opened = false;
+  for (char &x: flag) {
+    if (x == '{') {
+      if (opened) stop("Trying to open second sub-query (with '{') before closing the first:\n\t" + flag);
+      opened = true;
+      continue;
+    }
+    if (!opened) {
+      continue;
+    }
+    if (x == ':') {
+      if (part == 2) stop("double separater : between column name and sub-query:\n\t" + flag);
+      rstrip(name);
+      part = 2;
+      continue;
+    }
+    if (part == 1) {
+      if (x == '}') stop("sub query not properly defined: forat is {column1: query1, column2: query2}.\n\t" + flag);
+      if (x == ' ' and name == "") continue;
+      name.push_back(x);
+    }
+    if (part == 2) {
+      if (x == ' ' or x == '}' or x == ',') {
+        if (term == "OR") term = "";
+        if (term == "AND") stop("sub query cannot contain Boolean operator AND");
+        if (term == "NOT") stop("sub query cannot contain Boolean operator NOT. For matching everything except a certain term, use the ! symbol as a prefix. e.g. {column: query1 !query2}");
+        if (term != "") out[name].push_back(term);
+        term = "";
+      } else {
+        term.push_back(x);
+      }
+      if (x == '}' or x == ',') {
+        if (!opened) stop("Trying to close sub-query (with '}') before opening:\n\t" + flag);
+        if (name == "" or out[name].size() == 0) stop("sub query not properly defined: forat is {column1: query1, column2: query2}.\n\t" + flag);
+        name = "";
+        part = 1;
+        if (x == '}') opened = false;
+      }
+    }
+  }
+  return wrap(out);
+}
+
+
+// PARSE QUERY
 
 std::string get_bool_operator(List terms) {
   // returns the boolean operator being used, and tests whether only one boolean operator is used
@@ -129,6 +184,8 @@ std::string get_bool_operator(List terms) {
   return out;
 }
 
+
+
 List parse_terms(List terms, std::vector<std::string> flags) {
   List out;
   int n = terms.size();
@@ -140,8 +197,9 @@ List parse_terms(List terms, std::vector<std::string> flags) {
       if (term == "") continue;
 
       List tlist;
-      tlist["case_sensitive"] = char_in_string(flag, 's');
-      tlist["ghost"] = char_in_string(flag, 'g');
+      tlist["case_sensitive"] = char_in_flag(flag, 's');
+      tlist["ghost"] = char_in_flag(flag, 'g');
+      tlist["flag_query"] = get_flag_query(flag);
 
       tlist["term"] = term;
       out.push_back(tlist);
@@ -180,12 +238,26 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
   std::string term = "";
   bool all_sensitive = false; // case sensitive
   bool all_ghost = false;  // ghost terms  are taken into account in the query (e.g., x and y~i) but are not returned in the results
+  List all_flag_query;
 
   std::string relation = "";
+  std::string feature = "";
 
   bool lag_space = true;
-  while (!q.done()) {
+  while (true) {
+    if (q.done()) {
+      if (q.get_i(nested_i) == '"') mismatch_error(q, nested_i, " ");
+      if (q.get_i(nested_i) == '(') mismatch_error(q, nested_i, " ");
+      if (q.get_i(nested_i) == '<') mismatch_error(q, nested_i, " ");
+      break;
+    }
     char x = q.pop();
+
+    // escape next char
+    if (x == '\\') {
+      term = term + q.pop();
+      continue;
+    }
 
     // skip double spaces
     if (x == ' ') {
@@ -206,8 +278,9 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
     if (x == ')') {
       if (q.get_i(nested_i) != '(') mismatch_error(q, nested_i, ")");
       std::string flag = q.pop_flag();
-      all_ghost = char_in_string(flag, 'g');
-      all_sensitive = char_in_string(flag, 's');
+      all_ghost = char_in_flag(flag, 'g');
+      all_sensitive = char_in_flag(flag, 's');
+      all_flag_query = get_flag_query(flag);
       break;
     }
 
@@ -225,16 +298,24 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
       if (x == '>' and (q.get_i(nested_i) != '<')) mismatch_error(q, nested_i, ">");
       std::string flag = q.pop_flag();
       int window = get_number(flag); // gets number from string. if no number present, returns zero
-      all_ghost = char_in_string(flag, 'g');
-      all_sensitive = char_in_string(flag, 's');
+      all_ghost = char_in_flag(flag, 'g');
+      all_sensitive = char_in_flag(flag, 's');
+      all_flag_query = get_flag_query(flag);
       if (window == 0) {
         relation = "sequence";  // if no window is given, its a sequence query
       } else {
         relation = "proximity"; // otherwise, a proximity query
-        out["directed"] = char_in_string(flag, 'd');
+        out["directed"] = char_in_flag(flag, 'd');
         out["window"] = window;    // convert int in string form to int
       }
       break;
+    }
+
+    if (x == ':') {
+      if (terms.size() != 0 or term == "") stop("Manual feature column has to be specified at the beginning of query or nested query, as: 'column: ...'. To use double dot regularly, escape it with \\: (double slash if typed in R)");
+      feature = term;
+      term = "";
+      continue;
     }
 
     // a space at this point indicates the end of a term
@@ -252,12 +333,13 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
   }
   add_term(q, terms, term_flags, term);
 
-
   out["all_case_sensitive"] = all_sensitive;
   out["all_ghost"] = all_ghost;
+  out["all_flag_query"] = all_flag_query;
   out["terms"] = parse_terms(terms, term_flags);
   if (relation == "") relation = get_bool_operator(terms);
   out["relation"] = relation;
+  out["feature"] = feature;
 
   if (in_quote > 0) { // current level is within quotes
     if (relation == "AND") stop("Cannot use AND inside of quotes");
@@ -275,11 +357,11 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
 // [[Rcpp::export]]
 List parse_query(std::string x) {
   QueryIter q(x);
-  q.validate_query();
   return get_nested_terms(q);
 }
 
 
 /*** R
-x = parse_query('<renewable (fuel tank>)')
+x = parse_query('test~{dit: !test tat, dat: test, dit: x}')
+parse_query('test (banaan: test)')
 */
