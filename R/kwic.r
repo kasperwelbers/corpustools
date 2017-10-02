@@ -25,7 +25,16 @@
 #' @param ... See \link{tCorpus$search_features} for the query parameters
 #'
 #' @name tCorpus$kwic
-#' @aliases kwic.tCorpus
+#' @aliases kwic
+#' @examples
+#' tc = tokens_to_tcorpus(corenlp_tokens, sent_i_col = 'sentence', token_i_col = 'id')
+#'
+#' ## look directly for a term (or complex query)
+#' tc$kwic(query = 'love*')
+#'
+#' ## or, first perform a feature search, and then get the KWIC for the results
+#' hits = tc$search_features('(john OR mark) AND mary AND love*', context_level = 'sentence')
+#' tc$kwic(hits, context_level = 'sentence')
 tCorpus$set('public', 'kwic', function(hits=NULL, i=NULL, feature=NULL, query=NULL, code='', ntokens=10, nsample=NA, output_feature='token', query_feature='token', context_level=c('document','sentence'), kw_tag=c('<','>'), ...){
   if (!is.null(query)) hits = self$search_features(query=query, code=code, feature = query_feature, ...)
   keyword_in_context(self, hits=hits, i=i, code=code, ntokens=ntokens, nsample=nsample, output_feature=output_feature, context_level=context_level, kw_tag=kw_tag)

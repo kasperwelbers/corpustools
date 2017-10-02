@@ -25,6 +25,12 @@ is.featureHits <- function(fh, ...) {
 #' @param ... not used
 #'
 #' @method print featureHits
+#' @examples
+#' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
+#' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
+#' hits = tc$search_features(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
+#'
+#' hits
 #' @export
 print.featureHits <- function(x, ...){
   if(!is.featureHits(x)) stop('Not a proper featureHits object')
@@ -41,6 +47,12 @@ print.featureHits <- function(x, ...){
 #' @param ... not used
 #'
 #' @method summary featureHits
+#' @examples
+#' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
+#' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
+#' hits = tc$search_features(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
+#'
+#' summary(hits)
 #' @export
 summary.featureHits <- function(object, ...){
   doc_id = sent_i = hit_id = NULL ##  used in data.table syntax, but need to have bindings for R CMD check
@@ -88,6 +100,12 @@ is.contextHits <- function(ch, ...) {
 #' @param ... not used
 #'
 #' @method print contextHits
+#' @examples
+#' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
+#' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
+#' hits = tc$search_contexts(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
+#'
+#' hits
 #' @export
 print.contextHits <- function(x, ...){
   if(!is.contextHits(x)) stop('Not a proper featureHits object')
@@ -103,6 +121,12 @@ print.contextHits <- function(x, ...){
 #' @param ... not used
 #'
 #' @method summary contextHits
+#' @examples
+#' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
+#' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
+#' hits = tc$search_contexts(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
+#'
+#' summary(hits)
 #' @export
 summary.contextHits <- function(object, ...){
   #if(is.null(object$hits)) return(NULL)

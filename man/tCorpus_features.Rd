@@ -10,7 +10,7 @@
 \strong{Pre-process features}
 \tabular{ll}{
   \link[=tCorpus$preprocess]{$preprocess()} \tab Create or modify a feature by preprocessing an existing feature \cr
-  \link[=tCorpus$feature_subset]{$filter()} \tab Similar to using subset, but instead of deleting rows it only sets rows for a specified feature to NA.
+  \link[=tCorpus$feature_subset]{$feature_subset()} \tab Similar to using subset, but instead of deleting rows it only sets rows for a specified feature to NA.
 }
 \strong{Inspect features}
 \tabular{ll}{

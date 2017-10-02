@@ -2,7 +2,7 @@
 #'
 #' plot_semnet is a wrapper for the plot.igraph() function optimized for plotting a semantic network of the "semnet" class.
 #'
-#' Before plotting the network, the setNetworkAttributes() function is used to set pretty defaults for plotting. Optionally, reduce_labeloverlap can be used to prevent labeloverlap (as much as possible).
+#' Before plotting the network, the set_network_attributes() function is used to set pretty defaults for plotting. Optionally, reduce_labeloverlap can be used to prevent labeloverlap (as much as possible).
 #'
 #' @param g A network in the igraph format. Specifically designed for the output of coOccurenceNetwork() and windowedCoOccurenceNetwork()
 #' @param weight_attr The name of the weight attribute. Default is 'weight'
@@ -23,6 +23,14 @@
 #' @param layout_fun The igraph layout function that is used.
 #'
 #' @return Plots a network, and returns the network object if return_graph is TRUE.
+#' @examples
+#' tc = create_tcorpus(sotu_texts, doc_column = 'id')
+#' tc$preprocess('token','feature', remove_stopwords = TRUE, use_stemming = TRUE, min_docfreq=10)
+#' \dontrun{
+#' g = tc$semnet_window('feature', window.size = 10)
+#' g = backbone_filter(g, max_vertices = 100)
+#' plot_semnet(g)
+#' }
 #' @export
 plot_semnet <- function(g, weight_attr='weight', min_weight=NA, delete_isolates=F, vertexsize_attr='freq', vertexsize_coef=1, vertexcolor_attr=NA, edgewidth_coef=1, max_backbone_alpha=NA, labelsize_coef=1, labelspace_coef=1.1, reduce_labeloverlap=F, redo_layout=F, return_graph=T, vertex.label.dist=0.25, layout_fun=igraph::layout_with_fr, ...){
   ## add: out_r, jpg_file, pdf_file, width, height
@@ -41,13 +49,13 @@ plot_semnet <- function(g, weight_attr='weight', min_weight=NA, delete_isolates=
     g = igraph::delete.edges(g, which(igraph::E(g)$alpha > max_backbone_alpha))
   }
 
-  g = setNetworkAttributes(g, vertexsize_attr, vertexcolor_attr, redo_layout = redo_layout, edgewidth_coef=edgewidth_coef, layout_fun=layout_fun)
+  g = set_network_attributes(g, vertexsize_attr, vertexcolor_attr, redo_layout = redo_layout, edgewidth_coef=edgewidth_coef, layout_fun=layout_fun)
   igraph::V(g)$size = vertexsize_coef * igraph::V(g)$size
   igraph::V(g)$label.cex = labelsize_coef * igraph::V(g)$label.cex
   igraph::V(g)$label.dist = vertex.label.dist
 
   if (reduce_labeloverlap){
-    g = reduceLabelOverlap(g, labelspace_coef, cex_from_device = T)
+    g = reduce_label_overlap(g, labelspace_coef, cex_from_device = T)
   }
   g = plot_args_as_attributes(g, args=list(...))
 
@@ -78,15 +86,26 @@ plot_args_as_attributes <- function(g, args){
 #' @param size_attribute the name of the vertex attribute to be used to set the size of nodes
 #'
 #' @return a network in the Igraph format
+#' @examples
+#' tc = create_tcorpus(c('A B C', 'B C', 'B D'))
+#' g = tc$semnet('token')
+#'
+#' igraph::get.edge.attribute(g)
+#' igraph::get.vertex.attribute(g)
+#' \dontrun{plot(g)}
+#' g = set_network_attributes(g, size_attribute = 'freq')
+#' igraph::get.edge.attribute(g)
+#' igraph::get.vertex.attribute(g)
+#' \dontrun{plot(g)}
 #' @export
-setNetworkAttributes <- function(g, size_attribute='freq', color_attribute=NA, redo_layout=F, edgewidth_coef=1, layout_fun=igraph::layout_with_fr){
-  g = setVertexAttributes(g, size_attribute, color_attribute)
-  g = setEdgeAttributes(g, edgewidth_coef)
+set_network_attributes <- function(g, size_attribute='freq', color_attribute=NA, redo_layout=F, edgewidth_coef=1, layout_fun=igraph::layout_with_fr){
+  g = set_vertex_attributes(g, size_attribute, color_attribute)
+  g = set_edge_attributes(g, edgewidth_coef)
   if (is.null(g$layout) | redo_layout) g$layout = layout_fun(g)
   g
 }
 
-setVertexColors <- function(g, color){
+set_vertex_colors <- function(g, color){
   if (!is.null(color)){
     if (class(color) == 'numeric'){
       pal = substr(grDevices::rainbow(length(unique(color)), s=0.6,alpha=0.5), 1,7)
@@ -103,7 +122,7 @@ setVertexColors <- function(g, color){
   g
 }
 
-setVertexAttributes <- function(g, size, color){
+set_vertex_attributes <- function(g, size, color){
   vattrs = names(igraph::vertex.attributes(g))
   if (is.na(color) | !color %in% vattrs) {
     color = igraph::fastgreedy.community(igraph::as.undirected(g))$membership
@@ -111,7 +130,7 @@ setVertexAttributes <- function(g, size, color){
   } else {
     color = unlist(igraph::get.vertex.attribute(g, color))
   }
-  g = setVertexColors(g, color)
+  g = set_vertex_colors(g, color)
 
   if (is.na(size) | !size %in% vattrs) {
     size = rep(1, igraph::vcount(g))
@@ -129,7 +148,7 @@ setVertexAttributes <- function(g, size, color){
 }
 
 
-setEdgeAttributes <- function(g, edgewidth_coef){
+set_edge_attributes <- function(g, edgewidth_coef){
   igraph::E(g)$width = rescale_var(igraph::E(g)$weight, 1, 10) * edgewidth_coef
   igraph::E(g)$arrow.size= 0.00001
   igraph::E(g)$color='lightgrey'
@@ -144,7 +163,7 @@ rescale_var <- function(x, new_min=0, new_max=1, x_min=min(x), x_max=max(x)){
   return(x + new_min)
 }
 
-reduceLabelOverlap <- function(g, labelspace_coef=1.1, cex_from_device=F, label.attr='label', labelsize.attr='label.cex', rstep=0.01, tstep=0.2){
+reduce_label_overlap <- function(g, labelspace_coef=1.1, cex_from_device=F, label.attr='label', labelsize.attr='label.cex', rstep=0.01, tstep=0.2){
   layout_matrix = igraph::layout.norm(g$layout)
 
   vnames = names(igraph::vertex.attributes(g))
@@ -161,7 +180,6 @@ reduceLabelOverlap <- function(g, labelspace_coef=1.1, cex_from_device=F, label.
     label.cex = 1
   }
 
-  #ord = order(-centralization.degree(gs)$res) ## reorder so that least central tokens are relocated first
   ord = order(-label.cex) ## reorder so that smallest tokens are relocated first
   layout_matrix = layout_matrix[ord,]
   label.cex = label.cex[ord]
@@ -171,40 +189,8 @@ reduceLabelOverlap <- function(g, labelspace_coef=1.1, cex_from_device=F, label.
   graphics::plot(layout_matrix, axes = F, frame.plot = F, xlab='', ylab='', type='n', xlim = c(-1,1), ylim=c(-1,1))
   newlayout = wordcloud::wordlayout(layout_matrix[,1], layout_matrix[,2], label, cex=label.cex*labelspace_coef, rstep = rstep, tstep=tstep, xlim = c(-1,1), ylim=c(-1,1))
 
-  ## calculate new cex based on percentual difference old and new token width
-  #oldwidth = mapply(strwidth, s=label, cex=label.cex*labelspace_coef)
-  #shrinkcoef = newlayout[,'width'] / oldwidth
-  #newlayout = cbind(newlayout, newcex=label.cex*shrinkcoef)
-
   newlayout = newlayout[match(1:nrow(newlayout), ord),] # return original order
   #g = set.vertex.attribute(g, labelsize.attr, value=newlayout[,'newcex'])
   g$layout = as.matrix(newlayout[,1:2])
   g
 }
-
-#' Get top features from semnet clusters
-#'
-#'
-#' @param g an Igraph object
-#' @param cluster_attr THe name of the vertex attribute that contains the cluster ids
-#' @param measure The measure used to determine the top features. currently supports highest "degree" or "freq" (if freq column exists)
-#' @param top_n The number of top features per cluster
-#'
-#' @export
-top_cluster_features <- function(g, cluster_attr, measure=c('degree','freq'), top_n=5){
-  measure = match.arg(measure)
-  d = data.frame(name=igraph::V(g)$name,
-                 cluster = igraph::get.vertex.attribute(g, cluster_attr))
-  if (measure == 'degree') d$value = igraph::degree(g)
-  if (measure == 'freq') d$value = igraph::V(g)$freq
-
-  topclusters = table(d$cluster)
-  d = d[order(d$cluster, -d$value),]
-  d$rank = local_position(1:nrow(d), d$cluster, presorted=T)
-  d = d[d$rank <= top_n,]
-  tab = dcast(d, rank ~ cluster, value.var='name')
-  tab[is.na(tab)] = ''
-  tab[,names(topclusters)[order(-topclusters)]]
-}
-
-

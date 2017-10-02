@@ -10,6 +10,18 @@
 #' @param use_original_alpha if max_vertices is not NULL, this determines whether the lower alpha for selecting the top vertices is also used as a threshold for the edges, or whether the original value given in the alpha parameter is used.
 #' @param k_is_n the disparity filter method for backbone extraction uses the number of existing edges (k) for each node, which can be arbitraty if there are many very weak ties, which is often the case in a co-occurence network. By setting k_is_n to TRUE, it is 'assumed' that all nodes are connected, which makes sense from a language model perspective (i.e. probability for co-occurence is never zero)
 #' @return A graph in the Igraph format
+#'
+#' @examples
+#' tc = create_tcorpus(sotu_texts, doc_column = 'id')
+#' tc$preprocess('token','feature', remove_stopwords = TRUE, use_stemming = TRUE, min_docfreq = 10)
+#'
+#' g = tc$semnet_window('feature', window.size = 10)
+#' igraph::vcount(g)
+#' igraph::ecount(g)
+#' gb = backbone_filter(g, max_vertices = 100)
+#' igraph::vcount(gb)
+#' igraph::ecount(gb)
+#' \dontrun{plot_semnet(gb)}
 #' @export
 backbone_filter <- function(g, alpha=0.05, direction='none', delete_isolates=T, max_vertices=NULL, use_original_alpha=T, k_is_n=F){
   if (direction == 'none') igraph::E(g)$alpha = backbone_alpha(g, k_is_n)
@@ -32,15 +44,6 @@ calcAlpha <- function(mat, weightsum, k){
   mat
 }
 
-#' Calculate the alpha values that can be used to extract the backbone of a network.
-#'
-#' Based on the following paper: Serrano, M. A., Boguna, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.
-#'
-#' @param g A graph in the `Igraph` format.
-#' @param k_is_n the disparity filter method for backbone extraction uses the number of existing edges (k) for each node, which can be arbitraty if there are many very weak ties, which is often the case in a co-occurence network. By setting k_is_n to TRUE, it is 'assumed' that all nodes are connected, which makes sense from a language model perspective (i.e. probability for co-occurence is never zero)
-#'
-#' @return A vector of alpha values, which matches the edges. Can thus easily be made an edge attribute: E(g)$alpha = backbone.alpha(g)
-#' @export
 backbone_alpha <- function(g, k_is_n=F){
   if (igraph::has.multiple(g)) stop('The corpustools implementation of backbone extraction does not support parallel edges (i.e. having multiple edges between the same nodes with the same direction). If summing multiple edges is OK with you, you can use Igraphs simplify() function')
 
@@ -63,15 +66,6 @@ backbone_alpha <- function(g, k_is_n=F){
 
 }
 
-#' Calculate the alpha values that can be used to extract the backbone of a network, for only the out.degree
-#'
-#' Based on the following paper: Serrano, M. A., Boguna, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.
-#'
-#' @param g A graph in the `Igraph` format.
-#' @param k_is_n the disparity filter method for backbone extraction uses the number of existing edges (k) for each node, which can be arbitraty if there are many very weak ties, which is often the case in a co-occurence network. By setting k_is_n to TRUE, it is 'assumed' that all nodes are connected, which makes sense from a language model perspective (i.e. probability for co-occurence is never zero)
-#'
-#' @return A vector of alpha values, which matches the edges. Can thus easily be made an edge attribute: E(g)$alpha = backbone_alpha(g)
-#' @export
 backbone_outdegree_alpha <- function(g, k_is_n=F){
   if (igraph::has.multiple(g)) stop('The corpustools implementation of backbone extraction does not support parallel edges (i.e. having multiple edges between the same nodes with the same direction). If summing multiple edges is OK with you, you can use Igraphs simplify() function')
 
@@ -82,15 +76,6 @@ backbone_outdegree_alpha <- function(g, k_is_n=F){
   calcAlpha(mat, weightsum, k)[edgelist_ids]
 }
 
-#' Calculate the alpha values that can be used to extract the backbone of a network, for only the in.degree
-#'
-#' Based on the following paper: Serrano, M. A., Boguna, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.
-#'
-#' @param g A graph in the `Igraph` format.
-#' @param k_is_n the disparity filter method for backbone extraction uses the number of existing edges (k) for each node, which can be arbitraty if there are many very weak ties, which is often the case in a co-occurence network. By setting k_is_n to TRUE, it is 'assumed' that all nodes are connected, which makes sense from a language model perspective (i.e. probability for co-occurence is never zero)
-
-#' @return A vector of alpha values, which matches the edges. Can thus easily be made an edge attribute: E(g)$alpha = backbone_alpha(g)
-#' @export
 backbone_indegree_alpha <- function(g, k_is_n=F){
   if (igraph::has.multiple(g)) stop('The corpustools implementation of backbone extraction does not support parallel edges (i.e. having multiple edges between the same nodes with the same direction). If summing multiple edges is OK with you, you can use Igraphs simplify() function')
 

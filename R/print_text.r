@@ -11,7 +11,16 @@
 #' @param meta_columns The meta data that is printed at the top of each text.
 #'
 #' @name tCorpus$read_text
-#' @aliases read_text.tCorpus
+#' @aliases read_text
+#' @examples
+#' d = data.frame(text = c('First text', 'Second text', 'Third text'),
+#' medium = c('A','A','B'),
+#' date = c('2010-01-01','2010-02-01','2010-03-01'))
+#' tc = create_tcorpus(d)
+#'
+#' tc$read_text(1)
+#' tc$read_text(2)
+#' tc$read_text(1:3)
 tCorpus$set('public', 'read_text', function(doc_id, column='token', meta_columns = self$meta_names) {
   d = self$get(c('doc_id', column), doc_id = doc_id)
   d = split(d[[column]], f = d$doc_id)

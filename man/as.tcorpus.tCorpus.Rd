@@ -14,3 +14,7 @@
 \description{
 Force an object to be a tCorpus class
 }
+\examples{
+tc = create_tcorpus(c('First text', 'Second text'))
+as.tcorpus(tc)
+}

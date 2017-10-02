@@ -5,7 +5,6 @@
 #' @param freq A numeric vector of term frequencies (integers).
 #'
 #' @return A numeric vector with the smoothed term proportions
-#' @export
 sgt <- function(freq){
   ff = data.frame(table(freq))
   ff$freq = as.numeric(as.character(ff$freq))
@@ -23,6 +22,8 @@ sgt <- function(freq){
   }
 }
 
+
+
 can_smooth <- function(freq){
   ff = table(freq)
   ff = ff[!names(ff) == '0']
@@ -35,6 +36,8 @@ can_smooth <- function(freq){
 #' @param add The added value
 #'
 #' @return A numeric vector with the smoothed term proportions
+#' @examples
+#' laplace(c(0,0,1,1,1,2,2,2,3,3,4,7,10))
 #' @export
 laplace <- function(freq, add=0.5){
   (freq + add) / sum(freq + add)

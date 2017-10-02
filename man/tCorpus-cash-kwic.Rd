@@ -2,7 +2,7 @@
 % Please edit documentation in R/kwic.r
 \name{tCorpus$kwic}
 \alias{tCorpus$kwic}
-\alias{kwic.tCorpus}
+\alias{kwic}
 \title{Get keyword-in-context (KWIC) strings}
 \arguments{
 \item{hits}{results of feature search. see \link{tCorpus$search_features}.}
@@ -40,3 +40,13 @@ kwic(hits = NULL, i = NULL, query = NULL, code = '',
 }
 }
 
+\examples{
+tc = tokens_to_tcorpus(corenlp_tokens, sent_i_col = 'sentence', token_i_col = 'id')
+
+## look directly for a term (or complex query)
+tc$kwic(query = 'love*')
+
+## or, first perform a feature search, and then get the KWIC for the results
+hits = tc$search_features('(john OR mark) AND mary AND love*', context_level = 'sentence')
+tc$kwic(hits, context_level = 'sentence')
+}

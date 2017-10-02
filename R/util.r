@@ -30,8 +30,8 @@ fast_dummy_factor <- function(x) { ## if , still return a factor for consistency
 fast_factor <- function(x, levels=NULL) {
   if (!methods::is(x, 'factor')) {
     if (!all(is.na(x))) {
-      if (is.null(levels)) levels = vector(class(x), 0)
-      x = .Call('_corpustools_fast_factor', PACKAGE = 'corpustools', as.character(x), levels)
+      if (is.null(levels)) levels = vector('character', 0)
+      x = .Call('_corpustools_fast_factor', PACKAGE = 'corpustools', as.character(x), as.character(levels))
     } else {
       x = fast_dummy_factor(x)
     }

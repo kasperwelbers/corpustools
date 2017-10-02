@@ -14,3 +14,9 @@
 \description{
 Force an object to be a tCorpus class
 }
+\examples{
+\dontrun{
+x = c('First text','Second text')
+as.tcorpus(x) ## x is not a tCorpus object
+}
+}

@@ -362,6 +362,5 @@ List parse_query(std::string x) {
 
 
 /*** R
-x = parse_query('test~{dit: !test tat, dat: test, dit: x}')
-parse_query('test (banaan: test)')
+x = parse_query('test# A')
 */

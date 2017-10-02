@@ -38,7 +38,7 @@ copy() method.
 
 For methods where copying is often usefull, such as subset, there is also a copy parameter.
 
-\strong{tc2 = tc$subset(doc_id \%in\% selection, copy=T)}
+\strong{tc2 = tc$subset(doc_id \%in\% selection, copy=TRUE)}
 
 Now, tc will not be subsetted itself, but will subset a copy of itself and return it to be assigned to tc2.
 

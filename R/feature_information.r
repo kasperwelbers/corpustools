@@ -8,11 +8,20 @@
 #'
 #' \preformatted{feature_stats(feature, sent_freq=F)}
 #'
-#' @param feature The name of the feature
+#' @param feature The name of the feature column
 #' @param sent_freq If True, include sentence frequency (only if sentence information is available).
 #'
 #' @name tCorpus$feature_stats
-#' @aliases feature_stats.tCorpus
+#' @aliases feature_stats
+#' @examples
+#' tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'),
+#'                     split_sentences = TRUE)
+#'
+#' fs = tc$feature_stats('token')
+#' head(fs)
+#'
+#' fs = tc$feature_stats('token', context_level = 'sentence')
+#' head(fs)
 tCorpus$set('public', 'feature_stats', function(feature, context_level=c('document','sentence')){
   term_statistics(self, feature=feature, context_level=context_level)
 })
@@ -31,7 +40,12 @@ tCorpus$set('public', 'feature_stats', function(feature, context_level=c('docume
 #' @param return_long if True, results will be returned in a long format. Default is a table, but this can be inconvenient if there are many grouping variables.
 #'
 #' @name tCorpus$top_features
-#' @aliases top_features.tCorpus
+#' @aliases top_features
+#' @examples
+#' tc = tokens_to_tcorpus(corenlp_tokens, token_i_col = 'id')
+#'
+#' tc$top_features('lemma')
+#' tc$top_features('lemma', group_by = 'relation')
 tCorpus$set('public', 'top_features', function(feature, n=10, group_by=NULL, group_by_meta=NULL, return_long=F){
   top_features(self, feature=feature, n=n, group_by=group_by, group_by_meta=group_by_meta, return_long=return_long)
 })
@@ -46,6 +60,10 @@ tCorpus$set('public', 'top_features', function(feature, n=10, group_by=NULL, gro
 
 term_statistics <- function(tc, feature, context_level=c('document','sentence')) {
   dtm = tc$dtm(feature, context_level=context_level)
+  dtm_term_statistics(dtm, feature)
+}
+
+dtm_term_statistics <- function(dtm, feature) {
   dtm = dtm[Matrix::rowSums(dtm) > 0, Matrix::colSums(dtm) > 0]    # get rid of empty rows/columns
   vocabulary = colnames(dtm)
   data.frame(term = as.character(vocabulary),
@@ -58,7 +76,6 @@ term_statistics <- function(tc, feature, context_level=c('document','sentence'))
              tfidf = tapply(dtm@x/Matrix::rowSums(dtm)[dtm@i+1], dtm@j+1, mean) * log2(nrow(dtm)/Matrix::colSums(dtm > 0)),
              stringsAsFactors=F)
 }
-
 
 feature_stats <- function(tc, feature, sent_freq=F){
   dtm = tc$dtm(feature, context_level='document')

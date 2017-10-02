@@ -231,7 +231,7 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
-     set_colname = function(oldname, newname) {
+     set_name = function(oldname, newname) {
        if (oldname %in% c('doc_id','sent_i','token_i')) stop('The position columns (doc_id, sent_i, token_i) cannot be set or changed')
        if (grepl('^\\.', newname)) stop('column names in a tCorpus cannot start with a dot')
 
@@ -285,7 +285,7 @@ tCorpus <- R6::R6Class("tCorpus",
         invisible(self)
       },
 
-     set_meta_colname = function(oldname, newname) {
+     set_meta_name = function(oldname, newname) {
        if (oldname %in% c('doc_id')) stop('The doc_id column cannot be set or changed')
        if (grepl('^\\.', newname)) stop('column names in a tCorpus cannot start with a dot')
        setnames(private$.meta, oldname, newname)
@@ -401,6 +401,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
       lookup = function(x, feature='token', ignore_case=TRUE, batchsize=25, raw_regex=FALSE, fixed=FALSE, with_i=FALSE, as_ascii=FALSE, sub_query=list(), only_context=F, subcontext=NULL){
         forget_if_new(self$n) ## reset cache if n changes (possibly add some more indicators?)
+        ## replace with max cache size once implemented in memoise
 
         has_sub_query = length(sub_query) > 0
         if (has_sub_query) {
@@ -467,15 +468,15 @@ tCorpus <- R6::R6Class("tCorpus",
      n = function() nrow(private$.data),
      n_meta = function() nrow(private$.meta),
      feature_names = function(e=NULL) {
-       if (!is.null(e)) stop('Cannot change tcorpus$feature_names by assignment. Instead, use the set_colname() function')
+       if (!is.null(e)) stop('Cannot change tcorpus$feature_names by assignment. Instead, use the set_name() function')
        fnames = colnames(private$.data)[!colnames(private$.data) %in% c('doc_id','sent_i','token_i')]
      },
      names = function(e=NULL) {
-       if (!is.null(e)) stop('Cannot change tcorpus$names by assignment. Instead, use the set_colname() function')
+       if (!is.null(e)) stop('Cannot change tcorpus$names by assignment. Instead, use the set_name() function')
        colnames(private$.data)
      },
      meta_names = function(e=NULL) {
-       if (!is.null(e)) stop('Cannot change tcorpus$meta_names by assignment. Instead, use the set_meta_colname() function')
+       if (!is.null(e)) stop('Cannot change tcorpus$meta_names by assignment. Instead, use the set_meta_name() function')
        colnames(private$.meta)
      },
 
@@ -491,12 +492,16 @@ tCorpus <- R6::R6Class("tCorpus",
 )
 
 
+
 #' S3 print for tCorpus class
 #'
 #' @param x a tCorpus object
 #' @param ... not used
 #'
 #' @method print tCorpus
+#' @examples
+#' tc = create_tcorpus(c('First text', 'Second text'))
+#' print(tc)
 #' @export
 print.tCorpus <- function(x, ...) {
   sent_info = if ('sent_i' %in% x$names) paste(' and sentences (n = ', nrow(unique(x$get(c('doc_id','sent_i')))), ')', sep='') else ''
@@ -515,6 +520,9 @@ print.tCorpus <- function(x, ...) {
 #' @param tc a tCorpus object
 #'
 #' @return a tCorpus object
+#' @examples
+#' tc = create_tcorpus(c('First text', 'Second text'))
+#' refresh_tcorpus(tc)
 #' @export
 refresh_tcorpus <- function(tc){
   tCorpus$new(data=tc$get(),
@@ -535,6 +543,9 @@ rebuild_tcorpus <- function(tc) {
 #' @param ... not used
 #'
 #' @method summary tCorpus
+#' @examples
+#' tc = create_tcorpus(c('First text', 'Second text'))
+#' summary(tc)
 #' @export
 summary.tCorpus <- function(object, ...) object
 
@@ -551,6 +562,9 @@ as.tcorpus <- function(x, ...) UseMethod('as.tcorpus')
 #' @param x the object to be forced
 #' @param ... not used
 #'
+#' @examples
+#' tc = create_tcorpus(c('First text', 'Second text'))
+#' as.tcorpus(tc)
 #' @export
 as.tcorpus.tCorpus <- function(x, ...) x
 
@@ -559,6 +573,11 @@ as.tcorpus.tCorpus <- function(x, ...) x
 #' @param x the object to be forced
 #' @param ... not used
 #'
+#' @examples
+#' \dontrun{
+#' x = c('First text','Second text')
+#' as.tcorpus(x) ## x is not a tCorpus object
+#' }
 #' @export
 as.tcorpus.default <- function(x, ...) stop('x has to be a tCorpus object')
 ## params: preprocess_params=list, filter_params,
@@ -609,8 +628,10 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
     if (with_labels){
       ucontext = unique(d[,c('doc_id','sent_i')])
       ucontext = stringi::stri_paste(ucontext$doc_id, ucontext$sent_i, sep=' #')
-      context = fast_factor(global_position(d$sent_i, d$doc_id, presorted = T, position_is_local=T), levels = ucontext)
+      context = fast_factor(global_position(d$sent_i, d$doc_id, presorted = T, position_is_local=T))
+      levels(context) = ucontext
     } else {
+      fast_factor(global_position(d$sent_i, d$doc_id, presorted = T, position_is_local=T))
       context = fast_dummy_factor(global_position(d$sent_i, d$doc_id, presorted = T, position_is_local=T))
     }
   }
@@ -643,7 +664,10 @@ lookup_terms <- function(patterns, x, ignore_case=T, raw_regex=T, perl=F, batchs
 }
 
 mem_lookup_terms <- memoise::memoise(lookup_terms)
-mem_transform_ascii <- memoise::memoise(function(x) stringi::stri_trans_general(x, "Latin-ASCII"))
+mem_transform_ascii <- memoise::memoise(function(x) {
+  x = stringi::stri_trans_general(x,"any-latin")
+  stringi::stri_trans_general(x,"latin-ascii")
+})
 
 forget_if_new <- memoise::memoise(function(x){  ## the forget calls will only be performed if x changes
   forget_all_mem()                              ## otherwise the invisible NULL is simply returned from cache

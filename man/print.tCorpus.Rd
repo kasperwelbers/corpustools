@@ -14,3 +14,7 @@
 \description{
 S3 print for tCorpus class
 }
+\examples{
+tc = create_tcorpus(c('First text', 'Second text'))
+print(tc)
+}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/documentation_methods.r
 \name{tCorpus$context}
 \alias{tCorpus$context}
-\alias{context.tCorpus}
+\alias{context}
 \title{Get a context vector}
 \arguments{
 \item{context_level}{Select whether the context is document or sentence level}
@@ -10,7 +10,7 @@
 \item{with_labels}{Return context as only ids (numeric, starting at 1) or with labels (factor)}
 }
 \description{
-Determining on the purpose, the context of an analysis can be the document level or sentence level (note: at some point we'll add paragraph level). the tCorpus$context() method offers a convenient way to get the context id of tokens for different settings.
+Depending on the purpose, the context of an analysis can be the document level or sentence level. the tCorpus$context() method offers a convenient way to get the context id of tokens for different settings.
 }
 \section{Usage}{
 
@@ -19,3 +19,13 @@ Determining on the purpose, the context of an analysis can be the document level
 \preformatted{data(context_level = c('document','sentence'), with_labels = T)}
 }
 
+\examples{
+tc <- create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'),
+                     split_sentences = TRUE)
+
+doc <- tc$context() ## default context is doc_id (document level)
+doc
+
+sent <- tc$context('sentence') ## can specify sentence level
+sent
+}

@@ -2,7 +2,7 @@
 % Please edit documentation in R/semnet.r
 \name{tCorpus$semnet}
 \alias{tCorpus$semnet}
-\alias{semnet.tCorpus}
+\alias{semnet}
 \title{Create a semantic network based on the co-occurence of tokens in documents}
 \arguments{
 \item{feature}{The name of the feature column}
@@ -28,3 +28,12 @@ semnet(feature, measure = c('con_prob', 'con_prob_weighted', 'cosine', 'count_di
 }
 }
 
+\examples{
+text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
+tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
+
+g = tc$semnet('token')
+g
+igraph::get.data.frame(g)
+\dontrun{plot_semnet(g)}
+}

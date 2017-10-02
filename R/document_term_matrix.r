@@ -19,6 +19,38 @@
 #' @param ngram_before_subset If a subset is used, ngrams can be made before the subset, in which case an ngram can contain tokens that have been filtered out after the subset. Alternatively, if ngrams are made after the subset, ngrams will span over the gaps of tokens that are filtered out.
 #'
 #' @name tCorpus$dtm
+#' @examples
+#' tc = create_tcorpus(sotu_texts, doc_column = 'id', split_sentences = TRUE)
+#'
+#' ## Perform additional preprocessing on the 'token' column, and save as the 'feature' column
+#' tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
+#' tc$get()
+#'
+#' ## default: regular sparse matrix, using the Matrix package
+#' m = tc$dtm('feature')
+#' class(m)
+#' dim(m)
+#'
+#' ## alternatively, create quanteda ('quanteda_dfm') or tm ('tm_dtm') class for DTM
+#' \dontrun{
+#' m = tc$dtm('feature', form = 'quanteda_dfm')
+#' class(m)
+#' m
+#' }
+#'
+#' ## create DTM with sentences as rows (instead of documents)
+#' m = tc$dtm('feature', context_level = 'sentence')
+#' nrow(m)
+#'
+#' ## use weighting
+#' m = tc$dtm('feature', weight = 'termfreq')
+#' m = tc$dtm('feature', weight = 'docfreq')
+#' m = tc$dtm('feature', weight = 'tfidf')
+#' m = tc$dtm('feature', weight = 'norm_tfidf')
+#'
+#' ## immediately get subset
+#' m = tc$dtm('feature', subset_meta = president == 'Barack Obama')
+#' nrow(m)
 #' @aliases dtm.tCorpus
 tCorpus$set('public', 'dtm', function(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F) {
   if (class(substitute(subset_tokens)) %in% c('call', 'name')) subset_tokens = self$eval(substitute(subset_tokens), parent.frame())

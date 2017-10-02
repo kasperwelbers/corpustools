@@ -6,7 +6,8 @@
 \usage{
 preprocess_tokens(x, context = NULL, language = "english",
   use_stemming = F, lowercase = T, ngrams = 1, replace_whitespace = T,
-  as_ascii = F, remove_punctuation = T, remove_stopwords = F)
+  as_ascii = F, remove_punctuation = T, remove_stopwords = F,
+  min_freq = NULL, min_docfreq = NULL)
 }
 \arguments{
 \item{x}{A character vector in which each element is a token (i.e. a tokenized text)}
@@ -28,7 +29,21 @@ preprocess_tokens(x, context = NULL, language = "english",
 \item{remove_punctuation}{Logical. if TRUE, punctuation is removed}
 
 \item{remove_stopwords}{Logical. If TRUE, stopwords are removed (Make sure to specify the right language!)}
+
+\item{min_freq}{an integer, specifying minimum token frequency.}
+
+\item{min_docfreq}{an integer, specifying minimum document frequency.}
 }
 \description{
 Preprocess tokens in a character vector
+}
+\examples{
+tokens = c('I', 'am', 'a', 'SHORT', 'example', 'sentence', '!')
+
+## default is lowercase without punctuation
+preprocess_tokens(tokens)
+
+## optionally, delete stopwords, perform stemming, and make ngrams
+preprocess_tokens(tokens, remove_stopwords = TRUE, use_stemming = TRUE)
+preprocess_tokens(tokens, context = NA, ngrams = 3)
 }

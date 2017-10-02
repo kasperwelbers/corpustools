@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing.r
 \name{tCorpus$preprocess}
 \alias{tCorpus$preprocess}
-\alias{preprocess.tCorpus}
+\alias{preprocess}
 \title{Preprocess feature}
 \arguments{
 \item{column}{the column containing the feature to be used as the input}
@@ -24,6 +24,10 @@
 \item{use_stemming}{reduce features (tokens) to their stem}
 
 \item{language}{The language used for stopwords and stemming}
+
+\item{min_freq}{an integer, specifying minimum token frequency.}
+
+\item{min_docfreq}{an integer, specifying minimum document frequency.}
 }
 \description{
 Preprocess feature
@@ -40,3 +44,20 @@ preprocess(column, new_column = column,
            }
 }
 
+\examples{
+tc = create_tcorpus('I am a SHORT example sentence! That I am!')
+
+## default is lowercase without punctuation
+tc$preprocess('token', 'preprocessed_1')
+
+## delete stopwords and perform stemming
+tc$preprocess('token', 'preprocessed_2', remove_stopwords = TRUE, use_stemming = TRUE)
+
+## filter on minimum frequency
+tc$preprocess('token', 'preprocessed_3', min_freq=2)
+
+## make ngrams
+tc$preprocess('token', 'preprocessed_4', ngrams = 3)
+
+tc$get()
+}

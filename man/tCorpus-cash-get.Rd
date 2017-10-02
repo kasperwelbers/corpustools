@@ -2,18 +2,18 @@
 % Please edit documentation in R/documentation_methods.r
 \name{tCorpus$get}
 \alias{tCorpus$get}
-\alias{get.tCorpus}
 \alias{tCorpus$get_meta}
-\alias{get_meta.tCorpus}
+\alias{get}
+\alias{get_meta}
 \title{Access the data from a tCorpus}
 \arguments{
-\item{a}{character vector with the names of the columns}
+\item{columns}{character vector with the names of the columns}
 
 \item{keep_df}{if True, the output will be a data.table (or data.frame) even if it only contains 1 columns}
 
 \item{as.df}{if True, the output will be a regular data.frame instead of a data.table}
 
-\item{subset}{Optionally, only get a subset of rows (see \link{subset.tCorpus} method)}
+\item{subset}{Optionally, only get a subset of rows (see \link{tCorpus$subset} method)}
 
 \item{doc_id}{A vector with document ids to select rows. Faster than subset, because it uses binary search. Cannot be used in combination with subset. If duplicate doc_ids are given, duplicate rows are returned.}
 
@@ -32,3 +32,31 @@ Get the token and meta data.
 \preformatted{get_meta(columns=NULL, keep_df=F, as.df=F, subset=NULL, doc_id=NULL, safe_copy=T)}
 }
 
+\examples{
+d = data.frame(text = c('Text one first sentence. Text one second sentence', 'Text two'),
+               medium = c('A','B'),
+               date = c('2010-01-01','2010-02-01'),
+               doc_id = c('D1','D2'))
+tc = create_tcorpus(d, split_sentences = TRUE)
+
+## get token data
+tc$get()                     ## full data.table
+tc$get(c('doc_id','token'))  ## data.table with selected columns
+head(tc$get('doc_id'))       ## single column as vector
+head(tc$get(as.df = TRUE))      ## return as regular data.frame
+
+## get subset
+tc$get(subset = token_i \%in\% 1:2)
+
+## subset on keys using (fast) binary search
+tc$get(doc_id = 'D1')              ## for doc_id
+tc$get(doc_id = 'D1', token_i = 5) ## for doc_id / token pairs
+
+
+##### use get for meta data with get_meta
+tc$get_meta()
+
+## option to repeat meta data to match tokens
+tc$get_meta(per_token = TRUE) ## (note that first doc is repeated, and rows match tc$n)
+
+}

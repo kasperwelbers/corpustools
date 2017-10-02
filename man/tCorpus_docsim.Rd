@@ -6,3 +6,10 @@
 \description{
 \link[=tCorpus]{(back to overview)}
 }
+\details{
+\strong{Compare documents, and perform similarity based deduplication}
+\tabular{ll}{
+  \link[=tCorpus$compare_documents]{$compare_documents()} \tab Compare documents \cr
+  \link[=tCorpus$deduplicate]{$deduplicate()} \tab Remove duplicate documents
+}
+}

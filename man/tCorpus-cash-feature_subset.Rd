@@ -2,7 +2,7 @@
 % Please edit documentation in R/preprocessing.r
 \name{tCorpus$feature_subset}
 \alias{tCorpus$feature_subset}
-\alias{feature_subset.tCorpus}
+\alias{feature_subset}
 \title{Filter features}
 \arguments{
 \item{column}{the column containing the feature to be used as the input}
@@ -23,3 +23,11 @@ Just as in subset, it is easy to use objects and functions in the filter, includ
 \preformatted{feature_subset(column, new_column, subset)}
 }
 
+\examples{
+tc = create_tcorpus('a a a a b b b c c')
+
+tc$feature_subset('token', 'tokens_subset1', subset = token_i < 5)
+tc$feature_subset('token', 'tokens_subset2', subset = freq_filter(token, min = 3))
+
+tc$get()
+}

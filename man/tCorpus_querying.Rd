@@ -11,6 +11,7 @@
 \tabular{ll}{
   \link[=tCorpus$search_features]{$search_features)} \tab Search for features based on keywords and conditions \cr
   \link[=tCorpus$search_recode]{$search_recode()} \tab Use the search_features query syntax to recode features \cr
+  \link[=tCorpus$feature_associations]{$feature_associations()} \tab Given a query, get words that often co-occur nearby \cr
   \link[=tCorpus$kwic]{$kwic()} \tab Get keyword-in-context (kwic) strings
 }
 \strong{Context-level queries}

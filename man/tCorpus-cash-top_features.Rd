@@ -2,7 +2,7 @@
 % Please edit documentation in R/feature_information.r
 \name{tCorpus$top_features}
 \alias{tCorpus$top_features}
-\alias{top_features.tCorpus}
+\alias{top_features}
 \title{Show top features}
 \arguments{
 \item{feature}{The name of the feature}
@@ -25,3 +25,9 @@ Show top features
 \preformatted{top_features(feature, n = 10, group_by = NULL, group_by_meta = NULL, return_long = F}
 }
 
+\examples{
+tc = tokens_to_tcorpus(corenlp_tokens, token_i_col = 'id')
+
+tc$top_features('lemma')
+tc$top_features('lemma', group_by = 'relation')
+}

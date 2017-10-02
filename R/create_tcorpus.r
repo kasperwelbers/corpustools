@@ -1,5 +1,7 @@
 #' Create a tCorpus
 #'
+#' Create a \link{tCorpus} from raw text input
+#'
 #' @rdname create_tcorpus
 #'
 #' @param x main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.
@@ -15,11 +17,28 @@
 #'
 #' @export
 #' @name create_tcorpus
+#' @examples
+#'
 create_tcorpus <- function(x, ...) {
   UseMethod('create_tcorpus')
 }
 
 #' @rdname create_tcorpus
+#' @examples
+#' tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'))
+#' tc$get()
+#'
+#' tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'),
+#'                     split_sentences = TRUE)
+#' tc$get()
+#'
+#' ## with meta (easier to S3 method for data.frame)
+#' meta = data.frame(doc_id = c(1,2), source = c('a','b'))
+#' tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'),
+#'                     split_sentences = TRUE,
+#'                     doc_id = c(1,2),
+#'                     meta = meta)
+#' tc
 #' @export
 create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, verbose=F, ...) {
   if (any(duplicated(doc_id))) stop('doc_id should not contain duplicate values')
@@ -39,6 +58,13 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, split_sen
 }
 
 #' @rdname create_tcorpus
+#' @examples
+#' ## It makes little sense to have full texts as factors, but it tends to happen.
+#' ## The create_tcorpus S3 method for factors is essentially identical to the
+#' ##  method for a character vector.
+#' text = factor(c('Text one first sentence', 'Text one second sentence'))
+#' tc = create_tcorpus(text)
+#' tc$get()
 #' @export
 create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, verbose=F, ...) {
   create_tcorpus(as.character(x), doc_id=doc_id, meta=meta, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, verbose=verbose)
@@ -46,6 +72,28 @@ create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, split_senten
 
 
 #' @rdname create_tcorpus
+#' @examples
+#' d = data.frame(text = c('Text one first sentence. Text one second sentence.',
+#'                'Text two', 'Text three'),
+#'                date = c('2010-01-01','2010-01-01','2012-01-01'),
+#'                source = c('A','B','B'))
+#'
+#' tc = create_tcorpus(d, split_sentences = TRUE)
+#' tc
+#' tc$get()
+#'
+#' ## use multiple text columns
+#' d$headline = c('Head one', 'Head two', 'Head three')
+#' ## use custom doc_id
+#' d$doc_id = c('#1', '#2', '#3')
+#'
+#' tc = create_tcorpus(d, text_columns = c('headline','text'), doc_column = 'doc_id',
+#'                     split_sentences = TRUE)
+#' tc
+#' tc$get()
+#'
+#' ## (note that text from different columns is pasted together with a double newline in between)
+#' tc$read_text(doc_id = '#1')
 #' @export
 create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id', split_sentences=F, max_sentences=NULL, max_tokens=NULL, ...) {
   for(cname in text_columns) if (!cname %in% colnames(x)) stop(sprintf('text_column "%s" not in data.frame', cname))
@@ -79,6 +127,17 @@ create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id
 #' @param sent_is_local Sentences in the tCorpus must be locally unique within documents. If sent_is_local is FALSE, then sentences are made sure to be locally unique. However,  it is then assumed that the first sentence in a document is sentence 1, which might not be the case if tokens (input) is a subset. If you know for a fact that the sentence column in tokens is already locally unique, you can set sent_is_local to TRUE to keep the original sent_i values.
 #' @param token_is_local Same as sent_is_local, but or token_i
 #'
+#' @examples
+#' head(corenlp_tokens)
+#'
+#' tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
+#'                        sent_i_col = 'sentence', token_i_col = 'id')
+#' tc
+#'
+#' meta = data.frame(doc_id = 1, medium = 'A', date = '2010-01-01')
+#' tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
+#'                        sent_i_col = 'sentence', token_i_col = 'id', meta=meta)
+#' tc
 #' @export
 tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_i_col=NULL, sent_i_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=F, token_is_local=F) {
   tokens = data.table::as.data.table(tokens)
@@ -128,7 +187,7 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_i_col=NULL, sent_i
     if (!anyDuplicated(tokens, by=c('doc_id','sent_i','token_i')) == 0) stop('tokens should not contain duplicate triples of documents (doc_col), sentences (sent_i_col) and token positions (token_i_col)')
   } else {
     data.table::setkeyv(tokens, c('doc_id','token_i'))
-    if (!anyDuplicated(tokens, by=c('doc_id','token_i')) == 0) stop('tokens should not contain duplicate doubles of documents (doc_col) and token positions (token_i_col)')
+    if (!anyDuplicated(tokens, by=c('doc_id','token_i')) == 0) stop('tokens should not contain duplicate pairs of documents (doc_col) and token positions (token_i_col)')
   }
 
   ## make sure that sent_i and token_i are locally unique within documents

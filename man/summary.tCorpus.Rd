@@ -14,3 +14,7 @@
 \description{
 Summary of a tCorpus object
 }
+\examples{
+tc = create_tcorpus(c('First text', 'Second text'))
+summary(tc)
+}

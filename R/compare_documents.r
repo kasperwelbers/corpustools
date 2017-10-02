@@ -1,3 +1,36 @@
+
+#' Calculate the similarity of documents
+#'
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#' \preformatted{compare_documents(feature='token', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL))}
+#'
+#' @param feature the column name of the feature that is to be used for the comparison.
+#' @param date_col a date with time in POSIXct. If given together with hour_window, only documents within the given hour_window will be compared.
+#' @param hour_window an integer. If given together with date_col, only documents within the given hour_window will be compared.
+#' @param measure the similarity measure. Currently supports cosine similarity (symmetric) and overlap_pct (asymmetric)
+#' @param weight a weighting scheme for the document-term matrix. Default is term-frequency inverse document frequency with normalized rows (document length).
+#' @param ngrams an integer. If given, ngrams of this length are used
+#' @param from_subset An expression to select a subset. If given, only this subset will be compared to other documents
+#' @param to_subset An expression to select a subset. If given, documents are only compared to this subset
+#'
+#' @name tCorpus$compare_documents
+#' @aliases compare_documents
+#' @examples
+#' d = data.frame(text = c('a b c d e',
+#'                         'e f g h i j k',
+#'                         'a b c'),
+#'                date = c('2010-01-01','2010-01-01','2012-01-01'))
+#' tc = create_tcorpus(d)
+#'
+#' g = tc$compare_documents()
+#' igraph::get.data.frame(g)
+#'
+#' g = tc$compare_documents(measure = 'overlap_pct')
+#' igraph::get.data.frame(g)
+#'
+#' g = tc$compare_documents(date_col = 'date', hour_window = c(0,36))
+#' igraph::get.data.frame(g)
 tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
   if (!requireNamespace('RNewsflow', quietly = T)) stop('RNewsflow package needs to be installed in order to use document comparison methods')
   weight = match.arg(weight)
@@ -6,6 +39,46 @@ tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NU
   compare_documents_fun(self, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=min_similarity, weight=weight, ngrams=ngrams, from_subset=from_subset, to_subset=to_subset)
 })
 
+#' Deduplicate documents
+#'
+#' Deduplicate documents based on similarity scores. Can be used to filter out identical documents, but also similar documents.
+#'
+#' Note that deduplication occurs by reference (\link{tCorpus_modify_by_reference}) unless copy is set to TRUE.
+#'
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#' \preformatted{deduplicate(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=F)}
+#'
+#' @param feature the column name of the feature that is to be used for the comparison.
+#' @param date_col The column name for a column with a date vector (in POSIXct). If given together with hour_window, only documents within the given hour_window will be compared.
+#' @param meta_cols a vector with names for columns in the meta data. If given, documents are only considered duplicates if the values of these columns are identical (in addition to having a high similarity score)
+#' @param hour_window an integer. If given together with date_col, only documents within the given hour_window will be compared.
+#' @param min_docfreq a minimum document frequency for features. This is mostly to lighten computational load. Default is 2, because terms that occur once cannot overlap across documents
+#' @param min_docfreq a maximum document frequency percentage for features. High frequency terms contain little information for identifying duplicates. Default is 0.5 (i.e. terms that occur in more than 50 percent of documents are ignored),
+#' @param measure the similarity measure. Currently supports cosine similarity (symmetric) and overlap_pct (asymmetric)
+#' @param similarity the similarity threshold used to determine whether two documents are duplicates. Default is 1, meaning 100 percent identical.
+#' @param keep select either 'first', 'last' or 'random'. Determines which document of duplicates to delete. If a date is given, 'first' and 'last' specify whether the earliest or latest document is kept.
+#' @param weight a weighting scheme for the document-term matrix. Default is term-frequency inverse document frequency with normalized rows (document length).
+#' @param ngrams an integer. If given, ngrams of this length are used
+#' @param print_deduplicates if TRUE, print ids of duplicates that are deleted
+#' @param copy If TRUE, the method returns a new tCorpus object instead of deduplicating the current one by reference.
+#'
+#' @name tCorpus$deduplicate
+#' @aliases deduplicate
+#' @examples
+#' d = data.frame(text = c('a b c d e',
+#'                         'e f g h i j k',
+#'                         'a b c'),
+#'                date = c('2010-01-01','2010-01-01','2012-01-01'))
+#' tc = create_tcorpus(d)
+#'
+#' tc$get_meta()
+#' dedup = tc$deduplicate(feature='token', date_col = 'date', similarity = 0.8, copy=TRUE)
+#' dedup$get_meta()
+#'
+#' dedup = tc$deduplicate(feature='token', date_col = 'date', similarity = 0.8, keep = 'last',
+#'                        copy=TRUE)
+#' dedup$get_meta()
 tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=F){
   if (!requireNamespace('RNewsflow', quietly = T)) stop('RNewsflow package needs to be installed in order to use document comparison methods')
 
@@ -38,6 +111,7 @@ to_POSIXct <- function(x){
 
 compare_documents_fun <- function(tc, feature='token', date_col=NULL, hour_window=c(-24,24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
   measure = match.arg(measure)
+  if (measure == 'overlap_pct') measure = 'percentage.from'
   if (!is.null(date_col)) date_col = match.arg(date_col, choices = tc$meta_names)
 
   meta = as.data.frame(tc$get_meta())

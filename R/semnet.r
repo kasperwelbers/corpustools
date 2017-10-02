@@ -20,7 +20,15 @@
 #' @param n.batches If a number, perform the calculation in batches
 #'
 #' @name tCorpus$semnet
-#' @aliases semnet.tCorpus
+#' @aliases semnet
+#' @examples
+#' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
+#' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
+#'
+#' g = tc$semnet('token')
+#' g
+#' igraph::get.data.frame(g)
+#' \dontrun{plot_semnet(g)}
 tCorpus$set('public', 'semnet', function(feature, measure=c('cosine', 'con_prob', 'con_prob_weighted', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA){
   measure = match.arg(measure)
   if (!requireNamespace('igraph', quietly = T)) stop('igraph package needs to be installed in order to use semnet methods')
@@ -51,7 +59,15 @@ tCorpus$set('public', 'semnet', function(feature, measure=c('cosine', 'con_prob'
 #' @param set_matrix_mode Advanced feature. There are two approaches for calculating window co-occurrence. One is to measure how often a feature occurs within a given token window, which can be calculating by calculating the inner product of a matrix that contains the exact position of features and a matrix that contains the occurrence window. We refer to this as the "positionXwindow" mode. Alternatively, we can measure how much the windows of features overlap, for which take the inner product of two window matrices. By default, semnet_window takes the mode that we deem most appropriate for the similarity measure. Substantially, the positionXwindow approach has the advantage of being very easy to interpret (e.g. how likely is feature "Y" to occurr within 10 tokens from feature "X"?). The windowXwindow mode, on the other hand, has the interesting feature that similarity is stronger if tokens co-occurr more closely together (since then their windows overlap more). Currently, we only use the windowXwindow mode for cosine similarity. By using the set_matrix_mode parameter you can override this.
 #'
 #' @name tCorpus$semnet_window
-#' @aliases semnet_window.tCorpus
+#' @aliases semnet_window
+#' @examples
+#' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
+#' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
+#'
+#' g = tc$semnet_window('token', window.size = 1)
+#' g
+#' igraph::get.data.frame(g)
+#' \dontrun{plot_semnet(g)}
 tCorpus$set('public', 'semnet_window', function(feature, measure=c('cosine', 'con_prob', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=NA, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
   measure = match.arg(measure)
   if (!requireNamespace('igraph', quietly = T)) stop('igraph package needs to be installed in order to use semnet methods')

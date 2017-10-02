@@ -2,10 +2,10 @@
 % Please edit documentation in R/feature_information.r
 \name{tCorpus$feature_stats}
 \alias{tCorpus$feature_stats}
-\alias{feature_stats.tCorpus}
+\alias{feature_stats}
 \title{Feature statistics}
 \arguments{
-\item{feature}{The name of the feature}
+\item{feature}{The name of the feature column}
 
 \item{sent_freq}{If True, include sentence frequency (only if sentence information is available).}
 }
@@ -19,3 +19,13 @@ Compute a number of useful statistics for features: term frequency, idf, etc.
 \preformatted{feature_stats(feature, sent_freq=F)}
 }
 
+\examples{
+tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'),
+                    split_sentences = TRUE)
+
+fs = tc$feature_stats('token')
+head(fs)
+
+fs = tc$feature_stats('token', context_level = 'sentence')
+head(fs)
+}

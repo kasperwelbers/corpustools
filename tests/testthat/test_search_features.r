@@ -114,7 +114,6 @@ test_that("Query search works", {
   ## complex BOOLEAN unique hits
   tc = create_tcorpus("A B C")
 
-  ## doesn't work!!!!!!
   f = tc$search_features('A AND (B C)', mode = 'features')$hits$feature  ## feature mode matches everything
   expect_equal(as.character(f), c('A','B','C'))
   f = tc$search_features('(B C) AND A')$hits$feature                     ## in unique_hits mode, only one hits is found, because there is only one A.

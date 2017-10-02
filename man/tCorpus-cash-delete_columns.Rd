@@ -2,9 +2,9 @@
 % Please edit documentation in R/documentation_methods.r
 \name{tCorpus$delete_columns}
 \alias{tCorpus$delete_columns}
-\alias{delete_columns.tCorpus}
 \alias{tCorpus$delete_meta_columns}
-\alias{delete_meta_columns.tCorpus}
+\alias{delete_columns}
+\alias{delete_meta_columns}
 \title{Delete column from the data and meta data}
 \arguments{
 \item{cnames}{the names of the columns to delete}
@@ -20,3 +20,16 @@ Delete column from the data and meta data
 \preformatted{delete_meta_columns(cnames)}
 }
 
+\examples{
+d = data.frame(text = c('Text one','Text two','Text three'),
+               date = c('2010-01-01','2010-01-01','2012-01-01'))
+tc = create_tcorpus(d)
+
+tc$get()
+tc$delete_columns('token')
+tc$get()
+
+tc$get_meta()
+tc$delete_meta_columns('date')
+tc$get_meta()
+}

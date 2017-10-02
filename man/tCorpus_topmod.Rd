@@ -6,3 +6,9 @@
 \description{
 \link[=tCorpus]{(back to overview)}
 }
+\details{
+\strong{Train a topic model}
+\tabular{ll}{
+  \link[=tCorpus$lda_fit]{$lda_fit()} \tab Latent Dirichlet Allocation
+}
+}

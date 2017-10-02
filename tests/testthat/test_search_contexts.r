@@ -14,7 +14,6 @@ test_that("Query document search works", {
   hits = tc$search_contexts('mark AND rutte')
   expect_equal(as.character(hits$hits$doc_id), 'c')
 
-
   hits = tc$search_contexts('"mark rutte"', context_level = 'sentence')
   expect_equal(hits$hits$sent_i, 1)
 

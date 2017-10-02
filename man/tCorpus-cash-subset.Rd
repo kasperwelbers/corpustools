@@ -2,9 +2,9 @@
 % Please edit documentation in R/documentation_methods.r
 \name{tCorpus$subset}
 \alias{tCorpus$subset}
-\alias{subset.tCorpus}
-\alias{subset_meta.tCorpus}
 \alias{tCorpus$subset_meta}
+\alias{subset}
+\alias{subset_meta}
 \title{Subset a tCorpus}
 \arguments{
 \item{subset}{logical expression indicating rows to keep in the tokens data.}
@@ -18,14 +18,12 @@
 \description{
 Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta). The subset arguments work according to the \link{subset.data.table} function.
 
+Important!! Note that subset is performed by reference. In other words, when performed, subset will delete the rows from the tCorpus, instead of returning a new tCorpus (see example for clarification).
+This is the standard behaviour, because it is much more efficient. If you want to create a subset of a copy of the tCorpus, you can set the copy argument to TRUE.
+
 Subset can also be used to select rows based on token/feature frequences. This is a common step in corpus analysis, where it often makes sense to ignore very rare and/or very frequent tokens.
 To do so, there are several special functions that can be used within a subset call.
-The freq_filter() and docfreq_filter() can be used to filter terms based on term frequency and document frequency, respectively.
-The first argument to these functions is the name of the feature, e.g., freq_filter(token).
-To filter this feature you can specify: min (minimum frequency), max (maximum frequency), top (n most frequent tokens) and bottom (n least frequent tokens).
-For example, tc$freq_filter(token, min=10) filters out all rows in which the specified feature occures at least 10 times in the entire corpus.
-freq_filter(token, top=100) keeps only the rolws in which the feature is in the top 100 most frequent features.
-docfreq_filter(token, max = 0.9 * tc$n) deletes all rows with features that occured in more than 90% of all documents.
+The freq_filter() and docfreq_filter() can be used to filter terms based on term frequency and document frequency, respectively. (see examples)
 
 The subset_meta() method is an alternative for using subset(subset_meta = ...), that is added for consistency with the other _meta accessor methods.
 
@@ -42,3 +40,35 @@ subset_meta(subset = NULL, copy = F)
              }
 }
 
+\examples{
+tc = create_tcorpus(sotu_texts, doc_column = 'id')
+tc$n ## original number of tokens
+
+## select only first 20 tokens per document
+tc$subset(token_i < 20)
+
+tc$n ## number of tokens after subset
+
+## note that the return value is not assigned to tc, or to a new name.
+## rather, tc is changed by reference. To subset a copy of tc (the more classic R way),
+## the copy argument can be used. The following line creates tc2 as a copy of tc,
+## with only the first 10 tokens per document
+tc2 <- tc$subset(token_i < 10, copy=TRUE)
+
+tc$n   ## unchanged
+tc2$n  ## subset of tc
+
+## you can filter on term frequency and document frequency with the freq_filter() and
+## docfreq_filter() functions
+tc = create_tcorpus(sotu_texts, doc_column = 'id')
+tc$subset( freq_filter(token, min = 20, max = 100) )
+tc$get()
+
+
+###### subset can be used for meta data by using the subset_meta argument, or the subset_meta method
+tc$n_meta
+tc$subset(subset_meta = president == 'Barack Obama')
+tc$n_meta
+tc$subset_meta(date == '2013-02-12')
+tc$n_meta
+}

@@ -5,18 +5,46 @@
 \title{Merge tCorpus objects}
 \usage{
 merge_tcorpora(..., keep_data = c("intersect", "all"),
-  keep_meta = c("intersect", "all"))
+  keep_meta = c("intersect", "all"), if_duplicate = c("stop", "rename",
+  "drop"), duplicate_tag = "#D")
 }
 \arguments{
-\item{...}{either a named list or named arguments with tCorpus objects}
+\item{...}{tCorpus objects, or a list with tcorpus objects}
 
 \item{keep_data}{if 'intersect', then only the token data columns that occur in all tCorpurs objects are kept}
 
 \item{keep_meta}{if 'intersect', then only the document meta columns that occur in all tCorpurs objects are kept}
+
+\item{if_duplicate}{determine behaviour if there are duplicate doc_ids across tcorpora. By default, this yields an error, but you can set it to "rename" to change the names of duplicates (which makes sense of only the doc_ids are duplicate, but not the actual content), or "drop" to ignore duplicates, keeping only the first unique occurence.}
+
+\item{duplicate_tag}{a character string. if if_duplicates is "rename", this tag is added to the document id. (this is repeated till no duplicates remain)}
 }
 \value{
 a tCorpus object
 }
 \description{
-Merge tCorpus objects
+Create one tcorpus based on multiple tcorpus objects
+}
+\examples{
+tc1 = create_tcorpus(sotu_texts[1:10,], doc_column = 'id')
+tc2 = create_tcorpus(sotu_texts[11:20,], doc_column = 'id')
+tc = merge_tcorpora(tc1, tc2)
+tc$n_meta
+
+#### duplicate handling ####
+tc1 = create_tcorpus(sotu_texts[1:10,], doc_column = 'id')
+tc2 = create_tcorpus(sotu_texts[6:15,], doc_column = 'id')
+
+## duplicate error
+\dontrun{tc = merge_tcorpora(tc1,tc2)}
+
+## with "rename", has 20 documents of which 5 duplicates
+tc = merge_tcorpora(tc1,tc2, if_duplicate = 'rename')
+tc$n_meta
+sum(grepl('#D', tc$get_meta()$doc_id))
+
+## with "drop", has 15 documents without duplicates
+tc = merge_tcorpora(tc1,tc2, if_duplicate = 'drop')
+tc$n_meta
+mean(grepl('#D', tc$get_meta()$doc_id))
 }

@@ -16,16 +16,23 @@
 #' @param ... additional parameters passed to the plot function
 #'
 #' @return nothing
+#' @examples
+#' x = c(-10, -5, 3, 5)
+#' y = c(0, 2, 5, 10)
+#' words = c('words', 'where', 'you', 'like')
+#'
+#' \dontrun{
+#' plot_words(x,y,words, c(1,2,3,4))
+#' }
 #' @export
-plotWords <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', ylab='', yaxt='n', scale=2, random.y=T, xlim=NULL, ylim=NULL, ...){
-  wordsize = rescale_var(log(wordfreq), 0.75, scale)
+plot_words <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', ylab='', yaxt='n', scale=2, random.y=T, xlim=NULL, ylim=NULL, ...){
+  wordsize = rescale_var(wordfreq, 0.75, scale) + 1
   if (is.null(y) & random.y) y = sample(seq(-1, 1, by = 0.001), length(x))
   if (is.null(y) & !random.y) y = wordsize
   xmargin = (max(x) - min(x)) * 0.2
   ymargin = (max(y) - min(y)) * 0.2
   if (is.null(xlim)) xlim = c(min(x) - xmargin, max(x) + xmargin)
   if (is.null(ylim)) ylim = c(min(y) - ymargin, max(y) + ymargin)
-
   graphics::plot(x, y, type = "n", xlim = xlim, ylim = ylim, frame.plot = F, yaxt = yaxt, ylab = ylab, xlab = xlab, ...)
   wl <- as.data.frame(wordcloud::wordlayout(x, y, words, cex = wordsize))
 
@@ -47,10 +54,23 @@ plotWords <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', yla
 #' @param min.freq the minimum frquency to include (see wordcloud::wordcloud)
 #' @param rot.per the percentage of vertical words (see wordcloud::wordcloud)
 #' @param ... other arguments passed to wordcloud::wordcloud
+#'
+#' @examples
+#' ## create DTM
+#' tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
+#' tc$preprocess('token', 'feature', remove_stopwords = TRUE)
+#' dtm = tc$dtm('feature')
+#'
+#' \dontrun{
+#' dtm_wordcloud(dtm, nterms = 20)
+#'
+#' ## or without a DTM
+#' dtm_wordcloud(terms = c('in','the','cloud'), freqs = c(2,5,10))
+#' }
 #' @export
-dtm.wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs=NULL, scale=c(6, .5), min.freq=1, rot.per=.15, ...) {
+dtm_wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs=NULL, scale=c(6, .5), min.freq=1, rot.per=.15, ...) {
   if (!is.null(dtm)) {
-    t = term_statistics(dtm)
+    t = dtm_term_statistics(dtm)
     t = t[order(t$termfreq, decreasing=T), ]
     terms = t$term
     freqs = t$termfreq
@@ -68,16 +88,47 @@ dtm.wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs
                         rot.per=rot.per, ...)
 }
 
+
+#' visualize vocabularyComparison
+#'
+#' @param x a vocabularyComparison object, created with the \link{compare_corpus} or \link{compare_subset} method
+#' @param n the number of words in the plot
+#' @param mode use "both" to plot both overrepresented and underrepresented words using the plot_words function. Use "ratio_x" or "ratio_y" to only plot overrepresented or underrepresented words using dtm_wordcloud
+#' @param balance if TRUE, get an equal amount of terms on the left (underrepresented) and right (overrepresented) side. If FALSE, the top chi words are used, regardless of ratio.
+#' @param size use "freq", "chi2" or "ratio" for determining the size of words
+#' @param ... additional arguments passed to plot_words ("both" mode) or dtm_wordcloud (ratio modes)
+#'
+#' @examples
+#' ## as example, compare SOTU paragraphs about taxes to rest
+#' tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
+#' comp = tc$compare_subset('token', query_x = 'tax*')
+#'
+#' \dontrun{
+#' plot(comp, balance=T)
+#' plot(comp, mode = 'ratio_x')
+#' plot(comp, mode = 'ratio_y')
+#' }
 #' @export
-plot.vocabularyComparison <- function(x, n=25, mode=c('both', 'over_x','over_y'), ...){
+plot.vocabularyComparison <- function(x, n=25, mode=c('both', 'ratio_x','ratio_y'), balance=T, size = c('chi2','freq','ratio'), ...){
   mode = match.arg(mode)
-  if (!all(c('feature', 'over', 'chi2') %in% colnames(x)))
-  if(mode == 'over_y') x = x[x$over < 1,]
-  if(mode == 'over_x') x = x[x$over > 1,]
+  size = match.arg(size)
+
+  if(mode == 'ratio_y') x = x[x$ratio < 1,]
+  if(mode == 'ratio_x') x = x[x$ratio > 1,]
   x = x[order(-x$chi2),]
-  x = head(x, n)
-  relfreqmean = ((x$freq.x / sum(x$freq.x)) + (x$freq.y / sum(x$freq.y))) / 2
-  if (mode %in% c('over_x','over_y')) dtm.wordcloud(terms=x$feature, freqs=log(x$over), ...)
-  if (mode == 'both') plotWords(x = log(x$over), words=x$feature, wordfreq = relfreqmean, ...)
+  if (balance & mode == "both") {
+    x = rbind(head(x[x$ratio < 1,], ceiling(n/2)),
+              head(x[x$ratio >= 1,], floor(n/2)))
+  } else {
+    x = head(x, n)
+  }
+
+  if (size == 'freq') wsize = relfreqmean = ((x$freq.x / sum(x$freq.x)) + (x$freq.y / sum(x$freq.y))) / 2
+  if (size == 'ratio') wsize = x$ratio
+  if (size == 'chi2') wsize = x$chi2
+
+  if (mode %in% c('ratio_x','ratio_y')) dtm_wordcloud(terms=x$feature, freqs=wsize, ...)
+  if (mode == 'both') plot_words(x = log(x$ratio), words=x$feature, wordfreq = wsize, ...)
 }
+
 

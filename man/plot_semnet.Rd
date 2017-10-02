@@ -53,5 +53,14 @@ Plots a network, and returns the network object if return_graph is TRUE.
 plot_semnet is a wrapper for the plot.igraph() function optimized for plotting a semantic network of the "semnet" class.
 }
 \details{
-Before plotting the network, the setNetworkAttributes() function is used to set pretty defaults for plotting. Optionally, reduce_labeloverlap can be used to prevent labeloverlap (as much as possible).
+Before plotting the network, the set_network_attributes() function is used to set pretty defaults for plotting. Optionally, reduce_labeloverlap can be used to prevent labeloverlap (as much as possible).
+}
+\examples{
+tc = create_tcorpus(sotu_texts, doc_column = 'id')
+tc$preprocess('token','feature', remove_stopwords = TRUE, use_stemming = TRUE, min_docfreq=10)
+\dontrun{
+g = tc$semnet_window('feature', window.size = 10)
+g = backbone_filter(g, max_vertices = 100)
+plot_semnet(g)
+}
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/print_text.r
 \name{tCorpus$read_text}
 \alias{tCorpus$read_text}
-\alias{read_text.tCorpus}
+\alias{read_text}
 \title{Print tokens as text}
 \arguments{
 \item{doc_id}{The doc_ids of the documents to be printed.}
@@ -22,3 +22,13 @@ Print tokens as text
 read_text(doc_id, column='token', meta_columns = self$meta_names)}
 }
 
+\examples{
+d = data.frame(text = c('First text', 'Second text', 'Third text'),
+medium = c('A','A','B'),
+date = c('2010-01-01','2010-02-01','2010-03-01'))
+tc = create_tcorpus(d)
+
+tc$read_text(1)
+tc$read_text(2)
+tc$read_text(1:3)
+}

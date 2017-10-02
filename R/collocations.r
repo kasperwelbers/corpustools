@@ -36,8 +36,6 @@ collocation_strings <- function(tc, colloc_id, feature='token', pref=NULL){
 #' @param feature the name of the feature column
 #' @param new_feature the name of the new feature column
 #' @param pref_subset Optionally, a subset call, to specify a subset that has priority for finding the most frequently occuring string
-#'
-#' @export
 add_collocation_label <- function(tc, colloc_id, feature='token', new_feature=sprintf('%s_l', colloc_id), pref_subset=NULL){
   .pref_subset = deparse(substitute(pref_subset))
   if (!pref_subset == 'NULL') pref = tc$token_i(subset_meta=.pref_subset) else pref = NULL

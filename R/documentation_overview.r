@@ -58,8 +58,8 @@ NULL
 #'   \link[=tCorpus$set]{$set_meta()} \tab The set method for the document meta data \cr
 #'   \link[=tCorpus$set_levels]{$set_levels()} \tab Change the levels of factor columns. \cr
 #'   \link[=tCorpus$set_meta_levels]{$set_meta_levels()} \tab Change the levels of factor columns in the meta data \cr
-#'   \link[=tCorpus$set_colname]{$set_colname()} \tab Modify column names of token data. \cr
-#'   \link[=tCorpus$set_meta_colname]{$set_meta_colname()} \tab Delete columns in the meta data \cr
+#'   \link[=tCorpus$set_name]{$set_name()} \tab Modify column names of token data. \cr
+#'   \link[=tCorpus$set_meta_name]{$set_meta_name()} \tab Delete columns in the meta data \cr
 #'   \link[=tCorpus$delete_columns]{$delete_columns()} \tab Delete columns.  \cr
 #'   \link[=tCorpus$delete_meta_columns]{$delete_meta_columns()} \tab Delete columns in the meta data
 #' }
@@ -67,11 +67,11 @@ NULL
 #' Modifying is restricted in certain ways to ensure that the data always meets the assumptions required for tCorpus methods.
 #' tCorpus automatically tests whether assumptions are violated, so you don't have to think about this yourself.
 #' The most important limitations are that you cannot subset or append the data.
-#' For this, you can use the subset and append methods, or merge tCorpora together.
+#' For subsetting, you can use the \link{tCorpus$subset} method, and to add data to a tcorpus you can use the \link{merge_tcorpora} function.
 #'
 #' \strong{Subsetting, merging/adding}
 #' \tabular{ll}{
-#'   \link[=tCorpus$subset]{$subset()} \tab Modify the token and/or meta data using the \link{subset.tCorpus} function. A subset expression can be specified for both the token data (subset) and the document meta data (subset_meta). \cr
+#'   \link[=tCorpus$subset]{$subset()} \tab Modify the token and/or meta data using the \link{tCorpus$subset} function. A subset expression can be specified for both the token data (subset) and the document meta data (subset_meta). \cr
 #'   \link[=tCorpus$subset]{$subset_meta()} \tab For consistency with other *_meta methods \cr
 #'   \link[=tCorpus$subset_query]{$subset_query()} \tab Subset the tCorpus based on a query, as used in \link[=tCorpus$search_contexts]{$search_contexts}
 #' }
@@ -127,7 +127,7 @@ NULL
 #'
 #' For methods where copying is often usefull, such as subset, there is also a copy parameter.
 #'
-#' \strong{tc2 = tc$subset(doc_id \%in\% selection, copy=T)}
+#' \strong{tc2 = tc$subset(doc_id \%in\% selection, copy=TRUE)}
 #'
 #' Now, tc will not be subsetted itself, but will subset a copy of itself and return it to be assigned to tc2.
 #'
@@ -145,7 +145,7 @@ NULL
 #' \strong{Pre-process features}
 #' \tabular{ll}{
 #'   \link[=tCorpus$preprocess]{$preprocess()} \tab Create or modify a feature by preprocessing an existing feature \cr
-#'   \link[=tCorpus$feature_subset]{$filter()} \tab Similar to using subset, but instead of deleting rows it only sets rows for a specified feature to NA.
+#'   \link[=tCorpus$feature_subset]{$feature_subset()} \tab Similar to using subset, but instead of deleting rows it only sets rows for a specified feature to NA.
 #' }
 #' \strong{Inspect features}
 #' \tabular{ll}{
@@ -164,6 +164,7 @@ NULL
 #' \tabular{ll}{
 #'   \link[=tCorpus$search_features]{$search_features)} \tab Search for features based on keywords and conditions \cr
 #'   \link[=tCorpus$search_recode]{$search_recode()} \tab Use the search_features query syntax to recode features \cr
+#'   \link[=tCorpus$feature_associations]{$feature_associations()} \tab Given a query, get words that often co-occur nearby \cr
 #'   \link[=tCorpus$kwic]{$kwic()} \tab Get keyword-in-context (kwic) strings
 #' }
 #' \strong{Context-level queries}
@@ -197,6 +198,12 @@ NULL
 #'
 #' \link[=tCorpus]{(back to overview)}
 #'
+#' \strong{Compare vocabulary of two corpora}
+#' \tabular{ll}{
+#'   \link[=tCorpus$compare_corpus]{$compare_corpus()} \tab Compare vocabulary of one tCorpus to another \cr
+#'   \link[=tCorpus$compare_subset]{$compare_subset()} \tab Compare subset of a tCorpus to the rest of the tCorpus
+#' }
+#'
 #' @name tCorpus_compare
 NULL
 
@@ -204,12 +211,23 @@ NULL
 #'
 #' \link[=tCorpus]{(back to overview)}
 #'
+#' \strong{Train a topic model}
+#' \tabular{ll}{
+#'   \link[=tCorpus$lda_fit]{$lda_fit()} \tab Latent Dirichlet Allocation
+#' }
+#'
 #' @name tCorpus_topmod
 NULL
 
 #' Document similarity
 #'
 #' \link[=tCorpus]{(back to overview)}
+#'
+#' \strong{Compare documents, and perform similarity based deduplication}
+#' \tabular{ll}{
+#'   \link[=tCorpus$compare_documents]{$compare_documents()} \tab Compare documents \cr
+#'   \link[=tCorpus$deduplicate]{$deduplicate()} \tab Remove duplicate documents
+#' }
 #'
 #' @name tCorpus_docsim
 NULL

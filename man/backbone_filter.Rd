@@ -28,3 +28,15 @@ A graph in the Igraph format
 \description{
 Based on the following paper: Serrano, M. A., Boguna, M., & Vespignani, A. (2009). Extracting the multiscale backbone of complex weighted networks. Proceedings of the National Academy of Sciences, 106(16), 6483-6488.
 }
+\examples{
+tc = create_tcorpus(sotu_texts, doc_column = 'id')
+tc$preprocess('token','feature', remove_stopwords = TRUE, use_stemming = TRUE, min_docfreq = 10)
+
+g = tc$semnet_window('feature', window.size = 10)
+igraph::vcount(g)
+igraph::ecount(g)
+gb = backbone_filter(g, max_vertices = 100)
+igraph::vcount(gb)
+igraph::ecount(gb)
+\dontrun{plot_semnet(gb)}
+}

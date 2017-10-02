@@ -30,3 +30,15 @@ tokens_to_tcorpus(tokens, doc_col = "doc_id", token_i_col = NULL,
 \description{
 Create a tcorpus based on tokens (i.e. preprocessed texts)
 }
+\examples{
+head(corenlp_tokens)
+
+tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
+                       sent_i_col = 'sentence', token_i_col = 'id')
+tc
+
+meta = data.frame(doc_id = 1, medium = 'A', date = '2010-01-01')
+tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
+                       sent_i_col = 'sentence', token_i_col = 'id', meta=meta)
+tc
+}

@@ -22,12 +22,19 @@ x_filter <- function(ft, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
 #' @param top A number. If given, only the top x features with the highest frequency are TRUE
 #' @param bottom A number. If given, only the bottom x features with the highest frequency are TRUE
 #'
+#' @examples
+#' tc = create_tcorpus(c('a a a b b'))
+#'
+#' tc$get()
+#' tc$subset(subset = freq_filter(token, min=3))
+#' tc$get()
 #' @export
 freq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
   if (methods::is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
   freq_table = table(droplevels(x))
   x %in% x_filter(freq_table, min=min, max=max, top=top, bottom=bottom)
 }
+
 
 
 #' Support function for subset method
@@ -42,6 +49,12 @@ freq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
 #' @param bottom A number. If given, only the bottom x features with the highest document frequency are TRUE
 #' @param doc_id Added for reference, but should not be used. Automatically takes doc_id from tCorpus if the docfreq_filter function is used within the subset method.
 #'
+#' @examples
+#' tc = create_tcorpus(c('a a a b b', 'a a c c'))
+#'
+#' tc$get()
+#' tc$subset(subset = docfreq_filter(token, min=2))
+#' tc$get()
 #' @export
 docfreq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL, doc_id=parent.frame()$doc_id) {
   if (methods::is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))

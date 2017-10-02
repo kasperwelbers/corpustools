@@ -7,9 +7,9 @@
 #'                                    window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'),
 #'                                    subset=NULL, subset_meta=NULL}
 #'
-#' @param keyword The keyword part of the query, see explanation in \link{search_features.tCorpus}.
-#' @param condition The condition part of the query, see explanation in \link{search_features.tCorpus}.
-#' @param hits Alternatively, instead of giving a query, the results of \link{search_features.tCorpus} can be used.
+#' @param keyword The keyword part of the query, see explanation in \link{tCorpus$search_features}.
+#' @param condition The condition part of the query, see explanation in \link{tCorpus$search_features}.
+#' @param hits Alternatively, instead of giving a query, the results of \link{tCorpus$search_features} can be used.
 #' @param feature If keyword is used, the name of the feature column within which to search.
 #' @param window The size of the word window (i.e. the number of words next to the feature)
 #' @param n the top n of associated features
@@ -19,7 +19,23 @@
 #' @param subset_meta A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).
 #'
 #' @name tCorpus$feature_associations
-#' @aliases feature_associations.tCorpus
+#' @aliases feature_associations
+#' @examples
+#' tc = create_tcorpus(sotu_texts, doc_column = 'id')
+#'
+#' ## directly from query
+#' topf = tc$feature_associations('war')
+#' head(topf, 20) ## frequent words close to "war"
+#'
+#' ## adjust window size
+#' topf = tc$feature_associations('war', window = 5)
+#' head(topf, 20) ## frequent words very close (five tokens) to "war"
+#'
+#' ## you can also first perform search_features, to get hits for (complex) queries
+#' hits = tc$search_features('"war terror"~10')
+#' topf = tc$feature_associations(hits = hits)
+#' head(topf, 20) ## frequent words close to the combination of "war" and "terror" within 10 words
+#'
 tCorpus$set('public', 'feature_associations', function(query=NULL, hits=NULL, feature='token', window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'), subset=NULL, subset_meta=NULL) {
   if (is.null(query) & is.null(hits)) stop('either keyword or hits has to be specified')
   if (!is.null(query) & !is.null(hits)) stop('only keyword or hits can be specified')
@@ -39,6 +55,10 @@ feature_associations <- function(tc, hits, feature='token', window=15,  n=25, mi
   window = tc$token_i(hits$hits$doc_id, hits$hits$token_i, subset, subset_meta, window=window)
 
   tc_sub = tc$subset(window, copy=T)
+  if (tc_sub$n == 0) {
+    message('zero hits')
+    return(NULL)
+  }
   comp = tc_sub$compare_corpus(tc, feature = feature, is_subset = T)
   comp = comp[comp$freq.x > min_freq,]
   comp = comp[, c('feature','freq.x', 'freq.y', 'ratio','chi2')]

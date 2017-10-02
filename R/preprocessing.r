@@ -20,11 +20,30 @@
 #' @param remove_stopwords remove (i.e. make NA) stopwords. (!) Make sure to set the language argument correctly.
 #' @param use_stemming reduce features (tokens) to their stem
 #' @param language The language used for stopwords and stemming
+#' @param min_freq an integer, specifying minimum token frequency.
+#' @param min_docfreq an integer, specifying minimum document frequency.
 #'
 #' @name tCorpus$preprocess
-#' @aliases preprocess.tCorpus
-tCorpus$set('public', 'preprocess', function(column, new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english') {
-  invisible(preprocess_feature(self, column=column, new_column=new_column, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, use_stemming=use_stemming, language=language))
+#' @aliases preprocess
+#' @examples
+#' tc = create_tcorpus('I am a SHORT example sentence! That I am!')
+#'
+#' ## default is lowercase without punctuation
+#' tc$preprocess('token', 'preprocessed_1')
+#'
+#' ## delete stopwords and perform stemming
+#' tc$preprocess('token', 'preprocessed_2', remove_stopwords = TRUE, use_stemming = TRUE)
+#'
+#' ## filter on minimum frequency
+#' tc$preprocess('token', 'preprocessed_3', min_freq=2)
+#'
+#' ## make ngrams
+#' tc$preprocess('token', 'preprocessed_4', ngrams = 3)
+#'
+#' tc$get()
+tCorpus$set('public', 'preprocess', function(column, new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english', min_freq=NULL, min_docfreq=NULL) {
+  column = match.arg(column, self$names)
+  invisible(preprocess_feature(self, column=column, new_column=new_column, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, use_stemming=use_stemming, language=language, min_freq=min_freq, min_docfreq=min_docfreq))
 })
 
 #' Filter features
@@ -44,8 +63,16 @@ tCorpus$set('public', 'preprocess', function(column, new_column=column, lowercas
 #' @param subset logical expression indicating rows to keep in the tokens data. i.e. rows for which the logical expression is FALSE will be set to NA.
 #'
 #' @name tCorpus$feature_subset
-#' @aliases feature_subset.tCorpus
+#' @aliases feature_subset
+#' @examples
+#' tc = create_tcorpus('a a a a b b b c c')
+#'
+#' tc$feature_subset('token', 'tokens_subset1', subset = token_i < 5)
+#' tc$feature_subset('token', 'tokens_subset2', subset = freq_filter(token, min = 3))
+#'
+#' tc$get()
 tCorpus$set('public', 'feature_subset', function(column, new_column=column, subset, inverse=F, copy=F){
+  column = match.arg(column, self$names)
   if (new_column %in% c('doc_id','sent_i','token_i')) stop('The position columns (doc_id, sent_i, token_i) cannot be used')
   if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
 
@@ -69,17 +96,18 @@ tCorpus$set('public', 'feature_subset', function(column, new_column=column, subs
   invisible(self)
 })
 
-preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english'){
+
+preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, use_stemming=F, language='english', min_freq=NULL, min_docfreq=NULL){
   is_tcorpus(tc, T)
 
   feature = tc$get(column)
   if (!methods::is(feature, 'factor')) feature = factor(feature)
 
-  if (ngrams == 1) {
-    .feature = preprocess_tokens(feature, context=NA, language=language, use_stemming=use_stemming, lowercase=lowercase, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords)
+  if (ngrams == 1 & is.null(min_docfreq)) {
+    .feature = preprocess_tokens(feature, context=NA, language=language, use_stemming=use_stemming, lowercase=lowercase, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, min_freq=min_freq, min_docfreq=min_docfreq)
   } else {
     context = tc$context(context_level=ngram_context, with_labels = F)
-    .feature = preprocess_tokens(feature, context=context, language=language, use_stemming=use_stemming, lowercase=lowercase, ngrams = ngrams, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords)
+    .feature = preprocess_tokens(feature, context=context, language=language, use_stemming=use_stemming, lowercase=lowercase, ngrams = ngrams, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, min_freq=min_freq, min_docfreq=min_docfreq)
   }
   tc$set(column = new_column, value = .feature)
 }
@@ -97,15 +125,29 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
 #' @param as_ascii Logical. If TRUE, tokens will be forced to ascii
 #' @param remove_punctuation Logical. if TRUE, punctuation is removed
 #' @param remove_stopwords Logical. If TRUE, stopwords are removed (Make sure to specify the right language!)
+#' @param min_freq an integer, specifying minimum token frequency.
+#' @param min_docfreq an integer, specifying minimum document frequency.
 #'
+#' @examples
+#' tokens = c('I', 'am', 'a', 'SHORT', 'example', 'sentence', '!')
+#'
+#' ## default is lowercase without punctuation
+#' preprocess_tokens(tokens)
+#'
+#' ## optionally, delete stopwords, perform stemming, and make ngrams
+#' preprocess_tokens(tokens, remove_stopwords = TRUE, use_stemming = TRUE)
+#' preprocess_tokens(tokens, context = NA, ngrams = 3)
 #' @export
-preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=T, as_ascii=F, remove_punctuation=T, remove_stopwords=F){
+preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=T, as_ascii=F, remove_punctuation=T, remove_stopwords=F, min_freq=NULL, min_docfreq=NULL){
   language = match.arg(language, choices=c('danish','dutch','english','finnish','french','german','hungarian','italian','norwegian','porter','portuguese','romanian','russian','spanish','swedish','turkish'))
   if (!methods::is(x, 'factor')) x = fast_factor(x)
   if (replace_whitespace) levels(x) = gsub(' ', '_', levels(x), fixed=T)
   if (lowercase) levels(x) = tolower(levels(x))
   #if (as_ascii) levels(x) = iconv(levels(x), to='ASCII//TRANSLIT')
-  if (as_ascii) levels(x) = stringi::stri_trans_general(levels(x), "Latin-ASCII")
+  if (as_ascii) {
+    levels(x) = stringi::stri_trans_general(levels(x),"any-latin")
+    levels(x) = stringi::stri_trans_general(levels(x),"latin-ascii")
+  }
   if (remove_stopwords) levels(x)[levels(x) %in% get_stopwords(language)] = NA
   if (remove_punctuation) levels(x)[!grepl("[[:alnum:]]", levels(x))] = NA
   if (use_stemming) levels(x) = SnowballC::wordStem(levels(x), language=language)
@@ -114,8 +156,25 @@ preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=
     if (is.null(context)) stop('For ngrams, the "context" argument has to be specified. If no context is available, "context" can be NA')
     x = grouped_ngrams(x, context, ngrams)
   }
+
+  if (!is.null(min_docfreq)) {
+    if (is.null(context)) {
+      freq_table = unique(data.frame(doc_id=1, x=x))
+    } else {
+      freq_table = unique(data.frame(doc_id=context, x=x))
+    }
+    freq_table = table(droplevels(freq_table$x))
+    levels(x)[!levels(x) %in% x_filter(freq_table, min=min_docfreq)] = NA
+  }
+
+  if (!is.null(min_freq)) {
+    freq_table = table(droplevels(x))
+    levels(x)[!levels(x) %in% x_filter(freq_table, min=min_freq)] = NA
+  }
+
   x
 }
+
 
 create_ngrams <- function(tokens, group, n, label=T, sep = '/', empty='') {
   if (!length(tokens) == length(group)) stop("tokens has to be of same length as group")
@@ -146,6 +205,14 @@ grouped_ngrams <- function(tokens, group, n, filter=rep(T, length(tokens)), labe
 #' @param lang The language. Current options are: "danish", "dutch", "english", "finnish", "french", "german", "hungarian", "italian", "norwegian", "portuguese", "romanian", "russian", "spanish" and "swedish"
 #'
 #' @return A character vector containing stopwords
+#' @examples
+#' en_stop = get_stopwords('english')
+#' nl_stop = get_stopwords('dutch')
+#' ge_stop = get_stopwords('german')
+#'
+#' head(en_stop)
+#' head(nl_stop)
+#' head(ge_stop)
 #' @export
 get_stopwords <- function(lang){
   lang = match.arg(lang, names(corpustools::stopwords_list))

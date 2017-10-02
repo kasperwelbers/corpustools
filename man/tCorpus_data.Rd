@@ -24,8 +24,8 @@ The token and meta data can be modified with the set* and delete* methods. All m
   \link[=tCorpus$set]{$set_meta()} \tab The set method for the document meta data \cr
   \link[=tCorpus$set_levels]{$set_levels()} \tab Change the levels of factor columns. \cr
   \link[=tCorpus$set_meta_levels]{$set_meta_levels()} \tab Change the levels of factor columns in the meta data \cr
-  \link[=tCorpus$set_colname]{$set_colname()} \tab Modify column names of token data. \cr
-  \link[=tCorpus$set_meta_colname]{$set_meta_colname()} \tab Delete columns in the meta data \cr
+  \link[=tCorpus$set_name]{$set_name()} \tab Modify column names of token data. \cr
+  \link[=tCorpus$set_meta_name]{$set_meta_name()} \tab Delete columns in the meta data \cr
   \link[=tCorpus$delete_columns]{$delete_columns()} \tab Delete columns.  \cr
   \link[=tCorpus$delete_meta_columns]{$delete_meta_columns()} \tab Delete columns in the meta data
 }
@@ -33,11 +33,11 @@ The token and meta data can be modified with the set* and delete* methods. All m
 Modifying is restricted in certain ways to ensure that the data always meets the assumptions required for tCorpus methods.
 tCorpus automatically tests whether assumptions are violated, so you don't have to think about this yourself.
 The most important limitations are that you cannot subset or append the data.
-For this, you can use the subset and append methods, or merge tCorpora together.
+For subsetting, you can use the \link{tCorpus$subset} method, and to add data to a tcorpus you can use the \link{merge_tcorpora} function.
 
 \strong{Subsetting, merging/adding}
 \tabular{ll}{
-  \link[=tCorpus$subset]{$subset()} \tab Modify the token and/or meta data using the \link{subset.tCorpus} function. A subset expression can be specified for both the token data (subset) and the document meta data (subset_meta). \cr
+  \link[=tCorpus$subset]{$subset()} \tab Modify the token and/or meta data using the \link{tCorpus$subset} function. A subset expression can be specified for both the token data (subset) and the document meta data (subset_meta). \cr
   \link[=tCorpus$subset]{$subset_meta()} \tab For consistency with other *_meta methods \cr
   \link[=tCorpus$subset_query]{$subset_query()} \tab Subset the tCorpus based on a query, as used in \link[=tCorpus$search_contexts]{$search_contexts}
 }

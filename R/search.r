@@ -76,7 +76,6 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
 
 
 
-
 get_query_code <- function(query, code=NULL) {
   hashcount = stringi::stri_count(query, regex='[^\\\\]#')
   if (any(hashcount > 1)) stop("Can only use 1 hash (#) for labeling. Note that you can escape with double backslash (\\#) to search for #. ");
@@ -91,6 +90,7 @@ get_query_code <- function(query, code=NULL) {
   code
 }
 
+remove_query_label <- function(query) stringi::stri_replace(query, '', regex = '.*([^\\\\])# ?')
 
 get_sequence_hit <- function(d, seq_length, subcontext=NULL){
   hit_id = NULL ## used in data.table syntax, but need to have bindings for R CMD check
@@ -153,22 +153,4 @@ expand_window <- function(i, window) {
 
 overlapping_windows <- function(hit_list, window=window) {
   Reduce(intersect, sapply(hit_list, expand_window, window=window, simplify = F))
-}
-
-function(){
-  tc = readRDS('~/Desktop/testmem.rds')
-  tc = refresh_tcorpus(tc)
-
-  tc$kwic(query = '<president (<barack obama> <donald trump>)>~5', nsample = 5)
-
-  tc$kwic(query = '<president~i (<barack obama> <donald trump>)>~5', nsample = 5)
-
-  tc = create_tcorpus("jan jan piet")
-  tc$search_features('jan AND piet')$hits
-  tc$search_features('jan AND piet~i')$hits
-
-  q = parse_query('<(barack president) obama>')
-  q$terms[[1]]$relation
-  q$terms[[1]]$terms[[1]]$terms
-  qt
 }

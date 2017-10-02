@@ -17,3 +17,6 @@ A numeric vector with the smoothed term proportions
 \description{
 Laplace (i.e. add constant) smoothing
 }
+\examples{
+laplace(c(0,0,1,1,1,2,2,2,3,3,4,7,10))
+}

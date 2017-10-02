@@ -2,9 +2,9 @@
 % Please edit documentation in R/documentation_methods.r
 \name{tCorpus$set_levels}
 \alias{tCorpus$set_levels}
-\alias{set_levels.tCorpus}
 \alias{tCorpus$set_meta_levels}
-\alias{set_meta_levels.tCorpus}
+\alias{set_levels}
+\alias{set_meta_levels}
 \title{Change levels of factor columns}
 \arguments{
 \item{column}{the name of the column}
@@ -12,7 +12,7 @@
 \item{levels}{The new levels}
 }
 \description{
-Change levels of factor columns
+For factor columns, the levels can be changed directly (and by reference). This is particularly usefull for fast preprocessing (e.g., making tokens lowercase, )
 }
 \section{Usage}{
 
@@ -22,3 +22,11 @@ Change levels of factor columns
 \preformatted{set_meta_levels(column, levels)}
 }
 
+\examples{
+tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'))
+
+## change factor levels of a column in the token data
+unique_tokens <- tc$get_levels('token')
+tc$set_levels('token', toupper(unique_tokens))
+tc$get()
+}
