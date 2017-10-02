@@ -23,7 +23,7 @@ Imports:
     R6
 Suggests:
     testthat,
-    quanteda (>= 0.99.10),
+    quanteda (>= 0.99.9),
     tm (>= 0.6),
     topicmodels,
     RNewsflow,
