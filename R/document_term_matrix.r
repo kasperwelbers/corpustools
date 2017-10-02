@@ -20,7 +20,8 @@
 #'
 #' @name tCorpus$dtm
 #' @examples
-#' tc = create_tcorpus(sotu_texts, doc_column = 'id', split_sentences = TRUE)
+#' tc = create_tcorpus(c("First text first sentence. First text first sentence.",
+#'                    "Second text first sentence"), doc_column = 'id', split_sentences = TRUE)
 #'
 #' ## Perform additional preprocessing on the 'token' column, and save as the 'feature' column
 #' tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
@@ -29,7 +30,7 @@
 #' ## default: regular sparse matrix, using the Matrix package
 #' m = tc$dtm('feature')
 #' class(m)
-#' dim(m)
+#' m
 #'
 #' ## alternatively, create quanteda ('quanteda_dfm') or tm ('tm_dtm') class for DTM
 #' \dontrun{
@@ -43,14 +44,7 @@
 #' nrow(m)
 #'
 #' ## use weighting
-#' m = tc$dtm('feature', weight = 'termfreq')
-#' m = tc$dtm('feature', weight = 'docfreq')
-#' m = tc$dtm('feature', weight = 'tfidf')
 #' m = tc$dtm('feature', weight = 'norm_tfidf')
-#'
-#' ## immediately get subset
-#' m = tc$dtm('feature', subset_meta = president == 'Barack Obama')
-#' nrow(m)
 #' @aliases dtm.tCorpus
 tCorpus$set('public', 'dtm', function(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F) {
   if (class(substitute(subset_tokens)) %in% c('call', 'name')) subset_tokens = self$eval(substitute(subset_tokens), parent.frame())

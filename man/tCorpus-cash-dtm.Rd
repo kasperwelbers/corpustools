@@ -40,7 +40,8 @@ Create a document term matrix
 }
 
 \examples{
-tc = create_tcorpus(sotu_texts, doc_column = 'id', split_sentences = TRUE)
+tc = create_tcorpus(c("First text first sentence. First text first sentence.",
+                   "Second text first sentence"), doc_column = 'id', split_sentences = TRUE)
 
 ## Perform additional preprocessing on the 'token' column, and save as the 'feature' column
 tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
@@ -49,7 +50,7 @@ tc$get()
 ## default: regular sparse matrix, using the Matrix package
 m = tc$dtm('feature')
 class(m)
-dim(m)
+m
 
 ## alternatively, create quanteda ('quanteda_dfm') or tm ('tm_dtm') class for DTM
 \dontrun{
@@ -63,12 +64,5 @@ m = tc$dtm('feature', context_level = 'sentence')
 nrow(m)
 
 ## use weighting
-m = tc$dtm('feature', weight = 'termfreq')
-m = tc$dtm('feature', weight = 'docfreq')
-m = tc$dtm('feature', weight = 'tfidf')
 m = tc$dtm('feature', weight = 'norm_tfidf')
-
-## immediately get subset
-m = tc$dtm('feature', subset_meta = president == 'Barack Obama')
-nrow(m)
 }
