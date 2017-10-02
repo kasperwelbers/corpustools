@@ -12,6 +12,7 @@
 #' @return A graph in the Igraph format
 #'
 #' @examples
+#' \dontrun{
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #' tc$preprocess('token','feature', remove_stopwords = TRUE, use_stemming = TRUE, min_docfreq = 10)
 #'
@@ -21,7 +22,8 @@
 #' gb = backbone_filter(g, max_vertices = 100)
 #' igraph::vcount(gb)
 #' igraph::ecount(gb)
-#' \dontrun{plot_semnet(gb)}
+#' plot_semnet(gb)
+#' }
 #' @export
 backbone_filter <- function(g, alpha=0.05, direction='none', delete_isolates=T, max_vertices=NULL, use_original_alpha=T, k_is_n=F){
   if (direction == 'none') igraph::E(g)$alpha = backbone_alpha(g, k_is_n)

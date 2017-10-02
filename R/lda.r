@@ -27,16 +27,16 @@
 #' @name tCorpus$lda_fit
 #' @aliases lda_fit
 #' @examples
-#' ## (small set for demo. use more for decent results)
-#' tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
-#' tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
-#'
+#' \dontrun{
+#' tc = create_tcorpus(sotu_texts, doc_column = 'id')
+#' tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE, min_freq=10)
 #' set.seed(1)
 #' m = tc$lda_fit('feature', create_feature = 'lda', K = 5, alpha = 0.1)
 #'
 #' m
 #' topicmodels::terms(m, 10)
 #' tc$get()
+#' }
 tCorpus$set('public', 'lda_fit', function(feature, create_feature=NULL, K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250, context_level=c('document','sentence'), ...) {
   if (!requireNamespace('topicmodels', quietly = T)) stop('topicmodels package needs to be installed in order to use LDA')
 
