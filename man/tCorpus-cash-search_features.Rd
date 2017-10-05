@@ -18,9 +18,7 @@
 \item{verbose}{If TRUE, progress messages will be printed}
 }
 \description{
-Search tokens in a tokenlist using a query that consists of an keyword, and optionally a condition. For a detailed explanation of the query language please consult the query_tutorial markdown file. For a quick summary see the details below.
-
-Note that the query arguments (keyword, condition, code, condition_once) can be vectors to search multiple queries at once. Alternatively, the queries argument can be used to pass these arguments in a data.frame
+Search tokens in a tokenlist using Lucene-like queries. For a detailed explanation of the query language, see the details below.
 }
 \details{
 Brief summary of the query language
@@ -133,7 +131,7 @@ tc$search_features('A AND B', mode = 'features')$hits ## in "features", match an
 # ghost terms (used for conditions) can be repeated
 tc$search_features('A AND B~g')$hits
 
-
+\dontrun{
 ## advanced queries
 tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
                        sent_i_col = 'sentence', token_i_col = 'id')
@@ -159,4 +157,5 @@ hits$hits
 ## sequence: nsubj say*
 hits = tc$search_features('"(relation: nsubj) say*"')
 hits$hits
+}
 }

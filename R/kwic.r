@@ -48,6 +48,7 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, nsamp
   ## remove i and code parameters
 
   if(!is.featureHits(hits)) stop('hits must be a featureHits object (created with the $search_features() method')
+  hits$hits$hit_id = stringi::stri_paste(hits$hits$code, hits$hits$hit_id, sep=' ')
   d = hits$hits
 
   if(!is.na(nsample)) {
@@ -78,7 +79,7 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, nsamp
 
   ## paste features together
   kwic = split(as.character(d$feature), d$hit_id)
-  kwic = data.frame(hit_id = as.numeric(names(kwic)),
+  kwic = data.frame(hit_id = names(kwic),
                     kwic = stringi::stri_paste_list(kwic, sep = ' '))
   kwic$kwic = pretty_kwic(kwic$kwic)
 
@@ -88,6 +89,7 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, nsamp
   add$feature = stringi::stri_paste_list(feature, sep = ' -> ')
 
   kwic = merge(kwic, add, by='hit_id', all.x=T)
+  kwic$hit_id = as.numeric(stringi::stri_extract(regex = '[0-9]+$', kwic$hit_id))
   kwic[,c('doc_id','code','hit_id','feature','kwic')]
 }
 

@@ -1,9 +1,7 @@
 #' Find tokens using a Lucene-like search query
 #'
 #' @description
-#' Search tokens in a tokenlist using a query that consists of an keyword, and optionally a condition. For a detailed explanation of the query language please consult the query_tutorial markdown file. For a quick summary see the details below.
-#'
-#' Note that the query arguments (keyword, condition, code, condition_once) can be vectors to search multiple queries at once. Alternatively, the queries argument can be used to pass these arguments in a data.frame
+#' Search tokens in a tokenlist using Lucene-like queries. For a detailed explanation of the query language, see the details below.
 #'
 #' @section Usage:
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
@@ -123,7 +121,7 @@
 #' # ghost terms (used for conditions) can be repeated
 #' tc$search_features('A AND B~g')$hits
 #'
-#'
+#' \dontrun{
 #' ## advanced queries
 #' tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
 #'                        sent_i_col = 'sentence', token_i_col = 'id')
@@ -149,6 +147,7 @@
 #' ## sequence: nsubj say*
 #' hits = tc$search_features('"(relation: nsubj) say*"')
 #' hits$hits
+#' }
 tCorpus$set('public', 'search_features', function(query, code=NULL, feature='token', mode = c('unique_hits','features'), context_level = c('document','sentence'), verbose=F){
   search_features(self, query, code=code, feature=feature, mode=mode, context_level=context_level, verbose=verbose)
 })
