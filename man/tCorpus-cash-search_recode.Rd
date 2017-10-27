@@ -2,7 +2,7 @@
 % Please edit documentation in R/search_features.r
 \name{tCorpus$search_recode}
 \alias{tCorpus$search_recode}
-\alias{search_recode.tCorpus}
+\alias{search_recode}
 \title{Recode features in a tCorpus based on a search string}
 \arguments{
 \item{feature}{The feature in which to search}

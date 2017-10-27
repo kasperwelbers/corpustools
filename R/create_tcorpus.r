@@ -99,7 +99,7 @@ create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id
   for(cname in text_columns) if (!cname %in% colnames(x)) stop(sprintf('text_column "%s" not in data.frame', cname))
 
   if (length(text_columns) > 1){
-    text = apply(x[,text_columns], 1, paste, collapse = '\n\n')
+    text = do.call(paste, c(as.list(x[,text_columns]), sep='\n\n'))
   } else {
     text = x[[text_columns]]
   }

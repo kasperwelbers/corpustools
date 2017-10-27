@@ -1,3 +1,29 @@
+local_id <- function(group, i) {
+  ## given global indices per group, make them locally unique
+  ## has to be sorted on order(group, i)
+  newgroup = which(!duplicated(group))
+  repeat_add = c(newgroup[-1], length(group)+1) - newgroup
+  group_start = rep(i[newgroup], repeat_add)
+  (i - group_start) + 1
+}
+
+global_id <- function(group, i, window=NA) {
+  ## given local indices per group, make them globally unique
+  ## has to be sorted on order(group, i)
+  if (!length(unique(group)) == 1) {
+    newgroup = which(!duplicated(group)) # where does a new group start
+
+    group.max = i[newgroup-1] # the highest value of each group
+    if (!is.na(window)) group.max = group.max + window # increase the highest value of each group with max_window_size to make sure windows of different groups do not overlap.
+    add_scores = cumsum(c(0,group.max)) # the amount that should be added to the i at the start of each group
+
+    repeat_add = c(newgroup[-1], length(i)+1) - newgroup # the number of times the add scores need to be repeated to match the i vector
+    i + rep(add_scores, repeat_add)
+  } else {
+    i
+  }
+}
+
 verbose_counter <- function(n, i=0, ticks=10){
   function() {
     i <<- i + 1

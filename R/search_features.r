@@ -16,6 +16,7 @@
 #' @param feature The name of the feature column within which to search.
 #' @param mode There are two modes: "unique_hits" and "features". The "unique_hits" mode prioritizes finding full and unique matches., which is recommended for counting how often a query occurs. However, this also means that some tokens for which the query is satisfied might not assigned a hit_id. The "features" mode, instead, prioritizes finding all tokens, which is recommended for coding coding features (the code_features and search_recode methods always use features mode).
 #' @param context_level Select whether the queries should occur within while "documents" or specific "sentences".
+#' @param keep_longest If TRUE, then overlapping in case of overlapping queries strings in unique_hits mode, the query with the most separate terms is kept. For example, in the text "mr. Bob Smith", the query [smith OR "bob smith"] would match "Bob" and "Smith". If keep_longest is FALSE, the match that is used is determined by the order in the query itself. The same query would then match only "Smith".
 #' @param verbose If TRUE, progress messages will be printed
 #'
 #' @details
@@ -148,12 +149,38 @@
 #' hits = tc$search_features('"(relation: nsubj) say*"')
 #' hits$hits
 #' }
-tCorpus$set('public', 'search_features', function(query, code=NULL, feature='token', mode = c('unique_hits','features'), context_level = c('document','sentence'), verbose=F){
-  search_features(self, query, code=code, feature=feature, mode=mode, context_level=context_level, verbose=verbose)
+tCorpus$set('public', 'search_features', function(query, code=NULL, feature='token', mode = c('unique_hits','features'), context_level = c('document','sentence'), keep_longest=T, verbose=F){
+  search_features(self, query, code=code, feature=feature, mode=mode, context_level=context_level, keep_longest=keep_longest, verbose=verbose)
 })
 
-tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token', column='code', verbose=F){
-  hits = search_features(self, query, code=code, feature=feature, mode='features', verbose=verbose)
+
+#' Code features in a tCorpus based on a search string
+#'
+#' @description
+#' Add a column to the token data that contains a code (the query label) for tokens that match the query (see \link{tCorpus$search_features}).
+#'
+#' @section Usage:
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{
+#' code_features(query, code=NULL, feature='token', column='code', ...)
+#' }
+#'
+#' @param query A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.
+#' @param code The code given to the tokens that match the query (usefull when looking for multiple queries). Can also put code label in query with # (see details)
+#' @param feature The name of the feature column within which to search.
+#' @param column The name of the column that is added to the data
+#' @param ... Additional search_features parameters. See \link{tCorpus$search_features}
+#'
+#' @name tCorpus$code_features
+#' @examples
+#' tc = create_tcorpus('Anna and Bob are secretive')
+#'
+#' tc$code_features(c("actors# anna bob", "associations# secretive"))
+#' tc$get()
+#' @aliases code_features
+tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token', column='code', ...){
+  hits = search_features(self, query, code=code, feature=feature, mode='features', ...)
 
   .i = self$token_i(doc_id = hits$hits$doc_id, token_i = hits$hits$token_i)
   .value = hits$hits$code
@@ -179,7 +206,7 @@ tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token
 #' @param ... See \link{tCorpus$search_features} for the query parameters
 #'
 #' @name tCorpus$search_recode
-#' @aliases search_recode.tCorpus
+#' @aliases search_recode
 tCorpus$set('public', 'search_recode', function(feature, new_value, query){
   hits = search_features(self, query, feature=feature, mode='features')
   .i = self$token_i(doc_id = hits$hits$doc_id, token_i = hits$hits$token_i)
@@ -188,7 +215,7 @@ tCorpus$set('public', 'search_recode', function(feature, new_value, query){
   invisible(self)
 })
 
-search_features <- function(tc, query, code=NULL, feature='token', mode = c('unique_hits','features'), context_level=c('document','sentence'), verbose=F){
+search_features <- function(tc, query, code=NULL, feature='token', mode = c('unique_hits','features'), context_level=c('document','sentence'), keep_longest=TRUE, verbose=F){
   .ghost = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
   is_tcorpus(tc, T)
   mode = match.arg(mode)
@@ -203,7 +230,7 @@ search_features <- function(tc, query, code=NULL, feature='token', mode = c('uni
   for (i in 1:length(query)) {
     if (verbose) print(code[i])
     q = parse_query(as.character(query[i]))
-    h = recursive_search(tc, q, subcontext=subcontext, feature=feature, mode = mode)
+    h = recursive_search(tc, q, subcontext=subcontext, feature=feature, mode = mode, keep_longest=keep_longest)
     if (!is.null(h)) {
       h[, code := codelabel[i]]
       hits[[i]] = h

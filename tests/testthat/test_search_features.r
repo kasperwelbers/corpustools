@@ -80,6 +80,7 @@ test_that("Query search works", {
   ## in the second case, the second b is also returned.
 
   hits = tc$search_features('"mark rutte"~10') ## only matches first full occurence
+  hits$hits
   expect_equal(as.character(hits$hits$feature), c('Mark','Rutte'))
 
   hits = tc$search_features('"mark rutte"~10', mode = 'features') ## matches all features for which query is true
@@ -122,6 +123,15 @@ test_that("Query search works", {
   expect_equal(as.character(f), c('B','C'))
   f = tc$search_features('A~g AND (B C)')$hits$feature                   ## check whether ghost term can be first term (requires repeating of loop)
   expect_equal(as.character(f), c('B','C'))
+
+  ## match longest
+  tc = create_tcorpus('mr. bob smith')
+
+  hits = tc$search_features('Bob OR "bob smith"')  # match longest by default (bob smith)
+  expect_true(length(hits$hits$feature) == 2)
+
+  hits = tc$search_features('Bob OR "bob smith"', keep_longest = F) # otherwise, match first (bob)
+  expect_true(length(hits$hits$feature) == 1)
 
   cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 

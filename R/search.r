@@ -1,4 +1,4 @@
-recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode = c('unique_hits','features','contexts'), parent_relation='', all_case_sensitive=FALSE, all_ghost=FALSE, all_flag_query=list(), level=1) {
+recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode = c('unique_hits','features','contexts'), parent_relation='', all_case_sensitive=FALSE, all_ghost=FALSE, all_flag_query=list(), keep_longest=TRUE, level=1) {
   .ghost = NULL; .term_i = NULL; .seq_i = NULL; .group_i = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
 
   mode = match.arg(mode) ## 'unique_hit' created complete and unique sets of hits (needed for counting) but doesn't assign all features
@@ -53,6 +53,7 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
   }
 
   hits = data.table::rbindlist(hit_list, fill=TRUE)
+
   if (nrow(hits) == 0) return(NULL)
 
   feature_mode = mode == 'features'
@@ -70,7 +71,10 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
     hits = subset(hits, hit_id > 0)
   }
   if (nrow(hits) == 0) return(NULL)
+
+  if (level == 1 & mode == 'unique_hits') hits = remove_duplicate_hit_id(hits, keep_longest)
   if (level == 1 & mode == 'contexts') hits = unique(subset(hits, select=c('doc_id',subcontext)))
+
   return(hits)
 }
 
@@ -117,23 +121,45 @@ get_AND_hit <- function(d, n_unique, subcontext=NULL, group_i=NULL, replace=NULL
   if (!is.null(subcontext)) subcontext = d[[subcontext]]
   if (!is.null(group_i)) group_i = d[[group_i]]
   if (!is.null(replace)) replace = d[[replace]]
-
   .hit_id = .Call('_corpustools_AND_hit_ids', PACKAGE = 'corpustools', as.integer(d[['doc_id']]), as.integer(subcontext), as.integer(d[['token_i']]), as.integer(d[['.term_i']]), n_unique, as.character(group_i), replace, feature_mode)
   d[,hit_id := .hit_id]
 }
 
 get_OR_hit <- function(d) {
   hit_id = NULL ## used in data.table syntax, but need to have bindings for R CMD check
+
   if (!'hit_id' %in% colnames(d)) {
-    i = 1:nrow(d)
-  } else i = d$hit_id
-  isna = is.na(i)
+    .hit_id = 1:nrow(d)
+  } else .hit_id = d$hit_id
+
+  isna = is.na(.hit_id)
   if (any(isna)) {
-    if (all(isna)) na_ids = 1:length(i) else na_ids = 1:sum(isna) + max(i, na.rm = T)
-    i[isna] = na_ids
+    if (all(isna)) na_ids = 1:length(.hit_id) else na_ids = 1:sum(isna) + max(.hit_id, na.rm = T)
+    .hit_id[isna] = na_ids
   }
-  .hit_id = i
+
+  if ('.term_i' %in% colnames(d)) .hit_id = global_id(d$.term_i, .hit_id)
   d[,hit_id := .hit_id]
+}
+
+remove_duplicate_hit_id <- function(d, keep_longest=TRUE) {
+  .hit_id_length = NULL; .ghost = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
+  if (!'token_i' %in% colnames(d)) return(d)
+
+  dup = duplicated(d[,c('doc_id','token_i')])
+  if (any(dup)) {
+    if (!'.ghost' %in% colnames(d)) d$.ghost = F
+
+    if (keep_longest) {
+      d[, hit_id_length := sum(!.ghost), by=hit_id]   ## count non ghost terms per hit_id
+      pd = d[order(-d$hit_id_length),]                ## sort by this count to keep duplicates with highest score
+      dup_id = pd$hit_id[duplicated(pd[,c('doc_id','token_i')]) & !d$.ghost]
+    } else {
+      dup_id = d$hit_id[dup & !d$.ghost]
+    }
+    d = subset(d, !hit_id %in% unique(dup_id))
+  }
+  d
 }
 
 grep_global_i <- function(fi, regex, ...) {
