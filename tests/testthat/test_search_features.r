@@ -9,10 +9,6 @@ test_that("Query search works", {
            'Mark Rutte is simply Rutte')
   tc = create_tcorpus(text, doc_id = c('a','b','c'), split_sentences = T)
 
-  ## this doesn't yet work correctly
-  ## perhaps generally the seq_i to a group_id? (in which first a group tracker is made)
-  ## or reintroduce the subj approach
-
   hits = tc$search_features('"renewable fuel" AND better')
   expect_equal(as.character(hits$hits$feature), c('Renewable','fuel','better'))
 

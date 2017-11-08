@@ -9,7 +9,9 @@
 
 \item{new_value}{the character string with which all features that are found are replaced}
 
-\item{...}{See \link{tCorpus$search_features} for the query parameters}
+\item{query}{See \link{tCorpus$search_features} for the query parameters}
+
+\item{...}{Additional search_features parameters. See \link{tCorpus$search_features}}
 }
 \description{
 Search features (see \link{tCorpus$search_features}) and replace features with a new value

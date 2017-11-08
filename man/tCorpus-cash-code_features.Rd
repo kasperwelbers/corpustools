@@ -13,7 +13,17 @@
 
 \item{column}{The name of the column that is added to the data}
 
-\item{...}{Additional search_features parameters. See \link{tCorpus$search_features}}
+\item{add_column}{list of name-value pairs, used to add additional columns. The name will become the column name, and the value should be a vector of the same length as the query vector.}
+
+\item{context_level}{Select whether the queries should occur within while "documents" or specific "sentences".}
+
+\item{keep_longest}{If TRUE, then overlapping in case of overlapping queries strings in unique_hits mode, the query with the most separate terms is kept. For example, in the text "mr. Bob Smith", the query [smith OR "bob smith"] would match "Bob" and "Smith". If keep_longest is FALSE, the match that is used is determined by the order in the query itself. The same query would then match only "Smith".}
+
+\item{as_ascii}{if TRUE, perform search in ascii.}
+
+\item{verbose}{If TRUE, progress messages will be printed}
+
+\item{...}{alternative way to specify name-value pairs for adding additional columns}
 }
 \description{
 Add a column to the token data that contains a code (the query label) for tokens that match the query (see \link{tCorpus$search_features}).

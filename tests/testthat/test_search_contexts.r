@@ -11,6 +11,8 @@ test_that("Query document search works", {
            'Hey, A ~ symbol!! Can I match that?')
   tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = T)
 
+  hits = tc$search_features('!')
+
   hits = tc$search_contexts('mark AND rutte')
   expect_equal(as.character(hits$hits$doc_id), 'c')
 
@@ -73,3 +75,4 @@ test_that("Query document search works", {
   cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 
 })
+

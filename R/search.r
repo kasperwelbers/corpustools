@@ -1,4 +1,4 @@
-recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode = c('unique_hits','features','contexts'), parent_relation='', all_case_sensitive=FALSE, all_ghost=FALSE, all_flag_query=list(), keep_longest=TRUE, level=1) {
+recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode = c('unique_hits','features','contexts'), parent_relation='', all_case_sensitive=FALSE, all_ghost=FALSE, all_flag_query=list(), keep_longest=TRUE, as_ascii=F, level=1) {
   .ghost = NULL; .term_i = NULL; .seq_i = NULL; .group_i = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
 
   mode = match.arg(mode) ## 'unique_hit' created complete and unique sets of hits (needed for counting) but doesn't assign all features
@@ -12,13 +12,14 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
   if (!qlist$feature == "") feature = qlist[['feature']]  ## if the query specifies a feature column, override the feature parameter
   for (n in names(qlist$all_flag_query)) all_flag_query[[n]] = unique(c(all_flag_query[[n]], qlist$all_flag_query[[n]]))
 
+  qlist = collapse_or_queries(qlist)
 
   nterms = length(qlist$terms)
   for (j in 1:nterms) {
     q = qlist$terms[[j]]
     is_nested = 'terms' %in% names(q)
     if (is_nested) {
-      jhits = recursive_search(tc, q, subcontext=subcontext, feature='token', mode=mode, parent_relation=qlist$relation, all_case_sensitive, all_ghost, level=level+1)
+      jhits = recursive_search(tc, q, subcontext=subcontext, feature='token', mode=mode, parent_relation=qlist$relation, all_case_sensitive, all_ghost, all_flag_query, keep_longest, as_ascii, level=level+1)
       if (nterms == 1) {
         if (level == 1 & mode == 'contexts' & !is.null(jhits)) jhits = unique(subset(jhits, select=c('doc_id',subcontext)))
         return(jhits)
@@ -37,7 +38,7 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
       for (n in names(all_flag_query)) flag_query[[n]] = unique(c(flag_query[[n]], all_flag_query[[n]]))
 
       only_context = mode == 'contexts' & qlist$relation %in% c('AND','NOT')  ## only for AND and NOT, because proximity and sequence require feature positions (and OR can be nested in them)
-      jhits = tc$lookup(q$term, feature=feature, ignore_case=!.case_sensitive, sub_query=flag_query, only_context=only_context, subcontext=subcontext)
+      jhits = tc$lookup(q$term, feature=feature, ignore_case=!.case_sensitive, sub_query=flag_query, only_context=only_context, subcontext=subcontext, as_ascii=as_ascii)
       if (!is.null(jhits)) {
         jhits[, .ghost := .ghost]
         if (qlist$relation %in% c('proximity','sequence','AND')) jhits[,.group_i := paste0(j, '_')] else jhits[,.group_i := ''] ## for keeping track of nested multi word queries
@@ -78,6 +79,24 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
   return(hits)
 }
 
+collapse_or_queries <- function(qlist) {
+  if (qlist$relation == 'OR') {
+    nested = sapply(qlist$terms, function(x) 'terms' %in% names(x))
+    has_flag_query = sapply(qlist$terms, function(x) length(x$flag_query) > 0)
+    select = !nested & !has_flag_query # these terms are collapse-able
+
+    if (sum(select) > 1) {
+      terms = sapply(qlist$terms[select], function(x) x[c('case_sensitive','ghost','term')], simplify = F)
+      terms = data.table::rbindlist(terms)
+
+      col_terms = stats::aggregate(term ~ case_sensitive + ghost, data=terms, FUN = c, simplify=F)
+      col_terms = apply(col_terms, 1, as.list)
+      col_terms = sapply(col_terms, function(x) c(x, list(flag_query=list())), simplify = F)
+      qlist$terms = c(col_terms, qlist$terms[!select])
+    }
+  }
+  qlist
+}
 
 
 get_query_code <- function(query, code=NULL) {
@@ -86,6 +105,7 @@ get_query_code <- function(query, code=NULL) {
   hashcode = ifelse(hashcount == 1, stringi::stri_replace(query, '$1', regex = '([^\\\\])#.*'), NA)
 
   if (!is.null(code)) {
+    code = as.character(code)
     if (!length(code) == length(query)) stop('code and query vectors need to have the same length')
     code = ifelse(is.na(code), hashcode, code)
   } else code = hashcode
@@ -94,7 +114,16 @@ get_query_code <- function(query, code=NULL) {
   code
 }
 
-remove_query_label <- function(query) stringi::stri_replace(query, '', regex = '.*([^\\\\])# ?')
+remove_query_label <- function(query) {
+  ht_count = stringi::stri_count(query, fixed='#')
+  ht_nolabel_count = stringi::stri_count(query, regex='\\\\#')
+  has_label = (ht_count - ht_nolabel_count) > 0
+
+  if (any(has_label)) {
+    query[has_label] = unlist(sapply(stringi::stri_split_fixed(query[has_label], pattern = '#', n=2), function(x) x[[2]]))
+  }
+  query
+}
 
 get_sequence_hit <- function(d, seq_length, subcontext=NULL){
   hit_id = NULL ## used in data.table syntax, but need to have bindings for R CMD check
@@ -151,9 +180,10 @@ remove_duplicate_hit_id <- function(d, keep_longest=TRUE) {
     if (!'.ghost' %in% colnames(d)) d$.ghost = F
 
     if (keep_longest) {
-      d[, hit_id_length := sum(!.ghost), by=hit_id]   ## count non ghost terms per hit_id
-      pd = d[order(-d$hit_id_length),]                ## sort by this count to keep duplicates with highest score
+      d[, .hit_id_length := sum(!.ghost), by=hit_id]   ## count non ghost terms per hit_id
+      pd = d[order(-d$.hit_id_length),]                ## sort by this count to keep duplicates with highest score
       dup_id = pd$hit_id[duplicated(pd[,c('doc_id','token_i')]) & !d$.ghost]
+      d[, .hit_id_length := NULL]
     } else {
       dup_id = d$hit_id[dup & !d$.ghost]
     }

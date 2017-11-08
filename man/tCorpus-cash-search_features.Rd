@@ -17,6 +17,8 @@
 
 \item{keep_longest}{If TRUE, then overlapping in case of overlapping queries strings in unique_hits mode, the query with the most separate terms is kept. For example, in the text "mr. Bob Smith", the query [smith OR "bob smith"] would match "Bob" and "Smith". If keep_longest is FALSE, the match that is used is determined by the order in the query itself. The same query would then match only "Smith".}
 
+\item{as_ascii}{if TRUE, perform search in ascii.}
+
 \item{verbose}{If TRUE, progress messages will be printed}
 }
 \description{

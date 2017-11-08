@@ -9,7 +9,9 @@
 
 \item{feature}{The name of the feature columns on which the query is used.}
 
-\item{context_level}{Select whether the query and subset are performed at the document or sentence level.}
+\item{context_level}{Select whether the query and subset are performed at the document, sentence or (token)window level. If window is selected, the window size is specified in the window argument}
+
+\item{window}{if context_level is window, specifies the size of the window}
 }
 \description{
 A convenience function that searches for contexts (documents, sentences), and uses the results to \link[=tCorpus$search_contexts]{subset} the tCorpus token data.

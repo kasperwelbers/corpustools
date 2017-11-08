@@ -110,7 +110,8 @@ tCorpus$set('public', 'search_contexts', function(query, code=NULL, feature='tok
 #'
 #' @param query A character string that is a query. See \link{tCorpus$search_contexts} for query syntax.
 #' @param feature The name of the feature columns on which the query is used.
-#' @param context_level Select whether the query and subset are performed at the document or sentence level.
+#' @param context_level Select whether the query and subset are performed at the document, sentence or (token)window level. If window is selected, the window size is specified in the window argument
+#' @param window if context_level is window, specifies the size of the window
 #'
 #' @name tCorpus$subset_query
 #' @aliases subset_query
@@ -128,13 +129,18 @@ tCorpus$set('public', 'search_contexts', function(query, code=NULL, feature='tok
 #' tc2$get_meta()
 #'
 #' tc$get_meta() ## (unchanged)
-tCorpus$set('public', 'subset_query', function(query, feature='token', context_level=c('document','sentence'), copy=F){
+tCorpus$set('public', 'subset_query', function(query, feature='token', context_level=c('document','sentence','window'), window=25, copy=F){
   if (copy) {
     selfcopy = self$copy()$subset_query(query=query, feature=feature, context_level=context_level, copy=F)
     return(selfcopy)
   }
   context_level = match.arg(context_level)
-  hits = self$search_contexts(query, feature=feature, context_level=context_level)
+
+  if (context_level == 'window') {
+    hits = self$search_features(query, feature=feature, mode='features')
+  } else {
+    hits = self$search_contexts(query, feature=feature, context_level=context_level)
+  }
   hits = hits$hits
   if (is.null(hits)) return(NULL)
   if (context_level == 'document'){
@@ -143,8 +149,13 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
   if (context_level == 'sentence'){
     d = self$get(c('doc_id','sent_i'), keep_df=T)
     d$i = 1:nrow(d)
-    rows = d[list(hits$doc_id, hits$sent_i)]$i
+    setkeyv(d, c('doc_id','sent_i'))
+    rows = d[list(hits$doc_id, hits$sent_i),]$i
     self$select_rows(rows)
+  }
+  if (context_level == 'window'){
+    window = self$token_i(hits$doc_id, hits$token_i, window=window)
+    self$subset(window)
   }
   invisible(self)
 })
