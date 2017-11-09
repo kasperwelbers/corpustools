@@ -18,7 +18,8 @@
 #' @param query instead of using the hits or i arguments, a search string can be given directly. Note that this simply a convenient shorthand for first creating a hits object with \link{tCorpus$search_features}. If a query is given, then the ... argument is used to pass other arguments to \link{tCorpus$search_features}.
 #' @param code if 'i' or 'query' is used, the code argument can be used to add a code label. Should be a vector of the same length that gives the code for each i or query, or a vector of length 1 for a single label.
 #' @param ntokens an integers specifying the size of the context, i.e. the number of tokens left and right of the keyword.
-#' @param nsample optionally, get a random sample of the keywords/features. If multiple codes are used, the sample is drawn for each code individually.
+#' @param n a number, specifying the total number of hits
+#' @param nsample like n, but with a random sample of hits. If multiple codes are used, the sample is drawn for each code individually.
 #' @param output_feature the feature column that is used to make the KWIC.
 #' @param context_level Select the maxium context (document or sentence).
 #' @param kw_tag a character vector of length 2, that gives the symbols before (first value) and after (second value) the keyword in the KWIC string. Can for instance be used to prepare KWIC with format tags for highlighting.
@@ -35,15 +36,16 @@
 #' ## or, first perform a feature search, and then get the KWIC for the results
 #' hits = tc$search_features('(john OR mark) AND mary AND love*', context_level = 'sentence')
 #' tc$kwic(hits, context_level = 'sentence')
-tCorpus$set('public', 'kwic', function(hits=NULL, i=NULL, feature=NULL, query=NULL, code='', ntokens=10, nsample=NA, output_feature='token', query_feature='token', context_level=c('document','sentence'), kw_tag=c('<','>'), ...){
+tCorpus$set('public', 'kwic', function(hits=NULL, i=NULL, feature=NULL, query=NULL, code='', ntokens=10, n=NA, nsample=NA, output_feature='token', query_feature='token', context_level=c('document','sentence'), kw_tag=c('<','>'), ...){
   if (!is.null(query)) hits = self$search_features(query=query, code=code, feature = query_feature, ...)
-  keyword_in_context(self, hits=hits, i=i, code=code, ntokens=ntokens, nsample=nsample, output_feature=output_feature, context_level=context_level, kw_tag=kw_tag)
+  keyword_in_context(self, hits=hits, i=i, code=code, ntokens=ntokens, n=n, nsample=nsample, output_feature=output_feature, context_level=context_level, kw_tag=kw_tag)
 })
 
 #################################
 #################################
 
-keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, nsample=NA, output_feature='token', context_level=c('document', 'sentence'), kw_tag=c('<','>')){
+keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, n=NA, nsample=NA, output_feature='token', context_level=c('document', 'sentence'), kw_tag=c('<','>')){
+  feature = NULL; hit_id = NULL  ## for data.table
   if (class(i) == 'logical') i = which(i)
   ## remove i and code parameters
 
@@ -51,9 +53,13 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, nsamp
   hits$hits$hit_id = stringi::stri_paste(hits$hits$code, hits$hits$hit_id, sep=' ')
   d = hits$hits
 
-  if(!is.na(nsample)) {
+  if(!is.na(nsample)) n = nsample
+  if(!is.na(n)) {
     hit_ids = unique(d$hit_id)
-    if (nsample < length(hit_ids)) d = d[d$hit_id %in% sample(hit_ids, nsample),]
+    if (n < length(hit_ids)) {
+      hit_ids = if(!is.na(nsample)) sample(hit_ids, n) else head(hit_ids, n)
+      d = d[d$hit_id %in% hit_ids,]
+    }
   }
 
   shifts = -ntokens:ntokens
@@ -78,15 +84,17 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, nsamp
   d$feature[gap] = sprintf('[...] %s', d$feature[gap])
 
   ## paste features together
-  kwic = split(as.character(d$feature), d$hit_id)
-  kwic = data.frame(hit_id = names(kwic),
-                    kwic = stringi::stri_paste_list(kwic, sep = ' '))
+  setkey(d, 'hit_id')
+  kwic = d[, list(feature=list(feature)), by=hit_id]
+  kwic = data.frame(hit_id = kwic$hit_id,
+                    kwic = stringi::stri_paste_list(kwic$feature, sep = ' '))
   kwic$kwic = pretty_kwic(kwic$kwic)
 
   add = hits$hits[hits$hits$hit_id %in% kwic$hit_id, c('doc_id','hit_id','code', 'feature')]
-  feature = split(as.character(add$feature), add$hit_id)
-  add = add[!duplicated(add$hit_id),]
-  add$feature = stringi::stri_paste_list(feature, sep = ' -> ')
+  setkey(add, 'hit_id')
+  feature = add[, list(feature=list(feature)), by=hit_id]
+  add = unique(add, by='hit_id')
+  add$feature = stringi::stri_paste_list(feature$feature, sep = ' -> ')
 
   kwic = merge(kwic, add, by='hit_id', all.x=T)
   kwic$hit_id = as.numeric(stringi::stri_extract(regex = '[0-9]+$', kwic$hit_id))

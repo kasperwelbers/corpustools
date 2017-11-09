@@ -15,7 +15,9 @@
 
 \item{ntokens}{an integers specifying the size of the context, i.e. the number of tokens left and right of the keyword.}
 
-\item{nsample}{optionally, get a random sample of the keywords/features. If multiple codes are used, the sample is drawn for each code individually.}
+\item{n}{a number, specifying the total number of hits}
+
+\item{nsample}{like n, but with a random sample of hits. If multiple codes are used, the sample is drawn for each code individually.}
 
 \item{output_feature}{the feature column that is used to make the KWIC.}
 

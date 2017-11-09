@@ -5,7 +5,8 @@ featureHits <- function(hits, queries) {
   if (!'sent_i' %in% colnames(hits)) {
     if (nrow(hits) > 0) hits[, sent_i := NA] else hits$sent_i = numeric()
   }
-  hits = as.data.frame(hits[,c('code','feature','doc_id','sent_i','token_i', 'hit_id')])
+  #hits = as.data.frame(hits[,c('code','feature','doc_id','sent_i','token_i', 'hit_id')])
+  hits = hits[,c('code','feature','doc_id','sent_i','token_i', 'hit_id')]
   fh = list(hits=hits, queries=queries)
   class(fh) = c('featureHits', class(fh))
   if(!is.featureHits(fh)) stop('Not a proper featureHits object')
