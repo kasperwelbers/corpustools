@@ -700,7 +700,16 @@ search_term_regex <- function(patterns) {
 mem_lookup_terms <- memoise::memoise(lookup_terms)
 mem_lookup_table <- memoise::memoise(function(x, ignore_case, as_ascii) {
   lookup_term = search_term_fixed(x, ignore_case, as_ascii)
-  data.table(term = x, lookup_term = lookup_term, key = 'lookup_term')
+  lookup_table = data.table(term = x, lookup_term = lookup_term)
+
+  .SPLIT = stringi::stri_split(lookup_table$lookup_term, regex = '\\_| ')
+  len = sapply(.SPLIT, length)
+  if (max(len) > 1) {
+    lookup_table = lookup_table[rep(1:nrow(lookup_table), len),]
+    lookup_table[,lookup_term := unlist(.SPLIT)]
+  }
+  setkey(lookup_table, 'lookup_term')
+  lookup_table
 })
 
 forget_if_new <- memoise::memoise(function(x){  ## the forget calls will only be performed if x changes

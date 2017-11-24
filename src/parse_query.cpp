@@ -227,8 +227,7 @@ void add_nested(QueryIter &q, List &terms, std::vector<std::string> &term_flags,
 
 void mismatch_error(QueryIter q, int nested_i, std::string end_char) {
   std::string mismatch = q.get_from(nested_i);
-  stop("mismatch: trying to close with '" + end_char + "' but opened with '" + mismatch.substr(0,1) + "'\n  -->\t" + mismatch);
-
+  stop("incorrect nesting: trying to close with '" + end_char + "' but opened with '" + mismatch.substr(0,1) + "'\n  -->\t" + mismatch);
 }
 
 List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_quotemark = false) {

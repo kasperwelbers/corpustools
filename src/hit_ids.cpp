@@ -8,10 +8,11 @@ std::set<int> get_sequence(int &iw, NumericVector &seq_i, NumericVector &pos, Nu
 
   int lag = iw;
   for (int si = iw+1; si < seq_i.size(); si++) {
-    if (term_i[si] != v) continue;           // seq has to have same term_i
     int posdif = pos[si] - pos[lag];
     if (posdif > 1 or posdif < 0) break;      // next position in seq has to be same (0) or next (1)
     if (seq_i[si] != seq_i[lag]+1) break;
+    if (term_i[si] != v) continue;           // seq has to have same term_i
+
     seq_i_set.insert(si);
     lag = si;
   }

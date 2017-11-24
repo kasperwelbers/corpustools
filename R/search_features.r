@@ -247,7 +247,7 @@ search_features <- function(tc, query, code=NULL, feature='token', mode = c('uni
   hits = vector('list', length(query))
 
   for (i in 1:length(query)) {
-    if (verbose) cat(as.character(code[i]), '\n')
+    if (verbose) cat(as.character(codelabel[i]), '\n')
     q = parse_query(as.character(query[i]))
     h = recursive_search(tc, q, subcontext=subcontext, feature=feature, mode = mode, keep_longest=keep_longest, as_ascii=as_ascii)
     if (!is.null(h)) {

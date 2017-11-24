@@ -109,6 +109,7 @@ get_query_code <- function(query, code=NULL) {
     if (!length(code) == length(query)) stop('code and query vectors need to have the same length')
     code = ifelse(is.na(code), hashcode, code)
   } else code = hashcode
+  #print(code)
   code[is.na(code)] = paste('query', 1:sum(is.na(code)), sep='_')
   if (anyDuplicated(code)) stop('Cannot have duplicate codes')
   code
@@ -192,21 +193,5 @@ remove_duplicate_hit_id <- function(d, keep_longest=TRUE) {
   d
 }
 
-grep_global_i <- function(fi, regex, ...) {
-  exact_feature = levels(fi$feature)[grepl(regex, levels(fi$feature), ...)]
-  fi[list(exact_feature),,nomatch=0]$global_i
-}
 
-grep_fi <- function(fi, regex, ...) {
-  exact_feature = levels(fi$feature)[grepl(regex, levels(fi$feature), ...)]
-  i = fi[list(exact_feature),,nomatch=0]
 
-}
-
-expand_window <- function(i, window) {
-  unique(rep(i, window*2 + 1) + rep(-window:window, each=length(i)))
-}
-
-overlapping_windows <- function(hit_list, window=window) {
-  Reduce(intersect, sapply(hit_list, expand_window, window=window, simplify = F))
-}
