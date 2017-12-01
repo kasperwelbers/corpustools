@@ -6,7 +6,6 @@
 ## note that this file has to be named 1_*, because r files are processed in order by name,
 ## and the tCorpus class has to be created before the additional methods
 
-
 tCorpus <- R6::R6Class("tCorpus",
    cloneable=FALSE,
 

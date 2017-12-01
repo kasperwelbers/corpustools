@@ -5,7 +5,7 @@
 \alias{code_features}
 \title{Code features in a tCorpus based on a search string}
 \arguments{
-\item{query}{A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.}
+\item{query}{A character string that is a query. See \link{search_features} for documentation of the query language.}
 
 \item{code}{The code given to the tokens that match the query (usefull when looking for multiple queries). Can also put code label in query with # (see details)}
 

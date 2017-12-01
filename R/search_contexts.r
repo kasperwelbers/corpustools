@@ -129,33 +129,31 @@ tCorpus$set('public', 'search_contexts', function(query, code=NULL, feature='tok
 #' tc2$get_meta()
 #'
 #' tc$get_meta() ## (unchanged)
-tCorpus$set('public', 'subset_query', function(query, feature='token', context_level=c('document','sentence','window'), window=25, copy=F){
+tCorpus$set('public', 'subset_query', function(query, feature='token', context_level=c('document','sentence'), window=NA, copy=F){
   if (copy) {
-    selfcopy = self$copy()$subset_query(query=query, feature=feature, context_level=context_level, copy=F)
+    selfcopy = self$copy()$subset_query(query=query, feature=feature, context_level=context_level, window=window, copy=F)
     return(selfcopy)
   }
   context_level = match.arg(context_level)
 
-  if (context_level == 'window') {
-    hits = self$search_features(query, feature=feature, mode='features')
+  if (!is.na(window)) {
+    hits = self$search_features(query, feature=feature, context_level=context_level, mode='features')
+    if (is.null(hits)) return(NULL)
+    window = self$token_i(hits$hits$doc_id, hits$hits$token_i, window=window)
+    self$subset(window)
   } else {
     hits = self$search_contexts(query, feature=feature, context_level=context_level)
-  }
-  hits = hits$hits
-  if (is.null(hits)) return(NULL)
-  if (context_level == 'document'){
-    self$select_meta_rows(self$get_meta('doc_id') %in% hits$doc_id)
-  }
-  if (context_level == 'sentence'){
-    d = self$get(c('doc_id','sent_i'), keep_df=T)
-    d$i = 1:nrow(d)
-    setkeyv(d, c('doc_id','sent_i'))
-    rows = d[list(hits$doc_id, hits$sent_i),]$i
-    self$select_rows(rows)
-  }
-  if (context_level == 'window'){
-    window = self$token_i(hits$doc_id, hits$token_i, window=window)
-    self$subset(window)
+    if (is.null(hits)) return(NULL)
+    if (context_level == 'document'){
+      self$select_meta_rows(self$get_meta('doc_id') %in% hits$hits$doc_id)
+    }
+    if (context_level == 'sentence'){
+      d = self$get(c('doc_id','sent_i'), keep_df=T)
+      d$i = 1:nrow(d)
+      setkeyv(d, c('doc_id','sent_i'))
+      rows = d[list(hits$hits$doc_id, hits$hits$sent_i),]$i
+      self$select_rows(rows)
+    }
   }
   invisible(self)
 })

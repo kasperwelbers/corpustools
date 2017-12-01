@@ -3,12 +3,11 @@
 #' @section Usage:
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
-#' \preformatted{feature_associations(keyword=NULL, condition=NA, hits=NULL, feature='token',
+#' \preformatted{feature_associations(query=NULL, hits=NULL, feature='token',
 #'                                    window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'),
 #'                                    subset=NULL, subset_meta=NULL}
 #'
-#' @param keyword The keyword part of the query, see explanation in \link{tCorpus$search_features}.
-#' @param condition The condition part of the query, see explanation in \link{tCorpus$search_features}.
+#' @param query A character string that is a query. See \link{search_features} for documentation of the query language.
 #' @param hits Alternatively, instead of giving a query, the results of \link{tCorpus$search_features} can be used.
 #' @param feature If keyword is used, the name of the feature column within which to search.
 #' @param window The size of the word window (i.e. the number of words next to the feature)
@@ -43,6 +42,8 @@ tCorpus$set('public', 'feature_associations', function(query=NULL, hits=NULL, fe
 
   feature_associations(self, hits=hits, feature=feature, window=window, n=n, min_freq=min_freq, sort_by=sort_by, subset=subset, subset_meta=subset_meta)
 })
+
+
 
 ###################################
 ###################################

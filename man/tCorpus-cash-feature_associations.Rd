@@ -5,9 +5,7 @@
 \alias{feature_associations}
 \title{Get common nearby terms given a feature query}
 \arguments{
-\item{keyword}{The keyword part of the query, see explanation in \link{tCorpus$search_features}.}
-
-\item{condition}{The condition part of the query, see explanation in \link{tCorpus$search_features}.}
+\item{query}{A character string that is a query. See \link{search_features} for documentation of the query language.}
 
 \item{hits}{Alternatively, instead of giving a query, the results of \link{tCorpus$search_features} can be used.}
 
@@ -32,7 +30,7 @@ Get common nearby terms given a feature query
 
 ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 
-\preformatted{feature_associations(keyword=NULL, condition=NA, hits=NULL, feature='token',
+\preformatted{feature_associations(query=NULL, hits=NULL, feature='token',
                                    window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'),
                                    subset=NULL, subset_meta=NULL}
 }
