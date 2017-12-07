@@ -5,7 +5,7 @@ test_that("Advanced query search works", {
   library(corpustools)
   library(testthat)
 
-  tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id', sent_i_col = 'sentence', token_i_col = 'id')
+  tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id', sentence_col = 'sentence', token_id_col = 'id')
 
   ## using the sub/flag query to find only mary as a direct object
   hits = tc$search_features('mary~{relation: dobj}', context_level = 'sentence')

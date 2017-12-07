@@ -117,35 +117,34 @@ create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id
 
 #' Create a tcorpus based on tokens (i.e. preprocessed texts)
 #'
-#' @param tokens A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (token_i_col)
+#' @param tokens A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (token_id_col)
 #' @param doc_col The name of the column that contains the document ids/names
-#' @param token_i_col The name of the column that contains the positions of tokens. If NULL, it is assumed that the data.frame is ordered by the order of tokens and does not contain gaps (e.g., filtered out tokens)
-#' @param sent_i_col Optionally, the name of the column that indicates the sentences in which tokens occured.
+#' @param token_id_col The name of the column that contains the positions of tokens. If NULL, it is assumed that the data.frame is ordered by the order of tokens and does not contain gaps (e.g., filtered out tokens)
+#' @param sentence_col Optionally, the name of the column that indicates the sentences in which tokens occured.
 #' @param meta Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)
 #' @param meta_cols Alternatively, if there are document meta columns in the tokens data.table, meta_cols can be used to recognized them. Note that these values have to be unique within documents.
 #' @param feature_cols Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)
-#' @param sent_is_local Sentences in the tCorpus must be locally unique within documents. If sent_is_local is FALSE, then sentences are made sure to be locally unique. However,  it is then assumed that the first sentence in a document is sentence 1, which might not be the case if tokens (input) is a subset. If you know for a fact that the sentence column in tokens is already locally unique, you can set sent_is_local to TRUE to keep the original sent_i values.
-#' @param token_is_local Same as sent_is_local, but or token_i
+#' @param sent_is_local Sentences in the tCorpus are assumed to be locally unique within documents. If sent_is_local is FALSE, then sentences are transformed to be locally unique. However,  it is then assumed that the first sentence in a document is sentence 1, which might not be the case if tokens (input) is a subset.
+#' @param token_is_local Same as sent_is_local, but for token_id. Note that if a parent column is present, it will not be changed along.
 #'
 #' @examples
 #' head(corenlp_tokens)
 #'
 #' tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
-#'                        sent_i_col = 'sentence', token_i_col = 'id')
+#'                        sentence_col = 'sentence', token_id_col = 'id')
 #' tc
 #'
 #' meta = data.frame(doc_id = 1, medium = 'A', date = '2010-01-01')
 #' tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
-#'                        sent_i_col = 'sentence', token_i_col = 'id', meta=meta)
+#'                        sentence_col = 'sentence', token_id_col = 'id', meta=meta)
 #' tc
 #' @export
-tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_i_col=NULL, sent_i_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=F, token_is_local=F) {
+tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col=NULL, sentence_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=T, token_is_local=T) {
   tokens = data.table::as.data.table(tokens)
-  sent_i = token_i = NULL ## used in data.table syntax, but need to have bindings for R CMD check
-
+  sentence = token_id = NULL ## used in data.table syntax, but need to have bindings for R CMD check
 
   ## check whether the columns specified in the arguments exist
-  for(cname in c(doc_col, token_i_col, sent_i_col, meta_cols)){
+  for(cname in c(doc_col, token_id_col, sentence_col, meta_cols)){
     if (!cname %in% colnames(tokens)) stop(sprintf('"%s" is not an existing columnname in "tokens"', cname))
   }
   if (!is.null(meta)){
@@ -155,25 +154,25 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_i_col=NULL, sent_i
   ## change column names, make doc_id factor (both in reference, for efficiency) and check whether the right types are used
   data.table::setnames(tokens, which(colnames(tokens) == doc_col), 'doc_id')
   tokens[,'doc_id' := fast_factor(tokens$doc_id)]
-  if (!is.null(sent_i_col)) {
-    data.table::setnames(tokens, which(colnames(tokens) == sent_i_col), 'sent_i')
-    if (!methods::is(tokens$sent_i, 'numeric')) stop('sent_i_col has to be numeric/integer')
-    if (!methods::is(tokens$sent_i, 'integer')) tokens[,sent_i := as.integer(sent_i)]
+  if (!is.null(sentence_col)) {
+    data.table::setnames(tokens, which(colnames(tokens) == sentence_col), 'sentence')
+    if (!methods::is(tokens$sentence, 'numeric')) stop('sentence_col has to be numeric/integer')
+    if (!methods::is(tokens$sentence, 'integer')) tokens[,sentence := as.integer(sentence)]
   }
 
-  if (!is.null(token_i_col)) {
-    data.table::setnames(tokens, which(colnames(tokens) == token_i_col), 'token_i')
-    if (!methods::is(tokens$token_i, 'numeric')) stop('token_i_col has to be numeric/integer')
-    if (!methods::is(tokens$token_i, 'integer')) tokens[,token_i := as.integer(token_i)]
+  if (!is.null(token_id_col)) {
+    data.table::setnames(tokens, which(colnames(tokens) == token_id_col), 'token_id')
+    if (!methods::is(tokens$token_id, 'numeric')) stop('token_id_col has to be numeric/integer')
+    if (!methods::is(tokens$token_id, 'integer')) tokens[,token_id := as.integer(token_id)]
   } else {
-    warning('No token_i column specified. token order used instead (see documentation).')
-    tokens$token_i = 1:nrow(tokens)
+    warning('No token_id column specified. token order used instead (see documentation).')
+    tokens$token_id = 1:nrow(tokens)
     token_is_local = F
   }
 
   ## delete unused columns
-  if (is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sent_i_col, token_i_col, meta_cols)]
-  used_columns = c('doc_id','sent_i','token_i', meta_cols, feature_cols)
+  if (is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sentence_col, token_id_col, meta_cols)]
+  used_columns = c('doc_id','sentence','token_id', meta_cols, feature_cols)
   unused_columns = setdiff(colnames(tokens), used_columns)
   if(length(unused_columns) > 0) tokens[, (unused_columns) := NULL]
 
@@ -182,29 +181,29 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_i_col=NULL, sent_i
   }
 
   ## set data.table keys (sorting the data) and verify that there are no duplicates
-  if (!is.null(sent_i_col)) {
-    data.table::setkeyv(tokens, c('doc_id','sent_i','token_i'))
-    if (!anyDuplicated(tokens, by=c('doc_id','sent_i','token_i')) == 0) stop('tokens should not contain duplicate triples of documents (doc_col), sentences (sent_i_col) and token positions (token_i_col)')
+  if (!is.null(sentence_col)) {
+    data.table::setkeyv(tokens, c('doc_id','sentence','token_id'))
+    if (!anyDuplicated(tokens, by=c('doc_id','sentence','token_id')) == 0) stop('tokens should not contain duplicate triples of documents (doc_col), sentences (sentence_col) and token positions (token_id_col)')
   } else {
-    data.table::setkeyv(tokens, c('doc_id','token_i'))
-    if (!anyDuplicated(tokens, by=c('doc_id','token_i')) == 0) stop('tokens should not contain duplicate pairs of documents (doc_col) and token positions (token_i_col)')
+    data.table::setkeyv(tokens, c('doc_id','token_id'))
+    if (!anyDuplicated(tokens, by=c('doc_id','token_id')) == 0) stop('tokens should not contain duplicate pairs of documents (doc_col) and token positions (token_id_col)')
   }
 
-  ## make sure that sent_i and token_i are locally unique within documents
+  ## make sure that sentence and token_id are locally unique within documents
   ndoc = nrow(unique(tokens, by='doc_id'))
-  if (!is.null(sent_i_col)){
+  if (!is.null(sentence_col)){
     if (sent_is_local) {
-        if (ndoc > 1) if (!anyDuplicated(unique(tokens, by=c('doc_id','sent_i')), by='sent_i') == 0) warning("Sentence positions (sent_i) do not appear to be locally unique within documents (no duplicates). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
+        #if (ndoc > 10) if (!anyDuplicated(unique(tokens, by=c('doc_id','sentence')), by='sentence') == 0) warning("Sentence positions (sentence) do not appear to be locally unique within documents (no duplicates in at least 10 documents). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
     }
-    if (!sent_is_local) tokens[,'sent_i' := local_position(tokens$sent_i, tokens$doc_id, presorted = T)] ## make sure sentences are locally unique within documents (and not globally)
-    if (!token_is_local) tokens[,'token_i' := global_position(tokens$token_i,
-                                                            global_position(tokens$sent_i, tokens$doc_id, presorted = T, position_is_local=T),
+    if (!sent_is_local) tokens[,'sentence' := local_position(tokens$sentence, tokens$doc_id, presorted = T)] ## make sure sentences are locally unique within documents (and not globally)
+    if (!token_is_local) tokens[,'token_id' := global_position(tokens$token_id,
+                                                            global_position(tokens$sentence, tokens$doc_id, presorted = T, position_is_local=T),
                                                             presorted = T)]  ## make token positions globally unique, taking sentence id into account (in case tokens are locally unique within sentences)
   }
   if (token_is_local) {
-    if (ndoc > 1) if (!anyDuplicated(tokens, by=c('doc_id','token_i')) == 0) warning("token positions (token_i) do not appear to be locally unique within documents (no duplicates). Unless you are sure they are, set token_is_local to FALSE (and read documentation)")
+    #if (ndoc > 10) if (!anyDuplicated(tokens, by=c('doc_id','token_id')) == 0) warning("token positions (token_id) do not appear to be locally unique within documents (no duplicates in at least 10 documents). Unless you are sure they are, set token_is_local to FALSE (and read documentation)")
   } else {
-    tokens[,'token_i' := local_position(tokens$token_i, tokens$doc_id, presorted=T)] ## make tokens locally unique within documents
+    tokens[,'token_id' := local_position(tokens$token_id, tokens$doc_id, presorted=T)] ## make tokens locally unique within documents
   }
 
   ## arrange the meta data

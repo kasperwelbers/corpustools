@@ -35,9 +35,9 @@ tc$set(column = 'i', i)
 ## create new column based on existing column(s)
 tc$set(column = 'token_upper', toupper(token))
 ## use subset to modify existing column
-tc$set('token', paste0('***', token, '***'), subset = token_i == 1)
+tc$set('token', paste0('***', token, '***'), subset = token_id == 1)
 ## use subset to create new column with NA's
-tc$set('second_token', token, subset = token_i == 2)
+tc$set('second_token', token, subset = token_id == 2)
 
 tc$get()  ## show after set
 

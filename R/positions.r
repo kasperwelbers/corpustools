@@ -43,11 +43,11 @@ get_global_i <- function(tc, context_level=c('document','sentence'), max_window_
   is_tcorpus(tc)
   context_level = match.arg(context_level)
   if (context_level == 'document'){
-    global_i = global_position(position = tc$get('token_i'), context = tc$get('doc_id'), max_window_size = max_window_size, presorted=T, position_is_local=T)
+    global_i = global_position(position = tc$get('token_id'), context = tc$get('doc_id'), max_window_size = max_window_size, presorted=T, position_is_local=T)
   }
   if (context_level == 'sentence'){
-    if (!'sent_i' %in% tc$names) stop('Sentence level not possible, since no sentence information is available. To enable sentence level analysis, use split_sentences = T in "create_tcorpus()" or specify sent_i_col in "tokens_to_tcorpus()"')
-    globsent = global_position(position = tc$get('sent_i'), context = tc$get('doc_id'), presorted=T, position_is_local=T)
+    if (!'sentence' %in% tc$names) stop('Sentence level not possible, since no sentence information is available. To enable sentence level analysis, use split_sentences = T in "create_tcorpus()" or specify sentence_col in "tokens_to_tcorpus()"')
+    globsent = global_position(position = tc$get('sentence'), context = tc$get('doc_id'), presorted=T, position_is_local=T)
     global_i = global_position(position = tc$get('token_i'), context = globsent, max_window_size = max_window_size, presorted=T, position_is_local=T)
   }
   global_i

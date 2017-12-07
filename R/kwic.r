@@ -28,7 +28,7 @@
 #' @name tCorpus$kwic
 #' @aliases kwic
 #' @examples
-#' tc = tokens_to_tcorpus(corenlp_tokens, sent_i_col = 'sentence', token_i_col = 'id')
+#' tc = tokens_to_tcorpus(corenlp_tokens, sentence_col = 'sentence', token_id_col = 'id')
 #'
 #' ## look directly for a term (or complex query)
 #' tc$kwic(query = 'love*')
@@ -64,22 +64,22 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, n=NA,
 
   shifts = -ntokens:ntokens
   n = nrow(d)
-  d = d[rep(1:nrow(d), each=length(shifts)), c('doc_id','hit_id','token_i')]
-  d$token_i = d$token_i + shifts
+  d = d[rep(1:nrow(d), each=length(shifts)), c('doc_id','hit_id','token_id')]
+  d$token_id = d$token_id + shifts
   d$is_kw = rep(shifts == 0, n)
-  d$feature = tc$get(output_feature, doc_id = d$doc_id, token_i = d$token_i)
-  d = d[!is.na(d$feature),] ## positions that do not exist (token_i out of bounds) returned NA in tc$get
+  d$feature = tc$get(output_feature, doc_id = d$doc_id, token_id = d$token_id)
+  d = d[!is.na(d$feature),] ## positions that do not exist (token_id out of bounds) returned NA in tc$get
 
   d$feature = as.character(d$feature)
   d$feature[d$is_kw] = sprintf('%s%s%s', kw_tag[1], d$feature[d$is_kw], kw_tag[2])
 
   ## kwic's of the same hit_id should be merged.
-  d = d[order(d$hit_id, d$token_i, -d$is_kw),]
-  d = d[!duplicated(d[,c('hit_id','token_i')]),]
+  d = d[order(d$hit_id, d$token_id, -d$is_kw),]
+  d = d[!duplicated(d[,c('hit_id','token_id')]),]
 
   ## add tag for gap between kwic of merged hit_ids that are not adjacent
   same_hit_id = d$hit_id == shift(d$hit_id, 1, fill = -1)
-  not_adjacent = d$token_i - (shift(d$token_i, 1, fill=-1)) > 1
+  not_adjacent = d$token_id - (shift(d$token_id, 1, fill=-1)) > 1
   gap = same_hit_id & not_adjacent
   d$feature[gap] = sprintf('[...] %s', d$feature[gap])
 

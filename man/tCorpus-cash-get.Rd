@@ -17,7 +17,7 @@
 
 \item{doc_id}{A vector with document ids to select rows. Faster than subset, because it uses binary search. Cannot be used in combination with subset. If duplicate doc_ids are given, duplicate rows are returned.}
 
-\item{token_i}{A vector with token indices. Can only be used in pairs with doc_id. For example, if doc_id = c(1,1,1,2,2) and token_i = c(1,2,3,1,2), then the first three tokens of doc 1 and the first 2 tokens of doc 2 are returned. This is mainly usefull for fast (binary search) retrieval of specific tokens.}
+\item{token_id}{A vector with token indices. Can only be used in pairs with doc_id. For example, if doc_id = c(1,1,1,2,2) and token_id = c(1,2,3,1,2), then the first three tokens of doc 1 and the first 2 tokens of doc 2 are returned. This is mainly usefull for fast (binary search) retrieval of specific tokens.}
 
 \item{safe_copy}{for advanced use. The get methods always return a copy of the data, even if the full data is returned (i.e. use get without parameters). This is to prevent accidental changes within tCorpus data (which can break it) if the returned data is modified by reference (see data.table documentation). If safe_copy is set to FALSE and get is called without parameters---tc$get(safe_copy=F))---then no copy is made, which is much faster and more memory efficient. Use this if you need speed and efficiency, but make sure not to change the output data.table by reference.}
 }
@@ -28,7 +28,7 @@ Get the token and meta data.
 
 ## R6 active method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 
-\preformatted{get(columns=NULL, keep_df=F, as.df=F, subset=NULL, doc_id=NULL, token_i=NULL, safe_copy=T)}
+\preformatted{get(columns=NULL, keep_df=F, as.df=F, subset=NULL, doc_id=NULL, token_id=NULL, safe_copy=T)}
 \preformatted{get_meta(columns=NULL, keep_df=F, as.df=F, subset=NULL, doc_id=NULL, safe_copy=T)}
 }
 
@@ -46,11 +46,11 @@ head(tc$get('doc_id'))       ## single column as vector
 head(tc$get(as.df = TRUE))      ## return as regular data.frame
 
 ## get subset
-tc$get(subset = token_i \%in\% 1:2)
+tc$get(subset = token_id \%in\% 1:2)
 
 ## subset on keys using (fast) binary search
 tc$get(doc_id = 'D1')              ## for doc_id
-tc$get(doc_id = 'D1', token_i = 5) ## for doc_id / token pairs
+tc$get(doc_id = 'D1', token_id = 5) ## for doc_id / token pairs
 
 
 ##### use get for meta data with get_meta

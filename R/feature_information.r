@@ -42,7 +42,7 @@ tCorpus$set('public', 'feature_stats', function(feature, context_level=c('docume
 #' @name tCorpus$top_features
 #' @aliases top_features
 #' @examples
-#' tc = tokens_to_tcorpus(corenlp_tokens, token_i_col = 'id')
+#' tc = tokens_to_tcorpus(corenlp_tokens, token_id_col = 'id')
 #'
 #' tc$top_features('lemma')
 #' tc$top_features('lemma', group_by = 'relation')
@@ -90,7 +90,7 @@ feature_stats <- function(tc, feature, sent_freq=F){
                  reldocfreq = Matrix::colSums(dtm > 0) / nrow(dtm),
                  tfidf = tapply(dtm$v/Matrix::rowSums(dtm)[dtm$i], dtm$j, mean) * log2(nrow(dtm)/Matrix::colSums(dtm > 0)),
                  stringsAsFactors=F)
-  if ('sent_i' %in% tc$names){
+  if ('sentence' %in% tc$names){
     dtm = tc$dtm(feature, context_level='sentence')
     dtm = dtm[Matrix::rowSums(dtm) > 0, Matrix::colSums(dtm) > 0]    # get rid of empty rows/columns
     d$sentfreq = Matrix::colSums(dtm > 0)

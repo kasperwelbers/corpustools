@@ -55,17 +55,17 @@ tokenize_to_dataframe_batch <- function(x, doc_id, split_sentences=F, max_senten
                                            global_position=T))
     doclen = sapply(x, function(x) length(x$id))
     x = data.table::rbindlist(x)
-    data.table::setnames(x, c('sent_i','token_i','token'))
+    data.table::setnames(x, c('sentence','token_id','token'))
 
     x$doc_id = rep(doc_id, doclen)
-    data.table::setcolorder(x, c('doc_id','sent_i','token_i','token'))
+    data.table::setcolorder(x, c('doc_id','sentence','token_id','token'))
 
     if (!is.null(max_tokens)) x = x[x$position <= max_tokens,]
     x[, token := unescape_custom_dot_abbreviation(x$token)]
   } else {
     x = split_tokens(x, max_tokens)
     x = as.data.table(unlist_to_df(x, doc_id))
-    colnames(x) = c('doc_id', 'token_i', 'token')
+    colnames(x) = c('doc_id', 'token_id', 'token')
   }
   x[, token := fast_factor(x$token)]
   x[, doc_id := fast_factor(x$doc_id)]

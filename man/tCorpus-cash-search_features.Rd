@@ -138,7 +138,7 @@ tc$search_features('A AND B~g')$hits
 \dontrun{
 ## advanced queries
 tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
-                       sent_i_col = 'sentence', token_i_col = 'id')
+                       sentence_col = 'sentence', token_id_col = 'id')
 head(tc$get()) ## search in multiple feature columns with "columnname: "
 
 ## using the sub/flag query to find only mary as a direct object

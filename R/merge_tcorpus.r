@@ -80,17 +80,17 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
     meta = subset(meta, select = meta_names)
   }
 
-  if ('sent_i' %in% colnames(data)){
-    if (any(is.na(data$sent_i))) {
-      warning('sent_i contains NAs after merging, and is therefore deleted')
-      data$sent_i = NULL
+  if ('sentence' %in% colnames(data)){
+    if (any(is.na(data$sentence))) {
+      warning('sentence contains NAs after merging, and is therefore deleted')
+      data$sentence = NULL
       sent_col = NULL
     } else {
-      sent_col = 'sent_i'
+      sent_col = 'sentence'
     }
   } else {
     sent_col = NULL
   }
 
-  tokens_to_tcorpus(data, doc_col='doc_id', sent_i_col=sent_col, token_i_col='token_i', meta=meta, sent_is_local = T, token_is_local = T)
+  tokens_to_tcorpus(data, doc_col='doc_id', sentence_col=sent_col, token_id_col='token_id', meta=meta, sent_is_local = T, token_is_local = T)
 }

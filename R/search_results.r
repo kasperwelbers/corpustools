@@ -1,12 +1,12 @@
 featureHits <- function(hits, queries) {
   ## S3 class
-  sent_i = NULL ## used in data.table syntax, but need to have bindings for R CMD check
-  if(is.null(hits)) hits = data.frame(code=character(), feature=character(), doc_id=character(), sent_i = numeric(), hit_id=numeric())
-  if (!'sent_i' %in% colnames(hits)) {
-    if (nrow(hits) > 0) hits[, sent_i := NA] else hits$sent_i = numeric()
+  sentence = NULL ## used in data.table syntax, but need to have bindings for R CMD check
+  if(is.null(hits)) hits = data.frame(code=character(), feature=character(), doc_id=character(), sentence = numeric(), hit_id=numeric())
+  if (!'sentence' %in% colnames(hits)) {
+    if (nrow(hits) > 0) hits[, sentence := NA] else hits$sentence = numeric()
   }
-  #hits = as.data.frame(hits[,c('code','feature','doc_id','sent_i','token_i', 'hit_id')])
-  hits = hits[,c('code','feature','doc_id','sent_i','token_i', 'hit_id')]
+  #hits = as.data.frame(hits[,c('code','feature','doc_id','sentence','token_id', 'hit_id')])
+  hits = hits[,c('code','feature','doc_id','sentence','token_id', 'hit_id')]
   fh = list(hits=hits, queries=queries)
   class(fh) = c('featureHits', class(fh))
   if(!is.featureHits(fh)) stop('Not a proper featureHits object')
@@ -15,7 +15,7 @@ featureHits <- function(hits, queries) {
 
 is.featureHits <- function(fh, ...) {
   if (!methods::is(fh$hits, 'data.frame')) return(FALSE)
-  if (!all(c('code','feature','doc_id','hit_id', 'sent_i', 'token_i') %in% colnames(fh$hits))) return(FALSE)
+  if (!all(c('code','feature','doc_id','hit_id', 'sentence', 'token_id') %in% colnames(fh$hits))) return(FALSE)
   #if (!all(c('keyword','condition','code','condition_once') %in% colnames(fh$queries))) return(FALSE)
   return(TRUE)
 }
@@ -37,7 +37,7 @@ print.featureHits <- function(x, ...){
   if(!is.featureHits(x)) stop('Not a proper featureHits object')
   n_hits = nrow(unique(x$hits[,c('code', 'hit_id')]))
   n_docs = length(unique(x$hits$doc_id))
-  n_sent = if(any(is.na(x$hits$sent_i))) NULL else nrow(unique(x$hits[,c('doc_id','sent_i')]))
+  n_sent = if(any(is.na(x$hits$sentence))) NULL else nrow(unique(x$hits[,c('doc_id','sentence')]))
   cat(n_hits, 'hits (in', n_docs, 'documents')
   if(!is.null(n_sent)) cat(' /', n_sent, 'sentences)\n') else cat(')\n')
 }
@@ -56,13 +56,13 @@ print.featureHits <- function(x, ...){
 #' summary(hits)
 #' @export
 summary.featureHits <- function(object, ...){
-  doc_id = sent_i = hit_id = NULL ##  used in data.table syntax, but need to have bindings for R CMD check
+  doc_id = sentence = hit_id = NULL ##  used in data.table syntax, but need to have bindings for R CMD check
 
   #if(is.null(x$hits)) return(NULL)
-  if (!any(is.na(object$hits$sent_i))){
-    object$hits$sent_i = paste(object$hits$doc_id, object$hits$sent_i, sep='_')
+  if (!any(is.na(object$hits$sentence))){
+    object$hits$sentence = paste(object$hits$doc_id, object$hits$sentence, sep='_')
     agg = data.table(object$hits)[, list(hits = length(unique(hit_id)),
-                              sentences = length(unique(sent_i)),
+                              sentences = length(unique(sentence)),
                               documents = length(unique(doc_id))),
                               by='code']
   } else {
@@ -75,12 +75,12 @@ summary.featureHits <- function(object, ...){
 
 contextHits <- function(hits, queries) {
   ## S3 class
-  sent_i = NULL ## used in data.table syntax, but need to have bindings for R CMD check
-  if(is.null(hits)) hits = data.frame(code=character(), doc_id=character(), sent_i = numeric())
-  if (!'sent_i' %in% colnames(hits)) {
-    if (nrow(hits) > 0) hits[, sent_i := NA] else hits$sent_i = numeric()
+  sentence = NULL ## used in data.table syntax, but need to have bindings for R CMD check
+  if(is.null(hits)) hits = data.frame(code=character(), doc_id=character(), sentence = numeric())
+  if (!'sentence' %in% colnames(hits)) {
+    if (nrow(hits) > 0) hits[, sentence := NA] else hits$sentence = numeric()
   }
-  hits = as.data.frame(hits[,c('code','doc_id','sent_i')])
+  hits = as.data.frame(hits[,c('code','doc_id','sentence')])
 
   ch = list(hits=hits, queries=queries)
   class(ch) = c('contextHits', class(ch))
@@ -90,7 +90,7 @@ contextHits <- function(hits, queries) {
 
 is.contextHits <- function(ch, ...) {
   if (!methods::is(ch$hits, 'data.frame')) return(FALSE)
-  if (!all(c('code','doc_id','sent_i') %in% colnames(ch$hits))) return(FALSE)
+  if (!all(c('code','doc_id','sentence') %in% colnames(ch$hits))) return(FALSE)
   if (!all(c('query','code') %in% colnames(ch$queries))) return(FALSE)
   return(TRUE)
 }
@@ -111,7 +111,7 @@ is.contextHits <- function(ch, ...) {
 print.contextHits <- function(x, ...){
   if(!is.contextHits(x)) stop('Not a proper featureHits object')
   n_docs = length(unique(x$hits$doc_id))
-  n_sent = if(any(is.na(x$hits$sent_i))) NULL else nrow(x$hits[,c('doc_id','sent_i')])
+  n_sent = if(any(is.na(x$hits$sentence))) NULL else nrow(x$hits[,c('doc_id','sentence')])
   cat(n_docs, 'documents')
   if(!is.null(n_sent)) cat(' /', n_sent, 'sentences') else cat('\n')
 }
@@ -131,11 +131,11 @@ print.contextHits <- function(x, ...){
 #' @export
 summary.contextHits <- function(object, ...){
   #if(is.null(object$hits)) return(NULL)
-  doc_id = sent_i = NULL  ## used in data.table syntax, but need to have bindings for R CMD check
+  doc_id = sentence = NULL  ## used in data.table syntax, but need to have bindings for R CMD check
 
-  if (!any(is.na(object$hits$sent_i))){
-    object$hits$sent_i = paste(object$hits$doc_id, object$hits$sent_i, sep='_')
-    object = data.table(object$hits)[, list(sentences = length(unique(sent_i)),
+  if (!any(is.na(object$hits$sentence))){
+    object$hits$sentence = paste(object$hits$doc_id, object$hits$sentence, sep='_')
+    object = data.table(object$hits)[, list(sentences = length(unique(sentence)),
                               documents = length(unique(doc_id))),
                            by='code']
 
@@ -145,4 +145,5 @@ summary.contextHits <- function(object, ...){
   }
   as.data.frame(object)
 }
+
 

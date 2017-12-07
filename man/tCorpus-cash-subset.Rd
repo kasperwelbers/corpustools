@@ -45,7 +45,7 @@ tc = create_tcorpus(sotu_texts, doc_column = 'id')
 tc$n ## original number of tokens
 
 ## select only first 20 tokens per document
-tc$subset(token_i < 20)
+tc$subset(token_id < 20)
 
 tc$n ## number of tokens after subset
 
@@ -53,7 +53,7 @@ tc$n ## number of tokens after subset
 ## rather, tc is changed by reference. To subset a copy of tc (the more classic R way),
 ## the copy argument can be used. The following line creates tc2 as a copy of tc,
 ## with only the first 10 tokens per document
-tc2 <- tc$subset(token_i < 10, copy=TRUE)
+tc2 <- tc$subset(token_id < 10, copy=TRUE)
 
 tc$n   ## unchanged
 tc2$n  ## subset of tc

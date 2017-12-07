@@ -4,18 +4,18 @@
 \alias{tokens_to_tcorpus}
 \title{Create a tcorpus based on tokens (i.e. preprocessed texts)}
 \usage{
-tokens_to_tcorpus(tokens, doc_col = "doc_id", token_i_col = NULL,
-  sent_i_col = NULL, meta = NULL, meta_cols = NULL, feature_cols = NULL,
-  sent_is_local = F, token_is_local = F)
+tokens_to_tcorpus(tokens, doc_col = "doc_id", token_id_col = NULL,
+  sentence_col = NULL, meta = NULL, meta_cols = NULL,
+  feature_cols = NULL, sent_is_local = T, token_is_local = T)
 }
 \arguments{
-\item{tokens}{A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (token_i_col)}
+\item{tokens}{A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (token_id_col)}
 
 \item{doc_col}{The name of the column that contains the document ids/names}
 
-\item{token_i_col}{The name of the column that contains the positions of tokens. If NULL, it is assumed that the data.frame is ordered by the order of tokens and does not contain gaps (e.g., filtered out tokens)}
+\item{token_id_col}{The name of the column that contains the positions of tokens. If NULL, it is assumed that the data.frame is ordered by the order of tokens and does not contain gaps (e.g., filtered out tokens)}
 
-\item{sent_i_col}{Optionally, the name of the column that indicates the sentences in which tokens occured.}
+\item{sentence_col}{Optionally, the name of the column that indicates the sentences in which tokens occured.}
 
 \item{meta}{Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)}
 
@@ -23,9 +23,9 @@ tokens_to_tcorpus(tokens, doc_col = "doc_id", token_i_col = NULL,
 
 \item{feature_cols}{Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)}
 
-\item{sent_is_local}{Sentences in the tCorpus must be locally unique within documents. If sent_is_local is FALSE, then sentences are made sure to be locally unique. However,  it is then assumed that the first sentence in a document is sentence 1, which might not be the case if tokens (input) is a subset. If you know for a fact that the sentence column in tokens is already locally unique, you can set sent_is_local to TRUE to keep the original sent_i values.}
+\item{sent_is_local}{Sentences in the tCorpus are assumed to be locally unique within documents. If sent_is_local is FALSE, then sentences are transformed to be locally unique. However,  it is then assumed that the first sentence in a document is sentence 1, which might not be the case if tokens (input) is a subset.}
 
-\item{token_is_local}{Same as sent_is_local, but or token_i}
+\item{token_is_local}{Same as sent_is_local, but for token_id. Note that if a parent column is present, it will not be changed along.}
 }
 \description{
 Create a tcorpus based on tokens (i.e. preprocessed texts)
@@ -34,11 +34,11 @@ Create a tcorpus based on tokens (i.e. preprocessed texts)
 head(corenlp_tokens)
 
 tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
-                       sent_i_col = 'sentence', token_i_col = 'id')
+                       sentence_col = 'sentence', token_id_col = 'id')
 tc
 
 meta = data.frame(doc_id = 1, medium = 'A', date = '2010-01-01')
 tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
-                       sent_i_col = 'sentence', token_i_col = 'id', meta=meta)
+                       sentence_col = 'sentence', token_id_col = 'id', meta=meta)
 tc
 }

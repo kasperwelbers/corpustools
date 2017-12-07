@@ -43,7 +43,7 @@ kwic(hits = NULL, i = NULL, query = NULL, code = '',
 }
 
 \examples{
-tc = tokens_to_tcorpus(corenlp_tokens, sent_i_col = 'sentence', token_i_col = 'id')
+tc = tokens_to_tcorpus(corenlp_tokens, sentence_col = 'sentence', token_id_col = 'id')
 
 ## look directly for a term (or complex query)
 tc$kwic(query = 'love*')

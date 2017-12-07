@@ -26,7 +26,7 @@ Just as in subset, it is easy to use objects and functions in the filter, includ
 \examples{
 tc = create_tcorpus('a a a a b b b c c')
 
-tc$feature_subset('token', 'tokens_subset1', subset = token_i < 5)
+tc$feature_subset('token', 'tokens_subset1', subset = token_id < 5)
 tc$feature_subset('token', 'tokens_subset2', subset = freq_filter(token, min = 3))
 
 tc$get()

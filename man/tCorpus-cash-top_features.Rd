@@ -26,7 +26,7 @@ Show top features
 }
 
 \examples{
-tc = tokens_to_tcorpus(corenlp_tokens, token_i_col = 'id')
+tc = tokens_to_tcorpus(corenlp_tokens, token_id_col = 'id')
 
 tc$top_features('lemma')
 tc$top_features('lemma', group_by = 'relation')

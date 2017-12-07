@@ -22,11 +22,11 @@ tCorpus <- R6::R6Class("tCorpus",
      },
 
      check_unique_rows = function(d){
-       if (anyDuplicated(d, by = c('doc_id','token_i'))) stop('After transformation, token_i is not unique within documents')
+       if (anyDuplicated(d, by = c('doc_id','token_id'))) stop('After transformation, token_id is not unique within documents')
      },
 
      set_keys = function(){
-       if (!identical(key(private$.data), c('doc_id', 'token_i'))) setkey(private$.data, 'doc_id', 'token_i')
+       if (!identical(key(private$.data), c('doc_id', 'token_id'))) setkey(private$.data, 'doc_id', 'token_id')
        if (!identical(key(private$.meta), c('doc_id'))) setkey(private$.meta, 'doc_id')
      },
 
@@ -57,10 +57,10 @@ tCorpus <- R6::R6Class("tCorpus",
      },
 
 ## SHOW/GET DATA METHODS ##
-    get = function(columns=NULL, keep_df=F, as.df=F, subset=NULL, doc_id=NULL, token_i=NULL, safe_copy=T) {
+    get = function(columns=NULL, keep_df=F, as.df=F, subset=NULL, doc_id=NULL, token_id=NULL, safe_copy=T) {
       if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
       if (!is.null(doc_id) & !is.null(subset)) stop('Cannot filter by subset and doc_ids at the same time')
-      if (is.null(doc_id) & !is.null(token_i)) stop('token_i can only be given in pairs with doc_id')
+      if (is.null(doc_id) & !is.null(token_id)) stop('token_id can only be given in pairs with doc_id')
 
       if (is.null(doc_id) & is.null(subset)) {
         if (is.null(columns)) {
@@ -72,12 +72,12 @@ tCorpus <- R6::R6Class("tCorpus",
         if (is.null(columns)) columns = colnames(private$.data)
         if (!is.null(subset)) d = if (length(columns) > 1 | keep_df) private$.data[subset,columns,with=F] else private$.data[[columns]][subset]
         if (!is.null(doc_id)) {
-          if (is.null(token_i)) {
+          if (is.null(token_id)) {
             positions = list(doc_ids = as.character(doc_id))
             d = if (length(columns) > 1 | keep_df) private$.data[positions,columns,with=F] else private$.data[positions, columns, with=F][[columns]]
           } else {
-            if (!length(doc_id) == length(token_i)) stop('token_i can only be given in pairs with doc_id')
-            positions = list(doc_ids = as.character(doc_id), token_is = as.numeric(token_i))
+            if (!length(doc_id) == length(token_id)) stop('token_id can only be given in pairs with doc_id')
+            positions = list(doc_ids = as.character(doc_id), token_is = as.numeric(token_id))
             d = if (length(columns) > 1 | keep_df) private$.data[positions,columns,with=F] else private$.data[positions, columns, with=F][[columns]]
           }
         }
@@ -132,10 +132,10 @@ tCorpus <- R6::R6Class("tCorpus",
      eval = function(x, enclos=parent.frame()) eval(x, private$.data, enclos),
      eval_meta = function(x, enclos=parent.frame()) eval(x, private$.meta, enclos),
 
-     token_i = function(doc_id=NULL, token_i=NULL, subset=NULL, subset_meta=NULL, window=NULL, inverse=F){
+     token_id = function(doc_id=NULL, token_id=NULL, subset=NULL, subset_meta=NULL, window=NULL, inverse=F){
       if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
       if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = self$eval_meta(substitute(subset_meta), parent.frame())
-      if (is.null(doc_id) & !is.null(token_i)) stop('token_i can only be given in pairs with doc_id')
+      if (is.null(doc_id) & !is.null(token_id)) stop('token_id can only be given in pairs with doc_id')
 
       ## enable subset to be called from a character string. (e.g. used in search_features)
       if(methods::is(subset, 'character')) subset_meta = eval(parse(text=subset_meta), private$.meta, parent.frame())
@@ -143,7 +143,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
       i = NULL
       if (!is.null(doc_id)) {
-        pos = if (is.null(token_i)) list(doc_id) else list(doc_id, token_i)
+        pos = if (is.null(token_id)) list(doc_id) else list(doc_id, token_id)
         i = private$.data[pos, which=T]
       }
       if (!is.null(subset)) {
@@ -181,10 +181,10 @@ tCorpus <- R6::R6Class("tCorpus",
            }
          }
 
-         if (column %in% c('sent_i','token_i')) {  ## for position columns, first perform checks (inefficient, but this should be a rare case anyway)
+         if (column %in% c('sentence','token_id')) {  ## for position columns, first perform checks (inefficient, but this should be a rare case anyway)
             if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')
             value = as.integer(value)
-            mod = if ('sent_i' %in% self$names) private$.data[,c('doc_id','sent_i','token_i')] else private$.data[,c('doc_id','token_i')]
+            mod = if ('sentence' %in% self$names) private$.data[,c('doc_id','sentence','token_id')] else private$.data[,c('doc_id','token_id')]
             mod[subset, (column) := value]
             check_unique_rows(mod)
          }
@@ -193,10 +193,10 @@ tCorpus <- R6::R6Class("tCorpus",
          private$.data[subset, (column) := .value]
 
        } else {
-         if (column %in% c('sent_i','token_i')) {
+         if (column %in% c('sentence','token_id')) {
            if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')
            value = as.integer(value)
-           mod = if ('sent_i' %in% self$names) private$.data[,c('doc_id','sent_i','token_i')] else private$.data[,c('doc_id','token_i')]
+           mod = if ('sentence' %in% self$names) private$.data[,c('doc_id','sentence','token_id')] else private$.data[,c('doc_id','token_id')]
            suppressWarnings(mod[, (column) := value])
            check_unique_rows(mod)
          }
@@ -224,14 +224,14 @@ tCorpus <- R6::R6Class("tCorpus",
      },
 
      delete_columns = function(cnames){
-       protected_cols = intersect(self$names, c('doc_id', 'token_i'))
-       if (any(protected_cols %in% cnames)) stop("The position columns doc_id and token_i cannot be deleted")
+       protected_cols = intersect(self$names, c('doc_id', 'token_id'))
+       if (any(protected_cols %in% cnames)) stop("The position columns doc_id and token_id cannot be deleted")
        for (col in cnames) private$.data[,(col) := NULL]
        invisible(self)
      },
 
      set_name = function(oldname, newname) {
-       if (oldname %in% c('doc_id','sent_i','token_i')) stop('The position columns (doc_id, sent_i, token_i) cannot be set or changed')
+       if (oldname %in% c('doc_id','sentence','token_id')) stop('The position columns (doc_id, sentence, token_id) cannot be set or changed')
        if (grepl('^\\.', newname)) stop('column names in a tCorpus cannot start with a dot')
 
        data.table::setnames(private$.data, oldname, newname)
@@ -474,7 +474,7 @@ tCorpus <- R6::R6Class("tCorpus",
      n_meta = function() nrow(private$.meta),
      feature_names = function(e=NULL) {
        if (!is.null(e)) stop('Cannot change tcorpus$feature_names by assignment. Instead, use the set_name() function')
-       fnames = colnames(private$.data)[!colnames(private$.data) %in% c('doc_id','sent_i','token_i')]
+       fnames = colnames(private$.data)[!colnames(private$.data) %in% c('doc_id','sentence','token_id')]
      },
      names = function(e=NULL) {
        if (!is.null(e)) stop('Cannot change tcorpus$names by assignment. Instead, use the set_name() function')
@@ -509,7 +509,7 @@ tCorpus <- R6::R6Class("tCorpus",
 #' print(tc)
 #' @export
 print.tCorpus <- function(x, ...) {
-  sent_info = if ('sent_i' %in% x$names) paste(' and sentences (n = ', nrow(unique(x$get(c('doc_id','sent_i')))), ')', sep='') else ''
+  sent_info = if ('sentence' %in% x$names) paste(' and sentences (n = ', nrow(unique(x$get(c('doc_id','sentence')))), ')', sep='') else ''
   cat('tCorpus containing ', x$n, ' tokens',
       '\ngrouped by documents (n = ', x$n_meta, ')', sent_info,
       '\ncontains:',
@@ -537,8 +537,8 @@ refresh_tcorpus <- function(tc){
 rebuild_tcorpus <- function(tc) {
   tokens_to_tcorpus(tokens = tc$get(),
                     doc_col = 'doc_id',
-                    sent_i_col = ifelse('sent_i' %in% tc$names, T, F),
-                    token_i_col = 'token_i',
+                    sentence_col = ifelse('sentence' %in% tc$names, T, F),
+                    token_id_col = 'token_id',
                     meta = tc$get_meta())
 }
 
@@ -628,16 +628,16 @@ get_context <- function(tc, context_level = c('document','sentence'), with_label
     if (!with_labels) levels(context) = 1:length(levels(context))
   }
   if (context_level == 'sentence') {
-    if (!'sent_i' %in% tc$names) stop('Sentence level not possible, since no sentence information is available. To enable sentence level analysis, use split_sentences = T in "create_tcorpus()" or specify sent_i_col in "tokens_to_tcorpus()"')
-    d = tc$get(c('doc_id','sent_i'))
+    if (!'sentence' %in% tc$names) stop('Sentence level not possible, since no sentence information is available. To enable sentence level analysis, use split_sentences = T in "create_tcorpus()" or specify sentence_col in "tokens_to_tcorpus()"')
+    d = tc$get(c('doc_id','sentence'))
     if (with_labels){
-      ucontext = unique(d[,c('doc_id','sent_i')])
-      ucontext = stringi::stri_paste(ucontext$doc_id, ucontext$sent_i, sep=' #')
-      context = fast_factor(global_position(d$sent_i, d$doc_id, presorted = T, position_is_local=T))
+      ucontext = unique(d[,c('doc_id','sentence')])
+      ucontext = stringi::stri_paste(ucontext$doc_id, ucontext$sentence, sep=' #')
+      context = fast_factor(global_position(d$sentence, d$doc_id, presorted = T, position_is_local=T))
       levels(context) = ucontext
     } else {
-      fast_factor(global_position(d$sent_i, d$doc_id, presorted = T, position_is_local=T))
-      context = fast_dummy_factor(global_position(d$sent_i, d$doc_id, presorted = T, position_is_local=T))
+      fast_factor(global_position(d$sentence, d$doc_id, presorted = T, position_is_local=T))
+      context = fast_dummy_factor(global_position(d$sentence, d$doc_id, presorted = T, position_is_local=T))
     }
   }
   context

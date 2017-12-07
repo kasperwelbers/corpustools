@@ -139,7 +139,7 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
   if (!is.na(window)) {
     hits = self$search_features(query, feature=feature, context_level=context_level, mode='features')
     if (is.null(hits)) return(NULL)
-    window = self$token_i(hits$hits$doc_id, hits$hits$token_i, window=window)
+    window = self$token_id(hits$hits$doc_id, hits$hits$token_id, window=window)
     self$subset(window)
   } else {
     hits = self$search_contexts(query, feature=feature, context_level=context_level)
@@ -148,10 +148,10 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
       self$select_meta_rows(self$get_meta('doc_id') %in% hits$hits$doc_id)
     }
     if (context_level == 'sentence'){
-      d = self$get(c('doc_id','sent_i'), keep_df=T)
+      d = self$get(c('doc_id','sentence'), keep_df=T)
       d$i = 1:nrow(d)
-      setkeyv(d, c('doc_id','sent_i'))
-      rows = d[list(hits$hits$doc_id, hits$hits$sent_i),]$i
+      setkeyv(d, c('doc_id','sentence'))
+      rows = d[list(hits$hits$doc_id, hits$hits$sentence),]$i
       self$select_rows(rows)
     }
   }
@@ -169,8 +169,8 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
   codelabel = get_query_code(query, code)
   query = remove_query_label(query)
 
-  cols = if(context_level == 'sentence') c('doc_id','sent_i') else c('doc_id')
-  subcontext = if(context_level == 'sentence') 'sent_i' else NULL
+  cols = if(context_level == 'sentence') c('doc_id','sentence') else c('doc_id')
+  subcontext = if(context_level == 'sentence') 'sentence' else NULL
 
   hits = vector('list', length(query))
   for (i in 1:length(query)) {
@@ -187,7 +187,7 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
   if (nrow(hits) > 0) {
     setorderv(hits, cols)
   } else {
-    hits = data.frame(code=factor(), doc_id=factor(), sent_i=numeric())
+    hits = data.frame(code=factor(), doc_id=factor(), sentence=numeric())
   }
   queries = data.frame(code=codelabel, query=query)
   contextHits(hits, queries)

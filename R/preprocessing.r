@@ -67,13 +67,13 @@ tCorpus$set('public', 'preprocess', function(column, new_column=column, lowercas
 #' @examples
 #' tc = create_tcorpus('a a a a b b b c c')
 #'
-#' tc$feature_subset('token', 'tokens_subset1', subset = token_i < 5)
+#' tc$feature_subset('token', 'tokens_subset1', subset = token_id < 5)
 #' tc$feature_subset('token', 'tokens_subset2', subset = freq_filter(token, min = 3))
 #'
 #' tc$get()
 tCorpus$set('public', 'feature_subset', function(column, new_column=column, subset, inverse=F, copy=F){
   column = match.arg(column, self$names)
-  if (new_column %in% c('doc_id','sent_i','token_i')) stop('The position columns (doc_id, sent_i, token_i) cannot be used')
+  if (new_column %in% c('doc_id','sentence','token_id')) stop('The position columns (doc_id, sent_i, token_i) cannot be used')
   if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
 
   if (copy) {
