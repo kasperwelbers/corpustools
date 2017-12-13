@@ -183,7 +183,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
          if (column %in% c('sentence','token_id')) {  ## for position columns, first perform checks (inefficient, but this should be a rare case anyway)
             if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')
-            value = as.integer(value)
+            value = as.numeric(value)
             mod = if ('sentence' %in% self$names) private$.data[,c('doc_id','sentence','token_id')] else private$.data[,c('doc_id','token_id')]
             mod[subset, (column) := value]
             check_unique_rows(mod)
@@ -195,7 +195,7 @@ tCorpus <- R6::R6Class("tCorpus",
        } else {
          if (column %in% c('sentence','token_id')) {
            if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')
-           value = as.integer(value)
+           value = as.numeric(value)
            mod = if ('sentence' %in% self$names) private$.data[,c('doc_id','sentence','token_id')] else private$.data[,c('doc_id','token_id')]
            suppressWarnings(mod[, (column) := value])
            check_unique_rows(mod)

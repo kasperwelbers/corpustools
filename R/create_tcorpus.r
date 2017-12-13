@@ -139,7 +139,7 @@ create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id
 #'                        sentence_col = 'sentence', token_id_col = 'id', meta=meta)
 #' tc
 #' @export
-tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col=NULL, sentence_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=T, token_is_local=T) {
+tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col='token_id', sentence_col='sentence', meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=T, token_is_local=T) {
   tokens = data.table::as.data.table(tokens)
   sentence = token_id = NULL ## used in data.table syntax, but need to have bindings for R CMD check
 
@@ -157,13 +157,13 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col=NULL, sente
   if (!is.null(sentence_col)) {
     data.table::setnames(tokens, which(colnames(tokens) == sentence_col), 'sentence')
     if (!methods::is(tokens$sentence, 'numeric')) stop('sentence_col has to be numeric/integer')
-    if (!methods::is(tokens$sentence, 'integer')) tokens[,sentence := as.integer(sentence)]
+    if (!methods::is(tokens$sentence, 'integer')) tokens[,sentence := as.numeric(sentence)]
   }
 
   if (!is.null(token_id_col)) {
     data.table::setnames(tokens, which(colnames(tokens) == token_id_col), 'token_id')
     if (!methods::is(tokens$token_id, 'numeric')) stop('token_id_col has to be numeric/integer')
-    if (!methods::is(tokens$token_id, 'integer')) tokens[,token_id := as.integer(token_id)]
+    if (!methods::is(tokens$token_id, 'integer')) tokens[,token_id := as.numeric(token_id)]
   } else {
     warning('No token_id column specified. token order used instead (see documentation).')
     tokens$token_id = 1:nrow(tokens)
