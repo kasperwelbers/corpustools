@@ -1,4 +1,4 @@
-test_that("topicmodels works", {
+test_that("Testing: Topic models", {
   cat('\n', '-> Testing: Topic Models')
   start_time = Sys.time()
 
@@ -10,7 +10,10 @@ test_that("topicmodels works", {
   tc = tc$feature_subset('feature', 'feature', subset = freq_filter(feature, min=10) & docfreq_filter(feature, max=0.5*tc$n))
 
   m = tc$lda_fit(feature = 'feature', create_feature = 'lda', K=5)
+  expect_true(exists('m'))
 
   cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
+
 })
+
 

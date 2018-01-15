@@ -433,6 +433,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
         ## prepare lookup table: set a (secondary) data.table index
         if (!feature %in% indices(private$.data)) {
+
           data.table::setindexv(private$.data, feature)
           message(sprintf('created index for "%s" column', feature))
         }

@@ -3,6 +3,7 @@ test_that("comparing documents works", {
   start_time = Sys.time()
 
   library(corpustools)
+  library(testthat)
   d = data.frame(text = c('Renewable fuel is better than fossil fuels!',
                           'A fueled debate about fuel',
                           'Mark Rutte is simply Rutte'),

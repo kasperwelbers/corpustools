@@ -19,7 +19,7 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
     q = qlist$terms[[j]]
     is_nested = 'terms' %in% names(q)
     if (is_nested) {
-      jhits = recursive_search(tc, q, subcontext=subcontext, feature='token', mode=mode, parent_relation=qlist$relation, all_case_sensitive, all_ghost, all_flag_query, keep_longest, as_ascii, level=level+1)
+      jhits = recursive_search(tc, q, subcontext=subcontext, feature=feature, mode=mode, parent_relation=qlist$relation, all_case_sensitive, all_ghost, all_flag_query, keep_longest, as_ascii, level=level+1)
       if (nterms == 1) {
         if (level == 1 & mode == 'contexts' & !is.null(jhits)) jhits = unique(subset(jhits, select=c('doc_id',subcontext)))
         return(jhits)
@@ -109,7 +109,7 @@ get_query_code <- function(query, code=NULL) {
     if (!length(code) == length(query)) stop('code and query vectors need to have the same length')
     code = ifelse(is.na(code), hashcode, code)
   } else code = hashcode
-  #print(code)
+
   code[is.na(code)] = paste('query', 1:sum(is.na(code)), sep='_')
   if (anyDuplicated(code)) stop('Cannot have duplicate codes')
   code
