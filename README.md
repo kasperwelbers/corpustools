@@ -13,7 +13,13 @@ In time, we will add tutorials for the different analysis techniques. With the i
 Getting started
 ============
 
-You can install corpustools directly from github:
+You can install corpustools directly from CRAN
+
+```{r}
+install.packages('corpustools')
+```
+
+Or you can install the development version from Github
 
 ```{r}
 install_github("kasperwelbers/corpustools")

@@ -192,15 +192,16 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col='token_id',
   ## make sure that sentence and token_id are locally unique within documents
   ndoc = nrow(unique(tokens, by='doc_id'))
   if (!is.null(sentence_col)){
-    if (sent_is_local) {
-        #if (ndoc > 10) if (!anyDuplicated(unique(tokens, by=c('doc_id','sentence')), by='sentence') == 0) warning("Sentence positions (sentence) do not appear to be locally unique within documents (no duplicates in at least 10 documents). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
-    }
+    #if (sent_is_local) {
+    #    #if (ndoc > 10) if (!anyDuplicated(unique(tokens, by=c('doc_id','sentence')), by='sentence') == 0) warning("Sentence positions (sentence) do not appear to be locally unique within documents (no duplicates in at least 10 documents). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
+    #}
     if (!sent_is_local) tokens[,'sentence' := local_position(tokens$sentence, tokens$doc_id, presorted = T)] ## make sure sentences are locally unique within documents (and not globally)
     if (!token_is_local) tokens[,'token_id' := global_position(tokens$token_id,
                                                             global_position(tokens$sentence, tokens$doc_id, presorted = T, position_is_local=T),
                                                             presorted = T)]  ## make token positions globally unique, taking sentence id into account (in case tokens are locally unique within sentences)
   }
   if (token_is_local) {
+    if (!anyDuplicated(tokens, by=c('doc_id','token_id')) == 0) warning("Duplicate token ids (doc_id - token_id pairs) found. If token ids are not local at the document level, you can set token_is_local to False to use a token's position within a document as the token ids")
     #if (ndoc > 10) if (!anyDuplicated(tokens, by=c('doc_id','token_id')) == 0) warning("token positions (token_id) do not appear to be locally unique within documents (no duplicates in at least 10 documents). Unless you are sure they are, set token_is_local to FALSE (and read documentation)")
   } else {
     tokens[,'token_id' := local_position(tokens$token_id, tokens$doc_id, presorted=T)] ## make tokens locally unique within documents
