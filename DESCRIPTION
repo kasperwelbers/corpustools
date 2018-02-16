@@ -20,7 +20,11 @@ Imports:
     SnowballC,
     stringi, 
     Rcpp (>= 0.12.12), 
-    R6
+    R6,
+    shiny,
+    shinydashboard,
+    readr,
+    DT
 Suggests:
     testthat,
     quanteda (>= 0.99.9),

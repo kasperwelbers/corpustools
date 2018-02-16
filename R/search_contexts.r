@@ -139,7 +139,7 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
   if (!is.na(window)) {
     hits = self$search_features(query, feature=feature, context_level=context_level, mode='features')
     if (is.null(hits)) return(NULL)
-    window = self$token_id(hits$hits$doc_id, hits$hits$token_id, window=window)
+    window = self$get_token_id(hits$hits$doc_id, hits$hits$token_id, window=window)
     self$subset(window)
   } else {
     hits = self$search_contexts(query, feature=feature, context_level=context_level)

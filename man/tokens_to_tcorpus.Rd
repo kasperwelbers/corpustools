@@ -5,8 +5,10 @@
 \title{Create a tcorpus based on tokens (i.e. preprocessed texts)}
 \usage{
 tokens_to_tcorpus(tokens, doc_col = "doc_id", token_id_col = "token_id",
-  sentence_col = "sentence", meta = NULL, meta_cols = NULL,
-  feature_cols = NULL, sent_is_local = T, token_is_local = T)
+  sentence_col = "sentence", token_col = NULL, lemma_col = NULL,
+  pos_col = NULL, relation_col = NULL, parent_col = NULL, meta = NULL,
+  meta_cols = NULL, feature_cols = NULL, sent_is_local = T,
+  token_is_local = T)
 }
 \arguments{
 \item{tokens}{A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (token_id_col)}
@@ -16,6 +18,16 @@ tokens_to_tcorpus(tokens, doc_col = "doc_id", token_id_col = "token_id",
 \item{token_id_col}{The name of the column that contains the positions of tokens. If NULL, it is assumed that the data.frame is ordered by the order of tokens and does not contain gaps (e.g., filtered out tokens)}
 
 \item{sentence_col}{Optionally, the name of the column that indicates the sentences in which tokens occured.}
+
+\item{token_col}{Optionally, the name of the column that contains the token text}
+
+\item{lemma_col}{Optionally, the name of the column that contains the lemma of the token}
+
+\item{pos_col}{Optionally, the name of the column that contains the part-of-speech tag of the token}
+
+\item{relation_col}{Optionally, the name of the column that contains the relation of the token to its parent}
+
+\item{parent_col}{Optionally, the name of the column that contains the id of the parent}
 
 \item{meta}{Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)}
 

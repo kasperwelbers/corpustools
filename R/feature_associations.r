@@ -53,7 +53,7 @@ feature_associations <- function(tc, hits, feature='token', window=15,  n=25, mi
   if(methods::is(substitute(subset_meta), 'call')) subset_meta = tc$eval_meta(substitute(subset_meta), parent.frame())
   sort_by = match.arg(sort_by)
 
-  window = tc$token_id(hits$hits$doc_id, hits$hits$token_id, subset, subset_meta, window=window)
+  window = tc$get_token_id(hits$hits$doc_id, hits$hits$token_id, subset, subset_meta, window=window)
 
   tc_sub = tc$subset(window, copy=T)
   if (tc_sub$n == 0) {

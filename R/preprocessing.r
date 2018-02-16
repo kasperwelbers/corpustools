@@ -46,7 +46,7 @@
 #' tc$preprocess('token', 'preprocessed_4', ngrams = 3)
 #'
 #' tc$get()
-tCorpus$set('public', 'preprocess', function(column, new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, remove_numbers=F, use_stemming=F, language='english', min_freq=NULL, min_docfreq=NULL, max_freq=NULL, max_docfreq=NULL, min_char=NULL, max_char=NULL) {
+tCorpus$set('public', 'preprocess', function(column='token', new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, remove_numbers=F, use_stemming=F, language='english', min_freq=NULL, min_docfreq=NULL, max_freq=NULL, max_docfreq=NULL, min_char=NULL, max_char=NULL) {
   column = match.arg(column, self$names)
   invisible(preprocess_feature(self, column=column, new_column=new_column, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, remove_numbers=remove_numbers, use_stemming=use_stemming, language=language, min_freq=min_freq, min_docfreq=min_docfreq, max_freq=max_freq, max_docfreq=max_docfreq, min_char=min_char, max_char=max_char))
 })

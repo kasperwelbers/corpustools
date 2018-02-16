@@ -121,6 +121,11 @@ create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id
 #' @param doc_col The name of the column that contains the document ids/names
 #' @param token_id_col The name of the column that contains the positions of tokens. If NULL, it is assumed that the data.frame is ordered by the order of tokens and does not contain gaps (e.g., filtered out tokens)
 #' @param sentence_col Optionally, the name of the column that indicates the sentences in which tokens occured.
+#' @param token_col Optionally, the name of the column that contains the token text
+#' @param lemma_col Optionally, the name of the column that contains the lemma of the token
+#' @param pos_col Optionally, the name of the column that contains the part-of-speech tag of the token
+#' @param relation_col Optionally, the name of the column that contains the relation of the token to its parent
+#' @param parent_col Optionally, the name of the column that contains the id of the parent
 #' @param meta Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)
 #' @param meta_cols Alternatively, if there are document meta columns in the tokens data.table, meta_cols can be used to recognized them. Note that these values have to be unique within documents.
 #' @param feature_cols Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)
@@ -139,7 +144,7 @@ create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id
 #'                        sentence_col = 'sentence', token_id_col = 'id', meta=meta)
 #' tc
 #' @export
-tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col='token_id', sentence_col='sentence', meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=T, token_is_local=T) {
+tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col='token_id', sentence_col='sentence', token_col=NULL, lemma_col=NULL, pos_col=NULL, relation_col=NULL, parent_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=T, token_is_local=T) {
   tokens = data.table::as.data.table(tokens)
   sentence = token_id = NULL ## used in data.table syntax, but need to have bindings for R CMD check
 
@@ -228,7 +233,9 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col='token_id',
   }
   meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
 
-  tCorpus$new(data=tokens, meta = meta)
+  tc = tCorpus$new(data=tokens, meta = meta)
+  tc$set_special(token=token_col, lemma=lemma_col, POS=pos_col, relation=relation_col, parent=parent_col)
+  tc
 }
 
 ## alternative:: add formal data check and correction methods, and then simply create the tcorpus from the data and then perform the checks and corrections

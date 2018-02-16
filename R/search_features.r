@@ -190,7 +190,7 @@ tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token
   code = 1:length(query)
   hits = search_features(self, query, code=code, feature=feature, mode='features', context_level=context_level, keep_longest=keep_longest, as_ascii=as_ascii, verbose=verbose)
 
-  .i = self$token_id(doc_id = hits$hits$doc_id, token_id = hits$hits$token_id)
+  .i = self$get_token_id(doc_id = hits$hits$doc_id, token_id = hits$hits$token_id)
   .value = codelabel[as.numeric(hits$hits$code)]
   self$set(column=column, subset=.i, value=.value, subset_value=F)
 
@@ -228,7 +228,7 @@ tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token
 #' @aliases search_recode
 tCorpus$set('public', 'search_recode', function(feature, new_value, query, ...){
   hits = search_features(self, query, feature=feature, mode='features', ...)
-  .i = self$token_id(doc_id = hits$hits$doc_id, token_id = hits$hits$token_id)
+  .i = self$get_token_id(doc_id = hits$hits$doc_id, token_id = hits$hits$token_id)
   .new_value = new_value
   self$set(feature, .new_value, subset = .i)
   invisible(self)

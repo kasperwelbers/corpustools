@@ -132,7 +132,7 @@ tCorpus <- R6::R6Class("tCorpus",
      eval = function(x, enclos=parent.frame()) eval(x, private$.data, enclos),
      eval_meta = function(x, enclos=parent.frame()) eval(x, private$.meta, enclos),
 
-     token_id = function(doc_id=NULL, token_id=NULL, subset=NULL, subset_meta=NULL, window=NULL, inverse=F){
+     get_token_id = function(doc_id=NULL, token_id=NULL, subset=NULL, subset_meta=NULL, window=NULL, inverse=F){
       if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
       if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = self$eval_meta(substitute(subset_meta), parent.frame())
       if (is.null(doc_id) & !is.null(token_id)) stop('token_id can only be given in pairs with doc_id')
@@ -164,6 +164,15 @@ tCorpus <- R6::R6Class("tCorpus",
 
 
 ## DATA MODIFICATION METHODS ##
+
+     set_special = function(token=NULL, lemma=NULL, POS=NULL, relation=NULL, parent=NULL) {
+       if(!is.null(token)) self$set_name(token, 'token')
+       if(!is.null(lemma)) self$set_name(lemma, 'lemma')
+       if(!is.null(POS)) self$set_name(POS, 'POS')
+       if(!is.null(relation)) self$set_name(relation, 'relation')
+       if(!is.null(parent)) self$set_name(parent, 'parent')
+     },
+
      set = function(column, value, subset=NULL, subset_value=T){
        if (column == 'doc_id') stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
        if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
@@ -470,6 +479,8 @@ tCorpus <- R6::R6Class("tCorpus",
       clear_indices = function() data.table::setindex(private$.data, NULL)
    ),
 
+
+
    active = list(
      n = function() nrow(private$.data),
      n_meta = function() nrow(private$.meta),
@@ -485,6 +496,41 @@ tCorpus <- R6::R6Class("tCorpus",
        if (!is.null(e)) stop('Cannot change tcorpus$meta_names by assignment. Instead, use the set_meta_name() function')
        colnames(private$.meta)
      },
+
+     ### access  columns
+     doc_id = function(e=NULL){
+       if (!is.null(e)) stop('Cannot change doc_id. If you want to change doc_id labels, you can overwrite $doc_id_levels.')
+       private$.data[['doc_id']]
+     },
+     sentence = function(e=NULL){
+       if (!is.null(e)) stop('Cannot change position data (sentence) by assignment. Use the set() method instead')
+       private$.data[['sentence']]
+     },
+     token_id = function(e=NULL){
+       if (!is.null(e)) stop('Cannot change position data (token_id) by assignment. Use the set() method instead')
+       private$.data[['token_id']]
+     },
+     token = function(mod){
+       if (!is.null(mod)) private$.data[['token']] = mod
+       private$.data[['token']]
+     },
+     lemma = function(mod){
+       if (!is.null(mod)) private$.data[['lemma']] = mod
+       private$.data[['lemma']]
+     },
+     pos = function(mod){
+       if (!is.null(mod)) private$.data[['pos']] = mod
+       private$.data[['pos']]
+     },
+     parent = function(mod){
+       if (!is.null(mod)) private$.data[['parent']] = mod
+       private$.data[['parent']]
+     },
+     relation = function(mod){
+       if (!is.null(mod)) private$.data[['relation']] = mod
+       private$.data[['relation']]
+     },
+
 
 
      doc_id_levels = function(mod=NULL) {

@@ -70,7 +70,7 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   if (!is.null(subset_tokens) | !is.null(subset_meta)) {
     .subset_tokens = subset_tokens
     .subset_meta = subset_meta
-    sub_i = tc$token_id(subset = .subset_tokens, subset_meta = .subset_meta)
+    sub_i = tc$get_token_id(subset = .subset_tokens, subset_meta = .subset_meta)
     all_i = i
     i = droplevels(all_i[sub_i])
   } else {
