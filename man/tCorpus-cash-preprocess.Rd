@@ -21,6 +21,8 @@
 
 \item{remove_stopwords}{remove (i.e. make NA) stopwords. (!) Make sure to set the language argument correctly.}
 
+\item{remove_numbers}{remove features that are only numbers}
+
 \item{use_stemming}{reduce features (tokens) to their stem}
 
 \item{language}{The language used for stopwords and stemming}
@@ -28,6 +30,14 @@
 \item{min_freq}{an integer, specifying minimum token frequency.}
 
 \item{min_docfreq}{an integer, specifying minimum document frequency.}
+
+\item{max_freq}{an integer, specifying minimum token frequency.}
+
+\item{max_docfreq}{an integer, specifying minimum document frequency.}
+
+\item{min_char}{an integer, specifying minimum number of characters in a term}
+
+\item{max_char}{an integer, specifying maximum number of characters in a term}
 }
 \description{
 Preprocess feature
