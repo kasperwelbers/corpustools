@@ -107,7 +107,12 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
     if(weight == 'tfidf_norm') attributes(m)$weighting = c("term frequency - inverse document frequency (normalized)", "tf-idf")
     if(!weight %in% c('termfreq','tfidf', 'tfidf_norm')) attributes(m)$weighting = c(weight, weight)
   }
-  if (form == 'quanteda_dfm') m = methods::new("dfmSparse", methods::as(m, 'dgCMatrix'))
+  if (form == 'quanteda_dfm') {
+    m = methods::new("dfmSparse", methods::as(m, 'dgCMatrix'))
+    meta = tc$get_meta()
+    rownames(meta) = meta$doc_id
+    m@docvars <- as.data.frame(meta)
+  }
 
   m
 }
