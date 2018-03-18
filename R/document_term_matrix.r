@@ -109,11 +109,10 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   }
   if (form == 'quanteda_dfm') {
     m = methods::new("dfmSparse", methods::as(m, 'dgCMatrix'))
-    meta = tc$get_meta()
+    meta = as.data.frame(tc$get_meta())
     rownames(meta) = meta$doc_id
-    m@docvars <- as.data.frame(meta)
+    m@docvars <- meta
   }
-
   m
 }
 
