@@ -8,7 +8,8 @@
 #' @description
 #' Get the token and meta data.
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 active method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{get(columns=NULL, keep_df=F, as.df=F, subset=NULL, doc_id=NULL, token_id=NULL, safe_copy=T)}
@@ -58,7 +59,8 @@ NULL
 #'
 #' Depending on the purpose, the context of an analysis can be the document level or sentence level. the tCorpus$context() method offers a convenient way to get the context id of tokens for different settings.
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{data(context_level = c('document','sentence'), with_labels = T)}
@@ -83,7 +85,8 @@ NULL
 
 #' Designate column as columns with special meaning (token, lemma, POS, relation, parent)
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{set_special(token=NULL, lemma=NULL, POS=NULL, relation=NULL, parent=NULL)}
@@ -103,7 +106,8 @@ NULL
 #'
 #' Modify the token/meta data.table by setting the values of one (existing or new) column. The subset argument can be used to modify only subsets of columns, and can be a logical vector (select TRUE rows), numeric vector (indices of TRUE rows) or logical expression (e.g. pos == 'noun'). If a new column is made whie using a subset, then the rows outside of the selection are set to NA.
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{set(column, value, subset)}
@@ -142,7 +146,8 @@ NULL
 #'
 #' For factor columns, the levels can be changed directly (and by reference). This is particularly usefull for fast preprocessing (e.g., making tokens lowercase, )
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{set_levels(column, levels)}
@@ -165,7 +170,8 @@ NULL
 
 #' Change column names of data and meta data
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{set_name(oldname, newname)}
@@ -193,7 +199,8 @@ NULL
 
 #' Delete column from the data and meta data
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{delete_columns(cnames)}
@@ -233,7 +240,8 @@ NULL
 #'
 #' Note that you can also use the \link{tCorpus$feature_subset} method if you want to filter out low/high frequency tokens, but do not want to delete the rows in the tCorpus.
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{

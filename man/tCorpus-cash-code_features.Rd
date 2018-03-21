@@ -4,13 +4,6 @@
 \alias{tCorpus$code_features}
 \alias{code_features}
 \title{Code features in a tCorpus based on a search string}
-\usage{
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{
-code_features(query, code=NULL, feature='token', column='code', ...)
-}
-}
 \arguments{
 \item{query}{A character string that is a query. See \link{search_features} for documentation of the query language.}
 
@@ -34,6 +27,12 @@ code_features(query, code=NULL, feature='token', column='code', ...)
 }
 \description{
 Add a column to the token data that contains a code (the query label) for tokens that match the query (see \link{tCorpus$search_features}).
+
+\strong{Usage:}
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{code_features(query, code=NULL, feature='token', column='code', ...)}
 }
 \examples{
 tc = create_tcorpus('Anna and Bob are secretive')

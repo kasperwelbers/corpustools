@@ -4,13 +4,6 @@
 \alias{tCorpus$search_recode}
 \alias{search_recode}
 \title{Recode features in a tCorpus based on a search string}
-\usage{
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{
-search_recode(feature, new_value, keyword, condition = NA, condition_once = F)
-}
-}
 \arguments{
 \item{feature}{The feature in which to search}
 
@@ -22,4 +15,12 @@ search_recode(feature, new_value, keyword, condition = NA, condition_once = F)
 }
 \description{
 Search features (see \link{tCorpus$search_features}) and replace features with a new value
+
+\strong{Usage:}
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{
+search_recode(feature, new_value, keyword, condition = NA, condition_once = F)
+}
 }

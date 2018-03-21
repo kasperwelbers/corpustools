@@ -1,6 +1,7 @@
 #' Search for documents or sentences using Boolean queries
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{search_contexts(query, code = NULL, feature = 'token', context_level = c('document','sentence'), verbose = F)}
@@ -103,7 +104,8 @@ tCorpus$set('public', 'search_contexts', function(query, code=NULL, feature='tok
 #'
 #' See the documentation for \link[=tCorpus$search_contexts]{subset} for an explanation of the query language.
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{subset_query(query, feature = 'token', context_level = c('document','sentence'))}

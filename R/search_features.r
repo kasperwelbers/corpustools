@@ -3,9 +3,10 @@
 #' @description
 #' Search tokens in a tokenlist using Lucene-like queries. For a detailed explanation of the query language, see the details below.
 #'
-#' @usage
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
+#' \strong{Usage:}
+#'
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #' \preformatted{
 #' search_features(query, code = NA, feature = 'token',
 #'                 mode = c('unique_hits','features'), verbose = F)
@@ -160,12 +161,11 @@ tCorpus$set('public', 'search_features', function(query, code=NULL, feature='tok
 #' @description
 #' Add a column to the token data that contains a code (the query label) for tokens that match the query (see \link{tCorpus$search_features}).
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
-#' \preformatted{
-#' code_features(query, code=NULL, feature='token', column='code', ...)
-#' }
+#' \preformatted{code_features(query, code=NULL, feature='token', column='code', ...)}
 #'
 #' @param query A character string that is a query. See \link{search_features} for documentation of the query language.
 #' @param code The code given to the tokens that match the query (usefull when looking for multiple queries). Can also put code label in query with # (see details)
@@ -212,7 +212,8 @@ tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token
 #' @description
 #' Search features (see \link{tCorpus$search_features}) and replace features with a new value
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{

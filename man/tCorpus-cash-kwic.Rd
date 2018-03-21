@@ -4,16 +4,6 @@
 \alias{tCorpus$kwic}
 \alias{kwic}
 \title{Get keyword-in-context (KWIC) strings}
-\usage{
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{
-kwic(hits = NULL, i = NULL, query = NULL, code = '',
-     ntokens = 10, nsample = NA, output_feature = 'token',
-     context_levels = c('document','sentence'),
-     prettypaste = T, kw_tag = c('<','>'), ...)
-}
-}
 \arguments{
 \item{hits}{results of feature search. see \link{tCorpus$search_features}.}
 
@@ -39,6 +29,17 @@ kwic(hits = NULL, i = NULL, query = NULL, code = '',
 }
 \description{
 Create a data.frame with keyword-in-context strings for given indices (i), search results (hits) or search strings (keyword).
+
+\strong{Usage:}
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{
+kwic(hits = NULL, i = NULL, query = NULL, code = '',
+     ntokens = 10, nsample = NA, output_feature = 'token',
+     context_levels = c('document','sentence'),
+     prettypaste = T, kw_tag = c('<','>'), ...)
+}
 }
 \examples{
 tc = tokens_to_tcorpus(corenlp_tokens, sentence_col = 'sentence', token_id_col = 'id')

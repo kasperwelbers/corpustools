@@ -6,12 +6,6 @@
 \alias{set}
 \alias{set_meta}
 \title{Modify the token and meta data.tables of a tCorpus}
-\usage{
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{set(column, value, subset)}
-\preformatted{set_meta(column, value, subset)}
-}
 \arguments{
 \item{column}{Name of a new column (to create) or existing column (to transform)}
 
@@ -21,6 +15,14 @@
 }
 \description{
 Modify the token/meta data.table by setting the values of one (existing or new) column. The subset argument can be used to modify only subsets of columns, and can be a logical vector (select TRUE rows), numeric vector (indices of TRUE rows) or logical expression (e.g. pos == 'noun'). If a new column is made whie using a subset, then the rows outside of the selection are set to NA.
+}
+\details{
+\strong{Usage:}
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{set(column, value, subset)}
+\preformatted{set_meta(column, value, subset)}
 }
 \examples{
 tc = create_tcorpus(sotu_texts, doc_column = 'id')

@@ -5,7 +5,8 @@
 #' The parameters other than dtm are simply passed to the sampler but provide a workable default.
 #' See the description of that function for more information
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{

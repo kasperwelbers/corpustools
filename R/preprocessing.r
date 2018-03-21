@@ -1,6 +1,7 @@
 #' Preprocess feature
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{
@@ -58,7 +59,8 @@ tCorpus$set('public', 'preprocess', function(column='token', new_column='feature
 #'
 #' Just as in subset, it is easy to use objects and functions in the filter, including the special functions for using term frequency statistics (see documentation for \link{tCorpus$subset}).
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{feature_subset(column, new_column, subset)}
@@ -86,7 +88,7 @@ tCorpus$set('public', 'feature_subset', function(column, new_column=column, subs
     return(selfcopy)
   }
 
-  if (is(subset, 'numeric')) subset = 1:self$n %in% subset ## this can be the case if a vector of indices is passed to subset (which is not a valid call, but is allowed for convenience because it is a common way of subsetting)
+  if (methods::is(subset, 'numeric')) subset = 1:self$n %in% subset ## this can be the case if a vector of indices is passed to subset (which is not a valid call, but is allowed for convenience because it is a common way of subsetting)
 
   .subset = if (inverse) !subset else subset
 
@@ -216,7 +218,7 @@ grouped_ngrams <- function(tokens, group, n, filter=rep(T, length(tokens)), labe
     tokens = tokens[filter]
     group = if (length(group) == 1) rep(group, length(tokens)) else group[filter]
   } else {
-    if (is(tokens, 'factor')) levels(tokens) = union(levels(tokens), '')
+    if (methods::is(tokens, 'factor')) levels(tokens) = union(levels(tokens), '')
     group = if (length(group) == 1) rep(group, length(tokens)) else group
   }
 
@@ -235,7 +237,7 @@ grouped_ngrams <- function(tokens, group, n, filter=rep(T, length(tokens)), labe
       ngrams[which(filter)] = create_ngrams(tokens, group, n, label=label)
     } else {
       ngrams = create_ngrams(tokens, group, n, label=label)
-      if (!empty_is_na) ngrams[!filter] = NA
+      ngrams[!filter] = NA
     }
   }
   ngrams

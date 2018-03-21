@@ -6,15 +6,6 @@
 \alias{dfm}
 \alias{tCorpus$dfm}
 \title{Create a document term matrix.}
-\usage{
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-dtm(feature, context_level = c('document','sentence'), weight = c('termfreq','docfreq','tfidf','norm_tfidf'),
-    drop_empty_terms = T, form = c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens = NULL, subset_meta = NULL,
-    context = NULL, context_labels = T, feature_labels = T, ngrams = NA, ngram_before_subset = F)
-
-dfm(feature, ...)   ## identical, but without form argument
-}
 \arguments{
 \item{feature}{The name of the feature column}
 
@@ -44,11 +35,17 @@ dfm(feature, ...)   ## identical, but without form argument
 Create a document term matrix. The default output is a sparse matrix (Matrix, dgTMatrix). Alternatively, the dtm style from the tm and quanteda package can be used.
 
 The tCorpus$dfm method is shorthand for using quanteda's dfm (document feature matrix) class. The meta data in the tcorpus is then automatically added as docvars in the dfm.
-}
-\section{Arguments}{
 
-}
+\strong{Usage:}
 
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{dtm(feature, context_level = c('document','sentence'), weight = c('termfreq','docfreq','tfidf','norm_tfidf'),
+    drop_empty_terms = T, form = c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens = NULL, subset_meta = NULL,
+    context = NULL, context_labels = T, feature_labels = T, ngrams = NA, ngram_before_subset = F)}
+
+\preformatted{dfm(feature, ...)   ## identical, but without form argument}
+}
 \examples{
 tc = create_tcorpus(c("First text first sentence. First text first sentence.",
                    "Second text first sentence"), doc_column = 'id', split_sentences = TRUE)

@@ -4,14 +4,6 @@
 \alias{tCorpus$search_features}
 \alias{search_features}
 \title{Find tokens using a Lucene-like search query}
-\usage{
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{
-search_features(query, code = NA, feature = 'token',
-                mode = c('unique_hits','features'), verbose = F)
-             }
-}
 \arguments{
 \item{query}{A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.}
 
@@ -31,6 +23,15 @@ search_features(query, code = NA, feature = 'token',
 }
 \description{
 Search tokens in a tokenlist using Lucene-like queries. For a detailed explanation of the query language, see the details below.
+
+
+\strong{Usage:}
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+\preformatted{
+search_features(query, code = NA, feature = 'token',
+                mode = c('unique_hits','features'), verbose = F)
+             }
 }
 \details{
 Brief summary of the query language

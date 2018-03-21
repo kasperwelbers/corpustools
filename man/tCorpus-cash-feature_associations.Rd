@@ -4,13 +4,6 @@
 \alias{tCorpus$feature_associations}
 \alias{feature_associations}
 \title{Get common nearby terms given a feature query}
-\usage{
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{feature_associations(query=NULL, hits=NULL, feature='token',
-                                   window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'),
-                                   subset=NULL, subset_meta=NULL}
-}
 \arguments{
 \item{query}{A character string that is a query. See \link{search_features} for documentation of the query language.}
 
@@ -31,7 +24,14 @@
 \item{subset_meta}{A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).}
 }
 \description{
-Get common nearby terms given a feature query
+\strong{Usage:}
+}
+\details{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{feature_associations(query=NULL, hits=NULL, feature='token',
+                                   window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'),
+                                   subset=NULL, subset_meta=NULL}
 }
 \examples{
 tc = create_tcorpus(sotu_texts, doc_column = 'id')

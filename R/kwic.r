@@ -3,7 +3,8 @@
 #' @description
 #' Create a data.frame with keyword-in-context strings for given indices (i), search results (hits) or search strings (keyword).
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{

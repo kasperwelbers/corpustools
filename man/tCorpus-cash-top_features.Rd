@@ -4,11 +4,6 @@
 \alias{tCorpus$top_features}
 \alias{top_features}
 \title{Show top features}
-\usage{
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{top_features(feature, n = 10, group_by = NULL, group_by_meta = NULL, return_long = F}
-}
 \arguments{
 \item{feature}{The name of the feature}
 
@@ -21,7 +16,12 @@
 \item{return_long}{if True, results will be returned in a long format. Default is a table, but this can be inconvenient if there are many grouping variables.}
 }
 \description{
-Show top features
+\strong{Usage:}
+}
+\details{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{top_features(feature, n = 10, group_by = NULL, group_by_meta = NULL, return_long = F}
 }
 \examples{
 tc = tokens_to_tcorpus(corenlp_tokens, token_id_col = 'id')

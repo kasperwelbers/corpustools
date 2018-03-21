@@ -4,7 +4,7 @@
 \alias{require_package}
 \title{Check if package with given version exists}
 \usage{
-require_package(package, min_version = NULL, attach = F)
+require_package(package, min_version = NULL)
 }
 \arguments{
 \item{package}{The name of the package}
@@ -16,7 +16,4 @@ An error if package does not exist
 }
 \description{
 Check if package with given version exists
-}
-\examples{
-require_package('corpustools', '0.1')
 }

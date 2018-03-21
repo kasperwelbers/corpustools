@@ -1,6 +1,7 @@
 #' Get common nearby terms given a feature query
 #'
-#' @usage
+#' \strong{Usage:}
+#'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{feature_associations(query=NULL, hits=NULL, feature='token',

@@ -4,10 +4,6 @@
 \alias{tCorpus$deduplicate}
 \alias{deduplicate}
 \title{Deduplicate documents}
-\usage{
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-\preformatted{deduplicate(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=F)}
-}
 \arguments{
 \item{feature}{the column name of the feature that is to be used for the comparison.}
 
@@ -40,6 +36,11 @@ Deduplicate documents based on similarity scores. Can be used to filter out iden
 }
 \details{
 Note that deduplication occurs by reference (\link{tCorpus_modify_by_reference}) unless copy is set to TRUE.
+
+\strong{Usage:}
+
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+\preformatted{deduplicate(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=F)}
 }
 \examples{
 d = data.frame(text = c('a b c d e',
