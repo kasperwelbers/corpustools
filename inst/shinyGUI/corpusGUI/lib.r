@@ -127,12 +127,18 @@ tokensInputUI <- function(condition='true'){
 ## ui: demoInputUI
 ## server: loadDemoInput
 
+tcInEnv <- function() {
+  tcnames = sapply(names(.GlobalEnv), function(x) is(.GlobalEnv[[x]], 'tCorpus'))
+  tcnames = names(tcnames)[tcnames]
+  if (length(tcnames) == 0) tcnames = 'No tCorpus available'
+  as.list(tcnames)
+}
+
 ## function that adds user interface elements if the condition is TRUE.
 envInputUI <- function(condition='true'){
-  tcnames = names(.GlobalEnv)[sapply(.GlobalEnv, is, 'tCorpus')]
   conditionalPanel(
     condition = condition,
-    selectInput('env_tc', label = 'tCorpus', choices=list(tcnames), multiple = F)
+    selectInput('env_tc', label = 'tCorpus', choices=tcInEnv(), multiple = F)
   )
 }
 
@@ -172,7 +178,7 @@ loadData <- function(session, input, output){
   if(input$datatype == 'text'){
     dm = readr::read_csv(input$text$datapath)
     dm = dm[,colnames(dm) %in% c(input$text_docid_col, input$text_text_col, input$text_meta_col)]
-    .TCORPUS$tc = corpustools::create_tcorpus(dm, doc_column = input$text_docid_col, text_columns = input$text_text_col, split_sentences=T)
+    .DATA$tc = corpustools::create_tcorpus(dm, doc_column = input$text_docid_col, text_columns = input$text_text_col, split_sentences=T)
   }
 
   if(input$datatype == 'tokens'){
@@ -183,90 +189,93 @@ loadData <- function(session, input, output){
       meta = meta[,unique(c(input$meta_docid_col, input$meta_meta_col)), drop=F]
       colnames(meta)[input$meta_docid_col] = input$tokens_docid_col
     } else meta = NULL
-    .TCORPUS$tc = corpustools::tokens_to_tcorpus(tokens, doc_col = input$tokens_docid_col, token_id_col = input$tokens_tokenid_col,
+
+    .DATA$tc = corpustools::tokens_to_tcorpus(tokens, doc_col = input$tokens_docid_col, token_id_col = input$tokens_tokenid_col,
                                           sentence_col = input$tokens_sentence_col, meta=meta)
 
-
-    if(!input$tokens_token_col == '[not used]') .TCORPUS$tc$set_name(input$tokens_word_col, 'token')
-    if(!input$tokens_lemma_col == '[not used]') .TCORPUS$tc$set_name(input$tokens_lemma_col, 'lemma')
-    if(!input$tokens_pos_col == '[not used]') .TCORPUS$tc$set_name(input$tokens_pos_col, 'POS')
-    if(!input$tokens_parent_col == '[not used]') .TCORPUS$tc$set_name(input$tokens_parent_col, 'parent')
-    if(!input$tokens_relation_col == '[not used]') .TCORPUS$tc$set_name(input$tokens_relation_col, 'relation')
+    if(!input$tokens_token_col == '[not used]') .DATA$tc$set_name(input$tokens_token_col, 'token')
+    if(!input$tokens_lemma_col == '[not used]') .DATA$tc$set_name(input$tokens_lemma_col, 'lemma')
+    if(!input$tokens_pos_col == '[not used]') .DATA$tc$set_name(input$tokens_pos_col, 'POS')
+    if(!input$tokens_parent_col == '[not used]') .DATA$tc$set_name(input$tokens_parent_col, 'parent')
+    if(!input$tokens_relation_col == '[not used]') .DATA$tc$set_name(input$tokens_relation_col, 'relation')
   }
 
 
   if (input$datatype == 'env') {
-    print(11111)
-    print(input$env_tc)
-    if (!is.null(input$env_tc)) .TCORPUS = .GlobalEnv[[input$env_tc]]
+    if (is.null(input$env_tc)) return(NULL)
+    if (input$env_tc == 'No tCorpus available') return(NULL)
+    .DATA$tc = .GlobalEnv[[input$env_tc]]
   }
 
+  .GlobalEnv[['.TCORPUS']] = .DATA$tc
+  updateSelectInput(session, 'env_tc', choices = tcInEnv())
   updatePosFilter(session)
   updateDocfreqFilter(session)
   preprocessTokens(session, input, output)
 }
 
 calculateTokenStats <- function(){
-  .TCORPUS$tc$feature_stats('feature')
+  .DATA$tc$feature_stats('feature')
 }
 
 ############################################################################################################
 ########################################## corpus parameters ###############################################
-## ui: textCorpusParametersUI; tokensCorpusParametersUI; generalCorpusParametersUI
+## ui: preprocessParametersUI
 ## server: updatePosFilter; updateDocfreqFilter
 
 ## ui's
-textCorpusParametersUI <- function(condition='true'){
-  conditionalPanel(
-    condition = condition,
-    selectInput('language', 'Language', names(corpustools::stopwords_list), multiple=F, selected='english'),
-    selectInput('filters', 'filter/transform terms',
-                list('remove stopwords'='stopwords', 'lowercase'='lowercase', 'remove numbers'='numbers','remove punctuation'='punctuation','stem words'='stem'),
-                multiple=T, selected=c('stopwords','lowercase','numbers','punctuation','stem')),
-    br()
-  )
-}
-
-tokensCorpusParametersUI <- function(condition='true'){
-  conditionalPanel(
-    condition = condition,
-    selectInput('filter_input', 'Input', c('token','lemma'), multiple=F, selected='lemma'),
-    selectInput('language', 'Language', names(corpustools::stopwords_list), multiple=F, selected='english'),
-    selectInput('filters', 'filter/transform terms',
-                list('remove stopwords'='stopwords', 'lowercase'='lowercase', 'remove numbers'='numbers','remove punctuation'='punctuation','stem words'='stem'),
-                multiple=T, selected=c('stopwords','lowercase','numbers','punctuation')),
+preprocessParametersUI <- function(){
+  shiny::fluidPage(
+    shiny::fluidRow(
+      shiny::column(width=4,
+                    selectInput('pp_input', 'Input feature', c('token','lemma'), multiple=F, selected='lemma'),
+                    textInput('pp_output', 'Output feature', value = 'feature'),
+                    selectInput('language', 'Language', names(corpustools::stopwords_list), multiple=F, selected='english'),
+                    br(),
+                    preprocessButton()
+      ),
+      shiny::column(width=4,
+                    checkboxGroupInput('transforms', 'Transform',
+                                list('lowercasing'='lowercase', 'stemming'='stem', 'remove accents'='as_ascii'),
+                                selected=c('lowercase')),
+                    br(),
+                    sliderInput('ngrams', label='ngrams', value=1, min=1, max=4, step=1, ticks = F)
+      ),
+      shiny::column(width=4,
+                    checkboxGroupInput('filters', 'Filter',
+                                       list('stopwords'='stopwords', 'numbers'='numbers','punctuation'='punctuation'),
+                                       selected=c('stopwords','numbers','punctuation')),
+                    br(),
+                    br(),
+                    sliderInput('docfreq', label = 'document frequency', step=1, min = 1, max=1, value=c(1,1)),
+                    br(),
+                    sliderInput('wordlength', label = 'word length', step=1, min=1, max=100, value=c(1, 100)),
+                    br(),
+                    selectInput('posfilter', 'Part-of-speech filter', choices=c(), multiple = T)
+      )
+    ),
     br(),
-    htmlOutput('poswarning'),
-    selectInput('posfilter', 'Part-of-speech filter', choices=c(), multiple = T)
-  )
-}
-
-generalCorpusParametersUI <- function(){
-  list(
-    br(),
-    sliderInput('docfreq', label = 'min/max document frequency percentage', step=1, min = 1, max=1, value=c(1,1)),
-    br(),
-    sliderInput('wordlength', label = 'min/max word length', step=1, min=1, max=100, value=c(1, 100)),
-    br(),
-    sliderInput('ngrams', label='ngrams', value=1, min=1, max=4, step=1)
+    shiny::verbatimTextOutput('preprocess_syntax')
   )
 }
 
 ## update filters
 updatePosFilter <- function(session){
   updateSelectInput(session, 'posfilter', choices = c())
-  if('POS' %in% colnames(.TCORPUS$tc$names)){
-    postags = unique(.TCORPUS$tc$get_levels('POS'))
+  print(.DATA$tc$names)
+  if('POS' %in% .DATA$tc$names){
+    postags = unique(.DATA$tc$get_levels('POS'))
     if(length(postags) > 100) {
       output$poswarning = renderText('<div style="color:#FF0000">Too many unique pos values</div>')
     } else {
+      print(postags)
       updateSelectInput(session, 'posfilter', choices = postags, selected = postags)
     }
   }
 }
 
 updateDocfreqFilter <- function(session){
-  n = .TCORPUS$tc$n_meta
+  n = .DATA$tc$n_meta
   updateSliderInput(session, 'docfreq', min=1, max=n, value=c(1,n))
 }
 
@@ -285,18 +294,53 @@ preprocessButton <- function(){
 }
 
 preprocessTokens <- function(session, input, output, d){
-  if (is.null(.TCORPUS$tc)) return(NULL)
-  min_docfreq = if (input$docfreq[1] > 1) input$docfreq[1] else NULL
-  max_docfreq = if (input$docfreq[2] < .TCORPUS$tc$n_meta) input$docfreq[2] else NULL
+  if (is.null(.DATA$tc)) return(NULL)
 
-  .TCORPUS$tc$preprocess('token','feature', language=input$language, use_stemming='stem' %in% input$filters, lowercase='lowercase' %in% input$filters,
-                  ngrams=input$ngrams, remove_punctuation='punctuation' %in% input$filters, remove_stopwords='stopwords' %in% input$filters,
-                  remove_numbers='numbers' %in% input$filters, min_docfreq=min_docfreq, max_docfreq=max_docfreq, min_char=input$wordlength[1], max_char=input$wordlength[2])
+  output$preprocess_syntax = renderText(preprocessSyntax(input))
+  evalSyntax(preprocessSyntax(input))
+
+
+  #min_docfreq = if (input$docfreq[1] > 1) input$docfreq[1] else NULL
+  #max_docfreq = if (input$docfreq[2] < .DATA$tc$n_meta) input$docfreq[2] else NULL
+  #min_char = if(input$wordlength[1] > 1) input$wordlength[1] else NULL
+  #max_char = if(input$wordlength[2] < 100) input$wordlength[2] else NULL
+
+  #.DATA$tc$preprocess(input$pp_input, input$pp_output, language=input$language, use_stemming='stem' %in% input$transforms, lowercase='lowercase' %in% input$transforms, as_ascii='as_ascii' %in% input$transforms,
+  #                ngrams=input$ngrams, remove_punctuation='punctuation' %in% input$filters, remove_stopwords='stopwords' %in% input$filters,
+  #                remove_numbers='numbers' %in% input$filters, min_docfreq=min_docfreq, max_docfreq=max_docfreq, min_char=input$wordlength[1], max_char=input$wordlength[2])
   updateGeneralOutput(output)
+
+}
+
+preprocessSyntax <- function(input) {
+  printSyntax('preprocess',
+               fline(
+                 param('column', !input$pp_input == 'token', input$pp_input),
+                 param('new_column', !input$pp_output == 'feature', input$pp_output),
+                 param('language', !input$language == 'english', input$language)
+               ),
+               fline(
+                 param('use_stemming', 'stem' %in% input$transforms, T),
+                 param('lowercase', 'lowercase' %in% input$transforms, T),
+                 param('as_ascii', 'as_ascii' %in% input$transforms, T),
+                 param('ngrams', input$ngrams > 1, input$ngrams)
+               ),
+               fline(
+                 param('remove_punctuation', 'punctuation' %in% input$filters, T),
+                 param('remove_stopwords', 'stopwords' %in% input$filters, T),
+                 param('remove_numbers', 'numbers' %in% input$filters, T)
+               ),
+               fline(
+                 param('min_docfreq', input$docfreq[1] > 1, input$docfreq[1]),
+                 param('max_docfreq', input$docfreq[2] < .DATA$tc$n_meta, input$docfreq[2]),
+                 param('min_char', input$wordlength[1] > 1, input$wordlength[1]),
+                 param('max_char', input$wordlength[2] < 100, input$wordlength[2])
+               )
+              )
 }
 
 createDTM <- function(input, tokens){
-  if(is.null(.TCORPUS$text) & is.null(tokens)) return(NULL)
+  if(is.null(.DATA$text) & is.null(tokens)) return(NULL)
   ## note that the tokens used here is the result of getTokens(), which gives the already filtered version of d$tokens.
   ## d$text can be used directly because there is no preprocessing involved (this all happens below in RTextTools::create_matrix)
 
@@ -325,7 +369,7 @@ createDTM <- function(input, tokens){
 
 matchMeta <- function(input, dtm){
   if(is.null(dtm)) return(NULL)
-  .TCORPUS$meta[match(rownames(dtm), .TCORPUS$meta$doc_id),]
+  .DATA$meta[match(rownames(dtm), .DATA$meta$doc_id),]
 }
 
 
@@ -402,8 +446,8 @@ plotCompareUI <- function(condition='true'){
 ## server: plotWordcloud; plotSemnet
 
 prepareWordcloud <- function(input){
-  if(is.null(.TCORPUS$tc)) return(NULL)
-  ts = .TCORPUS$tc$feature_stats('feature')
+  if(is.null(.DATA$tc)) return(NULL)
+  ts = .DATA$tc$feature_stats('feature')
   ts = head(ts[order(-ts$termfreq),], input$wordcloud_nterms)
   list(termfreq=data.frame(term=ts$term, freq=as.numeric(ts$termfreq)),
        wordcloud_range = input$wordcloud_range)
@@ -438,7 +482,7 @@ prepareSemnet <- function(input, dtm, tokens){
 
 plotWordcloud <- function(actiondata){
   if(is.null(actiondata$termfreq)) return(NULL)
-  wordcloud(actiondata$termfreq$term, actiondata$termfreq$freq, scale = rev(actiondata$wordcloud_range),
+  wordcloud::wordcloud(actiondata$termfreq$term, actiondata$termfreq$freq, scale = rev(actiondata$wordcloud_range),
             min.freq = 1, max.words = Inf, random.order = FALSE, rot.per = 0.15, colors = brewer.pal(6, "YlGnBu"))
 }
 
@@ -468,7 +512,7 @@ plotParametersUI <- function(){
 
 updateGeneralOutput <- function(output){
   output$meta <- renderDataTable({
-    if (is.null(.TCORPUS$tc)) NULL else .TCORPUS$tc$get_meta(safe_copy=F)
+    if (is.null(.DATA$tc)) NULL else .DATA$tc$get_meta(safe_copy=F)
   }, options = list(autoWidth = F, scrollX=T, columnDefs = list(list(
     targets = '_all',
     render = JS("function(data, type, row, meta) {", "return type === 'display' && data.length > 20 ?",
@@ -477,21 +521,53 @@ updateGeneralOutput <- function(output){
 
   output$tokens <- renderDataTable({
 
-    if (is.null(.TCORPUS$tc)) NULL else .TCORPUS$tc$get(safe_copy=F)
+    if (is.null(.DATA$tc)) NULL else .DATA$tc$get(safe_copy=F)
   }, options = list(autoWidth = F, scrollX=T), rownames=F)
 
   output$summary <- renderText({
-    if (is.null(.TCORPUS$tc)) NULL else {
+    if (is.null(.DATA$tc)) NULL else {
       sprintf('<h4>documents: %s</h4>
                  <h4>tokens: %s</h4>
                  <h4>terms : %s</h4>
-                 <br>', .TCORPUS$tc$n_meta, .TCORPUS$tc$n,  length(.TCORPUS$tc$get_levels('feature')))
+                 <br>', .DATA$tc$n_meta, .DATA$tc$n,  length(.DATA$tc$get_levels('feature')))
     }
   })
   output$termstats <- renderDataTable({
-    d = if (is.null(.TCORPUS$tc)) NULL else .TCORPUS$tc$feature_stats('feature')
+    d = if (is.null(.DATA$tc)) NULL else .DATA$tc$feature_stats('feature')
     rownames(d) = NULL
     as.data.table(d[,c('term','characters','number','nonalpha','termfreq','docfreq')])
   }, options = list(autoWidth = F, scrollX=T), rownames=F)
 
+}
+
+
+###################################################################################
+################################# PRINT SYNTAX ####################################
+printSyntax <- function(f, ..., tc_name='tc') {
+  l = unlist(list(...))
+  offset = rep(' ', nchar(f) + nchar(tc_name) + 2)
+  offset = paste(offset, collapse='')
+  if (!is.null(l)) {
+    l = paste(l, collapse= paste0(',\n', offset))
+  } else l = ''
+  paste0('tc$', f, '(', l, ')')
+}
+
+fline <- function(...) {
+  l = unlist(list(...))
+  if (is.null(l)) return(NULL)
+  paste(l, collapse=', ')
+}
+
+param <- function(parameter, condition, value=T) {
+  if (is(value, 'character')) value = paste0('"', value, '"')
+  if (condition) paste0(parameter,' = ',value) else NULL
+}
+
+
+evalSyntax <- function(str){
+  print(str)
+  evalstring = paste0('.DATA$', str)
+  print(evalstring)
+  eval(parse(text=evalstring))
 }

@@ -4,6 +4,10 @@
 \alias{tCorpus$compare_subset}
 \alias{compare_subset}
 \title{Compare vocabulary of a subset of a tCorpus to the rest of the tCorpus}
+\usage{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+\preformatted{compare_subset(feature, subset_x=NULL, subset_meta_x=NULL, query_x=NULL, query_feature='token', smooth=0.1, min_ratio=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence'))}
+}
 \arguments{
 \item{feature}{the column name of the feature that is to be compared}
 
@@ -31,12 +35,6 @@ A vocabularyComparison object
 \description{
 Compare vocabulary of a subset of a tCorpus to the rest of the tCorpus
 }
-\section{Usage}{
-
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-\preformatted{compare_subset(feature, subset_x=NULL, subset_meta_x=NULL, query_x=NULL, query_feature='token', smooth=0.1, min_ratio=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence'))}
-}
-
 \examples{
 tc = create_tcorpus(sotu_texts, doc_column = 'id')
 

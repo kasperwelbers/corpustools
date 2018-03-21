@@ -6,6 +6,12 @@
 \alias{set_levels}
 \alias{set_meta_levels}
 \title{Change levels of factor columns}
+\usage{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{set_levels(column, levels)}
+\preformatted{set_meta_levels(column, levels)}
+}
 \arguments{
 \item{column}{the name of the column}
 
@@ -14,14 +20,6 @@
 \description{
 For factor columns, the levels can be changed directly (and by reference). This is particularly usefull for fast preprocessing (e.g., making tokens lowercase, )
 }
-\section{Usage}{
-
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{set_levels(column, levels)}
-\preformatted{set_meta_levels(column, levels)}
-}
-
 \examples{
 tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'))
 

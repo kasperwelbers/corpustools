@@ -1,7 +1,7 @@
 
 #' Calculate the similarity of documents
 #'
-#' @section Usage:
+#' @usage
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #' \preformatted{compare_documents(feature='token', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL))}
 #'
@@ -32,7 +32,7 @@
 #' g = tc$compare_documents(date_col = 'date', hour_window = c(0,36))
 #' igraph::get.data.frame(g)
 tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
-  if (!requireNamespace('RNewsflow', quietly = T)) stop('RNewsflow package needs to be installed in order to use document comparison methods')
+  require_package('RNewsflow')
   weight = match.arg(weight)
   from_subset = self$eval_meta(substitute(from_subset), parent.frame())
   to_subset = self$eval_meta(substitute(to_subset), parent.frame())
@@ -45,7 +45,7 @@ tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NU
 #'
 #' Note that deduplication occurs by reference (\link{tCorpus_modify_by_reference}) unless copy is set to TRUE.
 #'
-#' @section Usage:
+#' @usage
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #' \preformatted{deduplicate(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=F)}
 #'
@@ -80,7 +80,7 @@ tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NU
 #'                        copy=TRUE)
 #' dedup$get_meta()
 tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=F){
-  if (!requireNamespace('RNewsflow', quietly = T)) stop('RNewsflow package needs to be installed in order to use document comparison methods')
+  require_package('RNewsflow')
 
   weight = match.arg(weight)
   match.arg(feature, self$feature_names)

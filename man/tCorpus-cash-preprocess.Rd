@@ -4,6 +4,16 @@
 \alias{tCorpus$preprocess}
 \alias{preprocess}
 \title{Preprocess feature}
+\usage{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{
+preprocess(column, new_column = column,
+           lowercase = T, ngrams = 1, ngram_context=c('document', 'sentence'),
+           as_ascii = F, remove_punctuation = T, remove_stopwords = F, use_stemming = F,
+           language = 'english')
+           }
+}
 \arguments{
 \item{column}{the column containing the feature to be used as the input}
 
@@ -42,18 +52,6 @@
 \description{
 Preprocess feature
 }
-\section{Usage}{
-
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{
-preprocess(column, new_column = column,
-           lowercase = T, ngrams = 1, ngram_context=c('document', 'sentence'),
-           as_ascii = F, remove_punctuation = T, remove_stopwords = F, use_stemming = F,
-           language = 'english')
-           }
-}
-
 \examples{
 tc = create_tcorpus('I am a SHORT example sentence! That I am!')
 

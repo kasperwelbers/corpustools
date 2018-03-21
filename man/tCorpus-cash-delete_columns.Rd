@@ -6,20 +6,18 @@
 \alias{delete_columns}
 \alias{delete_meta_columns}
 \title{Delete column from the data and meta data}
+\usage{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{delete_columns(cnames)}
+\preformatted{delete_meta_columns(cnames)}
+}
 \arguments{
 \item{cnames}{the names of the columns to delete}
 }
 \description{
 Delete column from the data and meta data
 }
-\section{Usage}{
-
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{delete_columns(cnames)}
-\preformatted{delete_meta_columns(cnames)}
-}
-
 \examples{
 d = data.frame(text = c('Text one','Text two','Text three'),
                date = c('2010-01-01','2010-01-01','2012-01-01'))

@@ -4,6 +4,11 @@
 \alias{tCorpus$set_special}
 \alias{set_special}
 \title{Designate column as columns with special meaning (token, lemma, POS, relation, parent)}
+\usage{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{set_special(token=NULL, lemma=NULL, POS=NULL, relation=NULL, parent=NULL)}
+}
 \arguments{
 \item{token}{Name of the column that will be designated as the token, and renamed to 'token'}
 
@@ -18,10 +23,3 @@
 \description{
 Designate column as columns with special meaning (token, lemma, POS, relation, parent)
 }
-\section{Usage}{
-
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{set_special(token=NULL, lemma=NULL, POS=NULL, relation=NULL, parent=NULL)}
-}
-

@@ -27,7 +27,7 @@ Imports:
     DT
 Suggests:
     testthat,
-    quanteda (>= 0.99.9),
+    quanteda (>= 1.1.1),
     tm (>= 0.6),
     topicmodels,
     RNewsflow,

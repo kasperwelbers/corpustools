@@ -4,6 +4,11 @@
 \alias{tCorpus$subset_query}
 \alias{subset_query}
 \title{Subset tCorpus token data using a query}
+\usage{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{subset_query(query, feature = 'token', context_level = c('document','sentence'))}
+}
 \arguments{
 \item{query}{A character string that is a query. See \link{tCorpus$search_contexts} for query syntax.}
 
@@ -18,13 +23,6 @@ A convenience function that searches for contexts (documents, sentences), and us
 
 See the documentation for \link[=tCorpus$search_contexts]{subset} for an explanation of the query language.
 }
-\section{Usage}{
-
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{subset_query(query, feature = 'token', context_level = c('document','sentence'))}
-}
-
 \examples{
 text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)

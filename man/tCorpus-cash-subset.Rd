@@ -6,6 +6,15 @@
 \alias{subset}
 \alias{subset_meta}
 \title{Subset a tCorpus}
+\usage{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{
+subset(subset = NULL, subset_meta = NULL,
+       window = NULL, copy = F)
+subset_meta(subset = NULL, copy = F)
+             }
+}
 \arguments{
 \item{subset}{logical expression indicating rows to keep in the tokens data.}
 
@@ -29,17 +38,6 @@ The subset_meta() method is an alternative for using subset(subset_meta = ...), 
 
 Note that you can also use the \link{tCorpus$feature_subset} method if you want to filter out low/high frequency tokens, but do not want to delete the rows in the tCorpus.
 }
-\section{Usage}{
-
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{
-subset(subset = NULL, subset_meta = NULL,
-       window = NULL, copy = F)
-subset_meta(subset = NULL, copy = F)
-             }
-}
-
 \examples{
 tc = create_tcorpus(sotu_texts, doc_column = 'id')
 tc$n ## original number of tokens

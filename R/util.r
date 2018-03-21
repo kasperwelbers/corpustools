@@ -1,3 +1,23 @@
+#' Check if package with given version exists
+#'
+#' @param package The name of the package
+#' @param min_version The minimum version
+#'
+#' @return An error if package does not exist
+#'
+#' @examples
+#' require_package('corpustools', '0.1')
+require_package <- function(package, min_version = NULL, attach=F) {
+  version_string = if (!is.null(min_version)) sprintf(' (>= %s)', min_version) else ''
+  e = sprintf('%s package%s needs to be installed to use this function', package, version_string)
+  if(!requireNamespace(package, quietly = T)) stop(e)
+  if (!is.null(min_version)) {
+    version_comp = utils::compareVersion(as.character(utils::packageVersion(package)), min_version)
+    if (version_comp < 0) stop(e)
+  }
+  if (attach) require(package, character.only = T)
+}
+
 local_id <- function(group, i) {
   ## given global indices per group, make them locally unique
   ## has to be sorted on order(group, i)

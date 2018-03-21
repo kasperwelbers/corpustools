@@ -4,6 +4,11 @@
 \alias{tCorpus$feature_subset}
 \alias{feature_subset}
 \title{Filter features}
+\usage{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{feature_subset(column, new_column, subset)}
+}
 \arguments{
 \item{column}{the column containing the feature to be used as the input}
 
@@ -16,13 +21,6 @@ Similar to using \link{tCorpus$subset}, but instead of deleting rows it only set
 
 Just as in subset, it is easy to use objects and functions in the filter, including the special functions for using term frequency statistics (see documentation for \link{tCorpus$subset}).
 }
-\section{Usage}{
-
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{feature_subset(column, new_column, subset)}
-}
-
 \examples{
 tc = create_tcorpus('a a a a b b b c c')
 

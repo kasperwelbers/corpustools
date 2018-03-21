@@ -16,6 +16,11 @@ CharacterVector ngrams(CharacterVector tokens, CharacterVector group, int n, std
     last_group = std::string(group[i]);
 
     out[i] = tokens[i];
+    if (CharacterVector::is_na(out[i])) {
+      local_i += 1;
+      continue;
+    }
+
     for (int j = 1; j < n; j++)
     {
       if ((local_i - j) < 0){

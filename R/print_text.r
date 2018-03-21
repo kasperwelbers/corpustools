@@ -1,6 +1,6 @@
 #' Print tokens as text
 #'
-#' @section Usage:
+#' @usage
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{

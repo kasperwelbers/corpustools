@@ -2,9 +2,6 @@ source('lib.r')
 
 
 shinyServer(function(input, output, session) {
-  session$onSessionEnded(function() {
-    .TCORPUS = NULL
-  })
 
   ## update input parameters after selecting a file, using the column names to provide the options
   observeEvent(input$text,

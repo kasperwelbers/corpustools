@@ -3,7 +3,7 @@
 #' @description
 #' Search tokens in a tokenlist using Lucene-like queries. For a detailed explanation of the query language, see the details below.
 #'
-#' @section Usage:
+#' @usage
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{
@@ -160,7 +160,7 @@ tCorpus$set('public', 'search_features', function(query, code=NULL, feature='tok
 #' @description
 #' Add a column to the token data that contains a code (the query label) for tokens that match the query (see \link{tCorpus$search_features}).
 #'
-#' @section Usage:
+#' @usage
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{
@@ -212,7 +212,7 @@ tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token
 #' @description
 #' Search features (see \link{tCorpus$search_features}) and replace features with a new value
 #'
-#' @section Usage:
+#' @usage
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{

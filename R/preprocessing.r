@@ -1,6 +1,6 @@
 #' Preprocess feature
 #'
-#' @section Usage:
+#' @usage
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{
@@ -46,7 +46,7 @@
 #' tc$preprocess('token', 'preprocessed_4', ngrams = 3)
 #'
 #' tc$get()
-tCorpus$set('public', 'preprocess', function(column='token', new_column=column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, remove_numbers=F, use_stemming=F, language='english', min_freq=NULL, min_docfreq=NULL, max_freq=NULL, max_docfreq=NULL, min_char=NULL, max_char=NULL) {
+tCorpus$set('public', 'preprocess', function(column='token', new_column='feature', lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, remove_numbers=F, use_stemming=F, language='english', min_freq=NULL, min_docfreq=NULL, max_freq=NULL, max_docfreq=NULL, min_char=NULL, max_char=NULL) {
   column = match.arg(column, self$names)
   invisible(preprocess_feature(self, column=column, new_column=new_column, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, remove_numbers=remove_numbers, use_stemming=use_stemming, language=language, min_freq=min_freq, min_docfreq=min_docfreq, max_freq=max_freq, max_docfreq=max_docfreq, min_char=min_char, max_char=max_char))
 })
@@ -58,7 +58,7 @@ tCorpus$set('public', 'preprocess', function(column='token', new_column=column, 
 #'
 #' Just as in subset, it is easy to use objects and functions in the filter, including the special functions for using term frequency statistics (see documentation for \link{tCorpus$subset}).
 #'
-#' @section Usage:
+#' @usage
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{feature_subset(column, new_column, subset)}
@@ -137,6 +137,7 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
 #' @param max_docfreq an integer, specifying minimum document frequency.
 #' @param min_char an integer, specifying minimum number of characters in a term
 #' @param max_char an integer, specifying maximum number of characters in a term
+#' @param ngram_skip_empty if ngrams are used, determines whether empty (filtered out) terms are skipped (i.e. c("this", NA, "test"), becomes "this_test") or
 #'
 #' @examples
 #' tokens = c('I', 'am', 'a', 'SHORT', 'example', 'sentence', '!')
@@ -148,7 +149,7 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
 #' preprocess_tokens(tokens, remove_stopwords = TRUE, use_stemming = TRUE)
 #' preprocess_tokens(tokens, context = NA, ngrams = 3)
 #' @export
-preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=T, as_ascii=F, remove_punctuation=T, remove_stopwords=F, remove_numbers=F, min_freq=NULL, min_docfreq=NULL, max_freq=NULL, max_docfreq=NULL, min_char=NULL, max_char=NULL){
+preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=T, as_ascii=F, remove_punctuation=T, remove_stopwords=F, remove_numbers=F, min_freq=NULL, min_docfreq=NULL, max_freq=NULL, max_docfreq=NULL, min_char=NULL, max_char=NULL, ngram_skip_empty=T){
   language = match.arg(language, choices=c('danish','dutch','english','finnish','french','german','hungarian','italian','norwegian','porter','portuguese','romanian','russian','spanish','swedish','turkish'))
   if (!methods::is(x, 'factor')) x = fast_factor(x)
   if (replace_whitespace) levels(x) = gsub(' ', '_', levels(x), fixed=T)
@@ -167,7 +168,7 @@ preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=
 
   if (ngrams > 1) {
     if (is.null(context)) stop('For ngrams, the "context" argument has to be specified. If no context is available, "context" can be NA')
-    x = grouped_ngrams(x, context, ngrams)
+    x = grouped_ngrams(x, context, ngrams, skip_empty=ngram_skip_empty)
   }
 
   if (!is.null(min_docfreq) | !is.null(max_docfreq)) {
@@ -179,7 +180,6 @@ preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=
       freq_table = unique(data.frame(doc_id=context, x=x))
     }
     freq_table = table(droplevels(freq_table$x))
-    print(max_docfreq)
     levels(x)[!levels(x) %in% x_filter(freq_table, min=min_docfreq, max=max_docfreq)] = NA
   }
 
@@ -203,24 +203,40 @@ preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=
 
 create_ngrams <- function(tokens, group, n, label=T, sep = '/', empty='') {
   if (!length(tokens) == length(group)) stop("tokens has to be of same length as group")
+
   ng = .Call('_corpustools_ngrams', PACKAGE = 'corpustools', tokens, group, n, sep, empty)
   ng = fast_factor(ng)
   if (label) return(ng) else return(as.numeric(ng))
 }
 
-grouped_ngrams <- function(tokens, group, n, filter=rep(T, length(tokens)), label=T){
+grouped_ngrams <- function(tokens, group, n, filter=rep(T, length(tokens)), label=T, skip_empty=T){
   filter = filter & !is.na(tokens)
-  tokens = tokens[filter]
-  group = if (length(group) == 1) rep(group, length(tokens)) else group[filter]
+
+  if (skip_empty) {
+    tokens = tokens[filter]
+    group = if (length(group) == 1) rep(group, length(tokens)) else group[filter]
+  } else {
+    if (is(tokens, 'factor')) levels(tokens) = union(levels(tokens), '')
+    group = if (length(group) == 1) rep(group, length(tokens)) else group
+  }
 
   if (label) {
-    ngrams = as.factor(rep(NA, length(filter)))
-    ng = create_ngrams(tokens, group, n, label=label)
-    levels(ngrams) = levels(ng)
-    ngrams[which(filter)] = ng
+    if (skip_empty) {
+      ngrams = as.factor(rep(NA, length(filter)))
+      ng = create_ngrams(tokens, group, n, label=label)
+      levels(ngrams) = levels(ng)
+      ngrams[which(filter)] = ng
+    } else {
+      ngrams = create_ngrams(tokens, group, n, label=label)
+    }
   } else {
-    ngrams = vector('numeric', length(filter))
-    ngrams[which(filter)] = create_ngrams(tokens, group, n, label=label)
+    if (skip_empty) {
+      ngrams = vector('numeric', length(filter))
+      ngrams[which(filter)] = create_ngrams(tokens, group, n, label=label)
+    } else {
+      ngrams = create_ngrams(tokens, group, n, label=label)
+      if (!empty_is_na) ngrams[!filter] = NA
+    }
   }
   ngrams
 }

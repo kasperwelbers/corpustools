@@ -13,33 +13,16 @@ sidebar <- shinydashboard::dashboardSidebar(width = 300,
     envInputUI(condition = "input.datatype == 'env'"),
 
     br(),
-    loadDataButton(),
-
-    br(), hr(),
-    ############################# CORPUS PARAMETERS ################################
-    h3('Preprocess'),
-    textCorpusParametersUI('input.datatype == "text"'),
-    tokensCorpusParametersUI('input.datatype == "tokens"'),
-    generalCorpusParametersUI(),
-    preprocessButton()
+    loadDataButton()
   )
 )
 
-
-
 ## add codebook box
 body <- shinydashboard::dashboardBody(
-  shiny::fluidRow(
-    shinydashboard::tabBox(width = 5,
-      shiny::tabPanel(title = 'Meta',
-               DT::dataTableOutput('meta')
-      ),
-      shiny::tabPanel(title = 'Tokens',
-               DT::dataTableOutput('tokens')
-      ),
-      shiny::tabPanel(title = 'Features',
-               shiny::htmlOutput('summary'),
-               DT::dataTableOutput('termstats')
+
+    shinydashboard::tabBox(width = 6, height = 560,
+      shiny::tabPanel(title = 'Preprocessing',
+               preprocessParametersUI()
       ),
       shiny::tabPanel(title = 'Action',
                shiny::radioButtons('actions', 'Action:', list('Wordcloud'='wordcloud', 'Semantic network'='semnet', 'Compare corpora'='compare'), selected='wordcloud', inline=T),
@@ -51,14 +34,23 @@ body <- shinydashboard::dashboardBody(
                shiny::actionButton('plotaction', 'Perform action')
       )
     ),
-    shinydashboard::tabBox(width=7,
+    shinydashboard::tabBox(width=6, height=500,
+      shiny::tabPanel(title = 'Tokens',
+                      DT::dataTableOutput('tokens')
+      ),
+      shiny::tabPanel(title = 'Meta',
+                      DT::dataTableOutput('meta')
+      ),
+      shiny::tabPanel(title = 'Features',
+                      shiny::htmlOutput('summary'),
+                      DT::dataTableOutput('termstats')
+      ),
       shiny::tabPanel(title = "Plot", solidHeader = TRUE,
                shiny::htmlOutput('actionmessage'),
                plotParametersUI(),
                plotOutput('actionplot', width = '95%', height='95%')
       )
     )
-  )
 )
 
 shinydashboard::dashboardPage(
@@ -66,6 +58,4 @@ shinydashboard::dashboardPage(
   sidebar,
   body
 )
-
-
 

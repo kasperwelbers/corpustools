@@ -4,6 +4,14 @@
 \alias{tCorpus$search_features}
 \alias{search_features}
 \title{Find tokens using a Lucene-like search query}
+\usage{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{
+search_features(query, code = NA, feature = 'token',
+                mode = c('unique_hits','features'), verbose = F)
+             }
+}
 \arguments{
 \item{query}{A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.}
 
@@ -41,16 +49,6 @@ The following operators and modifiers are supported:
    \item{Aside from the feature column (specified with the feature argument) a query can include any column in the token data. To manually select a column, use 'columnname: ' at the start of a query or nested query (i.e. between parentheses or quotes). See examples for clarification.}
    }
 }
-\section{Usage}{
-
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{
-search_features(query, code = NA, feature = 'token',
-                mode = c('unique_hits','features'), verbose = F)
-             }
-}
-
 \examples{
 text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)

@@ -4,6 +4,13 @@
 \alias{tCorpus$feature_associations}
 \alias{feature_associations}
 \title{Get common nearby terms given a feature query}
+\usage{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{feature_associations(query=NULL, hits=NULL, feature='token',
+                                   window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'),
+                                   subset=NULL, subset_meta=NULL}
+}
 \arguments{
 \item{query}{A character string that is a query. See \link{search_features} for documentation of the query language.}
 
@@ -26,15 +33,6 @@
 \description{
 Get common nearby terms given a feature query
 }
-\section{Usage}{
-
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{feature_associations(query=NULL, hits=NULL, feature='token',
-                                   window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'),
-                                   subset=NULL, subset_meta=NULL}
-}
-
 \examples{
 tc = create_tcorpus(sotu_texts, doc_column = 'id')
 

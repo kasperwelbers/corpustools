@@ -8,7 +8,8 @@ preprocess_tokens(x, context = NULL, language = "english",
   use_stemming = F, lowercase = T, ngrams = 1, replace_whitespace = T,
   as_ascii = F, remove_punctuation = T, remove_stopwords = F,
   remove_numbers = F, min_freq = NULL, min_docfreq = NULL,
-  max_freq = NULL, max_docfreq = NULL, min_char = NULL, max_char = NULL)
+  max_freq = NULL, max_docfreq = NULL, min_char = NULL, max_char = NULL,
+  ngram_skip_empty = T)
 }
 \arguments{
 \item{x}{A character vector in which each element is a token (i.e. a tokenized text)}
@@ -44,6 +45,8 @@ preprocess_tokens(x, context = NULL, language = "english",
 \item{min_char}{an integer, specifying minimum number of characters in a term}
 
 \item{max_char}{an integer, specifying maximum number of characters in a term}
+
+\item{ngram_skip_empty}{if ngrams are used, determines whether empty (filtered out) terms are skipped (i.e. c("this", NA, "test"), becomes "this_test") or}
 }
 \description{
 Preprocess tokens in a character vector

@@ -3,7 +3,7 @@
 ## The additional methods should only use the public functions of the tCorpus class (so avoid private$)
 ## This way, we can more easily change or add backends in the future.
 
-## note that this file has to be named 1_*, because r files are processed in order by name,
+## this file has to be named 1_*, because in building the package the r files are processed in order by name,
 ## and the tCorpus class has to be created before the additional methods
 
 tCorpus <- R6::R6Class("tCorpus",
@@ -214,7 +214,7 @@ tCorpus <- R6::R6Class("tCorpus",
          suppressWarnings(private$.data[,(column) := value])
        }
 
-       ## strangely, the assign by reference in data.table sometimes adds NA as a factor level...
+       ## the assign by reference in data.table sometimes adds NA as a factor level...
        if (anyNA(levels(private$.data[[column]]))) {
          private$.data[,(column) := fast_factor(private$.data[[column]])]
        }

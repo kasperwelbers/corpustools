@@ -4,6 +4,12 @@
 \alias{tCorpus$read_text}
 \alias{read_text}
 \title{Print tokens as text}
+\usage{
+## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+
+\preformatted{
+read_text(doc_id, column='token', meta_columns = self$meta_names)}
+}
 \arguments{
 \item{doc_id}{The doc_ids of the documents to be printed.}
 
@@ -14,14 +20,6 @@
 \description{
 Print tokens as text
 }
-\section{Usage}{
-
-## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-
-\preformatted{
-read_text(doc_id, column='token', meta_columns = self$meta_names)}
-}
-
 \examples{
 d = data.frame(text = c('First text', 'Second text', 'Third text'),
 medium = c('A','A','B'),

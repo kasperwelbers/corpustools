@@ -5,7 +5,7 @@
 #' The parameters other than dtm are simply passed to the sampler but provide a workable default.
 #' See the description of that function for more information
 #'
-#' @section Usage:
+#' @usage
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{
@@ -38,7 +38,7 @@
 #' tc$get()
 #' }
 tCorpus$set('public', 'lda_fit', function(feature, create_feature=NULL, K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250, context_level=c('document','sentence'), ...) {
-  if (!requireNamespace('topicmodels', quietly = T)) stop('topicmodels package needs to be installed in order to use LDA')
+  require_package('topicmodels')
 
   dtm = self$dtm(feature=feature, context_level=context_level, ...)
   m = lda_fit(dtm=dtm, method='Gibbs', K=K, num.iterations=num.iterations, alpha=alpha, eta=eta, burnin=burnin)
@@ -69,7 +69,7 @@ lda_features <- function(tc, m, feature, new_feature='LDA_topic', context_level=
 }
 
 lda_fit <- function(dtm, method='Gibbs', K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250) {
-  if (!requireNamespace('topicmodels', quietly = T)) stop('The topicmodels package is required for this function, but has not yet been installed. You can run install.packages("topicmodels")')
+  require_package('topicmodels')
   if (methods::is(dtm, 'DocumentTermMatrix')) dtm = tm_dtm_to_dgTMatrix(dtm)
 
   empty_rows = sum(Matrix::rowSums(dtm) == 0)

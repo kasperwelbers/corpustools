@@ -1,5 +1,4 @@
-if(!exists('.TCORPUS')) {
-  .TCORPUS <- reactiveValues(tc=NULL)
-}
+.DATA <- reactiveValues(tc=NULL)
+
 
 

@@ -1,7 +1,7 @@
 
 #' Compare tCorpus vocabulary to that of another (reference) tCorpus
 #'
-#' @section Usage:
+#' @usage
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #' \preformatted{compare_corpus(tc_y, feature, smooth=0.1, min_ratio=NULL, min_chi2=NULL, is_subset=F, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence'))}
 #'
@@ -39,7 +39,7 @@ tCorpus$set('public', 'compare_corpus', function(tc_y, feature, smooth=0.1, min_
 
 #' Compare vocabulary of a subset of a tCorpus to the rest of the tCorpus
 #'
-#' @section Usage:
+#' @usage
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #' \preformatted{compare_subset(feature, subset_x=NULL, subset_meta_x=NULL, query_x=NULL, query_feature='token', smooth=0.1, min_ratio=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence'))}
 #'
