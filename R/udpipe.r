@@ -1,0 +1,64 @@
+prepare_model <- function(language, local_path=getOption('corpustools_resources', NULL)) {
+  udpipe_languages = eval(formals(udpipe::udpipe_download_model)[[1]])
+  if (!language %in% udpipe_languages) stop(sprintf('language passed to udpipe_model ("%s") is not available. Choose from:\n%s', language, paste(udpipe_languages, collapse=', ')))
+
+  path = make_dir(local_path, 'udpipe', language)
+
+  fname = list.files(path, full.names = T)[1]
+  if (is.na(fname)) {
+    m = udpipe::udpipe_download_model(language, model_dir = path)
+    fname = m$file_model
+  }
+  udpipe::udpipe_load_model(fname)
+}
+
+udpipe_parse <- function(x, udpipe_model, udpipe_model_path, doc_id=1:length(x), use_parser=use_parser, max_sentences=NULL, max_tokens=NULL, verbose=F){
+  udpipe_model = prepare_model(udpipe_model, udpipe_model_path)
+
+  batch_i = get_batch_i(length(doc_id), batchsize=100, return_list=T)
+  n = length(batch_i)
+  if (verbose & n > 1) pb = utils::txtProgressBar(min = 1, max = n, style = 3)
+  tokens = vector('list', n)
+  for (i in 1:n){
+    if (verbose & n > 1) pb$up(i)
+    tokens[[i]] = udpipe_parse_batch(x[batch_i[[i]]], udpipe_model, doc_id=doc_id[batch_i[[i]]],
+                                              use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)
+  }
+  data.table::rbindlist(tokens)
+}
+
+udpipe_parse_batch <- function(x, udpipe_model, doc_id, use_parser, max_sentences, max_tokens) {
+  token_id = NULL; head_token_id = NULL; sentence_id = NULL ## prevent no visible bindings error (due to data table syntax)
+
+  parser = if (use_parser) 'default' else 'none'
+
+  x <- udpipe::udpipe_annotate(udpipe_model, x = x, doc_id=doc_id, parser = parser)
+  x = as.data.table(x)
+
+  x[,token_id := as.numeric(token_id)]
+  x[,head_token_id := as.numeric(head_token_id)]
+
+  ## make token_id local within documents instead of within sentences
+  #### making sure the parent_id (head_token_id) still matches correctly (only if use_parser is true)
+  if (use_parser) parent_match = x[list(x$doc_id, x$sentence_id, x$head_token_id),,on=c('doc_id','sentence_id', 'token_id'), which=T] ## efficient 3 column match that returns indices
+  x$token_id = local_position(1:nrow(x), x$doc_id)   ## currently assuming that there are no gaps in token_ids. (otherwise need cumbersome solution from tokens_to_corpus function)
+  if (use_parser) x$head_token_id = x$token_id[parent_match]
+
+  if (!is.null(max_tokens) & !is.null(max_sentences)) {
+    x = subset(x, sentence_id <= max_sentences & token_id <= max_tokens)
+  } else {
+    if (!is.null(max_tokens)) x = subset(x, token_id <= max_tokens)
+    if (!is.null(max_sentences)) x = subset(x, sentence_id <= max_sentences)
+  }
+
+  drop_cols = c('paragraph_id', 'sentence')
+  if (!use_parser) drop_cols = c(drop_cols, c('head_token_id','dep_rel','deps'))
+  cols = setdiff(colnames(x), drop_cols)
+  x = subset(x, select=cols)
+  data.table::setnames(x, old = c('sentence_id', 'upos'), new = c('sentence', 'POS'))
+  if (use_parser) data.table::setnames(x, old = c('head_token_id', 'dep_rel'), new = c('parent','relation'))
+
+  x
+}
+
+

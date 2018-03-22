@@ -5,8 +5,11 @@ tokenize_to_dataframe <- function(x, doc_id=1:length(x), split_sentences=F, max_
   batch_i = get_batch_i(length(doc_id), batchsize=5000, return_list=T)
   prog = if (verbose) 'text' else 'none'
 
-  tokens = vector('list', length(batch_i))
-  for (i in 1:length(batch_i)){
+  n = length(batch_i)
+  if (verbose & n > 1) pb = utils::txtProgressBar(min = 1, max = n, style = 3)
+  tokens = vector('list', n)
+  for (i in 1:n){
+    if (verbose & n > 1) pb$up(i)
     tokens[[i]] = tokenize_to_dataframe_batch(x[batch_i[[i]]], doc_id=doc_id[batch_i[[i]]],
                                               split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens)
   }

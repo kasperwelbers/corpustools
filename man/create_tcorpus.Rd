@@ -10,16 +10,20 @@
 create_tcorpus(x, ...)
 
 \method{create_tcorpus}{character}(x, doc_id = 1:length(x), meta = NULL,
-  split_sentences = F, max_sentences = NULL, max_tokens = NULL,
-  verbose = F, ...)
+  udpipe_model = NULL, split_sentences = F, max_sentences = NULL,
+  max_tokens = NULL, udpipe_model_path = getOption("corpustools_resources",
+  NULL), use_parser = F, verbose = T, ...)
 
 \method{create_tcorpus}{factor}(x, doc_id = 1:length(x), meta = NULL,
-  split_sentences = F, max_sentences = NULL, max_tokens = NULL,
-  verbose = F, ...)
+  udpipe_model = NULL, split_sentences = F, max_sentences = NULL,
+  max_tokens = NULL, udpipe_model_path = getOption("corpustools_resources",
+  NULL), use_parser = F, verbose = T, ...)
 
 \method{create_tcorpus}{data.frame}(x, text_columns = "text",
-  doc_column = "doc_id", split_sentences = F, max_sentences = NULL,
-  max_tokens = NULL, ...)
+  doc_column = "doc_id", udpipe_model = NULL, split_sentences = F,
+  max_sentences = NULL, max_tokens = NULL,
+  udpipe_model_path = getOption("corpustools_resources", NULL),
+  use_parser = F, verbose = T, ...)
 }
 \arguments{
 \item{x}{main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.}
@@ -30,11 +34,17 @@ create_tcorpus(x, ...)
 
 \item{meta}{A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x}
 
-\item{split_sentences}{Logical. If TRUE, the sentence number of tokens is also computed.}
+\item{udpipe_model}{Optionally, the name of a udpipe language model (e.g., "english", "dutch", "german"), to use the udpipe package to perform natural language processing. On first use, the model will be downloaded to the location specified in the udpipe_model_path argument. By default, dependency parsing (the use_parser argument) is turned off for efficiency.}
+
+\item{split_sentences}{Logical. If TRUE, the sentence number of tokens is also computed. (only if udpipe_model is not used)}
 
 \item{max_sentences}{An integer. Limits the number of sentences per document to the specified number. If set when split_sentences == FALSE, split_sentences will be set to TRUE.}
 
 \item{max_tokens}{An integer. Limits the number of tokens per document to the specified number}
+
+\item{udpipe_model_path}{If udpipe_model is used, this path wil be used to look for the model, and if the model doesn't yet exist it will be downloaded to this location. If no path is given, the directory in which corpustool was installed will be used (see \link{resources_path}). You can also change the default with \link{set_resources_path}.}
+
+\item{use_parser}{If true, use dependency parser (only if udpipe_model is)}
 
 \item{verbose}{If TRUE, report progress}
 

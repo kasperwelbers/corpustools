@@ -21,17 +21,18 @@ Imports:
     stringi, 
     Rcpp (>= 0.12.12), 
     R6,
-    shiny,
-    shinydashboard,
     readr,
-    DT
+    udpipe
 Suggests:
     testthat,
     quanteda (>= 1.1.1),
     tm (>= 0.6),
     topicmodels,
     RNewsflow,
-    igraph
+    igraph,
+    shiny,
+    shinydashboard,
+    DT
 LinkingTo: Rcpp
 LazyData: true
 Encoding: UTF-8
