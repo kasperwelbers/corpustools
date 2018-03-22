@@ -24,3 +24,5 @@ vignettes/*.pdf
 src/*.o
 src/*.so
 src/*.dll
+
+inst/ext_resources/*

@@ -24,7 +24,14 @@ udpipe_parse <- function(x, udpipe_model, udpipe_model_path, doc_id=1:length(x),
     tokens[[i]] = udpipe_parse_batch(x[batch_i[[i]]], udpipe_model, doc_id=doc_id[batch_i[[i]]],
                                               use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)
   }
-  data.table::rbindlist(tokens)
+  tokens = data.table::rbindlist(tokens)
+
+  ## set factors
+  tokens[, doc_id := fast_factor(tokens$doc_id)]
+  for(col in colnames(tokens)) {
+    if (class(tokens[[col]]) %in% c('character')) tokens[,(col) := fast_factor(tokens[[col]])]
+  }
+  tokens
 }
 
 udpipe_parse_batch <- function(x, udpipe_model, doc_id, use_parser, max_sentences, max_tokens) {
