@@ -103,7 +103,6 @@ tCorpus$set('public', 'feature_subset', function(column, new_column=column, subs
   invisible(self)
 })
 
-
 preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T,remove_stopwords=F, remove_numbers=F, use_stemming=F, language='english', min_freq=NULL, min_docfreq=NULL, max_freq=NULL, max_docfreq=NULL, min_char=NULL, max_char=NULL){
   is_tcorpus(tc, T)
 

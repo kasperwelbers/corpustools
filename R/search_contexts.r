@@ -147,14 +147,17 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
     hits = self$search_contexts(query, feature=feature, context_level=context_level)
     if (is.null(hits)) return(NULL)
     if (context_level == 'document'){
-      self$select_meta_rows(self$get_meta('doc_id') %in% hits$hits$doc_id)
+      #self$select_meta_rows(self$get_meta('doc_id') %in% hits$hits$doc_id)
+      .doc_ids = hits$hits$doc_id
+      self$subset(subset_meta= doc_id %in% .doc_ids)
     }
     if (context_level == 'sentence'){
       d = self$get(c('doc_id','sentence'), keep_df=T)
       d$i = 1:nrow(d)
       setkeyv(d, c('doc_id','sentence'))
-      rows = d[list(hits$hits$doc_id, hits$hits$sentence),]$i
-      self$select_rows(rows)
+      .rows = d[list(hits$hits$doc_id, hits$hits$sentence),]$i
+      #self$select_rows(rows)
+      self$subset(subset=.rows)
     }
   }
   invisible(self)

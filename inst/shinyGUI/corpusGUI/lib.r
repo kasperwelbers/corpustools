@@ -512,7 +512,7 @@ plotParametersUI <- function(){
 
 updateGeneralOutput <- function(output){
   output$meta <- renderDataTable({
-    if (is.null(.DATA$tc)) NULL else .DATA$tc$get_meta(safe_copy=F)
+    if (is.null(.DATA$tc)) NULL else .DATA$tc$get_meta(copy=F)
   }, options = list(autoWidth = F, scrollX=T, columnDefs = list(list(
     targets = '_all',
     render = JS("function(data, type, row, meta) {", "return type === 'display' && data.length > 20 ?",
@@ -521,7 +521,7 @@ updateGeneralOutput <- function(output){
 
   output$tokens <- renderDataTable({
 
-    if (is.null(.DATA$tc)) NULL else .DATA$tc$get(safe_copy=F)
+    if (is.null(.DATA$tc)) NULL else .DATA$tc$get(copy=F)
   }, options = list(autoWidth = F, scrollX=T), rownames=F)
 
   output$summary <- renderText({

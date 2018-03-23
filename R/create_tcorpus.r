@@ -62,7 +62,7 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
   } else {
     data = tokenize_to_dataframe(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, verbose=verbose)
   }
-  tCorpus$new(data = data, meta = base::droplevels(meta))
+  tCorpus$new(tokens = data, meta = base::droplevels(meta))
 }
 
 #' @rdname create_tcorpus
@@ -241,7 +241,7 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col='token_id',
   }
   meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
 
-  tc = tCorpus$new(data=tokens, meta = meta)
+  tc = tCorpus$new(tokens=tokens, meta = meta)
   tc$set_special(token=token_col, lemma=lemma_col, POS=pos_col, relation=relation_col, parent=parent_col)
   tc
 }

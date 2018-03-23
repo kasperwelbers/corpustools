@@ -5,11 +5,16 @@ prepare_model <- function(language, local_path=getOption('corpustools_resources'
   path = make_dir(local_path, 'udpipe', language)
 
   fname = list.files(path, full.names = T)[1]
-  if (is.na(fname)) {
-    m = udpipe::udpipe_download_model(language, model_dir = path)
-    fname = m$file_model
+  if (!is.na(fname)) {
+    m = udpipe::udpipe_load_model(fname)
+    if (grepl('(nil)', deparse(m$model), fixed=T)) fname = NA   ## (nil) pointer indicates model is broken (e.g., partially downloaded), so needs to be downloaded again
   }
-  udpipe::udpipe_load_model(fname)
+  if (is.na(fname)) {
+    message(paste0("Model for this language does not yet exist. Will be downloaded to: ", path, '\n'))
+    m_file = udpipe::udpipe_download_model(language, model_dir = path)
+    m = udpipe::udpipe_load_model(m_file$file_model)
+  }
+  m
 }
 
 udpipe_parse <- function(x, udpipe_model, udpipe_model_path, doc_id=1:length(x), use_parser=use_parser, max_sentences=NULL, max_tokens=NULL, verbose=F){
@@ -17,12 +22,15 @@ udpipe_parse <- function(x, udpipe_model, udpipe_model_path, doc_id=1:length(x),
 
   batch_i = get_batch_i(length(doc_id), batchsize=100, return_list=T)
   n = length(batch_i)
-  if (verbose & n > 1) pb = utils::txtProgressBar(min = 1, max = n, style = 3)
+  if (verbose & n > 1) {
+    pb = utils::txtProgressBar(min = 1, max = n, style = 3)
+    pb$up(1)
+  }
   tokens = vector('list', n)
   for (i in 1:n){
-    if (verbose & n > 1) pb$up(i)
     tokens[[i]] = udpipe_parse_batch(x[batch_i[[i]]], udpipe_model, doc_id=doc_id[batch_i[[i]]],
                                               use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)
+    if (verbose & n > 1) pb$up(i+1)
   }
   tokens = data.table::rbindlist(tokens)
 

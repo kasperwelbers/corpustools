@@ -10,6 +10,8 @@ test_that("comparing documents works", {
                  date = c('2010-01-01','2010-01-01','2012-01-01'))
   tc = create_tcorpus(d)
 
+  ## find out why dtm is suddenly empty...
+
   g = tc$compare_documents()
   expect_equal(round(igraph::E(g)$weight,3), round(c(0.027, 0.022, 0.027, 0.022),3))
 

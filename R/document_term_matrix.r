@@ -128,7 +128,7 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   }
   if (form == 'quanteda_dfm') {
     m = quanteda::as.dfm(methods::as(m, 'dgCMatrix'))
-    dvars = tc$get_meta()
+    dvars = tc$get_meta(copy=T)
     dvars = dvars[match(rownames(m), dvars$doc_id),]  ## in case of subsetting
     for (dvar in colnames(dvars)) {
       if (dvar == 'doc_id') next
