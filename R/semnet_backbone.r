@@ -30,7 +30,7 @@ backbone_filter <- function(g, alpha=0.05, direction='none', delete_isolates=T, 
   if (direction == 'in') igraph::E(g)$alpha = backbone_indegree_alpha(g, k_is_n)
   if (direction == 'out') igraph::E(g)$alpha = backbone_outdegree_alpha(g, k_is_n)
   g = igraph::delete.edges(g, which(igraph::E(g)$alpha >= alpha))
-  if (!is.null(max_vertices) & igraph::ecount(g) > 0) g = filter_vertices_by_edgeweight(g, 'alpha', max_vertices, use_original_alpha)
+  if (!is.null(max_vertices) && igraph::ecount(g) > 0) g = filter_vertices_by_edgeweight(g, 'alpha', max_vertices, use_original_alpha)
   if (delete_isolates) g = igraph::delete.vertices(g, which(igraph::degree(g) == 0))
   if (igraph::ecount(g) == 0) {
     warning("No significant edges (backbone) remain!! Accept it (or lower the backbone_alpha)")

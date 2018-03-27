@@ -21,10 +21,10 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
     if (is_nested) {
       jhits = recursive_search(tc, q, subcontext=subcontext, feature=feature, mode=mode, parent_relation=qlist$relation, all_case_sensitive, all_ghost, all_flag_query, keep_longest, as_ascii, level=level+1)
       if (nterms == 1) {
-        if (level == 1 & mode == 'contexts' & !is.null(jhits)) jhits = unique(subset(jhits, select=c('doc_id',subcontext)))
+        if (level == 1 && mode == 'contexts' & !is.null(jhits)) jhits = unique(subset(jhits, select=c('doc_id',subcontext)))
         return(jhits)
       }
-      if (qlist$relation == 'proximity' & q$relation %in% c('proximity','AND')) stop("Cannot nest proximity or AND search within a proximity search")
+      if (qlist$relation == 'proximity' && q$relation %in% c('proximity','AND')) stop("Cannot nest proximity or AND search within a proximity search")
       if (!is.null(jhits)) {
         if (q$relation == 'sequence') jhits[, .seq_i := .term_i]
         if (qlist$relation %in% c('proximity','sequence','AND')) jhits[, .group_i := paste(j, .group_i, sep='_')] ## for keeping track of nested multi word queries
@@ -37,7 +37,7 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
       flag_query = q$flag_query
       for (n in names(all_flag_query)) flag_query[[n]] = unique(c(flag_query[[n]], all_flag_query[[n]]))
 
-      only_context = mode == 'contexts' & qlist$relation %in% c('AND','NOT')  ## only for AND and NOT, because proximity and sequence require feature positions (and OR can be nested in them)
+      only_context = mode == 'contexts' && qlist$relation %in% c('AND','NOT')  ## only for AND and NOT, because proximity and sequence require feature positions (and OR can be nested in them)
       jhits = tc$lookup(q$term, feature=feature, ignore_case=!.case_sensitive, sub_query=flag_query, only_context=only_context, subcontext=subcontext, as_ascii=as_ascii)
       if (!is.null(jhits)) {
         jhits[, .ghost := .ghost]
@@ -73,8 +73,8 @@ recursive_search <- function(tc, qlist, subcontext=NULL, feature='token', mode =
   }
   if (nrow(hits) == 0) return(NULL)
 
-  if (level == 1 & mode == 'unique_hits') hits = remove_duplicate_hit_id(hits, keep_longest)
-  if (level == 1 & mode == 'contexts') hits = unique(subset(hits, select=c('doc_id',subcontext)))
+  if (level == 1 && mode == 'unique_hits') hits = remove_duplicate_hit_id(hits, keep_longest)
+  if (level == 1 && mode == 'contexts') hits = unique(subset(hits, select=c('doc_id',subcontext)))
 
   return(hits)
 }
@@ -83,7 +83,7 @@ collapse_or_queries <- function(qlist) {
   if (qlist$relation == 'OR') {
     nested = sapply(qlist$terms, function(x) 'terms' %in% names(x))
     has_flag_query = sapply(qlist$terms, function(x) length(x$flag_query) > 0)
-    select = !nested & !has_flag_query # these terms are collapse-able
+    select = !nested && !has_flag_query # these terms are collapse-able
 
     if (sum(select) > 1) {
       terms = sapply(qlist$terms[select], function(x) x[c('case_sensitive','ghost','term')], simplify = F)

@@ -112,10 +112,10 @@ tCorpus <- R6::R6Class("tCorpus",
       self$validate_tokens()
 
       if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
-      if (!is.null(doc_id) & !is.null(subset)) stop('Cannot filter by subset and doc_ids at the same time')
-      if (is.null(doc_id) & !is.null(token_id)) stop('token_id can only be given in pairs with doc_id')
+      if (!is.null(doc_id) && !is.null(subset)) stop('Cannot filter by subset and doc_ids at the same time')
+      if (is.null(doc_id) && !is.null(token_id)) stop('token_id can only be given in pairs with doc_id')
 
-      if (is.null(doc_id) & is.null(subset)) {
+      if (is.null(doc_id) && is.null(subset)) {
         if (is.null(columns)) {
           d = self$tokens
         } else {
@@ -136,7 +136,7 @@ tCorpus <- R6::R6Class("tCorpus",
         }
       }
 
-      if (ncol(d) == 1 & !keep_df) d = d[,1][[1]]
+      if (ncol(d) == 1 && !keep_df) d = d[,1][[1]]
       if (as.df) d = as.data.frame(d)
       if(copy) data.table::copy(d) else d
     },
@@ -151,10 +151,10 @@ tCorpus <- R6::R6Class("tCorpus",
       self$validate()
 
       if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval_meta(substitute(subset), parent.frame())
-      if (!is.null(doc_id) & !is.null(subset)) stop('Cannot filter by subset and doc_ids at the same time')
+      if (!is.null(doc_id) && !is.null(subset)) stop('Cannot filter by subset and doc_ids at the same time')
 
 
-      if (is.null(doc_id) & is.null(subset)) {
+      if (is.null(doc_id) && is.null(subset)) {
         if (is.null(columns)) {
           d = self$meta
         } else {
@@ -169,7 +169,7 @@ tCorpus <- R6::R6Class("tCorpus",
         if (!is.null(subset)) self$meta[subset,columns,with=F]
       }
 
-      if (ncol(d) == 1 & !keep_df) d = d[,1][[1]]
+      if (ncol(d) == 1 && !keep_df) d = d[,1][[1]]
       if (as.df) d = as.data.frame(d)
       if (per_token) {
         exp_i = match(self$tokens$doc_id, self$meta$doc_id)
@@ -196,7 +196,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
       if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
       if (class(substitute(subset_meta)) %in% c('call', 'name')) subset_meta = self$eval_meta(substitute(subset_meta), parent.frame())
-      if (is.null(doc_id) & !is.null(token_id)) stop('token_id can only be given in pairs with doc_id')
+      if (is.null(doc_id) && !is.null(token_id)) stop('token_id can only be given in pairs with doc_id')
 
       ## enable subset to be called from a character string. (e.g. used in search_features)
       if(methods::is(subset, 'character')) subset_meta = eval(parse(text=subset_meta), self$meta, parent.frame())
@@ -243,7 +243,7 @@ tCorpus <- R6::R6Class("tCorpus",
        if (grepl('^\\.', column)) stop('column names in a tCorpus cannot start with a dot')
 
        if (!is.null(subset)){
-         if (subset_value & length(value) > 1) value = value[subset]
+         if (subset_value && length(value) > 1) value = value[subset]
          if (!column %in% colnames(self$tokens)) {
            self$tokens[,(column) := NA]
            if (methods::is(value, 'factor')) {
@@ -321,7 +321,7 @@ tCorpus <- R6::R6Class("tCorpus",
        if (grepl('^\\.', column)) stop('column names in a tCorpus cannot start with a dot')
 
        if (!is.null(subset)){
-         if (subset_value & length(value) > 1) value = value[subset]
+         if (subset_value && length(value) > 1) value = value[subset]
 
          if (!column %in% colnames(self$meta)) {
            self$meta[[column]] = NA
@@ -390,15 +390,15 @@ tCorpus <- R6::R6Class("tCorpus",
        }
 
        ## subset the data, using different solutions if one or both subsets (data and meta) are used for optimalisation
-       if (!is.null(subset_meta) & !is.null(subset)) {
+       if (!is.null(subset_meta) && !is.null(subset)) {
          private$select_meta_rows(subset_meta, keep_data = T) ## if both subsets are used, first perform both without subseting the other, then match on doc_ids.
          private$select_rows(subset, keep_meta = T)           ## (we cannot subset one before the other, because subset call's can contains vectors for which the rows should match)
          private$sync()
        }
-       if (!is.null(subset_meta) & is.null(subset)) {
+       if (!is.null(subset_meta) && is.null(subset)) {
          private$select_meta_rows(subset_meta, keep_data = F)
        }
-       if (is.null(subset_meta) & !is.null(subset)) {
+       if (is.null(subset_meta) && !is.null(subset)) {
          private$select_rows(subset, keep_meta = F)
        }
 
@@ -429,7 +429,7 @@ tCorpus <- R6::R6Class("tCorpus",
         d = meta[, list(N=.N, V=sum(len)), by=meta_cols]
 
         if (!is.null(hits) | !is.null(feature)){
-          if (!is.null(hits) & !is.null(feature)) stop('Cannot specify both hits and feature')
+          if (!is.null(hits) && !is.null(feature)) stop('Cannot specify both hits and feature')
           if (!is.null(hits)) {
             if (!methods::is(hits, c('featureHits', 'contextHits'))) stop('hits must be a featureHits or contextHits object (see the $search_features and $search_contexts methods)')
             if (methods::is(hits, 'featureHits')) {
@@ -484,7 +484,7 @@ tCorpus <- R6::R6Class("tCorpus",
           } else {
             out = data.table::copy(self$tokens)
           }
-          if (with_i & !only_context) out[, i:=1:nrow(out)]
+          if (with_i && !only_context) out[, i:=1:nrow(out)]
           if (has_sub_query) {
             if (is.null(sub_out)) return(NULL)
             out = data.table::fintersect(out, sub_out)
@@ -508,7 +508,7 @@ tCorpus <- R6::R6Class("tCorpus",
         }
 
         if (length(x) == 0) return(NULL)
-        if (with_i & !only_context) {
+        if (with_i && !only_context) {
           i = na.omit(self$tokens[list(x), on=feature, which=T])
           out = self$tokens[i,]
           out[,i:=i]
@@ -652,7 +652,7 @@ as.tcorpus.default <- function(x, ...) stop('x has to be a tCorpus object')
 
 is_tcorpus <- function(x, allow_stc=F){
   if (!class(x)[1] %in% c('tCorpus', 'shattered_tCorpus')) stop('not a tCorpus object')
-  if (is_shattered(x) & !allow_stc) stop('function not implemented for shattered_tCorpus')
+  if (is_shattered(x) && !allow_stc) stop('function not implemented for shattered_tCorpus')
   TRUE
 }
 
@@ -662,7 +662,7 @@ is_shattered <- function(x) methods::is(x, 'shattered_tCorpus')
 
 safe_selection <- function(d, selection){
   if (any(is.na(selection))) stop('selection cannot contain NA')
-  if (!methods::is(selection, 'numeric') & !methods::is(selection,'logical')) stop('selection has to be either a logical vector or a numerical vector (indices for TRUE values)')
+  if (!methods::is(selection, 'numeric') && !methods::is(selection,'logical')) stop('selection has to be either a logical vector or a numerical vector (indices for TRUE values)')
   if (methods::is(selection, 'numeric')) selection = 1:nrow(d) %in% selection
   selection
 }

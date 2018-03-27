@@ -173,7 +173,7 @@ loadDataButton <- function(){
 }
 
 loadData <- function(session, input, output){
-  if(is.null(input$text) & is.null(input$tokens) & is.null(input$env_tc)) return(NULL)
+  if(is.null(input$text) && is.null(input$tokens) && is.null(input$env_tc)) return(NULL)
 
   if(input$datatype == 'text'){
     dm = readr::read_csv(input$text$datapath)
@@ -340,7 +340,7 @@ preprocessSyntax <- function(input) {
 }
 
 createDTM <- function(input, tokens){
-  if(is.null(.DATA$text) & is.null(tokens)) return(NULL)
+  if(is.null(.DATA$text) && is.null(tokens)) return(NULL)
   ## note that the tokens used here is the result of getTokens(), which gives the already filtered version of d$tokens.
   ## d$text can be used directly because there is no preprocessing involved (this all happens below in RTextTools::create_matrix)
 
@@ -454,7 +454,7 @@ prepareWordcloud <- function(input){
 }
 
 prepareSemnet <- function(input, dtm, tokens){
-  if(is.null(dtm) & is.null(tokens)) return(NULL)
+  if(is.null(dtm) && is.null(tokens)) return(NULL)
   termselect = col_sums(dtm)
   termselect = head(names(termselect[order(-termselect)]), 500) # only use top 500 terms to speed up computation
 

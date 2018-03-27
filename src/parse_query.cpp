@@ -6,7 +6,7 @@ using namespace Rcpp;
 
 class QueryIter {
   std::string query;
-  int position;
+  unsigned int position;
 public:
   QueryIter (std::string);
   void next () {if (position < query.size()) position++;}

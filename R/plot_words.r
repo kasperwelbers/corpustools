@@ -27,8 +27,8 @@
 #' @export
 plot_words <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', ylab='', yaxt='n', scale=2, random.y=T, xlim=NULL, ylim=NULL, ...){
   wordsize = rescale_var(wordfreq, 0.75, scale) + 1
-  if (is.null(y) & random.y) y = sample(seq(-1, 1, by = 0.001), length(x))
-  if (is.null(y) & !random.y) y = wordsize
+  if (is.null(y) && random.y) y = sample(seq(-1, 1, by = 0.001), length(x))
+  if (is.null(y) && !random.y) y = wordsize
   xmargin = (max(x) - min(x)) * 0.2
   ymargin = (max(y) - min(y)) * 0.2
   if (is.null(xlim)) xlim = c(min(x) - xmargin, max(x) + xmargin)
@@ -116,7 +116,7 @@ plot.vocabularyComparison <- function(x, n=25, mode=c('both', 'ratio_x','ratio_y
   if(mode == 'ratio_y') x = x[x$ratio < 1,]
   if(mode == 'ratio_x') x = x[x$ratio > 1,]
   x = x[order(-x$chi2),]
-  if (balance & mode == "both") {
+  if (balance && mode == "both") {
     x = rbind(head(x[x$ratio < 1,], ceiling(n/2)),
               head(x[x$ratio >= 1,], floor(n/2)))
   } else {

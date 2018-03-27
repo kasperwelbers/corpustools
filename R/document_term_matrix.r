@@ -109,7 +109,7 @@ get_dtm <- function(tc, feature, context_level=c('document','sentence'), weight=
   } else idf = NULL
 
   feature = feature[sub_i]
-  if(drop_empty_terms & methods::is(feature, 'factor')) feature = droplevels(feature)
+  if(drop_empty_terms && methods::is(feature, 'factor')) feature = droplevels(feature)
   notNA = !is.na(feature)
 
   m = Matrix::spMatrix(length(levels(i)), length(levels(feature)),

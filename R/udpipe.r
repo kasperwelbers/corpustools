@@ -22,7 +22,7 @@ udpipe_parse <- function(x, udpipe_model, udpipe_model_path, doc_id=1:length(x),
 
   batch_i = get_batch_i(length(doc_id), batchsize=100, return_list=T)
   n = length(batch_i)
-  if (verbose & n > 1) {
+  if (verbose && n > 1) {
     pb = utils::txtProgressBar(min = 1, max = n, style = 3)
     pb$up(1)
   }
@@ -30,7 +30,7 @@ udpipe_parse <- function(x, udpipe_model, udpipe_model_path, doc_id=1:length(x),
   for (i in 1:n){
     tokens[[i]] = udpipe_parse_batch(x[batch_i[[i]]], udpipe_model, doc_id=doc_id[batch_i[[i]]],
                                               use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)
-    if (verbose & n > 1) pb$up(i+1)
+    if (verbose && n > 1) pb$up(i+1)
   }
   tokens = data.table::rbindlist(tokens)
 
@@ -59,7 +59,7 @@ udpipe_parse_batch <- function(x, udpipe_model, doc_id, use_parser, max_sentence
   x$token_id = local_position(1:nrow(x), x$doc_id)   ## currently assuming that there are no gaps in token_ids. (otherwise need cumbersome solution from tokens_to_corpus function)
   if (use_parser) x$head_token_id = x$token_id[parent_match]
 
-  if (!is.null(max_tokens) & !is.null(max_sentences)) {
+  if (!is.null(max_tokens) && !is.null(max_sentences)) {
     x = subset(x, sentence_id <= max_sentences & token_id <= max_tokens)
   } else {
     if (!is.null(max_tokens)) x = subset(x, token_id <= max_tokens)

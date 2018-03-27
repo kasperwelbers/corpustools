@@ -121,7 +121,7 @@ compare_documents_fun <- function(tc, feature='token', date_col=NULL, hour_windo
   ## construct dtm's based on subsets, but not if date_col and hour_window are given, because then this needs to be done differently for the newsflow.compare function
   if (is.null(date_col) | is.null(hour_window)){
     dtm = tc$dtm(feature=feature, weight = weight, subset_meta=from_subset, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams, form = 'tm_dtm')
-    if (is.null(from_subset) & is.null(to_subset)) {
+    if (is.null(from_subset) && is.null(to_subset)) {
       dtm.y = NULL
     } else {
       dtm.y = tc$dtm(feature=feature, weight = weight, subset_meta = to_subset, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams, form = 'tm_dtm')

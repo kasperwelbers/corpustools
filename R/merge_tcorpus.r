@@ -38,7 +38,7 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
   if_duplicate = match.arg(if_duplicate)
 
   tc_list = list(...)
-  if (length(tc_list) == 1 & class(tc_list[[1]])[1] == 'list') tc_list = tc_list[[1]]
+  if (length(tc_list) == 1 && class(tc_list[[1]])[1] == 'list') tc_list = tc_list[[1]]
   for(i in 1:length(tc_list)) if (!methods::is(tc_list[[i]], 'tCorpus')) stop(sprintf('%s is not a tCorpus object', names(tc_list)[i]))
 
   data = lapply(tc_list, function(x) x$get(copy=F))

@@ -24,7 +24,7 @@ NumericVector proximity_hit_ids(NumericVector con, NumericVector subcon, Numeric
   // con: context, subcon: subcontext, pos: term position, term_i: position of term in query, n_unique: number of unique terms in query,
   // window: size of proximity window, seq_i: optionally, a vector that identifies sequences with 1 to last (NA means no seq), assign_once: do not re-use once hit_id is assigned, directed: terms have to be in order from left to right
   double n = pos.size();
-  bool use_subcon = subcon.size() > 0;  // use the fact that as.Numeric(NULL) in R returns a vector of length 0 (NULL handling in Rcpp is cumbersome)
+  bool use_subcon = subcon.size() > 0;  // Kas.Numeric(NULL) in R returns a vector of length 0
   bool use_seq = seq_i.size() > 0;
   bool new_assign;
   NumericVector out(n);
@@ -85,7 +85,7 @@ NumericVector proximity_hit_ids(NumericVector con, NumericVector subcon, Numeric
 
 bool match_shortest(std::string &x, std::set<std::string> &group_set){
   for (const auto &y : group_set) {
-    int length = x.size();
+    unsigned int length = x.size();
     if (y.size() < length) length = y.size();
     if (x.substr(0,length) == y.substr(0,length)) return true;
   }
@@ -96,7 +96,6 @@ bool match_shortest(std::string &x, std::set<std::string> &group_set){
 NumericVector AND_hit_ids(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector term_i, double n_unique, std::vector<std::string> group_i, LogicalVector replace, bool feature_mode) {
   double n = pos.size();
   bool use_subcon = subcon.size() > 0;  // use the fact that as.Numeric(NULL) in R returns a vector of length 0 (NULL handling in Rcpp is cumbersome)
-  bool use_group = group_i.size() > 0;
   bool new_assign;
   NumericVector out(n);
 
@@ -125,7 +124,7 @@ NumericVector AND_hit_ids(NumericVector con, NumericVector subcon, NumericVector
       if (group_i[iw] != "") group_tracker[term_i[iw]].insert(group_i[iw]);
 
       if (!replace[iw] and !feature_mode) {
-        if (group_tracker.size() == 0 & tracker.size() == n_unique) break;
+        if ((group_tracker.size() == 0) && (tracker.size() == n_unique)) break;
       }
     }
 

@@ -109,7 +109,7 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
   feature = tc$get(column)
   if (!methods::is(feature, 'factor')) feature = factor(feature)
 
-  if (ngrams == 1 & is.null(min_docfreq)) {
+  if (ngrams == 1 && is.null(min_docfreq)) {
     .feature = preprocess_tokens(feature, context=NA, language=language, use_stemming=use_stemming, lowercase=lowercase, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, remove_numbers=remove_numbers, min_freq=min_freq, min_docfreq=min_docfreq, max_freq=max_freq, max_docfreq=max_docfreq, min_char=min_char, max_char=max_char)
   } else {
     context = tc$context(context_level=ngram_context, with_labels = F)
@@ -161,9 +161,9 @@ preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=
   }
   if (remove_stopwords) levels(x)[levels(x) %in% get_stopwords(language)] = NA
 
-  if (remove_punctuation & remove_numbers) levels(x)[!grepl("[[:alpha:]]", levels(x))] = NA
-  if (remove_punctuation & !remove_numbers) levels(x)[!grepl("[[:alnum:]]", levels(x))] = NA
-  if (!remove_punctuation & remove_numbers) levels(x)[!grepl("[[:alpha:][:punct:]]", levels(x))] = NA
+  if (remove_punctuation && remove_numbers) levels(x)[!grepl("[[:alpha:]]", levels(x))] = NA
+  if (remove_punctuation && !remove_numbers) levels(x)[!grepl("[[:alnum:]]", levels(x))] = NA
+  if (!remove_punctuation && remove_numbers) levels(x)[!grepl("[[:alpha:][:punct:]]", levels(x))] = NA
 
   if (use_stemming) levels(x) = SnowballC::wordStem(levels(x), language=language)
 

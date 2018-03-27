@@ -71,7 +71,7 @@ sgt_values <- function(r, Nr, conf=1.96) {
   ursd[i] = (i+1) / Nr[i] * sqrt(Nr[i+1] * 1 + Nr[i+1] / Nr[i])
 
   switch = abs(rstrel - rstarel) * 1:length(r) / ursd <= conf
-  if (any(switch) & !all(switch)) {
+  if (any(switch) && !all(switch)) {
     switch[which(switch)[1]:length(switch)] = T
   }
 
