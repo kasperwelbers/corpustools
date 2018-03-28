@@ -33,8 +33,7 @@
 }
 \description{
 Deduplicate documents based on similarity scores. Can be used to filter out identical documents, but also similar documents.
-}
-\details{
+
 Note that deduplication occurs by reference (\link{tCorpus_modify_by_reference}) unless copy is set to TRUE.
 
 \strong{Usage:}

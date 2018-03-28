@@ -42,6 +42,7 @@ tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NU
 
 #' Deduplicate documents
 #'
+#' @description
 #' Deduplicate documents based on similarity scores. Can be used to filter out identical documents, but also similar documents.
 #'
 #' Note that deduplication occurs by reference (\link{tCorpus_modify_by_reference}) unless copy is set to TRUE.
@@ -81,7 +82,7 @@ tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NU
 #' dedup = tc$deduplicate(feature='token', date_col = 'date', similarity = 0.8, keep = 'last',
 #'                        copy=TRUE)
 #' dedup$get_meta()
-tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=0.5, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=F){
+tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=1, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=F){
   require_package('RNewsflow')
 
   weight = match.arg(weight)
@@ -92,9 +93,7 @@ tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, me
   }
 
   ## adding DEDUPLICATE_FEATURE is not very elegant and memory efficient. Better alternative, perhaps, is to pass docfreq_filter results to compare_documents_fun.
-  .feature = feature
-  self$set('DEDUPLICATE_FEATURE', self$get(.feature))
-  self$feature_subset('DEDUPLICATE_FEATURE', 'DEDUPLICATE_FEATURE', subset = docfreq_filter('DEDUPLICATE_FEATURE', min=min_docfreq, max=self$n * max_docfreq_pct), copy=F)
+  self$preprocess(feature, new_column = 'DEDUPLICATE_FEATURE', min_docfreq = min_docfreq, max_docfreq = self$n_meta * max_docfreq_pct)
 
   .duplicates = get_duplicates(self, feature='DEDUPLICATE_FEATURE', date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
   self$subset(subset_meta = !doc_id %in% .duplicates, copy=F)
@@ -111,10 +110,11 @@ to_POSIXct <- function(x){
            error = function(e) stop(sprintf('Date column cannot be interpreted as POSIXct: \n\t-> %s', e)))
 }
 
-compare_documents_fun <- function(tc, feature='token', date_col=NULL, hour_window=c(-24,24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
+compare_documents_fun <- function(tc, feature='token', date_col=NULL, hour_window=c(-24,24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, from_subset=NULL, to_subset=NULL, verbose=T) {
   measure = match.arg(measure)
   if (measure == 'overlap_pct') measure = 'percentage.from'
   if (!is.null(date_col)) date_col = match.arg(date_col, choices = tc$meta_names)
+  if (length(hour_window) == 1) hour_window = c(-hour_window, hour_window)
 
   meta = as.data.frame(tc$get_meta())
 
@@ -136,6 +136,7 @@ compare_documents_fun <- function(tc, feature='token', date_col=NULL, hour_windo
 
   if (is.null(date_col)) {
     d = RNewsflow::documents.compare(dtm, dtm.y, measure=measure, min.similarity=min_similarity)
+    if (is.null(d)) return(NULL)
     if (nrow(d) == 0) return(NULL)
 
     g = igraph::graph.data.frame(d[,c('x','y')], directed = T)
@@ -150,13 +151,18 @@ compare_documents_fun <- function(tc, feature='token', date_col=NULL, hour_windo
     }
   } else {
     meta[,date_col] = to_POSIXct(meta[,date_col])
+
+
     if (is.null(hour_window)) {
       d = RNewsflow::documents.compare(dtm, dtm.y, measure=measure, min.similarity=min_similarity)
+      if (is.null(d)) return(NULL)
       if (nrow(d) == 0) return(NULL)
       g = RNewsflow::document.network(d, meta, 'doc_id', date_col)
     } else {
       g = RNewsflow::newsflow.compare(dtm, meta, id.var='doc_id', date.var=date_col, measure=measure, only.from=only_from, only.to=only_to, min.similarity=min_similarity, hour.window=hour_window)
     }
+
+
   }
   g
 }
@@ -168,14 +174,14 @@ get_duplicates <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, h
   g = compare_documents_fun(tc, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=similarity, weight=weight, ngrams)
   if (is.null(g)) {
     message('Deleting 0 duplicates')
-    return(tc)
+    return(c())
   }
 
-  e = igraph::get.edges(g, igraph::E(g)) ## edges by indices
+  #e = igraph::get.edges(g, igraph::E(g)) ## edges by indices
   d = igraph::get.data.frame(g, 'edges') ## edges by name and with weigth
   if (!is.null(meta_cols)) {
-    mx = tc$get_meta(meta_cols)[e[,1],]
-    my = tc$get_meta(meta_cols)[e[,2],]
+    mx = tc$get_meta(meta_cols, keep_df = T, doc_id=d$from)
+    my = tc$get_meta(meta_cols, keep_df = T, doc_id=d$to)
 
     allmatch = rowSums(mx == my) == ncol(mx)
     d = d[allmatch,]
@@ -195,7 +201,7 @@ get_duplicates <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, h
   }
 
   ## If date_var is missing, keep == 'random', or if there are identical articles that occured simultaneously, delete randomly
-  d = d[sample(1:nrow(d), nrow(d)),]
+  if (keep == 'random') d = d[sample(1:nrow(d), nrow(d)),]
   d$fromi = match(d$from, unique(d$from, d$to))
   d$toi = match(d$to, unique(d$from, d$to))
   d = d[d$fromi < d$toi,]
@@ -205,3 +211,5 @@ get_duplicates <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, h
   if (print_duplicates) sprintf('c(%s)', print(paste(sprintf('"%s"', duplicates), collapse=', ')))
   duplicates
 }
+
+

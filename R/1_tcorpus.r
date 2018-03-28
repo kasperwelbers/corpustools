@@ -593,8 +593,8 @@ print.tCorpus <- function(x, ...) {
 #' refresh_tcorpus(tc)
 #' @export
 refresh_tcorpus <- function(tc){
-  tCorpus$new(tokens = data.table::copy(tc$tokens),
-              meta = data.table::copy(tc$meta))
+  tCorpus$new(tokens = data.table::copy(tc$get(keep_df = T)),
+              meta = data.table::copy(tc$get_meta(keep_df = T)))
 }
 
 rebuild_tcorpus <- function(tc) {
