@@ -1,5 +1,2 @@
-library(testthat)
-library(corpustools)
-
-test_check('corpustools', reporter = 'stop')
+##test_that::test_check('corpustools', reporter = 'stop')
 

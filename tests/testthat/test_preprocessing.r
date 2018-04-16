@@ -1,9 +1,7 @@
-test_that("preprocessing works", {
-  cat('\n', '-> Testing: Preprocessing', '\n')
-  start_time = Sys.time()
+testthat::context('Preprocessing')
 
-  library(corpustools)
-  #library(testthat)
+
+test_that("preprocessing works", {
   tokens = data.frame(document = c(rep(1, 8), rep(2, 5), rep(3, 5)),
                       sentence = c(rep(1, 8), rep(2, 5), rep(3, 5)),
                       id = 1:18,
@@ -21,7 +19,4 @@ test_that("preprocessing works", {
 
   tc = tc$preprocess('token', new_column='feature', language='english', lowercase = T, use_stemming = T, ngrams = 3, ngram_context = 'document')
   expect_equal(tc$get('feature'), feature)
-
-  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
-
 })

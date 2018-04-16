@@ -71,7 +71,7 @@ lda_features <- function(tc, m, feature, new_feature='LDA_topic', context_level=
 
 lda_fit <- function(dtm, method='Gibbs', K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250) {
   require_package('topicmodels')
-  if (methods::is(dtm, 'DocumentTermMatrix')) dtm = tm_dtm_to_dgTMatrix(dtm)
+  if (methods::is(dtm, 'DocumentTermMatrix')) dtm = as_dgTMatrix(dtm)
 
   empty_rows = sum(Matrix::rowSums(dtm) == 0)
   empty_cols = sum(Matrix::rowSums(dtm) == 0)

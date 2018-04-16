@@ -1,8 +1,7 @@
-test_that("Semnet works", {
-  cat('\n', '-> Testing: Semnet', '\n')
-  start_time = Sys.time()
+testthat::context('Semnet')
 
-  library(corpustools)
+
+test_that("Semnet works", {
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte')
@@ -49,7 +48,4 @@ test_that("Semnet works", {
   expect_true(!'Rutte' %in% igraph::V(g)$name)
   g = tc_withNA$semnet_window('token', measure = 'con_prob', window.size = 10, n.batches = NA)
   expect_true(!'Rutte' %in% igraph::V(g)$name)
-
-  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
-
 })

@@ -1,8 +1,7 @@
-test_that("Corpus comparison works!", {
-  cat('\n', '-> Testing: Compare corpora', '\n')
-  start_time = Sys.time()
+testthat::context('Compare corpora')
 
-  library(corpustools)
+
+test_that("Corpus comparison works!", {
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte')
@@ -26,6 +25,4 @@ test_that("Corpus comparison works!", {
   expect_equal(round(sum(comp$chi2),3), 4.809)
 
   comp = tc$compare_corpus(tc_y, 'token', what = 'cooccurrence', smooth = F)
-
-  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 })

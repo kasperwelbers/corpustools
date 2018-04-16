@@ -1,78 +1,14 @@
-#include <Rcpp.h>
-using namespace Rcpp;
-// [[Rcpp::plugins(cpp11)]]
+#include "QueryIter.h"
 
-// QUERY ITERATOR CLASS
+List get_nested_terms(QueryIter &q, int nested_i, int in_quote, bool in_quotemark) ;
 
-class QueryIter {
-  std::string query;
-  unsigned int position;
-public:
-  QueryIter (std::string);
-  void next () {if (position < query.size()) position++;}
-  char pop ();                             // get char at current position and move position ahead
-  char get_i (int i) {return query[i];}    // get char at specific position
-  int get_position () {return position;}   // get position
-  bool done () {return position >= query.size();} // not more chars left
-  bool is (char);                          // check if char at current position is [argument]
-  bool is_in (std::string);                // check if char at current position is in [argument]
-  bool is_break () {return is_in("() \"<>");} // any term/context breaking character used in query parser
-  std::string get_from (int);              // get string from given position till current position (used for error messages)
-  std::string pop_till_break ();           // get string till next break (spaces, parentheses, angle brackets, quotes)
-  std::string pop_flag ();                 // get string till next break if its a flag (i.e. starts with ~)
-};
-
-QueryIter::QueryIter (std::string x) {
-  query = " " + x + " ";  // start with empty space to prevent issues with nested_i
-  position = 0;
-}
-
-char QueryIter::pop() {
-  char c = query[position];
-  next();
-  return c;
-}
-
-bool QueryIter::is (char c) {
-  if (position == query.length()-1) return false;
-  char x = query[position];
-  return x == c;
-}
-
-bool QueryIter::is_in (std::string breaks) {
-  char c = query[position];
-  for (char b: breaks){
-    if (c == b) return true;
-  }
-  return false;
-}
-
-std::string QueryIter::get_from(int from) {
-  return query.substr(from, position-from);
-}
-
-std::string QueryIter::pop_till_break () {
-  std::string out = "";
-  bool escaped = false;
-  while (!done()) {
-    if (is('{')) escaped = true;
-    if (is_break() and !escaped) break;
-    if (is('}')) escaped = false;
-    out.push_back(pop());
-  }
-  return out;
-}
-
-std::string QueryIter::pop_flag () {
-  if (is('~')) {
-    next();
-    return pop_till_break();
-  }
-  return "";
+// [[Rcpp::export]]
+List parse_query_cpp(std::string x) {
+  QueryIter q(x);
+  return get_nested_terms(q, 0, 0, false);
 }
 
 
-// process flag
 bool char_in_flag(std::string flag, char c) {
   bool opened = false; // for ignoring flag between curly brackets (used for sub query)
   for (char &flag_c : flag) {
@@ -148,9 +84,6 @@ List get_flag_query(std::string flag) {
   }
   return wrap(out);
 }
-
-
-// PARSE QUERY
 
 std::string get_bool_operator(List terms) {
   // returns the boolean operator being used, and tests whether only one boolean operator is used
@@ -352,13 +285,6 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
 
   return out;
 }
-
-// [[Rcpp::export]]
-List parse_query(std::string x) {
-  QueryIter q(x);
-  return get_nested_terms(q);
-}
-
 
 /*** R
 x = parse_query('test# A')

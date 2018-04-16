@@ -67,6 +67,7 @@ term_statistics <- function(tc, feature, context_level=c('document','sentence'))
 
 dtm_term_statistics <- function(dtm, feature) {
   dtm = dtm[Matrix::rowSums(dtm) > 0, Matrix::colSums(dtm) > 0]    # get rid of empty rows/columns
+  dtm = as_dgTMatrix(dtm)
   vocabulary = colnames(dtm)
   data.frame(term = as.character(vocabulary),
              characters = nchar(vocabulary),

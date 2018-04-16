@@ -130,7 +130,7 @@ get_sequence_hit <- function(d, seq_length, subcontext=NULL){
   hit_id = NULL ## used in data.table syntax, but need to have bindings for R CMD check
   setorderv(d, c('doc_id', 'token_id', '.term_i'))
   if (!is.null(subcontext)) subcontext = d[[subcontext]]
-  .hit_id = .Call('_corpustools_sequence_hit_ids', PACKAGE = 'corpustools', as.numeric(d[['doc_id']]), as.numeric(subcontext), as.numeric(d[['token_id']]), as.numeric(d[['.term_i']]), seq_length)
+  .hit_id = sequence_hit_ids_cpp(as.numeric(d[['doc_id']]), as.numeric(subcontext), as.numeric(d[['token_id']]), as.numeric(d[['.term_i']]), seq_length)
   d[,hit_id := .hit_id]
 }
 
@@ -141,7 +141,7 @@ get_proximity_hit <- function(d, n_unique, window=NA, subcontext=NULL, seq_i=NUL
   if (!is.null(seq_i)) seq_i = d[[seq_i]]
   if (!is.null(replace)) replace = d[[replace]]
 
-  .hit_id = .Call('_corpustools_proximity_hit_ids', PACKAGE = 'corpustools', as.numeric(d[['doc_id']]), as.numeric(subcontext), as.numeric(d[['token_id']]), as.numeric(d[['.term_i']]), n_unique, window, as.numeric(seq_i), replace, feature_mode, directed)
+  .hit_id = proximity_hit_ids_cpp(as.numeric(d[['doc_id']]), as.numeric(subcontext), as.numeric(d[['token_id']]), as.numeric(d[['.term_i']]), n_unique, window, as.numeric(seq_i), replace, feature_mode, directed)
   d[,hit_id := .hit_id]
 }
 
@@ -151,7 +151,7 @@ get_AND_hit <- function(d, n_unique, subcontext=NULL, group_i=NULL, replace=NULL
   if (!is.null(subcontext)) subcontext = d[[subcontext]]
   if (!is.null(group_i)) group_i = d[[group_i]]
   if (!is.null(replace)) replace = d[[replace]]
-  .hit_id = .Call('_corpustools_AND_hit_ids', PACKAGE = 'corpustools', as.numeric(d[['doc_id']]), as.numeric(subcontext), as.numeric(d[['token_id']]), as.numeric(d[['.term_i']]), n_unique, as.character(group_i), replace, feature_mode)
+  .hit_id = AND_hit_ids_cpp(as.numeric(d[['doc_id']]), as.numeric(subcontext), as.numeric(d[['token_id']]), as.numeric(d[['.term_i']]), n_unique, as.character(group_i), replace, feature_mode)
   d[,hit_id := .hit_id]
 }
 

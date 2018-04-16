@@ -14,7 +14,7 @@ IntegerVector fast_factor_template( const Vector<RTYPE>& x, Vector<RTYPE> levs) 
 }
 
 // [[Rcpp::export]]
-SEXP fast_factor( SEXP x, SEXP levs) {
+SEXP fast_factor_cpp( SEXP x, SEXP levs) {
   switch( TYPEOF(x) ) {
   case INTSXP: return fast_factor_template<INTSXP>(x, levs);
   case REALSXP: return fast_factor_template<REALSXP>(x, levs);

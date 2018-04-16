@@ -1,9 +1,7 @@
-test_that("tCorpus class works", {
-  cat('\n', '-> Testing: tCorpus', '\n')
-  start_time = Sys.time()
+testthat::context('tCorpus')
 
-  library(corpustools)
-  library(testthat)
+
+test_that("tCorpus class works", {
   ### create from data.frame
   tokens = data.frame(document = c(rep(1, 8), rep(2, 5), rep(3, 5)),
                  sentence = c(rep(1,8), rep(1,5), rep(1,5)),
@@ -63,7 +61,4 @@ test_that("tCorpus class works", {
   newmedium = as.factor(paste('source', medium))
   tc = tc$set_meta('medium', newmedium)
   expect_equal(tc$get_meta('medium'), newmedium)
-
-  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
-
 })

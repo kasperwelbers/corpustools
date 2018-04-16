@@ -33,11 +33,13 @@
 #' g = tc$compare_documents(date_col = 'date', hour_window = c(0,36))
 #' igraph::get.data.frame(g)
 tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
-  require_package('RNewsflow')
   weight = match.arg(weight)
   from_subset = self$eval_meta(substitute(from_subset), parent.frame())
   to_subset = self$eval_meta(substitute(to_subset), parent.frame())
-  compare_documents_fun(self, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=min_similarity, weight=weight, ngrams=ngrams, from_subset=from_subset, to_subset=to_subset)
+
+  dtm = self$dtm(feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
+  compare_documents_dtm(dtm, meta=self$get_meta(), date_col=date_col, hour_window=hour_window, only_from=from_subset, only_to=to_subset, min_similarity=min_similarity, measure=measure)
+
 })
 
 #' Deduplicate documents
@@ -83,8 +85,6 @@ tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NU
 #'                        copy=TRUE)
 #' dedup$get_meta()
 tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=1, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=F){
-  require_package('RNewsflow')
-
   weight = match.arg(weight)
   match.arg(feature, self$feature_names)
   if (copy) {
@@ -110,68 +110,16 @@ to_POSIXct <- function(x){
            error = function(e) stop(sprintf('Date column cannot be interpreted as POSIXct: \n\t-> %s', e)))
 }
 
-compare_documents_fun <- function(tc, feature='token', date_col=NULL, hour_window=c(-24,24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, from_subset=NULL, to_subset=NULL, verbose=T) {
-  measure = match.arg(measure)
-  if (measure == 'overlap_pct') measure = 'percentage.from'
-  if (!is.null(date_col)) date_col = match.arg(date_col, choices = tc$meta_names)
-  if (length(hour_window) == 1) hour_window = c(-hour_window, hour_window)
-
-  meta = as.data.frame(tc$get_meta())
-
-  ## construct dtm's based on subsets, but not if date_col and hour_window are given, because then this needs to be done differently for the newsflow.compare function
-  if (is.null(date_col) | is.null(hour_window)){
-    dtm = tc$dtm(feature=feature, weight = weight, subset_meta=from_subset, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams, form = 'tm_dtm')
-    if (is.null(from_subset) && is.null(to_subset)) {
-      dtm.y = NULL
-    } else {
-      dtm.y = tc$dtm(feature=feature, weight = weight, subset_meta = to_subset, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams, form = 'tm_dtm')
-    }
-  } else {
-    ## if the compare.newsflow function is used, the full DTM is given, and the only_from and only_to arguments are used
-    only_from = if (!is.null(from_subset)) tc$get_meta('doc_id')[from_subset] else NULL
-    only_to = if (!is.null(to_subset)) tc$get_meta('doc_id')[to_subset] else NULL
-
-    dtm = tc$dtm(feature=feature, weight = weight, drop_empty_terms = T, context_labels = T, feature_labels=F, ngrams=ngrams, form = 'tm_dtm')
-  }
-
-  if (is.null(date_col)) {
-    d = RNewsflow::documents.compare(dtm, dtm.y, measure=measure, min.similarity=min_similarity)
-    if (is.null(d)) return(NULL)
-    if (nrow(d) == 0) return(NULL)
-
-    g = igraph::graph.data.frame(d[,c('x','y')], directed = T)
-    igraph::E(g)$weight = d$similarity
-
-    missingmeta = as.character(meta[!meta$doc_id %in% igraph::V(g)$name, 'doc_id'])
-    g = igraph::add.vertices(g, nv = length(missingmeta), attr = list(name=missingmeta))
-    meta = meta[match(igraph::V(g)$name, meta$doc_id),]
-    attribs = colnames(meta)[!colnames(meta) == 'doc_id']
-    for(attrib in attribs){
-      g = igraph::set.vertex.attribute(g, attrib, value=as.character(meta[,attrib]))
-    }
-  } else {
-    meta[,date_col] = to_POSIXct(meta[,date_col])
-
-
-    if (is.null(hour_window)) {
-      d = RNewsflow::documents.compare(dtm, dtm.y, measure=measure, min.similarity=min_similarity)
-      if (is.null(d)) return(NULL)
-      if (nrow(d) == 0) return(NULL)
-      g = RNewsflow::document.network(d, meta, 'doc_id', date_col)
-    } else {
-      g = RNewsflow::newsflow.compare(dtm, meta, id.var='doc_id', date.var=date_col, measure=measure, only.from=only_from, only.to=only_to, min.similarity=min_similarity, hour.window=hour_window)
-    }
-
-
-  }
-  g
-}
-
-get_duplicates <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, print_duplicates=F) {
+get_duplicates <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, hour_window=24, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, print_duplicates=F) {
   keep = match.arg(keep)
   for (mvar in meta_cols) if (!mvar %in% tc$meta_names) stop(sprintf('Meta column (%s) not in corpus', mvar))
 
-  g = compare_documents_fun(tc, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=similarity, weight=weight, ngrams)
+  #g = compare_documents_fun(tc, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=similarity, weight=weight, ngrams)
+  dtm = tc$dtm(feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
+
+  g = compare_documents_dtm(dtm, meta=tc$get_meta(), date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, min_similarity=similarity)
+
+
   if (is.null(g)) {
     message('Deleting 0 duplicates')
     return(c())

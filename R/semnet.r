@@ -173,3 +173,7 @@ DocumentTermMatrix_to_dgTMatrix <- function(dtm){
   colnames(sm) = colnames(dtm)
   methods::as(sm, 'dgTMatrix')
 }
+
+
+
+

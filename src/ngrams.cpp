@@ -3,7 +3,7 @@ using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]
 
 // [[Rcpp::export]]
-CharacterVector ngrams(CharacterVector tokens, CharacterVector group, int n, std::string sep, std::string empty)
+CharacterVector ngrams_cpp(CharacterVector tokens, CharacterVector group, int n, std::string sep, std::string empty)
 {
   int len = tokens.size();
   CharacterVector out(len);

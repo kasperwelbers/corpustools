@@ -1,9 +1,7 @@
-test_that("Query search works", {
-  cat('\n', '-> Testing: Search features', '\n')
-  start_time = Sys.time()
+testthat::context('Search Features')
 
-  library(corpustools)
-  library(testthat)
+
+test_that("Query search works", {
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte')
@@ -128,8 +126,5 @@ test_that("Query search works", {
 
   hits = tc$search_features('Bob OR "bob smith"', keep_longest = F) # otherwise, match first (bob)
   expect_true(length(hits$hits$feature) == 1)
-
-  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
-
 })
 

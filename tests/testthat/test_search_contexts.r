@@ -1,10 +1,7 @@
+testthat::context('Search Contexts')
+
+
 test_that("Query document search works", {
-  cat('\n', '-> Testing: Search context', '\n')
-  start_time = Sys.time()
-
-  library(corpustools)
-  library(testthat)
-
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',
            'Mark Rutte is simply Rutte. Bos, on the other hand, is not always Wouter',
@@ -71,8 +68,5 @@ test_that("Query document search works", {
   tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = T)
   tc_rutte = tc$subset_query('"mark rutte"~2', context_level = 'sentence')
   expect_equal(tc_rutte$get_meta('doc_id'), 'c')
-
-  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
-
 })
 

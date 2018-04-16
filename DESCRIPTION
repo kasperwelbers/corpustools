@@ -20,6 +20,7 @@ Imports:
     SnowballC,
     stringi, 
     Rcpp (>= 0.12.12), 
+    RcppEigen,
     R6,
     readr,
     udpipe
@@ -28,12 +29,11 @@ Suggests:
     quanteda (>= 1.1.1),
     tm (>= 0.6),
     topicmodels,
-    RNewsflow,
     igraph,
     shiny,
     shinydashboard,
     DT
-LinkingTo: Rcpp
+LinkingTo: Rcpp, RcppEigen
 LazyData: true
 Encoding: UTF-8
 SystemRequirements: C++11

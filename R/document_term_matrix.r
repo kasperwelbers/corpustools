@@ -160,12 +160,13 @@ weight_dtm <- function(m, weight, idf=NULL){
   if(weight == 'docfreq') {
     m = m > 0
   }
-  methods::as(methods::as(m,'dgCMatrix'), 'dgTMatrix')
+  methods::as(m,'dgCMatrix')
 }
 
-tm_dtm_to_dgTMatrix <- function(dtm){
+as_dgTMatrix <- function(dtm){
+  if (!methods::is(dtm, 'DocumentTermMatrix')) return(methods::as(dtm, 'dgTMatrix'))
   sm = Matrix::spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
   rownames(sm) = rownames(dtm)
   colnames(sm) = colnames(dtm)
-  sm
+  methods::as(sm, 'dgTMatrix')
 }

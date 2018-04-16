@@ -1,9 +1,7 @@
+testthat::context('Topic Models')
+
+
 test_that("Testing: Topic models", {
-  cat('\n', '-> Testing: Topic Models')
-  start_time = Sys.time()
-
-  library(corpustools)
-
   tc = create_tcorpus(sotu_texts[1:500,], 'text', doc_column = 'id')
   tc = tc$preprocess('token', 'feature', lowercase = T, remove_punctuation = T, remove_stopwords = T, use_stemming = T, language = 'english')
 
@@ -11,9 +9,6 @@ test_that("Testing: Topic models", {
 
   m = tc$lda_fit(feature = 'feature', create_feature = 'lda', K=5)
   expect_true(exists('m'))
-
-  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
-
 })
 
 

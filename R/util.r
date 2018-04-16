@@ -73,7 +73,7 @@ fast_factor <- function(x, levels=NULL) {
   if (!methods::is(x, 'factor')) {
     if (!all(is.na(x))) {
       if (is.null(levels)) levels = vector('character', 0)
-      x = .Call('_corpustools_fast_factor', PACKAGE = 'corpustools', as.character(x), as.character(levels))
+      x = fast_factor_cpp(as.character(x), as.character(levels))
     } else {
       x = fast_dummy_factor(x)
     }
@@ -87,5 +87,12 @@ col_to_hsv <- function(col, alpha=1) {
   ## make mapped to enable vectorization
   hsv_col = grDevices::rgb2hsv(grDevices::col2rgb('red'))
   grDevices::hsv(hsv_col[1], hsv_col[2], hsv_col[3], alpha=alpha)
+}
+
+double_to_single_slash <- function(x) {
+  x = gsub('\\\\n','\n', x)
+  x = gsub('\\\\t','\t', x)
+  x = gsub('\\\\r','\r', x)
+  x
 }
 

@@ -249,7 +249,7 @@ search_features <- function(tc, query, code=NULL, feature='token', mode = c('uni
 
   for (i in 1:length(query)) {
     if (verbose) cat(as.character(codelabel[i]), '\n')
-    q = parse_query(as.character(query[i]))
+    q = parse_query_cpp(as.character(query[i]))
 
     h = recursive_search(tc, q, subcontext=subcontext, feature=feature, mode = mode, keep_longest=keep_longest, as_ascii=as_ascii)
 
@@ -258,7 +258,8 @@ search_features <- function(tc, query, code=NULL, feature='token', mode = c('uni
       hits[[i]] = h
     }
   }
-  hits = data.table::rbindlist(hits)
+  t = tc$tokens
+  hits = data.table::rbindlist(hits, fill = T)
 
   if (nrow(hits) > 0) {
     data.table::setnames(hits, feature, 'feature')

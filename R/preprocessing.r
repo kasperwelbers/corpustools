@@ -205,7 +205,7 @@ preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=
 create_ngrams <- function(tokens, group, n, label=T, sep = '/', empty='') {
   if (!length(tokens) == length(group)) stop("tokens has to be of same length as group")
 
-  ng = .Call('_corpustools_ngrams', PACKAGE = 'corpustools', tokens, group, n, sep, empty)
+  ng = ngrams_cpp(tokens, group, n, sep, empty)
   ng = fast_factor(ng)
   if (label) return(ng) else return(as.numeric(ng))
 }

@@ -1,10 +1,7 @@
+testthat::context('Advanced query search')
+
+
 test_that("Advanced query search works", {
-  cat('\n', '-> Testing: Advanced query search', '\n')
-  start_time = Sys.time()
-
-  library(corpustools)
-  library(testthat)
-
   tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id', sentence_col = 'sentence', token_id_col = 'id')
 
   ## using the sub/flag query to find only mary as a direct object
@@ -26,8 +23,6 @@ test_that("Advanced query search works", {
   ## sequence: nsubj say*
   hits = tc$search_features('"(relation: nsubj) say*"')
   expect_equal(as.character(hits$hits$feature), c('John','says'))
-
-  cat('\n    (', round(difftime(Sys.time(), start_time, units = 'secs'), 2), ' sec)', '\n', sep='')
 
 })
 
