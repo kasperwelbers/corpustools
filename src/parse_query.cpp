@@ -1,5 +1,7 @@
 #include "QueryIter.h"
 
+
+
 List get_nested_terms(QueryIter &q, int nested_i, int in_quote, bool in_quotemark) ;
 
 // [[Rcpp::export]]
@@ -7,6 +9,7 @@ List parse_query_cpp(std::string x) {
   QueryIter q(x);
   return get_nested_terms(q, 0, 0, false);
 }
+
 
 
 bool char_in_flag(std::string flag, char c) {

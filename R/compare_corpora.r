@@ -1,11 +1,7 @@
 
 #' Compare tCorpus vocabulary to that of another (reference) tCorpus
 #'
-#' \strong{Usage:}
-#'
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#' \preformatted{compare_corpus(tc_y, feature, smooth=0.1, min_ratio=NULL, min_chi2=NULL, is_subset=F, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence'))}
-#'
+#' @param tc a \link{tCorpus)}
 #' @param tc_y the reference tCorpus
 #' @param feature the column name of the feature that is to be compared
 #' @param smooth Laplace smoothing is used for the calculation of the ratio of the relative term frequency. Here you can set the added value.
@@ -15,9 +11,8 @@
 #' @param is_subset Specify whether tc is a subset of tc_y. In this case, the term frequencies of tc will be subtracted from the term frequencies in tc_y
 #' @param what choose whether to compare the frequency ("freq") of terms, or the document frequency ("docfreq"). This also affects how chi^2 is calculated, comparing either freq relative to vocabulary size or docfreq relative to corpus size (N)
 #'
-#' @name tCorpus$compare_corpus
-#' @aliases compare_corpus
 #' @return A vocabularyComparison object
+#' @export
 #' @examples
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #'
@@ -26,25 +21,21 @@
 #' obama = tc$subset_meta(president == 'Barack Obama', copy=TRUE)
 #' bush = tc$subset_meta(president == 'George W. Bush', copy=TRUE)
 #'
-#' comp = obama$compare_corpus(bush, 'feature')
+#' comp = compare_corpus(tc, bush, 'feature')
 #' comp = comp[order(-comp$chi),]
 #' head(comp)
 #' \dontrun{
 #' plot(comp)
 #' }
-tCorpus$set('public', 'compare_corpus', function(tc_y, feature, smooth=0.1, min_ratio=NULL, min_chi2=NULL, is_subset=F, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
-  if (is_subset && self$n > tc_y$n) stop('tCorpus x (the one calling the method) cannot be a subset of tCorpus y, because it has more tokens')
+compare_corpus <- function(tc, tc_y, feature, smooth=0.1, min_ratio=NULL, min_chi2=NULL, is_subset=F, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
+  if (is_subset && tc$n > tc_y$n) stop('tCorpus x (the one calling the method) cannot be a subset of tCorpus y, because it has more tokens')
   what = match.arg(what)
-  tcorpus_compare(self, tc_y, feature, smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, x_is_subset=is_subset, what=what)
-})
+  tcorpus_compare(tc, tc_y, feature, smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, x_is_subset=is_subset, what=what)
+}
 
 #' Compare vocabulary of a subset of a tCorpus to the rest of the tCorpus
 #'
-#' \strong{Usage:}
-#'
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#' \preformatted{compare_subset(feature, subset_x=NULL, subset_meta_x=NULL, query_x=NULL, query_feature='token', smooth=0.1, min_ratio=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence'))}
-#'
+#' @param tc a \link{tCorpus}
 #' @param feature the column name of the feature that is to be compared
 #' @param subset_x an expression to subset the tCorpus. The vocabulary of the subset will be compared to the rest of the tCorpus
 #' @param subset_meta_x like subset_x, but using using the meta data
@@ -56,41 +47,39 @@ tCorpus$set('public', 'compare_corpus', function(tc_y, feature, smooth=0.1, min_
 #' @param yates_cor mode for using yates correctsion in the chi^2 calculation. Can be turned on ("yes") or off ("no"), or set to "auto", in which case cochrans rule is used to determine whether yates' correction is used.
 #' @param what choose whether to compare the frequency ("freq") of terms, or the document frequency ("docfreq"). This also affects how chi^2 is calculated, comparing either freq relative to vocabulary size or docfreq relative to corpus size (N)
 #'
-#' @name tCorpus$compare_subset
-#' @aliases compare_subset
 #' @return A vocabularyComparison object
+#' @export
 #' @examples
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #'
 #' tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
 #'
-#' comp = tc$compare_subset('feature', subset_meta_x = president == 'Barack Obama')
+#' comp = compare_subset(tc, 'feature', subset_meta_x = president == 'Barack Obama')
 #' comp = comp[order(-comp$chi),]
 #' head(comp)
 #' \dontrun{
 #' plot(comp)
 #' }
 #'
-#' comp = tc$compare_subset('feature', query_x = 'terroris*')
+#' comp = compare_subset(tc, 'feature', query_x = 'terroris*')
 #' comp = comp[order(-comp$chi),]
 #' head(comp, 10)
-tCorpus$set('public', 'compare_subset', function(feature, subset_x=NULL, subset_meta_x=NULL, query_x=NULL, query_feature='token', smooth=0.1, min_ratio=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
-  subset_x = self$eval(substitute(subset_x), parent.frame())
-  subset_meta_x = self$eval_meta(substitute(subset_meta_x), parent.frame())
+compare_subset <- function(tc, feature, subset_x=NULL, subset_meta_x=NULL, query_x=NULL, query_feature='token', smooth=0.1, min_ratio=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
+  subset_x = tc$eval(substitute(subset_x), parent.frame())
+  subset_meta_x = tc$eval_meta(substitute(subset_meta_x), parent.frame())
   what = match.arg(what)
 
   if(is.null(subset_x) && is.null(subset_meta_x) & is.null(query_x)) stop("at least one of subset_x, subset_meta_x or query_x has to be specified")
   if(!is.null(subset_x) | !is.null(subset_meta_x)) {
     .subset_x = subset_x
     .subset_meta_x = subset_meta_x
-    tc_x = self$subset(subset=.subset_x, subset_meta = .subset_meta_x, copy=T)
+    tc_x = tc$subset(subset=.subset_x, subset_meta = .subset_meta_x, copy=T)
   }
-  if(!is.null(query_x)) tc_x = self$subset_query(query_x, feature=query_feature, copy=T)
+  if(!is.null(query_x)) tc_x = tc$subset_query(query_x, feature=query_feature, copy=T)
 
-  comp = tc_x$compare_corpus(self, feature=feature, smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, is_subset=T, what=what)
+  comp = compare_corpus(tc_x, tc, feature=feature, smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, is_subset=T, what=what)
   comp
-})
-
+}
 
 ########################
 ########################

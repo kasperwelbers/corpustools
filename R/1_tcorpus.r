@@ -184,12 +184,12 @@ tCorpus <- R6::R6Class("tCorpus",
       data.table::copy(levels(self$meta[[column]]))
     },
 
-     context = function(context_level = c('document','sentence'), with_labels=T){
+    context = function(context_level = c('document','sentence'), with_labels=T){
        get_context(self, context_level = context_level, with_labels=with_labels)
      },
 
-     eval = function(x, enclos=parent.frame()) eval(x, self$tokens, enclos),
-     eval_meta = function(x, enclos=parent.frame()) eval(x, self$meta, enclos),
+    eval = function(x, enclos=parent.frame()) eval(x, self$tokens, enclos),
+    eval_meta = function(x, enclos=parent.frame()) eval(x, self$meta, enclos),
 
     get_token_id = function(doc_id=NULL, token_id=NULL, subset=NULL, subset_meta=NULL, window=NULL, inverse=F){
       self$validate()

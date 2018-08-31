@@ -1,5 +1,5 @@
 Package: corpustools
-Version: 0.3.2
+Version: 0.3.3
 Date: 2018-03-23
 Title: Managing, Querying and Analyzing Tokenized Text
 Description: Provides text analysis in R, focusing on the use of a tokenized text format. In this format, the positions of tokens are maintained, and each token can be annotated (e.g., part-of-speech tags, dependency relations).
@@ -9,9 +9,7 @@ Description: Provides text analysis in R, focusing on the use of a tokenized tex
 Author: Kasper Welbers and Wouter van Atteveldt
 Maintainer: Kasper Welbers <kasperwelbers@gmail.com>
 Depends: 
-    R (>= 3.2.0), 
-    Matrix (>= 1.2), 
-    data.table (>= 1.10.4)
+    R (>= 3.2.0)
 Imports: 
     memoise,
     methods, 
@@ -20,19 +18,16 @@ Imports:
     SnowballC,
     stringi, 
     Rcpp (>= 0.12.12), 
-    RcppEigen,
     R6,
-    readr,
-    udpipe
+    udpipe,
+    data.table (>= 1.10.4),
+    Matrix (>= 1.2)
 Suggests:
     testthat,
     quanteda (>= 1.1.1),
     tm (>= 0.6),
     topicmodels,
-    igraph,
-    shiny,
-    shinydashboard,
-    DT
+    igraph
 LinkingTo: Rcpp, RcppEigen
 LazyData: true
 Encoding: UTF-8

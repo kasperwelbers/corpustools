@@ -24,7 +24,7 @@ public:
   int get_end ();
   bool is_done ();
   double pct_done ();
-  int next_position ();
+  void next_position ();
   bool move_to_position (int, int);
   Eigen::SparseMatrix<double> subset_matrix (Eigen::SparseMatrix<double>&);
 };

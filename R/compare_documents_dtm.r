@@ -1,15 +1,35 @@
-calc_sim <- function(dtm, meta, date_col, window=2, group_cols, min_value=0.5, measure=c('cosine','overlap_pct'), unit=c('days','hours', 'mins'), verbose=TRUE) {
+dtm_document_comparison <- function(dtm, meta, date_col=NULL, window=0, group_cols=NULL, min_value=0, measure=c('cosine','overlap_pct'), unit=c('days','hours', 'mins'), only_from=NULL, only_to = NULL, verbose=TRUE) {
   ## add only_from and only_to cheaply, using logical vector that are used to filter out results (so the crossprod still includes irrelevant matches)
-
   measure=match.arg(measure)
   unit = match.arg(unit)
+  if (is.null(window)) window = c(0,0)
+  if (length(window) == 1) window = c(window,window)
+
   meta_ids = group_date_ids(meta, date_col, group_cols, unit=unit)
-  out = compare_documents_cpp(dtm[meta_ids$i,], meta_ids$.GROUP_ID, meta_ids$.DATE_ID, lwindow=window, rwindow=window, measure = measure, min_value = min_value, verbose=verbose)
-  if (measure %in% c('cosine')) out = Matrix::forceSymmetric(out, uplo = 'L')
+
+  if (is.null(only_from) && is.null(only_to)) {
+    out = compare_documents_cpp(dtm[meta_ids$i,,drop=F], meta_ids$.GROUP_ID, meta_ids$.DATE_ID, lwindow=window[1], rwindow=window[2], measure = measure, min_value = min_value, verbose=verbose)
+  } else {
+    if (is.null(only_from)) only_from = rep(T, nrow(meta_ids))
+    if (is.null(only_to)) only_to = rep(T, nrow(meta_ids))
+    meta_ids_x = meta_ids[only_from[meta_ids$i],,drop=F]
+    meta_ids_y = meta_ids[only_to[meta_ids$i],,drop=F]
+    out = Matrix::spMatrix(nrow(meta_ids), nrow(meta_ids))
+    out[meta_ids_x$i, meta_ids_y$i] = compare_documents_xy_cpp(dtm[meta_ids_x$i,,drop=F], meta_ids_x$.GROUP_ID, meta_ids_x$.DATE_ID,
+                                                               dtm[meta_ids_y$i,,drop=F], meta_ids_y$.GROUP_ID, meta_ids_y$.DATE_ID,
+                                                               lwindow=window[1], rwindow=window[2], measure = measure, min_value = min_value, verbose=verbose)
+  }
+  #if (measure %in% c('cosine')) out = Matrix::forceSymmetric(out, uplo = 'L')
   original_order = match(1:nrow(out), meta_ids$i)
   out = out[original_order, original_order]
   colnames(out) = rownames(out) = rownames(dtm)
-  out
+  mode = if (measure %in% c('cosine')) 'max' else 'directed'
+  g = igraph::graph.adjacency(out, mode = mode, weighted=TRUE, diag=FALSE)
+  for(attrib in colnames(meta)){
+    g = igraph::set.vertex.attribute(g, attrib, value=meta[[attrib]])
+  }
+
+  g
 }
 
 group_date_ids <- function(meta, date_col, group_cols, unit) {
@@ -114,7 +134,7 @@ compare_documents_dtm <- function(dtm, meta=NULL, doc_col='doc_id', date_col=NUL
 
   ## dateindex and metaindex are the non-empty indices of the indices.
   metaindex = if (!is.null(meta_i_x) && !is.null(meta_i_y)) which(lapply(meta_i_x, length) > 0) else NULL
-  if (!is.null(date_i_x) && !is.null(date_i_y) && !is.null(hour_window)) {
+  if (!is.null(date_i_x) && !is.null(date_i_y) && !is.null(hour_window)) {T
     dateindex = which(lapply(date_i_x, length) > 0)
     ## similarity scores for date intervals will actually be calculated at the level of days since the
     ## cost of the unnecessary columns in the matrix multiplication is often less than the cost of performing it more often.

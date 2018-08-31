@@ -50,6 +50,8 @@ udpipe_parse_batch <- function(x, udpipe_model, doc_id, use_parser, max_sentence
   x <- udpipe::udpipe_annotate(udpipe_model, x = x, doc_id=doc_id, parser = parser)
   x = as.data.table(x)
 
+  warning('let op zum')
+
   x[,token_id := as.numeric(token_id)]
   x[,head_token_id := as.numeric(head_token_id)]
 

@@ -1,11 +1,7 @@
 
 #' Calculate the similarity of documents
 #'
-#' \strong{Usage:}
-#'
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#' \preformatted{compare_documents(feature='token', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL))}
-#'
+#' @param tc A \link{tCorpus}
 #' @param feature the column name of the feature that is to be used for the comparison.
 #' @param date_col a date with time in POSIXct. If given together with hour_window, only documents within the given hour_window will be compared.
 #' @param hour_window an integer. If given together with date_col, only documents within the given hour_window will be compared.
@@ -24,23 +20,23 @@
 #'                date = c('2010-01-01','2010-01-01','2012-01-01'))
 #' tc = create_tcorpus(d)
 #'
-#' g = tc$compare_documents()
+#' g = compare_documents(tc)
 #' igraph::get.data.frame(g)
 #'
-#' g = tc$compare_documents(measure = 'overlap_pct')
+#' g = compare_documents(tc, measure = 'overlap_pct')
 #' igraph::get.data.frame(g)
 #'
-#' g = tc$compare_documents(date_col = 'date', hour_window = c(0,36))
+#' g = compare_documents(tc, date_col = 'date', hour_window = c(0,36))
 #' igraph::get.data.frame(g)
-tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
+compare_documents <- function(tc, feature='token', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
   weight = match.arg(weight)
-  from_subset = self$eval_meta(substitute(from_subset), parent.frame())
-  to_subset = self$eval_meta(substitute(to_subset), parent.frame())
+  from_subset = tc$eval_meta(substitute(from_subset), parent.frame())
+  to_subset = tc$eval_meta(substitute(to_subset), parent.frame())
 
-  dtm = self$dtm(feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
-  compare_documents_dtm(dtm, meta=self$get_meta(), date_col=date_col, hour_window=hour_window, only_from=from_subset, only_to=to_subset, min_similarity=min_similarity, measure=measure)
-
-})
+  dtm = tc$dtm(feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
+  dtm_document_comparison(dtm, meta=tc$get_meta(), date_col=date_col, window=hour_window, group_cols=NULL, min_value=min_similarity, measure=measure, unit=c('hours'), only_from=from_subset, only_to = to_subset, verbose=TRUE)
+  #compare_documents_dtm(dtm, meta=self$get_meta(), date_col=date_col, hour_window=hour_window, only_from=from_subset, only_to=to_subset, min_similarity=min_similarity, measure=measure)
+}
 
 #' Deduplicate documents
 #'
@@ -117,6 +113,7 @@ get_duplicates <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, h
   #g = compare_documents_fun(tc, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=similarity, weight=weight, ngrams)
   dtm = tc$dtm(feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
 
+  #g = dtm_document_comparison(dtm, meta=self$get_meta(), date_col=date_col, window=hour_window, group_cols=NULL, min_value=min_similarity, measure=measure, unit=c('hours'), only_from=from_subset, only_to = to_subset, verbose=TRUE)
   g = compare_documents_dtm(dtm, meta=tc$get_meta(), date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, min_similarity=similarity)
 
 

@@ -1,4 +1,0 @@
-.DATA <- reactiveValues(tc=NULL)
-
-
-

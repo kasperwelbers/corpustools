@@ -3,7 +3,6 @@
 
 void divide_by_colsum(Eigen::SparseMatrix<double>& cp, Eigen::SparseMatrix<double>& m) {
   if (cp.cols() != m.cols()) {
-    Rcout << cp.cols() << " " << m.cols() << std::endl;
     stop("nee, fout");
   }
   double sum;
@@ -47,7 +46,6 @@ void fill_triples(std::vector<Eigen::Triplet<double>>& tl, Eigen::SparseMatrix<d
   int row, col;
   for (int k=0; k < cp.outerSize(); ++k) {
     col = k + col_offset;
-    //Rcout << col << std::endl;
     for (Eigen::SparseMatrix<double>::InnerIterator it(cp, k); it; ++it) {
       row = it.row() + row_offset;
       if (it.value() < min_value) continue;
@@ -56,7 +54,6 @@ void fill_triples(std::vector<Eigen::Triplet<double>>& tl, Eigen::SparseMatrix<d
       } else {
         if (row == col) continue;
       }
-      //Rcout << "  " << row << std::endl;
       tl.push_back(Eigen::Triplet<double>(col, row, it.value()));
     }
   }
@@ -70,8 +67,8 @@ void calc_sim(std::vector<Eigen::Triplet<double>>& tl, Eigen::SparseMatrix<doubl
     fill_triples(tl, cp, m2_offset, m1_offset, min_value, false);
   }
   if (measure == "cosine") {
-    Eigen::SparseMatrix<double> cp = m1.transpose() * m2;
-    fill_triples(tl, cp, m1_offset, m2_offset, min_value, true);
+    Eigen::SparseMatrix<double> cp = m2.transpose() * m1;
+    fill_triples(tl, cp, m2_offset, m1_offset, min_value, false);
   }
 }
 
@@ -133,6 +130,7 @@ Eigen::SparseMatrix<double> compare_documents_xy_cpp(Eigen::SparseMatrix<double>
   MatrixColIter m_xi = MatrixColIter(group_x, order_x, 0, 0);
   MatrixColIter m_yi = MatrixColIter(group_y, order_y, lwindow, rwindow);
 
+
   if (measure == "cosine") {
     matrix_norm_scores(m_x);
     matrix_norm_scores(m_y);
@@ -141,15 +139,14 @@ Eigen::SparseMatrix<double> compare_documents_xy_cpp(Eigen::SparseMatrix<double>
   std::vector<Eigen::Triplet<double>> tl;
   tl.reserve(ceil((n_x+n_y)*10));    // start with lazy guess. update in manage_capacity()
 
+
   //Progress p(n_x, verbose);
   while (!m_xi.is_done()) {
-    bool has_position = m_yi.move_to_position(m_xi.get_group(), m_yi.get_order());
+    bool has_position = m_yi.move_to_position(m_xi.get_group(), m_xi.get_order());
     if (has_position) {
       manage_capacity(tl, (m_xi.pct_done() + m_yi.pct_done()) / 2);
       Eigen::SparseMatrix<double> m1 = m_xi.subset_matrix(m_x);
       Eigen::SparseMatrix<double> m2 = m_yi.subset_matrix(m_y);
-      Rcout << m_yi.get_start() << std::endl;
-      //Rcout << m1.cols() << " " << m2.cols() << std::endl;
       calc_sim(tl, m1, m_xi.get_start(), m2, m_yi.get_start(), measure, min_value);
     }
     //if (Progress::check_abort())

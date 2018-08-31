@@ -22,9 +22,9 @@ MatrixColIter::MatrixColIter (std::vector<int> group, std::vector<int> order, in
   if (lwindow < 0 or rwindow < 0) stop("window values (lwindow, rwindow) cannot be negative");
 
   int group_end, order_end, order_end_window;
-  for (int group_start = 0; group_start < (n-1); group_start = group_end+1){
+  for (int group_start = 0; group_start < n; group_start = group_end+1){
     group_end = range_end(group, group_start, n-1, group[group_start]);
-    for (int order_start = (group_start); order_start < group_end; order_start = order_end+1) {
+    for (int order_start = (group_start); order_start <= group_end; order_start = order_end+1) {
       order_end = range_end(order, order_start, group_end, order[order_start]);
 
       group_v.push_back(group[group_start]);
@@ -50,16 +50,17 @@ int MatrixColIter::get_start () {return(start[position]);}
 int MatrixColIter::get_end () {return(end[position]);}
 bool MatrixColIter::is_done () {return(position >= n_positions);}
 double MatrixColIter::pct_done () {return(double(start[position]) / n);}
-int MatrixColIter::next_position () {position++;}
+void MatrixColIter::next_position () {position++;}
 
 bool MatrixColIter::move_to_position(int group, int order) {
+  if (position >= n_positions) return(false);
   while (group > group_v[position]) {
     position++;
-    if (position > n_positions) return(false);
+    if (position >= n_positions) return(false);
   }
   while (order > order_v[position] and group == group_v[position]) {
     position++;
-    if (position > n_positions) return(false);
+    if (position >= n_positions) return(false);
   }
   return(group == group_v[position] and order == order_v[position]);
 }
