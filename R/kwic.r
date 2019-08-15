@@ -1,22 +1,11 @@
 #' Get keyword-in-context (KWIC) strings
 #'
-#' @description
 #' Create a data.frame with keyword-in-context strings for given indices (i), search results (hits) or search strings (keyword).
 #'
-#' \strong{Usage:}
-#'
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{
-#' kwic(hits = NULL, i = NULL, query = NULL, code = '',
-#'      ntokens = 10, nsample = NA, output_feature = 'token',
-#'      context_levels = c('document','sentence'),
-#'      prettypaste = T, kw_tag = c('<','>'), ...)
-#' }
-#'
-#' @param hits results of feature search. see \link{tCorpus$search_features}.
+#' @param tc a tCorpus
+#' @param hits results of feature search. see \link{search_features}.
 #' @param i instead of the hits argument, you can give the indices of features directly.
-#' @param query instead of using the hits or i arguments, a search string can be given directly. Note that this simply a convenient shorthand for first creating a hits object with \link{tCorpus$search_features}. If a query is given, then the ... argument is used to pass other arguments to \link{tCorpus$search_features}.
+#' @param query instead of using the hits or i arguments, a search string can be given directly. Note that this simply a convenient shorthand for first creating a hits object with \link{search_features}. If a query is given, then the ... argument is used to pass other arguments to \link{tCorpus$search_features}.
 #' @param code if 'i' or 'query' is used, the code argument can be used to add a code label. Should be a vector of the same length that gives the code for each i or query, or a vector of length 1 for a single label.
 #' @param ntokens an integers specifying the size of the context, i.e. the number of tokens left and right of the keyword.
 #' @param n a number, specifying the total number of hits
@@ -24,23 +13,22 @@
 #' @param output_feature the feature column that is used to make the KWIC.
 #' @param context_level Select the maxium context (document or sentence).
 #' @param kw_tag a character vector of length 2, that gives the symbols before (first value) and after (second value) the keyword in the KWIC string. Can for instance be used to prepare KWIC with format tags for highlighting.
-#' @param ... See \link{tCorpus$search_features} for the query parameters
+#' @param ... See \link{search_features} for the query parameters
 #'
-#' @name tCorpus$kwic
-#' @aliases kwic
+#' @export
 #' @examples
 #' tc = tokens_to_tcorpus(corenlp_tokens, sentence_col = 'sentence', token_id_col = 'id')
 #'
 #' ## look directly for a term (or complex query)
-#' tc$kwic(query = 'love*')
+#' get_kwic(tc, query = 'love*')
 #'
 #' ## or, first perform a feature search, and then get the KWIC for the results
-#' hits = tc$search_features('(john OR mark) AND mary AND love*', context_level = 'sentence')
-#' tc$kwic(hits, context_level = 'sentence')
-tCorpus$set('public', 'kwic', function(hits=NULL, i=NULL, feature=NULL, query=NULL, code='', ntokens=10, n=NA, nsample=NA, output_feature='token', query_feature='token', context_level=c('document','sentence'), kw_tag=c('<','>'), ...){
-  if (!is.null(query)) hits = self$search_features(query=query, code=code, feature = query_feature, ...)
-  keyword_in_context(self, hits=hits, i=i, code=code, ntokens=ntokens, n=n, nsample=nsample, output_feature=output_feature, context_level=context_level, kw_tag=kw_tag)
-})
+#' hits = search_features(tc, '(john OR mark) AND mary AND love*', context_level = 'sentence')
+#' get_kwic(tc, hits=hits, context_level = 'sentence')
+get_kwic <- function(tc, hits=NULL, i=NULL, feature=NULL, query=NULL, code='', ntokens=10, n=NA, nsample=NA, output_feature='token', query_feature='token', context_level=c('document','sentence'), kw_tag=c('<','>'), ...){
+  if (!is.null(query)) hits = search_features(tc, query=query, code=code, feature = query_feature, ...)
+  keyword_in_context(tc, hits=hits, i=i, code=code, ntokens=ntokens, n=n, nsample=nsample, output_feature=output_feature, context_level=context_level, kw_tag=kw_tag)
+}
 
 #################################
 #################################
@@ -50,7 +38,7 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, n=NA,
   if (class(i) == 'logical') i = which(i)
   ## remove i and code parameters
 
-  if(!is.featureHits(hits)) stop('hits must be a featureHits object (created with the $search_features() method')
+  if(!is.featureHits(hits)) stop('hits must be a featureHits object (created with search_features()')
   hits$hits$hit_id = stringi::stri_paste(hits$hits$code, hits$hits$hit_id, sep=' ')
   d = hits$hits
 

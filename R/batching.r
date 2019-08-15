@@ -12,6 +12,7 @@ get_batch_i <- function(n, n.batches=NA, batchsize=NA, return_list=F, return_vec
   batch_i
 }
 
+
 data_batch <- function(tc, context_level, n.batches=10, batchsize=NA, return_list=F, return_vector=F, for_meta=F){
   if (for_meta) {
     if (!context_level == 'document') stop('for_meta only possible if context is document')

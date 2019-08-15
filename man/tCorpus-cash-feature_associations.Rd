@@ -2,7 +2,6 @@
 % Please edit documentation in R/deprecated.r
 \name{tCorpus$feature_associations}
 \alias{tCorpus$feature_associations}
-\alias{feature_associations}
 \title{Get common nearby terms given a feature query}
 \arguments{
 \item{query}{A character string that is a query. See \link{search_features} for documentation of the query language.}

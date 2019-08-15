@@ -4,27 +4,25 @@
 \alias{compare_documents_dtm}
 \title{Compare the documents in a dtm with a sliding window over time}
 \usage{
-compare_documents_dtm(dtm, meta = NULL, doc_col = "doc_id",
-  date_col = NULL, meta_cols = NULL, hour_window = 24,
-  measure = c("cosine", "overlap_pct"), min_similarity = 0,
-  n_topsim = NULL, only_from = NULL, only_to = NULL,
-  return_zeros = FALSE, only_complete_window = FALSE, verbose = T)
+compare_documents_dtm(dtm, meta = NULL, date_col = NULL,
+  meta_cols = NULL, hour_window = 24, measure = c("cosine",
+  "overlap_pct"), min_similarity = 0, n_topsim = NULL,
+  only_from = NULL, only_to = NULL, only_complete_window = FALSE,
+  pvalue = c("none", "normal", "lognormal", "nz_normal", "nz_lognormal",
+  "disparity"), return_as = c("igraph", "edgelist", "matrix"),
+  verbose = T, ...)
 }
 \arguments{
 \item{dtm}{A document-term matrix in the tm \link[tm]{DocumentTermMatrix} class. It is recommended to weight the DTM beforehand, for instance using \link[tm]{weightTfIdf}.}
 
 \item{meta}{A data.frame where rows are documents and columns are document meta information.
-Should at least contain 2 columns: the document name/id and date.
-The name/id column should match the document names/ids of the edgelist, and its label is specified in the `doc_col` argument.
-The date column should be intepretable with \link[base]{as.POSIXct}, and its label is specified in the `date_col` argument.}
-
-\item{doc_col}{The label for the document name/id column in the `meta` data.frame. Default is "document_id"}
+Should at least contain a column with the document date. The date column should be intepretable with \link[base]{as.POSIXct}, and its label is specified in the `date_col` argument.}
 
 \item{date_col}{The name of the document date column in the `meta` data.frame. If given, only documents within the given date window (specified in hour_window) will be compared}
 
 \item{meta_cols}{The names of other columsn in the `meta` data.frame. If given, only documents with identical values in these columns will be compared.}
 
-\item{hour_window}{A vector of eighter length 1 or 2. If length is 1, the same value is used for the left and right side of the window. If length is 2, the first and second value determine the left and right side. For example, the value 12 will compare each document to all documents between the previous and next 12 hours, and c(-10, 36) will compare each document to all documents between the previous 10 and the next 36 hours.}
+\item{hour_window}{A vector of length 1 or 2. If length is 1, the same value is used for the left and right side of the window. If length is 2, the first and second value determine the left and right side. For example, the value 12 will compare each document to all documents between the previous and next 12 hours, and c(-10, 36) will compare each document to all documents between the previous 10 and the next 36 hours.}
 
 \item{measure}{the measure that should be used to calculate similarity/distance/adjacency. Currently supports the symmetrical measure "cosine" (cosine similarity), and the assymetrical measures "overlap_pct" (percentage of term scores in the document that also occur in the other document).}
 
@@ -36,9 +34,11 @@ The date column should be intepretable with \link[base]{as.POSIXct}, and its lab
 
 \item{only_to}{A vector with names/ids of documents (dtm rownames), or a logical vector that matches the rows of the dtm. Use to compare other documents to only these documents.}
 
-\item{return_zeros}{If true, all comparison results are returned, including those with zero similarity (rarely usefull and problematic with large data)}
-
 \item{only_complete_window}{if True, only compare articles (x) of which a full window of reference articles (y) is available. Thus, for the first and last [window.size] days, there will be no results for x.}
+
+\item{pvalue}{If used, transform the similarity score to a p-value. The value is reversed, so that higher means more similar (and thus the min.similarity still makes sense). Currently supports "normal" and "lognormal" distribution, and the uniform distribution used in the "disparity" filter (see Serrano et al.). Also "nz_normal" and "nz_lognormal" can be used to only consider the nonzero values.}
+
+\item{return_as}{Detemine whether output is returned as an "edgelist", "igraph" network or sparse "matrix'.}
 
 \item{verbose}{If TRUE, report progress}
 }

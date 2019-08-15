@@ -41,7 +41,7 @@
 tCorpus$set('public', 'lda_fit', function(feature, create_feature=NULL, K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250, context_level=c('document','sentence'), ...) {
   require_package('topicmodels')
 
-  dtm = self$dtm(feature=feature, context_level=context_level, ...)
+  dtm = get_dtm(self, feature=feature, context_level=context_level, ...)
   m = lda_fit(dtm=dtm, method='Gibbs', K=K, num.iterations=num.iterations, alpha=alpha, eta=eta, burnin=burnin)
   if (!is.null(create_feature)) {
     .d = lda_features(tc=self, m=m, feature=feature, new_feature=new_feature, context_level=context_level)

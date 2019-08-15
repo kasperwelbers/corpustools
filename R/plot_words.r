@@ -59,7 +59,7 @@ plot_words <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', yl
 #' ## create DTM
 #' tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
 #' tc$preprocess('token', 'feature', remove_stopwords = TRUE)
-#' dtm = tc$dtm('feature')
+#' dtm = get_dtm(tc, 'feature')
 #'
 #' \dontrun{
 #' dtm_wordcloud(dtm, nterms = 20)

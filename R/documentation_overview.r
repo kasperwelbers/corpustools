@@ -5,7 +5,20 @@
 
 #' tCorpus: a corpus class for tokenized texts
 #'
-#' @section Working with the tCorpus:
+#' The tCorpus is a class for managing tokenized texts, stored as a data.frame in which each row represents a token, and columns contain the positions and features of these tokens.
+#'
+#' @section Methods and Functions:
+#'
+#' The corpustools package uses both functions and methods for working with the tCorpus.
+#'
+#' Methods are used for all operations that modify the tCorpus itself, such as subsetting or adding columns.
+#' This allows the data to be \link[=tCorpus_modify_by_reference]{modified by reference}.
+#' Methods are accessed using the dollar sign after the tCorpus object. For example, if the tCorpus is named tc, the subset method can be called as tc$subset(...)
+#'
+#' Functions are used for all operations that return a certain output, such as search results or a semantic network.
+#' These are used in the common R style that you know and love. For example, if the tCorpus is named tc, a semantic network can be created with semnet(tc, ...)
+#'
+#' @section Overview of methods and functions:
 #'
 #' The primary goal of the tCorpus is to facilitate various corpus analysis techniques. The documentation for currently implemented techniques can be reached through the following links.
 #' \tabular{ll}{
@@ -37,7 +50,7 @@ NULL
 #' @name tCorpus_create
 NULL
 
-#' Methods for viewing, modifying and subsetting tCorpus data
+#' Methods and functions for viewing, modifying and subsetting tCorpus data
 #'
 #' \link[=tCorpus]{(back to overview)}
 #'
@@ -45,13 +58,15 @@ NULL
 #' \tabular{ll}{
 #'   \link[=tCorpus$get]{$get()} \tab Get token data, with the possibility to select columns and subset  \cr
 #'   \link[=tCorpus$get]{$get_meta()} \tab Get meta data, with the possibility to select columns and subset  \cr
-#'   \link[=tCorpus$dtm]{$dtm()} \tab Create a document term matrix \cr
+#'   \link[=get_dtm]{get_dtm()} \tab Create a document term matrix \cr
+#'   \link[=get_dfm]{get_dfm()} \tab Create a document term matrix, using the Quanteda dfm format \cr
 #'   \link[=tCorpus$context]{$context()} \tab Get a context vector. Currently supports documents or globally unique sentences.
 #' }
 #'
 #' \strong{Modify}
 #'
 #' The token and meta data can be modified with the set* and delete* methods. All modifications are performed by reference.
+#'
 #'
 #' \tabular{ll}{
 #'   \link[=tCorpus$set]{$set()} \tab Modify the token data by setting the values of one (existing or new) column. \cr
@@ -73,13 +88,13 @@ NULL
 #' \tabular{ll}{
 #'   \link[=tCorpus$subset]{$subset()} \tab Modify the token and/or meta data using the \link{tCorpus$subset} function. A subset expression can be specified for both the token data (subset) and the document meta data (subset_meta). \cr
 #'   \link[=tCorpus$subset]{$subset_meta()} \tab For consistency with other *_meta methods \cr
-#'   \link[=tCorpus$subset_query]{$subset_query()} \tab Subset the tCorpus based on a query, as used in \link[=tCorpus$search_contexts]{$search_contexts}
+#'   \link[=tCorpus$subset_query]{$subset_query()} \tab Subset the tCorpus based on a query, as used in \link[=search_contexts]{search_contexts}
 #' }
 #'
 #'
 #' \strong{Fields}
 #'
-#' For the sake of convenience, the number of rows and column names of the data and meta data.tables can be accessed directly. This is also faster and more memory efficient than using nrows() and colnames() on the data and meta fields, because those have to copy the data.tables.
+#' For the sake of convenience, the number of rows and column names of the data and meta data.tables can be accessed directly.
 #'
 #' \tabular{ll}{
 #'   $n \tab The number of tokens (i.e. rows in the data) \cr
@@ -97,7 +112,7 @@ NULL
 #' \link[=tCorpus]{(back to overview)}
 #'
 #' If any tCorpus method is used that changes the corpus (e.g., set, subset),
-#' the change is made by reference. This is very convenient when working with a large
+#' the change is made by reference. This is convenient when working with a large
 #' corpus, because it means that the corpus does not have to be copied when changes are made,
 #' which is slow and memory inefficient.
 #'
@@ -131,10 +146,6 @@ NULL
 #'
 #' Now, tc will not be subsetted itself, but will subset a copy of itself and return it to be assigned to tc2.
 #'
-#' Note that tc is also modified by reference if the subset method (or any other method that modified the corpus)
-#' is called within a function. No matter where and how you call the method, tc itself will be subsetted unless you
-#' explicitly copy it first or set copy to True.
-#'
 #' @name tCorpus_modify_by_reference
 NULL
 
@@ -162,15 +173,15 @@ NULL
 #'
 #' \strong{Feature-level queries}
 #' \tabular{ll}{
-#'   \link[=tCorpus$search_features]{$search_features())} \tab Search for features based on keywords and conditions \cr
+#'   \link[=search_features]{search_features())} \tab Search for features based on keywords and conditions \cr
 #'   \link[=tCorpus$code_features]{$code_features())} \tab  Add a column to the token data based on feature search results \cr
 #'   \link[=tCorpus$search_recode]{$search_recode()} \tab Use the search_features query syntax to recode features \cr
-#'   \link[=tCorpus$feature_associations]{$feature_associations()} \tab Given a query, get words that often co-occur nearby \cr
-#'   \link[=tCorpus$kwic]{$kwic()} \tab Get keyword-in-context (kwic) strings
+#'   \link[=feature_associations]{feature_associations()} \tab Given a query, get words that often co-occur nearby \cr
+#'   \link[=kwic]{kwic()} \tab Get keyword-in-context (kwic) strings
 #' }
 #' \strong{Context-level queries}
 #' \tabular{ll}{
-#'   \link[=tCorpus$search_contexts]{$search_contexts()} \tab Search for documents or sentences using Lucene-like queries \cr
+#'   \link[=search_contexts]{search_contexts()} \tab Search for documents or sentences using Lucene-like queries \cr
 #'   \link[=tCorpus$subset_query]{$subset_query()} \tab use the search_contexts query syntax to subset the tCorpus
 #' }
 #'

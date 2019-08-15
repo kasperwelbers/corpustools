@@ -2,7 +2,7 @@
 % Please edit documentation in R/documentation_overview.r
 \name{tCorpus_data}
 \alias{tCorpus_data}
-\title{Methods for viewing, modifying and subsetting tCorpus data}
+\title{Methods and functions for viewing, modifying and subsetting tCorpus data}
 \description{
 \link[=tCorpus]{(back to overview)}
 }
@@ -11,7 +11,8 @@
 \tabular{ll}{
   \link[=tCorpus$get]{$get()} \tab Get token data, with the possibility to select columns and subset  \cr
   \link[=tCorpus$get]{$get_meta()} \tab Get meta data, with the possibility to select columns and subset  \cr
-  \link[=tCorpus$dtm]{$dtm()} \tab Create a document term matrix \cr
+  \link[=get_dtm]{get_dtm()} \tab Create a document term matrix \cr
+  \link[=get_dfm]{get_dfm()} \tab Create a document term matrix, using the Quanteda dfm format \cr
   \link[=tCorpus$context]{$context()} \tab Get a context vector. Currently supports documents or globally unique sentences.
 }
 
@@ -39,12 +40,12 @@ For subsetting, you can use the \link{tCorpus$subset} method, and to add data to
 \tabular{ll}{
   \link[=tCorpus$subset]{$subset()} \tab Modify the token and/or meta data using the \link{tCorpus$subset} function. A subset expression can be specified for both the token data (subset) and the document meta data (subset_meta). \cr
   \link[=tCorpus$subset]{$subset_meta()} \tab For consistency with other *_meta methods \cr
-  \link[=tCorpus$subset_query]{$subset_query()} \tab Subset the tCorpus based on a query, as used in \link[=tCorpus$search_contexts]{$search_contexts}
+  \link[=tCorpus$subset_query]{$subset_query()} \tab Subset the tCorpus based on a query, as used in \link[=search_contexts]{search_contexts}
 }
 
 \strong{Fields}
 
-For the sake of convenience, the number of rows and column names of the data and meta data.tables can be accessed directly. This is also faster and more memory efficient than using nrows() and colnames() on the data and meta fields, because those have to copy the data.tables.
+For the sake of convenience, the number of rows and column names of the data and meta data.tables can be accessed directly.
 
 \tabular{ll}{
   $n \tab The number of tokens (i.e. rows in the data) \cr

@@ -1,0 +1,350 @@
+---
+title: "corpustools: Managing, Querying and Analyzing Tokenized Text"
+author: "by Kasper Welbers and Wouter van Atteveldt"
+date: "2019-08-14"
+output:
+  rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to corpustools}
+  %\VignetteEncoding{UTF-8}
+  
+  %\VignetteEngine{knitr::rmarkdown}
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r, include=FALSE}
+options(digits=3)
+library(knitr)
+```
+
+# Introduction
+
+```{r}
+library(corpustools)
+```
+
+The corpustools package offers various tools for anayzing text corpora. What sets it appart from other text analysis packages is that it focuses on the use of a `tokenlist` format for storing tokenized texts. By a tokenlist we mean a data.frame in which each token (i.e. word) of a text is a row, and columns contain information about each token. The advantage of this approach is that all information from the full text is preserved, and more information can be added. This format can also be used to work with the output from natural language processing pipelines such as SpaCy, UDpipe and Stanford CoreNLP. Furthermore, by preserving the full text information, it is possible to reconstruct texts with annotations from text analysis techniques. This enables qualitative analysis and manual validation of the results of computational text analysis methods (e.g., highlighted search results or dictionary terms, coloring words based on topicmodels).
+
+The problem is that the tokenlist format quickly leads to huge data.frames that can be difficult to manage. This is where corpustools comes in. The backbone of corpustools is the `tCorpus` class (i.e. *tokenlist corpus*), that builds on the `R6` and `data.table` packages to work efficiently with huge tokenlists. corpustools provides functions to create the `tcorpus` from full text, apply basic and advanced text preprocessing, and to use various analysis and visualization techniques.
+
+An example application that combines functionalities could be as follows. Given full-text data, you create a tcorpus. With the built-in search functionalities you use a Lucene style Boolean query to find where in these texts certain issues are discussed. You subset the tcorpus to focus you analysis on the text within 100 words of the search results. You now train a topicmodel on this data, and annotate the `tcorpus` with the wordassignments (i.e. the topics assigned to individual words). This information can then be used in other analyses or visualizations, and a topic browser can be created in which full texts are shown with the topic words highlighted.
+
+This document explains how to create and use a `tcorpus`. For a quick reference, you can also access the documentation hub from within R.
+
+```{r, eval=F}
+?tcorpus
+```
+
+
+# Creating a tcorpus
+
+A tcorpus consists of two data.tables (i.e. enhanced data.frames supported by the data.table package). 
+
+* **$tokens**: the tokenlist. Each row is a token, and columns contain the position and features of this token.
+* **$meta**: the document meta data. Each row is a unique document, and columns contain the document variables. 
+
+There are two ways to create a tcorpus: create a tcorpus from full-text or by importing a tokenlist. 
+
+
+## creating a tcorpus from full-text
+
+The `create_tcorpus` function creates a tcorpus from full-text input. The full text can be provided as a single character vector or as a data.frame in which the text is given in one of the columns. We recommend using the data.frame approach, because this automatically imports all other columns as document meta. 
+
+As an example we have provided the `sotu_texts` demo data. This is a data.frame in which each rows represents a paragraph of the state of the union speeches from Bush and Obama
+
+```{r}
+colnames(sotu_texts)
+```
+
+We can pass `sotu_texts` to the `create_tcorpus` function. Here we also need to specify which column contain the text (text_columns), and which column contains the document id (doc_column). Note that multiple text columns can be given.
+
+```{r}
+tc = create_tcorpus(sotu_texts, doc_column = 'id', text_columns = 'text')
+tc
+```
+
+Printing `tc` shows the number of tokens (i.e. words) in the tcorpus, the number of documents, and the columns in the `tokens` and `meta` data.tables. We can also look at the tokens and meta data directly (for changing this data, please read the `Managing the tcorpus` section below).
+
+```{r}
+## first 6 rows (head) of tokens and meta data.tables
+head(tc$tokens)   
+head(tc$meta)
+```
+
+### Additional options
+
+The create_tcorpus function has some additional parameters.
+
+* The `split_sentences` argument can be set to TRUE to perform sentence boundary detection. This adds the `sentence` column to the tokens data.table, which can be used in seveal techniques in corpustools. 
+* While the tcorpus preserves the full-text information in terms of word order, some information is lost regarding the empty spaces between words (e.g., single spaces versus tabs or empty lines). This information can be preserved with the `remember_spaces` argument. 
+* It can be usefull and memory efficient to only focus on the first part of a text. The `max_sentences` and `max_tokens` parameters can be  set to limit the tcorpus to contain only the first x sentences/tokens of each text. 
+* It is also possible to directly use the `udpipe` package to tokenize the texts with a natural language processing pipeline. This is discussed in the section on `Preprocessing`.
+
+
+## Importing a tokenlist
+
+If you already have a tokenlist it can be imported as a tcorpus with the `tokens_to_tcorpus` function. The tokenlist has to be formatted as a data.frame. As an example we provide the corenlp_tokens demo data, which is the output of the Stanford CoreNLP parser.
+
+```{r}
+head(corenlp_tokens)
+```
+
+This type of data.frame can be passed to the `tokens_to_tcorpus` function. The names of the columns that describe the token positions (document_id, sentence and token_id) also need to be specified.
+
+```{r}
+tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
+                       sentence_col = 'sentence', token_id_col = 'id')
+tc
+```
+
+To include document meta data, a separate data.frame with meta data has to be passed to the `meta` argument. This data.frame needs to have a column with the document id, using the name specified in `doc_col`.
+
+
+# Querying the tcorpus
+
+One of the nice features of corpustools is the rather extensive querying capabilities. We've actually implemented a detailed Lucene-like boolean query language. Not only can you use the common AND, OR and NOT operators, but you can also look for words within a given word distance. You can also include all features in the tokens data.table in a query, such as part-of-speech tags or lemma.
+
+Furthermore, since we are not concerned with competitive performance on huge databases, we can support some features that are often not supported or accessible in search engines. For instance:
+
+* allow you to perform a case-sensitive search (IS versus is, Bush versus bush)
+* It is common that search engines support wildcards at the end of a word (`econom*` for economy, economist, economic) but not at the start, which can be a problem in languages that like to stick words together, such as Dutch or German. We support wild cards anywhere you like.
+* The number of times a query uniquely matches a document is counted (see documentation for what that means), and the specific locations where a query is matched can be retrieved. 
+
+A description of the query language can be found in the documentation of the search_features() function.
+
+```{r}
+?search_features()
+```
+
+## search_features()
+
+To demonstrate the search_features() function, we first make a tcorpus of the SOTU speeches. Note that we use split_sentences = T, so that we can also view results at the sentence level.
+
+```{r}
+tc = create_tcorpus(sotu_texts, doc_column = 'id', text_columns = 'text', split_sentences=T)
+```
+
+The search_features() function takes the tcorpus as the first argument. The query should be a character vector with one or multiple queries. Here we look for two queries, `terror*` and `war*`.
+
+```{r}
+hits = search_features(tc, query = c('terror*','war*'))
+hits
+summary(hits)
+```
+
+The regular output shows the total number of hits, and the summary shows the hits per query. Note, however, that the `code` is now query_1 and query_2 because we didn't label our queries. There are two ways to label queries in corpustools. One is to provide the code labels with the `code` argument. The other is to prefix the label in the query string with a hashtag. Here we use the latter.
+
+```{r}
+hits = search_features(tc, query = c('Terror# terror*','War# war*'))
+summary(hits)
+```
+
+
+### Things to do with query hits
+
+We can use the aggregate method to aggregate hits.
+
+```{r}
+tc$aggregate(hits=hits)
+tc$aggregate(hits=hits, meta_cols = 'president')  ## break by meta variables
+```
+
+We can view hits in keyword-in-context (kwic) listings 
+
+```{r}
+get_kwic(tc, hits, n = 3)
+```
+
+We can create semantic networks based on the cooccurence of queries in documents. For more on using the `semnet` function, see the tuorial below. The `semnet_window` function also works with hits.
+
+```{r}
+hits = search_features(tc, c('War# war* OR army OR bomb*','Terrorism# terroris*', 
+                             'Economy# econom* OR bank*','Education# educat* OR school*'))
+g = semnet(hits)
+igraph::get.adjacency(g, attr='weight')
+```
+
+We can create HTML browsers that highlight hits in full text. If you run this command in RStudio with the ```view = TRUE```, you'll also directly see the browser in the viewer pane.
+
+```{r, eval=F}
+url = browse_hits(tc, hits, view=F)
+```
+
+
+### Adding query hits as token features
+
+Technically, you can do pretty much anything with query hits that you can do with regular tokens. 
+The format of the tcorpus allows any token-level annotations to be added to the tokens data.frame.
+For adding query hits, we also have a wrapper function that does this, called `code_features`. 
+
+```{r}
+## example query that matches first words in corpus
+q = 'Example# unfinished OR restore OR "basic bargain"' 
+tc$code_features(q)
+head(tc$tokens, 10)
+```
+
+Note that ```tc$code_features``` is an R6 method. If this is new to you, an explanation is provided below in the `Using the tcorpus R6 methods` section.
+
+
+
+# Preprocessing
+
+Splitting texts into a tokenlist is a form of text preprocessing called tokenization. For many text analysis techniques it is furthermore necessary (or at least strongly recommended) to use additional preprocessing techniques (see e.g., [Welbers, van Atteveldt \& Benoit, 2017](https://www.tandfonline.com/doi/full/10.1080/19312458.2017.1387238); [Denny \& Spirling, 2018](https://www.cambridge.org/core/journals/political-analysis/article/text-preprocessing-for-unsupervised-learning-why-it-matters-when-it-misleads-and-what-to-do-about-it/AA7D4DE0AA6AB208502515AE3EC6989E)).
+
+Corpustools support various preprocessing techniques. We make a rough distinction between **basic** and **advanced** preprocessing. By basic preprocessing we mean the common lightweight techniques such as stemming, lowercasing and stopword removal. By advanced preprocessing we refer to techniques such as lemmatization, part-of-speech tagging and dependency parsing, that require more sophisticated NLP pipelines. Also, while not strictly a preprocessing technique, it is often usefull to **filter** out certain terms. For instance, you might want to look only at nouns, drop all terms that occur less than 10 times in the corpus, or perhaps use more stopwords. 
+
+## basic preprocessing
+
+The basic preprocessing techniques can be performed on a `tcorpus` with the `preprocess` method. The main arguments are:
+
+* **column**: the name of the column to use as input. Default is "token"
+* **new_column**: the name of the column in which to store the output. Default is "feature"
+* **lowercase**: make text lowercase. Defaults to TRUE
+* **remove_punctuation**: remove punctuation. Defaults to TRUE
+* **use_stemming**: apply stemming. Defaults to FALSE
+* **remove_stopwords**: removes stopwords (e.g., the, it, is). Defaults to FALSE
+* **language**: the language used for stemming and stopword removal. Defaults to "english""
+
+Lowercasing and removing punctuation is so common that its the default. In the following example we also apply stemming and stopword removal. Note that since we work with English data we do not need to set the language, but if other languages are used the language argument needs to be used. Also note that we do not specify `column` and `new_column`. A `tcorpus` created with `create_tcorpus` always has a "token" column with the raw token text.
+
+```{r}
+tc = create_tcorpus(sotu_texts, doc_column = 'id', text_columns = 'text')
+
+tc$preprocess(use_stemming = T, remove_stopwords=T)
+tc$tokens
+```
+
+The tokens data.table now has the new column "feature" which contains the preprocessed token. 
+
+## advanced preprocessing
+
+Most of the advanced NLP pipelines require external dependencis (Python for SpaCy, Java for CoreNLP), but the `UDPipe` pipeline runs in C++ which plays nicely with R. We have built a wrapper for the `udpipe` package which provides bindings for using UDPipe directly from within R. Unlike basic preprocessing, this feature has to be used in the create_tcorpus function, because it requires the raw text input.
+
+To use a UDPipe model in create_tcorpus, you simply need to use the `udpipe_model` argument. The value for this  argument is the language/name of the model you want to use (if the name does not exist, you'll get a list of options). The first time using a language, R will automatically download the model and store it in the corpustools folder in your library (you can also specify another location with the `udpipe_model_path` argument).
+
+```{r, eval=F}
+tc = create_tcorpus("This is a quick example", udpipe_model='english-ewt')
+tc$tokens   ## output not shown in this vignette
+```
+
+By default, UDPipe will not perform dependency parsing. You can activate this part of the pipeline by using the ```use_parser = TRUE``` argument, but it takes longer to compute and not all language have good dependency parser performance.
+
+
+## filtering tokens
+
+In basic preprocessing we saw that NA values were introduced where stopwords were filtered out. If you want to filter out more tokens, you can use the `tc$feature_subset` method. This works as a regular subset, but the difference is that the corpus is kept intact. That is, the rows of the tokens that are filtered out are not deleted. 
+
+For example, we can specifically filter out the token with token_id 5. For this we take the subset of tokens that is not 5.
+
+```{r, eval=F}
+## for sake of clarity, recreate the corpus and preprocess it
+tc = create_tcorpus(sotu_texts, doc_column = 'id', text_columns = 'text')
+tc$preprocess(use_stemming = T, remove_stopwords=T)
+
+tc$feature_subset('feature', !token_id == 5)
+```
+
+This sets all values in the 'feature' column with token_id 5 to NA. This is just an example that is easy to run. A more usefull application is to use this to subset on part-of-speech tags.
+
+It is often usefull to filter out tokens based on frequency. For instance, to only include words in a model that are not too rare to be interesting and not too common to be informative. The feature subset function has four arguments to do so: `min_freq`, `max_freq`, `min_docfreq` and `max_docfreq`. Here `freq` indicates how often a term occured in the corpus, and `docfreq` indicates the number of unique documents in which a term occured. For example, the following code filters out all tokens that occur less than 10 times.
+
+```{r, eval=F}
+tc$feature_subset('feature', min_freq=10)
+```
+
+For the sake of convenience, the min/max functions are also integrated in the `preprocess` method. So it would also have been possible to use ```tc$preprocess(use_stemming = T, remove_stopwords=T, min_freq=10)```. Also, if you want to inspect the freq and docfreq of terms, you could use the ```feature_stats(tc, 'feature')``` function. 
+
+
+
+## Why keep the full corpus intact after preprocessing and filter?
+
+Note that in corpustools the original tokens are still intact after preprocessing. This is very NOT memory efficient, so why do we do it?
+
+Keeping the corpus intact in this way has the benefit that the results of an analysis, as performed with the preprocessed tokens, can be linked to the full corpus. For example, here we show a quick and dirty example of a topic model, with the word assignments 
+
+```{r}
+## create tcorpus and preprocess tokens
+tc = create_tcorpus(sotu_texts, doc_column = 'id', text_columns = 'text')
+tc$preprocess(use_stemming = T, remove_stopwords=T, min_docfreq = 5)
+
+## fit lda model, using the create_feature argument to store the topic assignments
+tc$lda_fit('feature', create_feature = 'topic', K = 5, alpha = 0.001)
+head(tc$tokens, 10)
+```
+
+This is just a silly example (with a poorly trained topic model) but it shows the idea. In the tokens we now see that certain words (unfinished, restore) have topic assignments. These topic assignments are based on the topic model trained with the preprocessed versions of the tokens (unfinish, restor). Thus, we can relate the results of a text analysis technique (in this case topic modeling, but the same would work with word scaling, dictionaries, etc.) to the original text. This is important, because in the end we apply these techniques to make inferences about the text, and this approach allows us to validate the results and/or perform additional analyses on the original texts.
+
+We can now also reconstruct the full text with the topic words coloured to visualize the topic assignments. The `browse_text` function creates an HTML browser of the full texts, and here we use the ```category = 'topic'``` argument to indicate that the tokens$topic column should be used to colour the words. 
+
+```{r, eval=F}
+url = browse_texts(tc, category='topic', view=T)
+```
+
+If you run this command in RStudio with the ```view = TRUE```, you'll also directly see the browser in the viewer pane. 
+
+# Using the tcorpus R6 methods
+
+The tcorpus class is an R6 class. This has some benefits in terms of speed and memory for working with large corpora, but also requires a bit of background knowledge about R6 methods.
+
+R6 methods are accessed with the dollar symbol, similar to how you access columns in a data.frame. For example, this is how you access the tcorpus subset method.
+
+```{r, eval=F}
+tc$subset()
+```
+
+Whenever you use an R6 method that changes the tcorpus itself, this change is performed *by reference*. What this means is that you do not need to assign the output of this operation. For example, lets make a dummy tcorpus and subset by reference.
+
+```{r}
+tc = create_tcorpus('this is an example')
+tc$tokens
+```
+
+Now we use subset to keep only the tokens with token_id < 3.
+
+```{r}
+tc$subset(token_id < 3)
+tc$tokens
+```
+
+Note that the subset has correctly been performed. I did not need to assign the output of `tc$subset()` to overwrite tc. That is, we didn't need to do ```tc = tc$subset(token_id < 3)```. 
+
+The advantage of this approach is that tc does not have to be copied, which can be slow or problematic memory wise with a large corpus. However, if you really do want to make a copy, you need to explicitly tell R to. To copy a tcorpus, you can use the copy() method.
+
+```{r}
+tc2 = tc$copy()
+```
+
+For convenience, the subset methods in tcorpus also have a copy argument, which can be set to TRUE if you want to make a copy.
+
+```{r}
+tc2 = tc$subset(token_id == 1, copy=T)
+tc   ## still has two tokens (token_id 1 and 2)
+tc2  ## only has one token (token_id 1)
+```
+
+
+
+
+## Modifying
+
+
+The token and meta data can be modified with the `set*` and `delete*` methods. All modifications are performed by reference.
+
+```{r, eval=F}
+?set	                 # add or modify columns in $tokens.
+?set_meta	             # add or modify columns in $meta
+?set_name	             # Modify column names in $tokens
+?set_meta_name	       # Modify column names in $meta
+?delete_columns	       # Delete columns in $tokens
+?delete_meta_columns	 # Delete columns in $meta
+```
+
+Modifying is restricted in certain ways to ensure that the data always meets the assumptions required for tCorpus methods. tCorpus automatically tests whether assumptions are violated, so you don't have to think about this yourself. The most important limitations are that you cannot subset or append the data. For subsetting, you can use the tCorpus$subset method, and to add data to a tcorpus you can use the merge_tcorpora function.
+
+
+
+```{r}
+?tcorpus
+```

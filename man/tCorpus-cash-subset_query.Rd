@@ -5,7 +5,7 @@
 \alias{subset_query}
 \title{Subset tCorpus token data using a query}
 \arguments{
-\item{query}{A character string that is a query. See \link{tCorpus$search_contexts} for query syntax.}
+\item{query}{A character string that is a query. See \link{search_contexts} for query syntax.}
 
 \item{feature}{The name of the feature columns on which the query is used.}
 
@@ -14,9 +14,9 @@
 \item{window}{if context_level is window, specifies the size of the window}
 }
 \description{
-A convenience function that searches for contexts (documents, sentences), and uses the results to \link[=tCorpus$search_contexts]{subset} the tCorpus token data.
+A convenience function that searches for contexts (documents, sentences), and uses the results to \link[=search_contexts]{subset} the tCorpus token data.
 
-See the documentation for \link[=tCorpus$search_contexts]{subset} for an explanation of the query language.
+See the documentation for \link[=search_contexts]{search_contexts} for an explanation of the query language.
 
 \strong{Usage:}
 

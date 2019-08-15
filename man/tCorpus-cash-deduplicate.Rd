@@ -29,6 +29,8 @@
 
 \item{print_deduplicates}{if TRUE, print ids of duplicates that are deleted}
 
+\item{verbose}{if TRUE, report progress}
+
 \item{copy}{If TRUE, the method returns a new tCorpus object instead of deduplicating the current one by reference.}
 }
 \description{

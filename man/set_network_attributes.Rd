@@ -4,8 +4,8 @@
 \alias{set_network_attributes}
 \title{Set some default network attributes for pretty plotting}
 \usage{
-set_network_attributes(g, size_attribute = "freq", color_attribute = NA,
-  redo_layout = F, edgewidth_coef = 1,
+set_network_attributes(g, size_attribute = "freq",
+  color_attribute = NA, redo_layout = F, edgewidth_coef = 1,
   layout_fun = igraph::layout_with_fr)
 }
 \arguments{

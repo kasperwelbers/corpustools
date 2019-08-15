@@ -107,7 +107,7 @@ get_matrix_stats <- function(m1, m2=NULL, mat_stats = c('sum.x','sum.y','magnitu
 #### DTM based cooccurrene ####
 
 cooccurrence_matrix <- function(tc, feature, count_mode, mat_stats, context_level, n.batches, alpha, drop_empty_terms=T){
-  m = tc$dtm(feature=feature, context_level = context_level, drop_empty_terms=drop_empty_terms, context_labels = F)
+  m = get_dtm(tc, feature=feature, context_level = context_level, drop_empty_terms=drop_empty_terms, context_labels = F)
 
   if (is.na(n.batches)){
     ml = cooccurrence_crossprod(m, count_mode=count_mode, mat_stats=mat_stats, alpha=alpha)

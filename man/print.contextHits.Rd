@@ -7,7 +7,7 @@
 \method{print}{contextHits}(x, ...)
 }
 \arguments{
-\item{x}{a contextHits object, as returned by \link{tCorpus$search_contexts}}
+\item{x}{a contextHits object, as returned by \link{search_contexts}}
 
 \item{...}{not used}
 }
@@ -17,7 +17,7 @@ S3 print for contextHits class
 \examples{
 text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-hits = tc$search_contexts(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
+hits = search_contexts(tc, c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 
 hits
 }

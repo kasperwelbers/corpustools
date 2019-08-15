@@ -22,14 +22,14 @@ is.featureHits <- function(fh, ...) {
 
 #' S3 print for featureHits class
 #'
-#' @param x a featureHits object, as returned by \link{tCorpus$search_features}
+#' @param x a featureHits object, as returned by \link{search_features}
 #' @param ... not used
 #'
 #' @method print featureHits
 #' @examples
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-#' hits = tc$search_features(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
+#' hits = search_features(tc, c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 #'
 #' hits
 #' @export
@@ -44,14 +44,14 @@ print.featureHits <- function(x, ...){
 
 #' S3 summary for featureHits class
 #'
-#' @param object a featureHits object, as returned by \link{tCorpus$search_features}
+#' @param object a featureHits object, as returned by \link{search_features}
 #' @param ... not used
 #'
 #' @method summary featureHits
 #' @examples
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-#' hits = tc$search_features(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
+#' hits = search_features(tc, c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 #'
 #' summary(hits)
 #' @export
@@ -97,14 +97,14 @@ is.contextHits <- function(ch, ...) {
 
 #' S3 print for contextHits class
 #'
-#' @param x a contextHits object, as returned by \link{tCorpus$search_contexts}
+#' @param x a contextHits object, as returned by \link{search_contexts}
 #' @param ... not used
 #'
 #' @method print contextHits
 #' @examples
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-#' hits = tc$search_contexts(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
+#' hits = search_contexts(tc, c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 #'
 #' hits
 #' @export
@@ -118,14 +118,14 @@ print.contextHits <- function(x, ...){
 
 #' S3 summary for contextHits class
 #'
-#' @param object a contextHits object, as returned by \link{tCorpus$search_contexts}
+#' @param object a contextHits object, as returned by \link{search_contexts}
 #' @param ... not used
 #'
 #' @method summary contextHits
 #' @examples
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-#' hits = tc$search_contexts(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
+#' hits = search_contexts(tc, c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 #'
 #' summary(hits)
 #' @export

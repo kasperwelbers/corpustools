@@ -9,15 +9,17 @@
 \usage{
 create_tcorpus(x, ...)
 
-\method{create_tcorpus}{character}(x, doc_id = 1:length(x), meta = NULL,
-  udpipe_model = NULL, split_sentences = F, max_sentences = NULL,
-  max_tokens = NULL, udpipe_model_path = getOption("corpustools_resources",
-  NULL), use_parser = F, remember_spaces = FALSE, verbose = T, ...)
+\method{create_tcorpus}{character}(x, doc_id = 1:length(x),
+  meta = NULL, udpipe_model = NULL, split_sentences = F,
+  max_sentences = NULL, max_tokens = NULL,
+  udpipe_model_path = getOption("corpustools_resources", NULL),
+  use_parser = F, remember_spaces = FALSE, verbose = T, ...)
 
 \method{create_tcorpus}{factor}(x, doc_id = 1:length(x), meta = NULL,
   udpipe_model = NULL, split_sentences = F, max_sentences = NULL,
-  max_tokens = NULL, udpipe_model_path = getOption("corpustools_resources",
-  NULL), use_parser = F, remember_spaces = FALSE, verbose = T, ...)
+  max_tokens = NULL,
+  udpipe_model_path = getOption("corpustools_resources", NULL),
+  use_parser = F, remember_spaces = FALSE, verbose = T, ...)
 
 \method{create_tcorpus}{data.frame}(x, text_columns = "text",
   doc_column = "doc_id", udpipe_model = NULL, split_sentences = F,
@@ -34,7 +36,7 @@ create_tcorpus(x, ...)
 
 \item{meta}{A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x}
 
-\item{udpipe_model}{Optionally, the name of a udpipe language model (e.g., "english", "dutch", "german"), to use the udpipe package to perform natural language processing. On first use, the model will be downloaded to the location specified in the udpipe_model_path argument. By default, dependency parsing (see use_parser argument) is turned off.}
+\item{udpipe_model}{Optionally, the name of a udpipe language model (e.g., "english-ewt", "dutch-alpino"), to use the udpipe package to perform natural language processing. See \href{https://github.com/jwijffels/udpipe.models.ud.2.4/blob/master/inst/udpipe-ud-2.4-190531/README}{here} for a list of the available models. On first use, the model will be downloaded to the location specified in the udpipe_model_path argument. By default, dependency parsing (see use_parser argument) is turned off.}
 
 \item{split_sentences}{Logical. If TRUE, the sentence number of tokens is also computed. (only if udpipe_model is not used)}
 

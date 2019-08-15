@@ -6,8 +6,8 @@
 \usage{
 compare_subset(tc, feature, subset_x = NULL, subset_meta_x = NULL,
   query_x = NULL, query_feature = "token", smooth = 0.1,
-  min_ratio = NULL, min_chi2 = NULL, yates_cor = c("auto", "yes", "no"),
-  what = c("freq", "docfreq", "cooccurrence"))
+  min_ratio = NULL, min_chi2 = NULL, yates_cor = c("auto", "yes",
+  "no"), what = c("freq", "docfreq", "cooccurrence"))
 }
 \arguments{
 \item{tc}{a \link{tCorpus}}
@@ -18,7 +18,7 @@ compare_subset(tc, feature, subset_x = NULL, subset_meta_x = NULL,
 
 \item{subset_meta_x}{like subset_x, but using using the meta data}
 
-\item{query_x}{like subset_x, but using a query search to select documents (see \link{tCorpus$search_contexts})}
+\item{query_x}{like subset_x, but using a query search to select documents (see \link{search_contexts})}
 
 \item{query_feature}{if query_x is used, the column name of the feature used in the query search.}
 

@@ -6,7 +6,7 @@
 #'
 #' @param x main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.
 #' @param meta A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x
-#' @param udpipe_model Optionally, the name of a udpipe language model (e.g., "english", "dutch", "german"), to use the udpipe package to perform natural language processing. On first use, the model will be downloaded to the location specified in the udpipe_model_path argument. By default, dependency parsing (see use_parser argument) is turned off.
+#' @param udpipe_model Optionally, the name of a udpipe language model (e.g., "english-ewt", "dutch-alpino"), to use the udpipe package to perform natural language processing. See \href{https://github.com/jwijffels/udpipe.models.ud.2.4/blob/master/inst/udpipe-ud-2.4-190531/README}{here} for a list of the available models. On first use, the model will be downloaded to the location specified in the udpipe_model_path argument. By default, dependency parsing (see use_parser argument) is turned off.
 #' @param split_sentences Logical. If TRUE, the sentence number of tokens is also computed. (only if udpipe_model is not used)
 #' @param max_tokens An integer. Limits the number of tokens per document to the specified number
 #' @param max_sentences An integer. Limits the number of sentences per document to the specified number. If set when split_sentences == FALSE, split_sentences will be set to TRUE.

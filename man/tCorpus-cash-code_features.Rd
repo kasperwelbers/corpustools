@@ -23,6 +23,8 @@
 
 \item{verbose}{If TRUE, progress messages will be printed}
 
+\item{overwrite}{If TRUE (default) and column already exists, overwrite previous results.}
+
 \item{...}{alternative way to specify name-value pairs for adding additional columns}
 }
 \description{

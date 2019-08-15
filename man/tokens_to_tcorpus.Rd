@@ -4,9 +4,10 @@
 \alias{tokens_to_tcorpus}
 \title{Create a tcorpus based on tokens (i.e. preprocessed texts)}
 \usage{
-tokens_to_tcorpus(tokens, doc_col = "doc_id", token_id_col = "token_id",
-  sentence_col = "sentence", token_col = NULL, lemma_col = NULL,
-  pos_col = NULL, relation_col = NULL, parent_col = NULL, meta = NULL,
+tokens_to_tcorpus(tokens, doc_col = "doc_id",
+  token_id_col = "token_id", sentence_col = "sentence",
+  token_col = NULL, lemma_col = NULL, pos_col = NULL,
+  relation_col = NULL, parent_col = NULL, meta = NULL,
   meta_cols = NULL, feature_cols = NULL, sent_is_local = T,
   token_is_local = T)
 }

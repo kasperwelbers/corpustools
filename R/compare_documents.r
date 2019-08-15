@@ -4,15 +4,19 @@
 #' @param tc A \link{tCorpus}
 #' @param feature the column name of the feature that is to be used for the comparison.
 #' @param date_col a date with time in POSIXct. If given together with hour_window, only documents within the given hour_window will be compared.
-#' @param hour_window an integer. If given together with date_col, only documents within the given hour_window will be compared.
+#' @param meta_cols a character vector with columns in the meta data / docvars. If given, only documents for which these values are identical are compared
+#' @param hour_window A vector of length 1 or 2. If length is 1, the same value is used for the left and right side of the window. If length is 2, the first and second value determine the left and right side. For example, the value 12 will compare each document to all documents between the previous and next 12 hours, and c(-10, 36) will compare each document to all documents between the previous 10 and the next 36 hours.
 #' @param measure the similarity measure. Currently supports cosine similarity (symmetric) and overlap_pct (asymmetric)
 #' @param weight a weighting scheme for the document-term matrix. Default is term-frequency inverse document frequency with normalized rows (document length).
 #' @param ngrams an integer. If given, ngrams of this length are used
 #' @param from_subset An expression to select a subset. If given, only this subset will be compared to other documents
 #' @param to_subset An expression to select a subset. If given, documents are only compared to this subset
+#' @param verbose If TRUE, report progress
 #'
 #' @name tCorpus$compare_documents
 #' @aliases compare_documents
+#' @return An igraph graph in which nodes are documents and edges represent similarity scores
+#' @export
 #' @examples
 #' d = data.frame(text = c('a b c d e',
 #'                         'e f g h i j k',
@@ -28,14 +32,14 @@
 #'
 #' g = compare_documents(tc, date_col = 'date', hour_window = c(0,36))
 #' igraph::get.data.frame(g)
-compare_documents <- function(tc, feature='token', date_col=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
+compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL, verbose=T) {
   weight = match.arg(weight)
+  measure = match.arg(measure)
   from_subset = tc$eval_meta(substitute(from_subset), parent.frame())
   to_subset = tc$eval_meta(substitute(to_subset), parent.frame())
 
-  dtm = tc$dtm(feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
-  dtm_document_comparison(dtm, meta=tc$get_meta(), date_col=date_col, window=hour_window, group_cols=NULL, min_value=min_similarity, measure=measure, unit=c('hours'), only_from=from_subset, only_to = to_subset, verbose=TRUE)
-  #compare_documents_dtm(dtm, meta=self$get_meta(), date_col=date_col, hour_window=hour_window, only_from=from_subset, only_to=to_subset, min_similarity=min_similarity, measure=measure)
+  dtm = get_dfm(tc, feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
+  compare_documents_dtm(dtm, date_col=date_col, window=hour_window, meta_cols=meta_cols, min.similarity=min_similarity, measure=measure, only_from=from_subset, only_to = to_subset, verbose=verbose)
 }
 
 #' Deduplicate documents
@@ -62,6 +66,7 @@ compare_documents <- function(tc, feature='token', date_col=NULL, hour_window=NU
 #' @param weight a weighting scheme for the document-term matrix. Default is term-frequency inverse document frequency with normalized rows (document length).
 #' @param ngrams an integer. If given, ngrams of this length are used
 #' @param print_deduplicates if TRUE, print ids of duplicates that are deleted
+#' @param verbose if TRUE, report progress
 #' @param copy If TRUE, the method returns a new tCorpus object instead of deduplicating the current one by reference.
 #'
 #' @name tCorpus$deduplicate
@@ -80,8 +85,10 @@ compare_documents <- function(tc, feature='token', date_col=NULL, hour_window=NU
 #' dedup = tc$deduplicate(feature='token', date_col = 'date', similarity = 0.8, keep = 'last',
 #'                        copy=TRUE)
 #' dedup$get_meta()
-tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=1, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, copy=F){
+tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=1, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, verbose=T, copy=F){
   weight = match.arg(weight)
+  measure = match.arg(measure)
+
   match.arg(feature, self$feature_names)
   if (copy) {
     selfcopy = self$copy()$deduplicate(feature=feature, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, min_docfreq=min_docfreq, max_docfreq_pct=max_docfreq_pct, measure=measure, similarity=similarity, keep=keep, weight=weight, ngrams=ngrams, print_duplicates=print_duplicates, copy=F)
@@ -91,7 +98,7 @@ tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, me
   ## adding DEDUPLICATE_FEATURE is not very elegant and memory efficient. Better alternative, perhaps, is to pass docfreq_filter results to compare_documents_fun.
   self$preprocess(feature, new_column = 'DEDUPLICATE_FEATURE', min_docfreq = min_docfreq, max_docfreq = self$n_meta * max_docfreq_pct)
 
-  .duplicates = get_duplicates(self, feature='DEDUPLICATE_FEATURE', date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates)
+  .duplicates = get_duplicates(self, feature='DEDUPLICATE_FEATURE', date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates, verbose=verbose)
   self$subset(subset_meta = !doc_id %in% .duplicates, copy=F)
   self$set('DEDUPLICATE_FEATURE', NULL)
   invisible(self)
@@ -106,30 +113,17 @@ to_POSIXct <- function(x){
            error = function(e) stop(sprintf('Date column cannot be interpreted as POSIXct: \n\t-> %s', e)))
 }
 
-get_duplicates <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, hour_window=24, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, print_duplicates=F) {
+get_duplicates <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, hour_window=24, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), ngrams=NA, print_duplicates=F, verbose=T) {
   keep = match.arg(keep)
   for (mvar in meta_cols) if (!mvar %in% tc$meta_names) stop(sprintf('Meta column (%s) not in corpus', mvar))
 
   #g = compare_documents_fun(tc, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=similarity, weight=weight, ngrams)
-  dtm = tc$dtm(feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
+  dtm = get_dfm(tc, feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
+  d = compare_documents_dtm(dtm, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, min_similarity=similarity, return_as='edgelist', verbose=verbose)
 
-  #g = dtm_document_comparison(dtm, meta=self$get_meta(), date_col=date_col, window=hour_window, group_cols=NULL, min_value=min_similarity, measure=measure, unit=c('hours'), only_from=from_subset, only_to = to_subset, verbose=TRUE)
-  g = compare_documents_dtm(dtm, meta=tc$get_meta(), date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, min_similarity=similarity)
-
-
-  if (is.null(g)) {
+  if (nrow(d) == 0) {
     message('Deleting 0 duplicates')
     return(c())
-  }
-
-  #e = igraph::get.edges(g, igraph::E(g)) ## edges by indices
-  d = igraph::get.data.frame(g, 'edges') ## edges by name and with weigth
-  if (!is.null(meta_cols)) {
-    mx = tc$get_meta(meta_cols, keep_df = T, doc_id=d$from)
-    my = tc$get_meta(meta_cols, keep_df = T, doc_id=d$to)
-
-    allmatch = rowSums(mx == my) == ncol(mx)
-    d = d[allmatch,]
   }
 
   duplicates = c()

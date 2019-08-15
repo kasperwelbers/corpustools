@@ -8,7 +8,7 @@
 }
 \details{
 If any tCorpus method is used that changes the corpus (e.g., set, subset),
-the change is made by reference. This is very convenient when working with a large
+the change is made by reference. This is convenient when working with a large
 corpus, because it means that the corpus does not have to be copied when changes are made,
 which is slow and memory inefficient.
 
@@ -41,8 +41,4 @@ For methods where copying is often usefull, such as subset, there is also a copy
 \strong{tc2 = tc$subset(doc_id \%in\% selection, copy=TRUE)}
 
 Now, tc will not be subsetted itself, but will subset a copy of itself and return it to be assigned to tc2.
-
-Note that tc is also modified by reference if the subset method (or any other method that modified the corpus)
-is called within a function. No matter where and how you call the method, tc itself will be subsetted unless you
-explicitly copy it first or set copy to True.
 }

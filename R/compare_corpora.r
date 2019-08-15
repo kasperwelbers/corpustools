@@ -39,7 +39,7 @@ compare_corpus <- function(tc, tc_y, feature, smooth=0.1, min_ratio=NULL, min_ch
 #' @param feature the column name of the feature that is to be compared
 #' @param subset_x an expression to subset the tCorpus. The vocabulary of the subset will be compared to the rest of the tCorpus
 #' @param subset_meta_x like subset_x, but using using the meta data
-#' @param query_x like subset_x, but using a query search to select documents (see \link{tCorpus$search_contexts})
+#' @param query_x like subset_x, but using a query search to select documents (see \link{search_contexts})
 #' @param query_feature if query_x is used, the column name of the feature used in the query search.
 #' @param smooth Laplace smoothing is used for the calculation of the ratio of the relative term frequency. Here you can set the added value.
 #' @param min_ratio threshold for the ratio value, which is the ratio of the relative frequency of a term in dtm.x and dtm.y
@@ -87,7 +87,7 @@ compare_subset <- function(tc, feature, subset_x=NULL, subset_meta_x=NULL, query
 tcorpus_compare <- function(tc_x, tc_y, feature, smooth=0.1, min_ratio=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), x_is_subset=F, what=c('freq','docfreq', 'cooccurrence')) {
   ## it would be more memory efficient to not split up the tcorpus, but return a dtm and split that up (possibly within the dtm_compare function)
   ## so add an alternative route if tc_y == NULL, where an addition selection parameter is used
-  comp = dtm_compare(tc_x$dtm(feature, context_labels = F), tc_y$dtm(feature, context_labels = F), smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, x_is_subset=x_is_subset, what=what)
+  comp = dtm_compare(get_dtm(tc_x, feature, context_labels = F), get_dtm(tc_y, feature, context_labels = F), smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, x_is_subset=x_is_subset, what=what)
   class(comp) = c('vocabularyComparison', class(comp))
   comp
 }

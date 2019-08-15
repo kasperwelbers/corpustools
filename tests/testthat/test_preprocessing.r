@@ -10,9 +10,11 @@ test_that("preprocessing works", {
 
   tc = tokens_to_tcorpus(tokens, doc_col ='document', token_id_col = 'id', meta=meta)
 
-  dtm = tc$dtm('token')
+  dtm = get_dtm(tc, 'token')
   ## test preprocess_feature
   token = tc$get('token')
+
+  dtm = get_dfm(tc, 'token')
 
   context = tc$context('document')
   feature = preprocess_tokens(token, context=context, language='english', lowercase = T, use_stemming = T, ngrams = 3)

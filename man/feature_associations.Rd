@@ -4,12 +4,17 @@
 \alias{feature_associations}
 \title{Get common nearby terms given a feature query}
 \usage{
-feature_associations(tc, hits, feature = "token", window = 15, n = 25,
-  min_freq = 1, sort_by = c("chi2", "ratio", "freq"), subset = NULL,
+feature_associations(tc, query = NULL, hits = NULL,
+  feature = "token", window = 15, n = 25, min_freq = 1,
+  sort_by = c("chi2", "ratio", "freq"), subset = NULL,
   subset_meta = NULL)
 }
 \arguments{
-\item{hits}{Alternatively, instead of giving a query, the results of \link{tCorpus$search_features} can be used.}
+\item{tc}{a \link{tCorpus}}
+
+\item{query}{A character string that is a query. See \link{search_features} for documentation of the query language.}
+
+\item{hits}{Alternatively, instead of giving a query, the results of \link{search_features} can be used.}
 
 \item{feature}{If keyword is used, the name of the feature column within which to search.}
 
@@ -24,8 +29,9 @@ feature_associations(tc, hits, feature = "token", window = 15, n = 25,
 \item{subset}{A call (or character string of a call) as one would normally pass to subset.tCorpus. If given, the keyword has to occur within the subset. This is for instance usefull to only look in named entity POS tags when searching for people or organization. Note that the condition does not have to occur within the subset.}
 
 \item{subset_meta}{A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).}
-
-\item{query}{A character string that is a query. See \link{search_features} for documentation of the query language.}
+}
+\value{
+a data.frame
 }
 \description{
 Get common nearby terms given a feature query

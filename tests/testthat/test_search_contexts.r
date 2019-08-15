@@ -8,60 +8,60 @@ test_that("Query document search works", {
            'Hey, A ~ symbol!! Can I match that?')
   tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = T)
 
-  hits = tc$search_features('!')
+  hits = search_features(tc, '!')
 
-  hits = tc$search_contexts('mark AND rutte')
+  hits = search_contexts(tc, 'mark AND rutte')
   expect_equal(as.character(hits$hits$doc_id), 'c')
 
-  hits = tc$search_contexts('"mark rutte"', context_level = 'sentence')
+  hits = search_contexts(tc, '"mark rutte"', context_level = 'sentence')
   expect_equal(hits$hits$sentence, 1)
 
   ## test context boundaries
-  hits = tc$search_contexts('"rutte bos"~5', context_level = 'document') ## should find rutte and bos across sentences
+  hits = search_contexts(tc, '"rutte bos"~5', context_level = 'document') ## should find rutte and bos across sentences
   expect_true(nrow(hits$hits) > 0)
 
-  hits = tc$search_contexts('"rutte bos"~5', context_level = 'sentence') ## should not find rutte and bos across sentences
+  hits = search_contexts(tc, '"rutte bos"~5', context_level = 'sentence') ## should not find rutte and bos across sentences
   expect_true(nrow(hits$hits) == 0)
 
   ## proximity search
-  hits = tc$search_contexts('"bos wouter"~5', context_level = 'sentence') # bos and wouter within a token distance of 5
+  hits = search_contexts(tc, '"bos wouter"~5', context_level = 'sentence') # bos and wouter within a token distance of 5
   expect_true(nrow(hits$hits) == 0)
 
-  hits = tc$search_contexts('"bos wouter"~10', context_level = 'sentence') #  bos and wouter within a token distance of 10
+  hits = search_contexts(tc, '"bos wouter"~10', context_level = 'sentence') #  bos and wouter within a token distance of 10
   expect_true(nrow(hits$hits) > 0)
 
-  hits = tc$search_contexts('wouter NOT "bos wouter"~10', context_level = 'sentence') # wouter should not occur within 10 tokens from bos
+  hits = search_contexts(tc, 'wouter NOT "bos wouter"~10', context_level = 'sentence') # wouter should not occur within 10 tokens from bos
   expect_true(nrow(hits$hits) == 0)
 
-  hits = tc$search_contexts('wouter NOT "bos wouter"~3', context_level = 'sentence') # wouter should not occur within 10 tokens from bos
+  hits = search_contexts(tc, 'wouter NOT "bos wouter"~3', context_level = 'sentence') # wouter should not occur within 10 tokens from bos
   expect_true(nrow(hits$hits) == 1)
 
   ## BOOLEAN
-  hits = tc$search_contexts('wouter AND bos')
+  hits = search_contexts(tc, 'wouter AND bos')
   expect_true(nrow(hits$hits) == 1)
-  hits = tc$search_contexts('wouter NOT bos')
+  hits = search_contexts(tc, 'wouter NOT bos')
   expect_true(nrow(hits$hits) == 0)
-  hits = tc$search_contexts('wouter NOT (bos OR banaan)') # neither bos nor banaan may occur
+  hits = search_contexts(tc, 'wouter NOT (bos OR banaan)') # neither bos nor banaan may occur
   expect_true(nrow(hits$hits) == 0)
-  hits = tc$search_contexts('wouter NOT (bos AND banaan)') # bos and banaan may not occur together
+  hits = search_contexts(tc, 'wouter NOT (bos AND banaan)') # bos and banaan may not occur together
   expect_true(nrow(hits$hits) == 1)
 
   ## case sensitive
-  hits = tc$search_contexts('bos~s')
+  hits = search_contexts(tc, 'bos~s')
   expect_true(nrow(hits$hits) == 0)
-  hits = tc$search_contexts('Bos~s')
+  hits = search_contexts(tc, 'Bos~s')
   expect_true(nrow(hits$hits) == 1)
 
   tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = T)
-  hits = tc$search_contexts('"wouter bos"~10s') ## if flag on quotes, all within quotes needs to be case sensitive
+  hits = search_contexts(tc, '"wouter bos"~10s') ## if flag on quotes, all within quotes needs to be case sensitive
 
   expect_true(nrow(hits$hits) == 0)
-  hits = tc$search_contexts('"Wouter Bos"~s10')
+  hits = search_contexts(tc, '"Wouter Bos"~s10')
   expect_true(nrow(hits$hits) == 1)
-  expect_equal(tc$search_contexts('"Wouter Bos"~10s')$hits, tc$search_contexts('"Wouter Bos"~s10')$hits) ## order of flags is irrelevant
+  expect_equal(search_contexts(tc, '"Wouter Bos"~10s')$hits, search_contexts(tc, '"Wouter Bos"~s10')$hits) ## order of flags is irrelevant
 
   ## using special characters (other than ?, * or ~)
-  hits = tc$search_features('!')
+  hits = search_features(tc, '!')
   expect_equal(as.character(hits$hits$doc_id), c('a','d','d'))
 
   ## query subsetting

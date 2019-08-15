@@ -123,7 +123,7 @@ tCorpus <- R6::R6Class("tCorpus",
         }
       } else {
         if (is.null(columns)) columns = colnames(self$tokens)
-        if (!is.null(subset)) self$tokens[subset,columns,with=F]
+        if (!is.null(subset)) d = self$tokens[subset,columns,with=F]
         if (!is.null(doc_id)) {
           if (is.null(token_id)) {
             positions = list(doc_ids = as.character(doc_id))
@@ -199,7 +199,7 @@ tCorpus <- R6::R6Class("tCorpus",
       if (is.null(doc_id) && !is.null(token_id)) stop('token_id can only be given in pairs with doc_id')
 
       ## enable subset to be called from a character string. (e.g. used in search_features)
-      if(methods::is(subset, 'character')) subset_meta = eval(parse(text=subset_meta), self$meta, parent.frame())
+      if(methods::is(subset, 'character')) subset = eval(parse(text=subset), self$tokens, parent.frame())
       if(methods::is(subset_meta, 'character')) subset_meta = eval(parse(text=subset_meta), self$meta, parent.frame())
 
       i = NULL
@@ -283,6 +283,8 @@ tCorpus <- R6::R6Class("tCorpus",
        }
 
        private$set_keys()
+       self$tokens[]
+       self$meta[]
        invisible(self)
      },
 
@@ -344,6 +346,8 @@ tCorpus <- R6::R6Class("tCorpus",
        if (anyNA(levels(self$meta[[column]]))) {
          self$meta[,(column) := fast_factor(self$meta[[column]])]
        }
+       self$tokens[]
+       self$meta[]
        invisible(self)
      },
 
@@ -403,6 +407,8 @@ tCorpus <- R6::R6Class("tCorpus",
        }
 
        private$droplevels()
+       self$tokens[]
+       self$meta[]
        invisible(self)
      },
 
@@ -431,7 +437,7 @@ tCorpus <- R6::R6Class("tCorpus",
         if (!is.null(hits) | !is.null(feature)){
           if (!is.null(hits) && !is.null(feature)) stop('Cannot specify both hits and feature')
           if (!is.null(hits)) {
-            if (!methods::is(hits, c('featureHits', 'contextHits'))) stop('hits must be a featureHits or contextHits object (see the $search_features and $search_contexts methods)')
+            if (!methods::is(hits, c('featureHits', 'contextHits'))) stop('hits must be a featureHits or contextHits object (see the search_features and search_contexts functions)')
             if (methods::is(hits, 'featureHits')) {
               coldata = hits$hits[!duplicated(hits$hits[,c('code', 'hit_id')]),]
             } else {

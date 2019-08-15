@@ -4,8 +4,9 @@
 \alias{dtm_wordcloud}
 \title{Plot a word cloud from a dtm}
 \usage{
-dtm_wordcloud(dtm = NULL, nterms = 100, freq.fun = NULL, terms = NULL,
-  freqs = NULL, scale = c(6, 0.5), min.freq = 1, rot.per = 0.15, ...)
+dtm_wordcloud(dtm = NULL, nterms = 100, freq.fun = NULL,
+  terms = NULL, freqs = NULL, scale = c(6, 0.5), min.freq = 1,
+  rot.per = 0.15, ...)
 }
 \arguments{
 \item{dtm}{the document-term matrix}
@@ -35,7 +36,7 @@ You can either supply a document-term matrix or provide terms and freqs directly
 ## create DTM
 tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
 tc$preprocess('token', 'feature', remove_stopwords = TRUE)
-dtm = tc$dtm('feature')
+dtm = get_dtm(tc, 'feature')
 
 \dontrun{
 dtm_wordcloud(dtm, nterms = 20)

@@ -4,8 +4,9 @@
 \alias{backbone_filter}
 \title{Extract the backbone of a network.}
 \usage{
-backbone_filter(g, alpha = 0.05, direction = "none", delete_isolates = T,
-  max_vertices = NULL, use_original_alpha = T, k_is_n = F)
+backbone_filter(g, alpha = 0.05, direction = "none",
+  delete_isolates = T, max_vertices = NULL, use_original_alpha = T,
+  k_is_n = F)
 }
 \arguments{
 \item{g}{A graph in the `Igraph` format.}
