@@ -1,4 +1,4 @@
-#' Compute the chi^2 statistic for a 2x2 crosstab containing the values
+#' Vectorized computation of chi^2 statistic for a 2x2 crosstab containing the values
 #' [a, b]
 #' [c, d]
 #'

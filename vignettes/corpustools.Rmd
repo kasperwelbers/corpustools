@@ -3,7 +3,9 @@ title: "corpustools: Managing, Querying and Analyzing Tokenized Text"
 author: "by Kasper Welbers and Wouter van Atteveldt"
 date: "2019-08-14"
 output:
-  rmarkdown::html_vignette
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
 vignette: >
   %\VignetteIndexEntry{Introduction to corpustools}
   %\VignetteEncoding{UTF-8}
@@ -129,6 +131,13 @@ The search_features() function takes the tcorpus as the first argument. The quer
 
 ```{r}
 hits = search_features(tc, query = c('terror*','war*'))
+```
+
+The first time a query search is performed the token column is indexed to enable fast binary search. More generally, a query can be performed using any character/factor type column in tc$tokens, but indexing of columns only happens after it has been queried the first time. 
+
+The output of `search_features` is a `featureHits` object.
+
+```{r}
 hits
 summary(hits)
 ```
@@ -138,6 +147,13 @@ The regular output shows the total number of hits, and the summary shows the hit
 ```{r}
 hits = search_features(tc, query = c('Terror# terror*','War# war*'))
 summary(hits)
+```
+
+It is usefull to know that the `featureHits` object has a `hits` and `queries` slot. The queries slot contains the query input for provenance, and the hits slot shows the tokens that are matched. Note that queries can match multiple words. The hit_id column indicates the unique matches.
+
+```{r}
+hits$queries
+head(hits$hits)
 ```
 
 
@@ -161,8 +177,13 @@ We can create semantic networks based on the cooccurence of queries in documents
 ```{r}
 hits = search_features(tc, c('War# war* OR army OR bomb*','Terrorism# terroris*', 
                              'Economy# econom* OR bank*','Education# educat* OR school*'))
+hits
+summary(hits)
+plot_associations(hits)
+
+
 g = semnet(hits)
-igraph::get.adjacency(g, attr='weight')
+plot_semnet(g)
 ```
 
 We can create HTML browsers that highlight hits in full text. If you run this command in RStudio with the ```view = TRUE```, you'll also directly see the browser in the viewer pane.

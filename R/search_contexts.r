@@ -76,6 +76,7 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
 #' @param code If given, used as a label for the results of the query. Especially usefull if multiple queries are used.
 #' @param feature The name of the feature column
 #' @param context_level Select whether the queries should occur within while "documents" or specific "sentences". Returns results at the specified level.
+#' @param as_ascii if TRUE, perform search in ascii.
 #' @param verbose If TRUE, progress messages will be printed
 #'
 #' @details
@@ -159,7 +160,7 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
 #'
 #' search_contexts(tc, '"a b"~s')$hits   ## use ~s flag on everything between quotes
 #' search_contexts(tc, '"A B"~s')$hits   ## use ~s flag on everything between quotes
-search_contexts <- function(tc, query, code=NULL, feature='token', context_level=c('document','sentence'), verbose=F){
+search_contexts <- function(tc, query, code=NULL, feature='token', context_level=c('document','sentence'), verbose=F, as_ascii=F){
   is_tcorpus(tc, T)
   context_level = match.arg(context_level)
   if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(tc$feature_names, collapse=', ')))
@@ -170,10 +171,13 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
   subcontext = if(context_level == 'sentence') 'sentence' else NULL
 
   hits = vector('list', length(query))
+  lookup_tables = list()
   for (i in 1:length(query)) {
     if (verbose) print(code[i])
     q = parse_query_cpp(as.character(query[i]))
-    h = recursive_search(tc, q, subcontext=subcontext, feature=feature, mode = 'contexts')
+
+    lookup_tables = prepare_lookup_tables(tc, q, lookup_tables, feature = feature, as_ascii = as_ascii)
+    h = recursive_search(tc, q, lookup_tables, subcontext=subcontext, feature=feature, mode = 'contexts', as_ascii=as_ascii)
     if (!is.null(h)) {
       h[, code := codelabel[i]]
       hits[[i]] = h

@@ -36,9 +36,12 @@ plot_semnet <- function(g, weight_attr='weight', min_weight=NA, delete_isolates=
   ## add: out_r, jpg_file, pdf_file, width, height
   ## add seed!!  default to random number, save as attribute
 
-  igraph::E(g)$weight = igraph::get.edge.attribute(g, weight_attr)
-  if (!is.na(min_weight)) g = igraph::delete.edges(g, which(igraph::E(g)$weight < min_weight))
-  if (delete_isolates) g = igraph::delete.vertices(g, which(igraph::degree(g) == 0))
+
+  if (igraph::ecount(g) > 0) {
+    igraph::E(g)$weight = igraph::get.edge.attribute(g, weight_attr)
+    if (!is.na(min_weight)) g = igraph::delete.edges(g, which(igraph::E(g)$weight < min_weight))
+    if (delete_isolates) g = igraph::delete.vertices(g, which(igraph::degree(g) == 0))
+  }
   if (igraph::vcount(g) == 0) {
     igraph::plot.igraph(g, ...)
     if (return_graph) return(g) else return(NULL)
@@ -100,7 +103,7 @@ plot_args_as_attributes <- function(g, args){
 #' @export
 set_network_attributes <- function(g, size_attribute='freq', color_attribute=NA, redo_layout=F, edgewidth_coef=1, layout_fun=igraph::layout_with_fr){
   g = set_vertex_attributes(g, size_attribute, color_attribute)
-  g = set_edge_attributes(g, edgewidth_coef)
+  if (igraph::ecount(g) > 0) g = set_edge_attributes(g, edgewidth_coef)
   if (is.null(g$layout) | redo_layout) g$layout = layout_fun(g)
   g
 }
@@ -108,7 +111,7 @@ set_network_attributes <- function(g, size_attribute='freq', color_attribute=NA,
 set_vertex_colors <- function(g, color){
   if (!is.null(color)){
     if (class(color) == 'numeric'){
-      pal = substr(grDevices::rainbow(length(unique(color)), s=0.6,alpha=0.5), 1,7)
+      pal = substr(grDevices::rainbow(length(unique(color)), s=0.5,alpha=0.5), 1,7)
       duplicates = unique(color[duplicated(color)])
       color = match(color, duplicates) # re-index colors, and setting isolates to NA
       igraph::V(g)$color = ifelse(is.na(color), '#AEAEAE', pal[color])
@@ -139,7 +142,7 @@ set_vertex_attributes <- function(g, size, color){
     size = igraph::get.vertex.attribute(g, size)
   }
 
-  igraph::V(g)$size= rescale_var(size^0.4, 2, 10)
+  if (!'size' %in% names(igraph::vertex.attributes(g))) igraph::V(g)$size= rescale_var(size^0.4, 2, 10)
   igraph::V(g)$label.color = 'black'
 
   igraph::V(g)$label.cex = rescale_var(size^0.4, 0.8, 1)
@@ -150,8 +153,9 @@ set_vertex_attributes <- function(g, size, color){
 
 set_edge_attributes <- function(g, edgewidth_coef){
   igraph::E(g)$width = rescale_var(igraph::E(g)$weight, 1, 10) * edgewidth_coef
-  igraph::E(g)$arrow.size= 0.00001
-  igraph::E(g)$color='lightgrey'
+  eattrs = names(igraph::edge.attributes(g))
+  if (!'arrow.size' %in% eattrs) igraph::E(g)$arrow.size= 0.00001
+  if (!'color' %in% eattrs) igraph::E(g)$color='lightgrey'
   g
 }
 

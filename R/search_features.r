@@ -242,11 +242,13 @@ search_features <- function(tc, query, code=NULL, feature='token', mode = c('uni
   subcontext = if(context_level == 'sentence') 'sentence' else NULL
   hits = vector('list', length(query))
 
+  lookup_tables = list()
   for (i in 1:length(query)) {
     if (verbose) cat(as.character(codelabel[i]), '\n')
     q = parse_query_cpp(as.character(query[i]))
 
-    h = recursive_search(tc, q, subcontext=subcontext, feature=feature, mode = mode, keep_longest=keep_longest, as_ascii=as_ascii)
+    lookup_tables = prepare_lookup_tables(tc, q, lookup_tables, feature = feature, as_ascii = as_ascii)
+    h = recursive_search(tc, q, lookup_tables=lookup_tables, subcontext=subcontext, feature=feature, mode = mode, keep_longest=keep_longest, as_ascii=as_ascii)
 
     if (!is.null(h)) {
       h[, code := codelabel[i]]

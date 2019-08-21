@@ -5,7 +5,8 @@
 \title{Search for documents or sentences using Boolean queries}
 \usage{
 search_contexts(tc, query, code = NULL, feature = "token",
-  context_level = c("document", "sentence"), verbose = F)
+  context_level = c("document", "sentence"), verbose = F,
+  as_ascii = F)
 }
 \arguments{
 \item{tc}{a \link{tCorpus)}}
@@ -19,6 +20,8 @@ search_contexts(tc, query, code = NULL, feature = "token",
 \item{context_level}{Select whether the queries should occur within while "documents" or specific "sentences". Returns results at the specified level.}
 
 \item{verbose}{If TRUE, progress messages will be printed}
+
+\item{as_ascii}{if TRUE, perform search in ascii.}
 }
 \value{
 A contextHits object, which is a list with $hits (data.frame with locations) and $queries (copy of queries for provenance)

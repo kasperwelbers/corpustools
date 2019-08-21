@@ -33,13 +33,20 @@ semnet <- function(tc, feature='token', measure=c('con_prob', 'con_prob_weighted
   measure = match.arg(measure)
   context_level = match.arg(context_level)
 
-  if (is(tc, 'featureHits')) {
+  if (!is(tc, 'tCorpus') && !is(tc, 'featureHits') && !is(tc, 'contextHits')) stop('tc has to be a tCorpus, featureHits or contextHits object')
+
+
+  if (is(tc, 'featureHits') || is(tc, 'contextHits')) {
     sentence_col = if (anyNA(tc$hits$sentence)) NULL else 'sentence'
     hits = tc$hits
+    if (is(tc, 'contextHits')) {
+      hits$hit_id = 1:nrow(hits)
+      hits$token_id = 1:nrow(hits) ## doesn't matter for document/sentence level semnet
+    }
     if (context_level == 'sentence') {
-      hits = unique(hits, by=c('doc_id','sentence','hit_id'))
+      hits = unique(hits, by=c('code','sentence','hit_id'))
     } else {
-      hits = unique(hits, by=c('hit_id'))
+      hits = unique(hits, by=c('code', 'hit_id'))
     }
     tc = tokens_to_tcorpus(hits, doc_col = 'doc_id', sentence_col=NULL, token_id_col = 'token_id')
     feature = 'code'
@@ -119,6 +126,8 @@ semnet_window <- function(tc, feature='token', measure=c('con_prob', 'cosine', '
   measure = match.arg(measure)
   context_level = match.arg(context_level)
   matrix_mode = match.arg(matrix_mode)
+
+  if (!is(tc, 'tCorpus') && !is(tc, 'featureHits')) stop('tc has to be a tCorpus or featureHits object')
 
   if (is(tc, 'featureHits')) {
     sentence_col = if (anyNA(tc$hits$sentence)) NULL else 'sentence'

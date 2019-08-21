@@ -1,8 +1,19 @@
-prepare_model <- function(language, local_path=getOption('corpustools_resources', NULL)) {
-  udpipe_languages = eval(formals(udpipe::udpipe_download_model)[[1]])
-  if (!language %in% udpipe_languages) stop(sprintf('language passed to udpipe_model ("%s") is not available. Choose from:\n%s', language, paste(udpipe_languages, collapse=', ')))
+prepare_model <- function(udpipe_model, local_path=getwd()) {
+  udpipe_models = eval(formals(udpipe::udpipe_download_model)[[1]])
 
-  path = make_dir(local_path, 'udpipe', language)
+  if (!udpipe_model %in% udpipe_models) {
+    guess_language = gsub('-.*','',udpipe_model)
+    avail_language = stringi::stri_extract(udpipe_models, regex='.*(?=-)')
+    suggest = udpipe_models[grep(guess_language, avail_language, ignore.case = T)]
+    suggest = na.omit(suggest)
+    message = sprintf('"%s" is not a valid udpipe model (in the current repository).\n', udpipe_model)
+    if (length(suggest) > 0) message = paste0(message, '\nAvailable models for "', guess_language, '" are: ', paste(paste0('"',suggest,'"'), collapse=', '))
+    message = paste(message, '\nUse show_udpipe_models() for an overview of all available models')
+    stop(message)
+  }
+
+  language = stringi::stri_extract(udpipe_model, regex='.*(?=-)')
+  path = make_dir(local_path, 'udpipe_models', language)
 
   fname = list.files(path, full.names = T)[1]
   if (!is.na(fname)) {
@@ -11,11 +22,33 @@ prepare_model <- function(language, local_path=getOption('corpustools_resources'
   }
   if (is.na(fname)) {
     message(paste0("Model for this language does not yet exist. Will be downloaded to: ", path, '\n'))
-    m_file = udpipe::udpipe_download_model(language, model_dir = path)
+    m_file = udpipe::udpipe_download_model(udpipe_model, model_dir = path)
     m = udpipe::udpipe_load_model(m_file$file_model)
   }
   m
 }
+
+
+
+#' Show the names of udpipe models
+#'
+#' Returns a data.table with the language, treebank and udpipe_model name.
+#' Uses the default model repository provided by the udpipe package (\code{\link[udpipe]{udpipe_download_model}}).
+#' For more information about udpipe and performance benchmarks of the UD models, see the
+#' GitHub page of the \href{https://github.com/bnosac/udpipe}{udpipe package}.
+#'
+#' @return a data.frame
+#' @export
+#'
+#' @examples
+#' show_udpipe_models()
+show_udpipe_models <- function() {
+  m = eval(formals(udpipe::udpipe_download_model)[[1]])
+  language = stringi::stri_extract(m, regex='.*(?=-)')
+  treebank = stringi::stri_extract(m, regex='(?<=-).*')
+  data.frame(language=language, treebank=treebank, udpipe_model=m)
+}
+
 
 udpipe_parse <- function(x, udpipe_model, udpipe_model_path, doc_id=1:length(x), use_parser=use_parser, max_sentences=NULL, max_tokens=NULL, verbose=F){
   udpipe_model = prepare_model(udpipe_model, udpipe_model_path)
@@ -79,3 +112,18 @@ udpipe_parse_batch <- function(x, udpipe_model, doc_id, use_parser, max_sentence
 }
 
 
+make_dir <- function(path=getwd(), ...) {
+  if (is.null(path)){
+    path = system.file(package='corpustools')
+  } else {
+    path = if (path == '') getwd() else normalizePath(gsub('\\/$', '', path))
+  }
+  if (file.access(path,"6") == -1) stop('You do not have write permission for this location, and therefore cannot download the model here')
+  #path = paste(path, 'ext_resources', sep='/')
+
+  add = paste(unlist(list(...)), collapse='/')
+  if (!add == '') path = paste(path, add, sep='/')
+
+  if (!dir.exists(path)) dir.create(path, recursive = TRUE)
+  path
+}

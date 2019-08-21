@@ -146,4 +146,64 @@ summary.contextHits <- function(object, ...){
   as.data.frame(object)
 }
 
+#' S3 plot for contextHits class
+#'
+#' @param object a contextHits object, as returned by \link{search_contexts}
+#' @param ... not used
+#'
+#' @method plot contextHits
+#' @examples
+#' tc = create_tcorpus(sotu_texts, doc_column='id')
+#' hits = search_contexts(tc, c('War# war* OR army OR bomb*','Terrorism# terroris*',
+#'                               Economy# econom* OR bank*','Education# educat* OR school*'))
+#' plot(hits)
+#' @export
+plot.contextHits <- function(object, min_weight=0, backbone_alpha=NA, ...){
+  invisible(plot_associations(object, measure='cosine', min_weight=min_weight, backbone_alpha=backbone_alpha, ...))
+}
 
+#' S3 plot for featureHits class
+#'
+#' @param object a featureHits object, as returned by \link{search_features}
+#' @param ... not used
+#'
+#' @method plot featureHits
+#' @examples
+#' tc = create_tcorpus(sotu_texts, doc_column='id')
+#' hits = search_features(tc, c('War# war* OR army OR bomb*','Terrorism# terroris*',
+#'                               Economy# econom* OR bank*','Education# educat* OR school*'))
+#' plot(hits)
+#' @export
+plot.featureHits <- function(object, min_weight=0, backbone_alpha=NA, ...){
+  invisible(plot_associations(object, measure='cosine', min_weight=min_weight, backbone_alpha=backbone_alpha, ...))
+}
+
+plot_associations <- function(hits, min_weight=0, backbone_alpha=NA, measure=c('con_prob','con_prob_weighted','cosine','count_directed','count_undirected','chi'), context_level=c('document','sentence'), n=c('documents','sentences','hits'), ...) {
+  if (!is(hits, 'featureHits') && !is(hits, 'contextHits')) stop('hits has to be a featureHits or contextHits object')
+  if (is(hits, 'contextHits') && n=='hits') stop('count cannot be "hits" for contextHits results')
+  measure = match.arg(measure)
+
+  g = semnet(hits, measure = 'con_prob_weighted', backbone = !is.na(backbone_alpha))
+
+  n = match.arg(n)
+  totalhits = summary(hits)
+  if (context_level == 'sentence' && !'sentences' %in% colnames(totalhits)) stop('Cannot use context_level = "sentence" if the queried tcorpus does not have sentence information')
+  if (n == 'sentences' && !'sentences' %in% colnames(totalhits)) stop('Cannot use n = "sentences" if the queried tcorpus does not have sentence information')
+  igraph::V(g)$freq = totalhits[match(igraph::V(g)$name, totalhits$code), n]
+  igraph::V(g)$name = paste0(igraph::V(g)$name, '\n(', V(g)$freq, ')')
+
+  #igraph::V(g)$color = substr(grDevices::rainbow(nrow(totalhits), s=0.4,alpha=0.5), 1,7)
+
+  size = V(g)$freq
+  size = (size / max(size))*100
+  size[size < 3] = 3
+  igraph::V(g)$size = size
+
+  if (!measure %in% c('cosine','count_undirected')) {
+    igraph::E(g)$curved=0.3
+    e = igraph::get.edges(g, igraph::E(g))
+    #igraph::E(g)$color = substr(grDevices::rainbow(nrow(totalhits), s=0.25,alpha=0.25), 1,7)[e[,1]]
+    igraph::E(g)$arrow.size=1
+  }
+  invisible(plot_semnet(g, vertexcolor_attr = 'color', vertexsize_attr='freq', max_backbone_alpha=backbone_alpha))
+}
