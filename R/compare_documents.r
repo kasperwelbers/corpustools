@@ -32,15 +32,37 @@
 #'
 #' g = compare_documents(tc, date_col = 'date', hour_window = c(0,36))
 #' igraph::get.data.frame(g)
-compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL, verbose=T) {
+compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, hour_window=c(24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL, verbose=T) {
   weight = match.arg(weight)
   measure = match.arg(measure)
   from_subset = tc$eval_meta(substitute(from_subset), parent.frame())
   to_subset = tc$eval_meta(substitute(to_subset), parent.frame())
 
   dtm = get_dfm(tc, feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
-  compare_documents_dtm(dtm, date_col=date_col, window=hour_window, meta_cols=meta_cols, min.similarity=min_similarity, measure=measure, only_from=from_subset, only_to = to_subset, verbose=verbose)
+
+  if (!is.null(meta_cols)) {
+    meta_cols = subset(quanteda::docvars(dtm), select=meta_cols)
+    quanteda::docvars(dtm, 'group_col') = do.call(paste, args=c(meta_cols, list(sep='__')))
+    group_col = 'group_col'
+  } else group_col = NULL
+
+  dtm_y = NULL
+  if (!is.null(to_subset)) {
+    dtm_y = quanteda::dfm_subset(dtm, subset=to_subset)
+  }
+  if (!is.null(from_subset)) {
+    if (is.null(dtm_y)) dtm_y = dtm
+    dtm = quanteda::dfm_subset(dtm, subset=from_subset)
+  }
+
+  if (length(hour_window) == 1) hour_window = c(-hour_window, hour_window)
+
+  g = RNewsflow::compare_documents(dtm, dtm_y,
+                                   date_var=date_col, hour_window=hour_window, group_var=group_col,
+                                   min_similarity=min_similarity, measure=measure, verbose=verbose)
+  RNewsflow::as_document_network(g)
 }
+
 
 #' Deduplicate documents
 #'
@@ -57,7 +79,7 @@ compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL
 #' @param feature the column name of the feature that is to be used for the comparison.
 #' @param date_col The column name for a column with a date vector (in POSIXct). If given together with hour_window, only documents within the given hour_window will be compared.
 #' @param meta_cols a vector with names for columns in the meta data. If given, documents are only considered duplicates if the values of these columns are identical (in addition to having a high similarity score)
-#' @param hour_window an integer. If given together with date_col, only documents within the given hour_window will be compared.
+#' @param hour_window A vector of length 1 or 2. If length is 1, the same value is used for the left and right side of the window. If length is 2, the first and second value determine the left and right side. For example, the value 12 will compare each document to all documents between the previous and next 12 hours, and c(-10, 36) will compare each document to all documents between the previous 10 and the next 36 hours.
 #' @param min_docfreq a minimum document frequency for features. This is mostly to lighten computational load. Default is 2, because terms that occur once cannot overlap across documents
 #' @param min_docfreq a maximum document frequency percentage for features. High frequency terms contain little information for identifying duplicates. Default is 0.5 (i.e. terms that occur in more than 50 percent of documents are ignored),
 #' @param measure the similarity measure. Currently supports cosine similarity (symmetric) and overlap_pct (asymmetric)
@@ -85,7 +107,7 @@ compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL
 #' dedup = tc$deduplicate(feature='token', date_col = 'date', similarity = 0.8, keep = 'last',
 #'                        copy=TRUE)
 #' dedup$get_meta()
-tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, min_docfreq=2, max_docfreq_pct=1, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, verbose=T, copy=F){
+tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=24, min_docfreq=2, max_docfreq_pct=1, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, verbose=T, copy=F){
   weight = match.arg(weight)
   measure = match.arg(measure)
 
@@ -119,7 +141,18 @@ get_duplicates <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, h
 
   #g = compare_documents_fun(tc, feature=feature, date_col=date_col, hour_window=hour_window, measure=measure, min_similarity=similarity, weight=weight, ngrams)
   dtm = get_dfm(tc, feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
-  d = compare_documents_dtm(dtm, date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, min_similarity=similarity, return_as='edgelist', verbose=verbose)
+
+  if (!is.null(meta_cols)) {
+    meta_cols = subset(quanteda::docvars(dtm), select=meta_cols)
+    quanteda::docvars(dtm, 'group_col') = do.call(paste, args=c(meta_cols, list(sep='__')))
+    group_col = 'group_col'
+  } else group_col = NULL
+
+  if (length(hour_window) == 1) hour_window = c(-hour_window, hour_window)
+
+  d = RNewsflow::compare_documents(dtm, date_var=date_col, group_var=group_col, hour_window=hour_window,
+                                   measure=measure, min_similarity=similarity, verbose=verbose)
+  d = d$d
 
   if (nrow(d) == 0) {
     message('Deleting 0 duplicates')

@@ -21,6 +21,7 @@ Imports:
     udpipe,
     data.table (>= 1.10.4),
     tokenbrowser,
+    RNewsflow (>= 1.2.1),
     Matrix (>= 1.2)
 Suggests:
     testthat,

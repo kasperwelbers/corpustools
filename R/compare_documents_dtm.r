@@ -44,6 +44,8 @@
 #' head(igraph::get.data.frame(g, 'edges'))
 #' }
 compare_documents_dtm <- function(dtm, meta=NULL, date_col=NULL, meta_cols=NULL, hour_window=24, measure=c('cosine','overlap_pct'), min_similarity=0, n_topsim=NULL, only_from=NULL, only_to=NULL, only_complete_window=FALSE, pvalue = c("none", "normal", "lognormal", "nz_normal", "nz_lognormal", "disparity"), return_as= c("igraph", "edgelist", "matrix"), verbose=T, ...){
+  .Deprecated(msg = "The compare_documents_dtm function is deprecated, because corpustools now uses the (very similar) compare_documents function from the RNewsflow package")
+
   if (is.null(meta)) {
     if (!methods::is(dtm, 'dfm')) stop('meta can only be NULL if dtm is a quanteda dfm class')
   }

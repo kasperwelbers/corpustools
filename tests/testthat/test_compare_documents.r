@@ -32,6 +32,8 @@ test_that("comparing documents works", {
   testthat::expect_true(igraph::ecount(g) == 2)
 
   ## due to random selection of which duplicate to delete, chains can lead to varying number of duplicates. Think of something more smart, or order by id/name instead of random
+  tc = create_tcorpus(d)
+
   dedup = tc$deduplicate(feature='token', similarity = 0.025, verbose=F)
   testthat::expect_true(dedup$n_meta == 1)
 })
