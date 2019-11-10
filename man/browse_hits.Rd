@@ -11,6 +11,8 @@ browse_hits(tc, hits, token_col = "token", n = 500,
 \arguments{
 \item{tc}{a tCorpus}
 
+\item{hits}{a featureHits object, as returned by \link{search_features}}
+
 \item{token_col}{The name of the column in tc$tokens that contain the token text}
 
 \item{n}{If doc_ids is NULL, Only n of the results are printed (to prevent accidentally making huge browsers).}
@@ -36,9 +38,9 @@ The url for the file location is returned (invisibly)
 Creates a static HTML file to view the query hits in the tcorpus in full text mode.
 }
 \examples{
-\dontrun{
+\donttest{
 tc = create_tcorpus(sotu_texts, doc_column='id')
 hits = search_features(tc, c("Terrorism# terroris*", "War# war*"))
-view_hits(tc, hits)
+browse_hits(tc, hits)
 }
 }

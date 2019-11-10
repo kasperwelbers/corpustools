@@ -11,11 +11,13 @@
 
 \item{meta_cols}{a vector with names for columns in the meta data. If given, documents are only considered duplicates if the values of these columns are identical (in addition to having a high similarity score)}
 
-\item{hour_window}{an integer. If given together with date_col, only documents within the given hour_window will be compared.}
+\item{hour_window}{A vector of length 1 or 2. If length is 1, the same value is used for the left and right side of the window. If length is 2, the first and second value determine the left and right side. For example, the value 12 will compare each document to all documents between the previous and next 12 hours, and c(-10, 36) will compare each document to all documents between the previous 10 and the next 36 hours.}
 
 \item{min_docfreq}{a minimum document frequency for features. This is mostly to lighten computational load. Default is 2, because terms that occur once cannot overlap across documents}
 
-\item{min_docfreq}{a maximum document frequency percentage for features. High frequency terms contain little information for identifying duplicates. Default is 0.5 (i.e. terms that occur in more than 50 percent of documents are ignored),}
+\item{max_docfreq_pct}{a maximum document frequency percentage for features. High frequency terms contain little information for identifying duplicates. Default is 0.5 (i.e. terms that occur in more than 50 percent of documents are ignored),}
+
+\item{lowercase}{If True, make feature lowercase}
 
 \item{measure}{the similarity measure. Currently supports cosine similarity (symmetric) and overlap_pct (asymmetric)}
 
@@ -47,14 +49,14 @@ Note that deduplication occurs by reference (\link{tCorpus_modify_by_reference})
 d = data.frame(text = c('a b c d e',
                         'e f g h i j k',
                         'a b c'),
-               date = c('2010-01-01','2010-01-01','2012-01-01'))
+               date = as.POSIXct(c('2010-01-01','2010-01-01','2012-01-01')))
 tc = create_tcorpus(d)
 
-tc$get_meta()
+tc$meta
 dedup = tc$deduplicate(feature='token', date_col = 'date', similarity = 0.8, copy=TRUE)
-dedup$get_meta()
+dedup$meta
 
 dedup = tc$deduplicate(feature='token', date_col = 'date', similarity = 0.8, keep = 'last',
                        copy=TRUE)
-dedup$get_meta()
+dedup$meta
 }

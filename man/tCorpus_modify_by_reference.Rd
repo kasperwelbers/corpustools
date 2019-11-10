@@ -10,7 +10,7 @@
 If any tCorpus method is used that changes the corpus (e.g., set, subset),
 the change is made by reference. This is convenient when working with a large
 corpus, because it means that the corpus does not have to be copied when changes are made,
-which is slow and memory inefficient.
+which is slower and less memory efficient.
 
 To illustrate, for a tCorpus object named `tc`, the subset method can be called like this:
 
@@ -30,15 +30,22 @@ Be aware, however, that the following does not work!!
 
 In this case, tc2 does contain the subsetted corpus, but tc itself will also be subsetted!!
 
-We force this approach on you, because it is faster and more memory efficient, which becomes
-crucial for large corpora. If you do want to make a copy, it has to be done explicitly with the
-copy() method.
+Using the R6 method for subset forces this approach on you, because it is faster and more memory efficient.
+If you do want to make a copy, there are several solutions.
 
-\strong{tc2 = tc$copy()}
+Firstly, for some methods we provide identical functions. For example, instead of the $subset() R6 method,
+we can use the subset() function.
 
-For methods where copying is often usefull, such as subset, there is also a copy parameter.
+\strong{tc2 = subset(tc, doc_id \%in\% selection)}
+
+We promise that only the R6 methods (called as tc$method()) will change the data by reference.
+
+A second option is that R6 methods where copying is often usefull have copy parameter
+Modifying by reference only happens in the R6 methods
 
 \strong{tc2 = tc$subset(doc_id \%in\% selection, copy=TRUE)}
 
-Now, tc will not be subsetted itself, but will subset a copy of itself and return it to be assigned to tc2.
+Finally, you can always make a deep copy of the entire tCorpus before modifying it, using the $copy() method.
+
+\strong{tc2 = tc$copy()}
 }

@@ -7,21 +7,20 @@
 #' @param meta_cols a character vector with columns in the meta data / docvars. If given, only documents for which these values are identical are compared
 #' @param hour_window A vector of length 1 or 2. If length is 1, the same value is used for the left and right side of the window. If length is 2, the first and second value determine the left and right side. For example, the value 12 will compare each document to all documents between the previous and next 12 hours, and c(-10, 36) will compare each document to all documents between the previous 10 and the next 36 hours.
 #' @param measure the similarity measure. Currently supports cosine similarity (symmetric) and overlap_pct (asymmetric)
+#' @param min_similarity A threshold for the similarity score
 #' @param weight a weighting scheme for the document-term matrix. Default is term-frequency inverse document frequency with normalized rows (document length).
 #' @param ngrams an integer. If given, ngrams of this length are used
 #' @param from_subset An expression to select a subset. If given, only this subset will be compared to other documents
 #' @param to_subset An expression to select a subset. If given, documents are only compared to this subset
 #' @param verbose If TRUE, report progress
 #'
-#' @name tCorpus$compare_documents
-#' @aliases compare_documents
 #' @return An igraph graph in which nodes are documents and edges represent similarity scores
 #' @export
 #' @examples
 #' d = data.frame(text = c('a b c d e',
 #'                         'e f g h i j k',
 #'                         'a b c'),
-#'                date = c('2010-01-01','2010-01-01','2012-01-01'))
+#'                date = as.POSIXct(c('2010-01-01','2010-01-01','2012-01-01')))
 #' tc = create_tcorpus(d)
 #'
 #' g = compare_documents(tc)
@@ -57,7 +56,7 @@ compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL
 
   if (length(hour_window) == 1) hour_window = c(-hour_window, hour_window)
 
-  g = RNewsflow::compare_documents(dtm, dtm_y,
+  g = RNewsflow::compare_documents(dtm, dtm_y, only_complete_window = F,
                                    date_var=date_col, hour_window=hour_window, group_var=group_col,
                                    min_similarity=min_similarity, measure=measure, verbose=verbose)
   RNewsflow::as_document_network(g)
@@ -81,7 +80,8 @@ compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL
 #' @param meta_cols a vector with names for columns in the meta data. If given, documents are only considered duplicates if the values of these columns are identical (in addition to having a high similarity score)
 #' @param hour_window A vector of length 1 or 2. If length is 1, the same value is used for the left and right side of the window. If length is 2, the first and second value determine the left and right side. For example, the value 12 will compare each document to all documents between the previous and next 12 hours, and c(-10, 36) will compare each document to all documents between the previous 10 and the next 36 hours.
 #' @param min_docfreq a minimum document frequency for features. This is mostly to lighten computational load. Default is 2, because terms that occur once cannot overlap across documents
-#' @param min_docfreq a maximum document frequency percentage for features. High frequency terms contain little information for identifying duplicates. Default is 0.5 (i.e. terms that occur in more than 50 percent of documents are ignored),
+#' @param max_docfreq_pct a maximum document frequency percentage for features. High frequency terms contain little information for identifying duplicates. Default is 0.5 (i.e. terms that occur in more than 50 percent of documents are ignored),
+#' @param lowercase If True, make feature lowercase
 #' @param measure the similarity measure. Currently supports cosine similarity (symmetric) and overlap_pct (asymmetric)
 #' @param similarity the similarity threshold used to determine whether two documents are duplicates. Default is 1, meaning 100 percent identical.
 #' @param keep select either 'first', 'last' or 'random'. Determines which document of duplicates to delete. If a date is given, 'first' and 'last' specify whether the earliest or latest document is kept.
@@ -97,17 +97,17 @@ compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL
 #' d = data.frame(text = c('a b c d e',
 #'                         'e f g h i j k',
 #'                         'a b c'),
-#'                date = c('2010-01-01','2010-01-01','2012-01-01'))
+#'                date = as.POSIXct(c('2010-01-01','2010-01-01','2012-01-01')))
 #' tc = create_tcorpus(d)
 #'
-#' tc$get_meta()
+#' tc$meta
 #' dedup = tc$deduplicate(feature='token', date_col = 'date', similarity = 0.8, copy=TRUE)
-#' dedup$get_meta()
+#' dedup$meta
 #'
 #' dedup = tc$deduplicate(feature='token', date_col = 'date', similarity = 0.8, keep = 'last',
 #'                        copy=TRUE)
-#' dedup$get_meta()
-tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=24, min_docfreq=2, max_docfreq_pct=1, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, verbose=T, copy=F){
+#' dedup$meta
+tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=24, min_docfreq=2, max_docfreq_pct=1, lowercase=T, measure=c('cosine','overlap_pct'), similarity=1, keep=c('first','last', 'random'), weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, print_duplicates=F, verbose=T, copy=F){
   weight = match.arg(weight)
   measure = match.arg(measure)
 
@@ -118,7 +118,7 @@ tCorpus$set('public', 'deduplicate', function(feature='token', date_col=NULL, me
   }
 
   ## adding DEDUPLICATE_FEATURE is not very elegant and memory efficient. Better alternative, perhaps, is to pass docfreq_filter results to compare_documents_fun.
-  self$preprocess(feature, new_column = 'DEDUPLICATE_FEATURE', min_docfreq = min_docfreq, max_docfreq = self$n_meta * max_docfreq_pct)
+  self$preprocess(feature, new_column = 'DEDUPLICATE_FEATURE', lowercase=lowercase, min_docfreq = min_docfreq, max_docfreq = self$n_meta * max_docfreq_pct)
 
   .duplicates = get_duplicates(self, feature='DEDUPLICATE_FEATURE', date_col=date_col, meta_cols=meta_cols, hour_window=hour_window, measure=measure, similarity=similarity, keep=keep, weight=weight, print_duplicates=print_duplicates, verbose=verbose)
   self$subset(subset_meta = !doc_id %in% .duplicates, copy=F)
@@ -150,11 +150,11 @@ get_duplicates <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, h
 
   if (length(hour_window) == 1) hour_window = c(-hour_window, hour_window)
 
-  d = RNewsflow::compare_documents(dtm, date_var=date_col, group_var=group_col, hour_window=hour_window,
+  d = RNewsflow::compare_documents(dtm, date_var=date_col, group_var=group_col, hour_window=hour_window, only_complete_window = F,
                                    measure=measure, min_similarity=similarity, verbose=verbose)
   d = d$d
 
-  if (nrow(d) == 0) {
+  if (is.null(d) || nrow(d) == 0) {
     message('Deleting 0 duplicates')
     return(c())
   }

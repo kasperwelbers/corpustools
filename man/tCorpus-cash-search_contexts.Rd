@@ -39,7 +39,7 @@ The following operators and modifiers are supported:
 \examples{
 text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-tc$get() ## (example uses letters instead of words for simple query examples)
+tc$tokens
 
 hits = tc$search_contexts(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 hits          ## print shows number of hits

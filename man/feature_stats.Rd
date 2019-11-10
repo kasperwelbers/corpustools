@@ -4,14 +4,14 @@
 \alias{feature_stats}
 \title{Feature statistics}
 \usage{
-feature_stats(tc, feature, sent_freq = F)
+feature_stats(tc, feature, context_level = c("document", "sentence"))
 }
 \arguments{
 \item{tc}{a tCorpus}
 
 \item{feature}{The name of the feature column}
 
-\item{sent_freq}{If True, include sentence frequency (only if sentence information is available).}
+\item{context_level}{Should results be returned at document or sentence level}
 }
 \value{
 a data.frame

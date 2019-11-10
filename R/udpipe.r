@@ -5,7 +5,7 @@ prepare_model <- function(udpipe_model, local_path=getwd()) {
     guess_language = gsub('-.*','',udpipe_model)
     avail_language = stringi::stri_extract(udpipe_models, regex='.*(?=-)')
     suggest = udpipe_models[grep(guess_language, avail_language, ignore.case = T)]
-    suggest = na.omit(suggest)
+    suggest = stats::na.omit(suggest)
     message = sprintf('"%s" is not a valid udpipe model (in the current repository).\n', udpipe_model)
     if (length(suggest) > 0) message = paste0(message, '\nAvailable models for "', guess_language, '" are: ', paste(paste0('"',suggest,'"'), collapse=', '))
     message = paste(message, '\nUse show_udpipe_models() for an overview of all available models')

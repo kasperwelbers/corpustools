@@ -33,9 +33,9 @@ g = tc$semnet('token')
 
 igraph::get.edge.attribute(g)
 igraph::get.vertex.attribute(g)
-\dontrun{plot(g)}
+\donttest{plot(g)}
 g = set_network_attributes(g, size_attribute = 'freq')
 igraph::get.edge.attribute(g)
 igraph::get.vertex.attribute(g)
-\dontrun{plot(g)}
+\donttest{plot(g)}
 }

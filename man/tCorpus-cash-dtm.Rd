@@ -50,7 +50,7 @@ tc = create_tcorpus(c("First text first sentence. First text first sentence.",
 
 ## Perform additional preprocessing on the 'token' column, and save as the 'feature' column
 tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
-tc$get()
+tc$tokens
 
 ## default: regular sparse matrix, using the Matrix package
 m = tc$dtm('feature')
@@ -58,7 +58,7 @@ class(m)
 m
 
 ## alternatively, create quanteda ('quanteda_dfm') or tm ('tm_dtm') class for DTM
-\dontrun{
+\donttest{
 m = tc$dtm('feature', form = 'quanteda_dfm')
 class(m)
 m

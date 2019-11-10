@@ -4,11 +4,14 @@
 \alias{plot.featureHits}
 \title{S3 plot for featureHits class}
 \usage{
-\method{plot}{featureHits}(object, min_weight = 0, backbone_alpha = NA,
-  ...)
+\method{plot}{featureHits}(x, min_weight = 0, backbone_alpha = NA, ...)
 }
 \arguments{
-\item{object}{a featureHits object, as returned by \link{search_features}}
+\item{x}{a featureHits object, as returned by \link{search_features}}
+
+\item{min_weight}{Optionally, the minimum weight for an edge in the network}
+
+\item{backbone_alpha}{Optionally, the alpha threshold for backbone extraction (similar to a p-value, and lower is more strict)}
 
 \item{...}{not used}
 }
@@ -18,6 +21,8 @@ S3 plot for featureHits class
 \examples{
 tc = create_tcorpus(sotu_texts, doc_column='id')
 hits = search_features(tc, c('War# war* OR army OR bomb*','Terrorism# terroris*',
-                              Economy# econom* OR bank*','Education# educat* OR school*'))
+                              'Economy# econom* OR bank*','Education# educat* OR school*'))
+\donttest{
 plot(hits)
+}
 }

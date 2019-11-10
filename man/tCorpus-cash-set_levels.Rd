@@ -28,5 +28,5 @@ tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text
 ## change factor levels of a column in the token data
 unique_tokens <- tc$get_levels('token')
 tc$set_levels('token', toupper(unique_tokens))
-tc$get()
+tc$tokens
 }

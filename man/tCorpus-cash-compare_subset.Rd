@@ -42,7 +42,7 @@ tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
 comp = tc$compare_subset('feature', subset_meta_x = president == 'Barack Obama')
 comp = comp[order(-comp$chi),]
 head(comp)
-\dontrun{
+\donttest{
 plot(comp)
 }
 

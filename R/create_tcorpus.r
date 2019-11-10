@@ -25,7 +25,7 @@
 #' @export
 #' @name create_tcorpus
 #' @examples
-#'
+#' ## ...
 create_tcorpus <- function(x, ...) {
   UseMethod('create_tcorpus')
 }
@@ -33,11 +33,11 @@ create_tcorpus <- function(x, ...) {
 #' @rdname create_tcorpus
 #' @examples
 #' tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'))
-#' tc$get()
+#' tc$tokens
 #'
 #' tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'),
 #'                     split_sentences = TRUE)
-#' tc$get()
+#' tc$tokens
 #'
 #' ## with meta (easier to S3 method for data.frame)
 #' meta = data.frame(doc_id = c(1,2), source = c('a','b'))
@@ -85,7 +85,7 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
 #' ##  method for a character vector.
 #' text = factor(c('Text one first sentence', 'Text one second sentence'))
 #' tc = create_tcorpus(text)
-#' tc$get()
+#' tc$tokens
 #' @export
 create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
   create_tcorpus(as.character(x), doc_id=doc_id, meta=meta, udpipe_model=udpipe_model, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, udpipe_model_path=udpipe_model_path, use_parser=use_parser, remember_spaces=remember_spaces, verbose=verbose)
@@ -101,7 +101,7 @@ create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model
 #'
 #' tc = create_tcorpus(d, split_sentences = TRUE)
 #' tc
-#' tc$get()
+#' tc$tokens
 #'
 #' ## use multiple text columns
 #' d$headline = c('Head one', 'Head two', 'Head three')
@@ -111,10 +111,7 @@ create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model
 #' tc = create_tcorpus(d, text_columns = c('headline','text'), doc_column = 'doc_id',
 #'                     split_sentences = TRUE)
 #' tc
-#' tc$get()
-#'
-#' ## (note that text from different columns is pasted together with a double newline in between)
-#' tc$read_text(doc_id = '#1')
+#' tc$tokens
 #' @export
 create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id', udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
   for(cname in text_columns) if (!cname %in% colnames(x)) stop(sprintf('text_column "%s" not in data.frame', cname))
@@ -259,5 +256,7 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col='token_id',
   tc
 }
 
+
 ## alternative:: add formal data check and correction methods, and then simply create the tcorpus from the data and then perform the checks and corrections
+
 

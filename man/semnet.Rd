@@ -7,7 +7,7 @@
 semnet(tc, feature = "token", measure = c("con_prob",
   "con_prob_weighted", "cosine", "count_directed", "count_undirected",
   "chi2"), context_level = c("document", "sentence"), backbone = F,
-  n.batches = NA, alpha = 2)
+  n.batches = NA)
 }
 \arguments{
 \item{tc}{a tCorpus or a featureHits object (i.e. the result of search_features)}
@@ -35,5 +35,5 @@ tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
 g = semnet(tc, 'token')
 g
 igraph::get.data.frame(g)
-\dontrun{plot_semnet(g)}
+\donttest{plot_semnet(g)}
 }

@@ -39,3 +39,5 @@ License: GPL-3
 URL: http://github.com/kasperwelbers/corpustools
 Roxygen: list(wrap = FALSE)
 RoxygenNote: 6.1.1
+VignetteBuilder: knitr
+

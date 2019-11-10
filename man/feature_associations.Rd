@@ -2,21 +2,23 @@
 % Please edit documentation in R/feature_associations.r
 \name{feature_associations}
 \alias{feature_associations}
-\title{Get common nearby terms given a feature query}
+\title{Get common nearby features given a query or query hits}
 \usage{
-feature_associations(tc, query = NULL, hits = NULL,
-  feature = "token", window = 15, n = 25, min_freq = 1,
+feature_associations(tc, feature, query = NULL, hits = NULL,
+  query_feature = "token", window = 15, n = 25, min_freq = 1,
   sort_by = c("chi2", "ratio", "freq"), subset = NULL,
-  subset_meta = NULL)
+  subset_meta = NULL, include_self = F)
 }
 \arguments{
 \item{tc}{a \link{tCorpus}}
+
+\item{feature}{The name of the feature column in $tokens}
 
 \item{query}{A character string that is a query. See \link{search_features} for documentation of the query language.}
 
 \item{hits}{Alternatively, instead of giving a query, the results of \link{search_features} can be used.}
 
-\item{feature}{If keyword is used, the name of the feature column within which to search.}
+\item{query_feature}{If query is used, the column in $tokens on which the query is performed. By default uses 'token'}
 
 \item{window}{The size of the word window (i.e. the number of words next to the feature)}
 
@@ -29,26 +31,29 @@ feature_associations(tc, query = NULL, hits = NULL,
 \item{subset}{A call (or character string of a call) as one would normally pass to subset.tCorpus. If given, the keyword has to occur within the subset. This is for instance usefull to only look in named entity POS tags when searching for people or organization. Note that the condition does not have to occur within the subset.}
 
 \item{subset_meta}{A call (or character string of a call) as one would normally pass to the subset_meta parameter of subset.tCorpus. If given, the keyword has to occur within the subset documents. This is for instance usefull to make queries date dependent. For example, in a longitudinal analysis of politicians, it is often required to take changing functions and/or party affiliations into account. This can be accomplished by using subset_meta = "date > xxx & date < xxx" (given that the appropriate date column exists in the meta data).}
+
+\item{include_self}{If True, include the feature itself in the output}
 }
 \value{
 a data.frame
 }
 \description{
-Get common nearby terms given a feature query
+Get common nearby features given a query or query hits
 }
 \examples{
 tc = create_tcorpus(sotu_texts, doc_column = 'id')
+tc$preprocess()
 
 ## directly from query
-topf = feature_associations(tc, 'war')
+topf = feature_associations(tc, 'feature', 'war')
 head(topf, 20) ## frequent words close to "war"
 
 ## adjust window size
-topf = feature_associations(tc, 'war', window = 5)
+topf = feature_associations(tc, 'feature', 'war', window = 5)
 head(topf, 20) ## frequent words very close (five tokens) to "war"
 
 ## you can also first perform search_features, to get hits for (complex) queries
 hits = search_features(tc, '"war terror"~10')
-topf = feature_associations(tc, hits = hits)
+topf = feature_associations(tc, 'feature', hits = hits)
 head(topf, 20) ## frequent words close to the combination of "war" and "terror" within 10 words
 }

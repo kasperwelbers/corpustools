@@ -21,7 +21,7 @@
 #' y = c(0, 2, 5, 10)
 #' words = c('words', 'where', 'you', 'like')
 #'
-#' \dontrun{
+#' \donttest{
 #' plot_words(x,y,words, c(1,2,3,4))
 #' }
 #' @export
@@ -61,7 +61,7 @@ plot_words <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', yl
 #' tc$preprocess('token', 'feature', remove_stopwords = TRUE)
 #' dtm = get_dtm(tc, 'feature')
 #'
-#' \dontrun{
+#' \donttest{
 #' dtm_wordcloud(dtm, nterms = 20)
 #'
 #' ## or without a DTM
@@ -103,13 +103,14 @@ dtm_wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs
 #' tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
 #' comp = tc$compare_subset('token', query_x = 'tax*')
 #'
-#' \dontrun{
+#' \donttest{
 #' plot(comp, balance=T)
 #' plot(comp, mode = 'ratio_x')
 #' plot(comp, mode = 'ratio_y')
 #' }
 #' @export
 plot.vocabularyComparison <- function(x, n=25, mode=c('both', 'ratio_x','ratio_y'), balance=T, size = c('chi2','freq','ratio'), ...){
+  #if (!methods::is(x, 'vocabularyComparison')) stop('x has to be a vocabularyComparison object')
   mode = match.arg(mode)
   size = match.arg(size)
 
@@ -131,4 +132,34 @@ plot.vocabularyComparison <- function(x, n=25, mode=c('both', 'ratio_x','ratio_y
   if (mode == 'both') plot_words(x = log(x$ratio), words=x$feature, wordfreq = wsize, ...)
 }
 
+#' visualize feature associations
+#'
+#' @param x a featureAssociations object, created with the \link{feature_associations} function
+#' @param n the number of words in the plot
+#' @param size use "freq", "chi2" or "ratio" for determining the size of words
+#' @param ... additional arguments passed to dtm_wordcloud
+#'
+#' @examples
+#' ## as example, compare SOTU paragraphs about taxes to rest
+#' tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
+#' comp = tc$compare_subset('token', query_x = 'tax*')
+#'
+#' \donttest{
+#' plot(comp, balance=T)
+#' plot(comp, mode = 'ratio_x')
+#' plot(comp, mode = 'ratio_y')
+#' }
+#' @export
+plot.featureAssociations <- function(x, n=25, size = c('chi2','freq','ratio'), ...){
+  size = match.arg(size)
+  x = x[x$ratio > 1,]
+  x = x[order(-x$chi2),]
+  x = head(x, n)
+
+  if (size == 'freq') wsize = relfreqmean = ((x$freq.x / sum(x$freq.x)) + (x$freq.y / sum(x$freq.y))) / 2
+  if (size == 'ratio') wsize = x$ratio
+  if (size == 'chi2') wsize = x$chi2
+
+  dtm_wordcloud(terms=x$feature, freqs=wsize, ...)
+}
 

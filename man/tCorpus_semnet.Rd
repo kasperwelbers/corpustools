@@ -9,8 +9,8 @@
 \details{
 \strong{Create networks}
 \tabular{ll}{
-  \link[=tCorpus$semnet]{$semnet)} \tab Feature co-occurrence within contexts (documents, sentences) \cr
-  \link[=tCorpus$semnet_window]{$semnet_window()} \tab Feature co-occurrence within a specified token distance
+  \link[=semnet]{semnet)} \tab Feature co-occurrence within contexts (documents, sentences) \cr
+  \link[=semnet_window]{semnet_window()} \tab Feature co-occurrence within a specified token distance
 }
 \strong{Support functions for analyzing and visualizing the semantic network}
 \tabular{ll}{

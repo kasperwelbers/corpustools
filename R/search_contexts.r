@@ -3,7 +3,7 @@
 #' Subset tCorpus token data using a query
 #'
 #' @description
-#' A convenience function that searches for contexts (documents, sentences), and uses the results to \link[=search_contexts]{subset} the tCorpus token data.
+#' A convenience function that searches for contexts (documents, sentences), and uses the results to \link[=subset]{subset} the tCorpus token data.
 #'
 #' See the documentation for \link[=search_contexts]{search_contexts} for an explanation of the query language.
 #'
@@ -11,48 +11,45 @@
 #'
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
-#' \preformatted{subset_query(query, feature = 'token', context_level = c('document','sentence'))}
+#' \preformatted{subset_query(query, feature = 'token', context_level = c('document','sentence','window'))}
 #'
 #' @param query A character string that is a query. See \link{search_contexts} for query syntax.
 #' @param feature The name of the feature columns on which the query is used.
-#' @param context_level Select whether the query and subset are performed at the document, sentence or (token)window level. If window is selected, the window size is specified in the window argument
-#' @param window if context_level is window, specifies the size of the window
+#' @param context_level Select whether the query and subset are performed at the document or sentence level.
+#' @param window  If used, uses a word distance as the context (overrides context_level)
+#' @param copy    If true, return modified copy of data instead of subsetting the input tcorpus by reference.
 #'
 #' @name tCorpus$subset_query
-#' @aliases subset_query
 #' @examples
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
 #'
 #' ## subset by reference
 #' tc$subset_query('A')
-#' tc$get_meta()
+#' tc$meta
 #'
 #' ## using copy mechanic
+#' class(tc$tokens$doc_id)
 #' tc2 = tc$subset_query('A AND D', copy=TRUE)
 #'
 #' tc2$get_meta()
 #'
-#' tc$get_meta() ## (unchanged)
+#' tc$meta ## (unchanged)
 tCorpus$set('public', 'subset_query', function(query, feature='token', context_level=c('document','sentence'), window=NA, copy=F){
-  if (copy) {
-    selfcopy = self$copy()$subset_query(query=query, feature=feature, context_level=context_level, window=window, copy=F)
-    return(selfcopy)
-  }
   context_level = match.arg(context_level)
 
   if (!is.na(window)) {
     hits = self$search_features(query, feature=feature, context_level=context_level, mode='features')
     if (is.null(hits)) return(NULL)
     window = self$get_token_id(hits$hits$doc_id, hits$hits$token_id, window=window)
-    self$subset(window)
+    out = self$subset(window, copy=copy)
   } else {
     hits = search_contexts(self, query, feature=feature, context_level=context_level)
     if (is.null(hits)) return(NULL)
     if (context_level == 'document'){
       #self$select_meta_rows(self$get_meta('doc_id') %in% hits$hits$doc_id)
       .doc_ids = hits$hits$doc_id
-      self$subset(subset_meta= doc_id %in% .doc_ids)
+      out = self$subset(subset_meta= doc_id %in% .doc_ids, copy=copy)
     }
     if (context_level == 'sentence'){
       d = self$get(c('doc_id','sentence'), keep_df=T)
@@ -60,10 +57,10 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
       setkeyv(d, c('doc_id','sentence'))
       .rows = d[list(hits$hits$doc_id, hits$hits$sentence),]$i
       #self$select_rows(rows)
-      self$subset(subset=.rows)
+      out = self$subset(subset=.rows, copy=copy)
     }
   }
-  invisible(self)
+  invisible(out)
 })
 
 #####################
@@ -71,7 +68,7 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
 
 #' Search for documents or sentences using Boolean queries
 #'
-#' @param tc a \link{tCorpus)}
+#' @param tc a \code{\link{tCorpus}}
 #' @param query A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.
 #' @param code If given, used as a label for the results of the query. Especially usefull if multiple queries are used.
 #' @param feature The name of the feature column
@@ -98,7 +95,7 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
 #' @examples
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-#' tc$get() ## (example uses letters instead of words for simple query examples)
+#' tc$tokens
 #'
 #' hits = search_contexts(tc, c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 #' hits          ## print shows number of hits
@@ -177,6 +174,7 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
     q = parse_query_cpp(as.character(query[i]))
 
     lookup_tables = prepare_lookup_tables(tc, q, lookup_tables, feature = feature, as_ascii = as_ascii)
+
     h = recursive_search(tc, q, lookup_tables, subcontext=subcontext, feature=feature, mode = 'contexts', as_ascii=as_ascii)
     if (!is.null(h)) {
       h[, code := codelabel[i]]

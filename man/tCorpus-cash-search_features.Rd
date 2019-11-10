@@ -52,7 +52,7 @@ The following operators and modifiers are supported:
 \examples{
 text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-tc$get() ## (example uses letters instead of words for simple query examples)
+tc$tokens
 
 hits = tc$search_features(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 hits          ## print shows number of hits
@@ -133,11 +133,11 @@ tc$search_features('A AND B', mode = 'features')$hits ## in "features", match an
 # ghost terms (used for conditions) can be repeated
 tc$search_features('A AND B~g')$hits
 
-\dontrun{
+\donttest{
 ## advanced queries
 tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
                        sentence_col = 'sentence', token_id_col = 'id')
-head(tc$get()) ## search in multiple feature columns with "columnname: "
+head(tc$tokens) ## search in multiple feature columns with "columnname: "
 
 ## using the sub/flag query to find only mary as a direct object
 hits = tc$search_features('mary~{relation: dobj}', context_level = 'sentence')

@@ -40,5 +40,5 @@ Add a column to the token data that contains a code (the query label) for tokens
 tc = create_tcorpus('Anna and Bob are secretive')
 
 tc$code_features(c("actors# anna bob", "associations# secretive"))
-tc$get()
+tc$tokens
 }

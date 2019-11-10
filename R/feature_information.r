@@ -4,7 +4,7 @@
 #'
 #' @param tc a tCorpus
 #' @param feature The name of the feature column
-#' @param sent_freq If True, include sentence frequency (only if sentence information is available).
+#' @param context_level  Should results be returned at document or sentence level
 #'
 #' @return a data.frame
 #' @export
@@ -70,13 +70,16 @@ top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, r
     scores
   }
 
+
   break_cols = colnames(group_df)
   group_df[[feature]] = tc$get(feature)
   scores = plyr::ddply(group_df, break_cols, .fun = get_top_freq, n=n, feature=feature)
 
   if (!return_long) {
     scores = scores[,!colnames(scores) == 'freq', drop=F]
-    scores = dcast(scores, ... ~ rank, value.var=feature)
+    scores$token = as.character(scores[[feature]])
+    scores = dcast(data.table::as.data.table(scores), ... ~ rank, value.var=feature)
+    scores = as.data.frame(scores)
     colnames(scores)[!colnames(scores) %in% break_cols] = paste('rank', colnames(scores)[!colnames(scores) %in% break_cols], sep='_')
   }
   scores
@@ -104,29 +107,6 @@ dtm_term_statistics <- function(dtm, feature) {
              reldocfreq = Matrix::colSums(dtm > 0) / nrow(dtm),
              tfidf = tapply(dtm@x/Matrix::rowSums(dtm)[dtm@i+1], dtm@j+1, mean) * log2(nrow(dtm)/Matrix::colSums(dtm > 0)),
              stringsAsFactors=F)
-}
-
-feature_stats <- function(tc, feature, sent_freq=F){
-  dtm = get_dtm(tc, feature, context_level='document')
-  dtm = dtm[Matrix::rowSums(dtm) > 0, Matrix::colSums(dtm) > 0]    # get rid of empty rows/columns
-  dtm = as(dtm, 'dgTMatrix')
-
-  vocabulary = colnames(dtm)
-  d = data.table::data.table(term = as.character(vocabulary),
-                 characters = nchar(vocabulary),
-                 number = grepl("[0-9]", vocabulary),
-                 nonalpha = grepl("\\W", vocabulary),
-                 termfreq = Matrix::colSums(dtm),
-                 docfreq = Matrix::colSums(dtm > 0),
-                 reldocfreq = Matrix::colSums(dtm > 0) / nrow(dtm),
-                 tfidf = tapply(dtm@x/Matrix::rowSums(dtm)[dtm@i+1], dtm@j+1, mean) * log2(nrow(dtm)/Matrix::colSums(dtm > 0)),
-                 stringsAsFactors=F)
-  if ('sentence' %in% tc$names){
-    dtm = get_dtm(tc, feature, context_level='sentence')
-    dtm = dtm[Matrix::rowSums(dtm) > 0, Matrix::colSums(dtm) > 0]    # get rid of empty rows/columns
-    d[,sentfreq := Matrix::colSums(dtm > 0)]
-  }
-  d
 }
 
 rank_unique_rows <- function(d, columns=colnames(d)) {

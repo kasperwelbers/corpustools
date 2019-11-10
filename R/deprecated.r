@@ -1,8 +1,10 @@
-is_deprecated <- function(f = as.character(sys.call(sys.parent()))[1L], new=NULL){
+is_deprecated <- function(f = as.character(sys.call(sys.parent()))[1L], new=NULL, warn=F){
+  ## wrapper for .Deprecated
   f = gsub('.*\\$', '', f)
   if (is.null(new)) new = f
-  msg <- gettextf("'%s' as a (R6) method is deprecated.\nIt used to be:\t\ttCorpus$%s(...)\nnow use instead:\t%s(tc, ...)\nSee help('%s')", f,f,new,new)
-  warning(msg, call. = FALSE, domain = NA)
+  msg <- gettextf("'%s' as an R6 method is deprecated.\nIt used to be:\t\ttCorpus$%s(...)\nnow use instead:\t%s(tc, ...)\nSee help('%s')", f,f,new,new)
+  #warning(msg, call. = FALSE, domain = NA)
+  if (warn) warning(warningCondition(msg, class = "deprecatedWarning"))
 }
 
 #' Get keyword-in-context (KWIC) strings
@@ -76,8 +78,9 @@ tCorpus$set('public', 'kwic', function(hits=NULL, i=NULL, feature=NULL, query=NU
 #' head(fs)
 tCorpus$set('public', 'feature_stats', function(feature, context_level=c('document','sentence')){
   is_deprecated()
-  term_statistics(self, feature=feature, context_level=context_level)
+  feature_stats(self, feature=feature, context_level=context_level)
 })
+
 
 #' Show top features
 #'
@@ -97,6 +100,7 @@ tCorpus$set('public', 'feature_stats', function(feature, context_level=c('docume
 #' @examples
 #' tc = tokens_to_tcorpus(corenlp_tokens, token_id_col = 'id')
 #'
+#' top_features(tc, 'lemma')
 #' tc$top_features('lemma')
 #' tc$top_features('lemma', group_by = 'relation')
 tCorpus$set('public', 'top_features', function(feature, n=10, group_by=NULL, group_by_meta=NULL, return_long=F){
@@ -133,7 +137,7 @@ tCorpus$set('public', 'top_features', function(feature, n=10, group_by=NULL, gro
 #' g = tc$semnet('token')
 #' g
 #' igraph::get.data.frame(g)
-#' \dontrun{plot_semnet(g)}
+#' \donttest{plot_semnet(g)}
 tCorpus$set('public', 'semnet', function(feature, measure=c('cosine', 'con_prob', 'con_prob_weighted', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA){
   is_deprecated()
   measure = match.arg(measure)
@@ -173,12 +177,14 @@ tCorpus$set('public', 'semnet', function(feature, measure=c('cosine', 'con_prob'
 #' g = tc$semnet_window('token', window.size = 1)
 #' g
 #' igraph::get.data.frame(g)
-#' \dontrun{plot_semnet(g)}
+#' \donttest{plot_semnet(g)}
 tCorpus$set('public', 'semnet_window', function(feature, measure=c('cosine', 'con_prob', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=NA, set_matrix_mode=c(NA, 'windowXwindow','positionXwindow')){
   is_deprecated()
   measure = match.arg(measure)
+  set_matrix_mode = match.arg(set_matrix_mode)
+  if (is.na(set_matrix_mode)) set_matrix_mode = 'positionXwindow'
   require_package('igraph')
-  semnet_window(self, feature=feature, measure=measure, context_level=context_level, window.size=window.size, direction=direction, backbone=backbone, n.batches=n.batches, set_matrix_mode=set_matrix_mode)
+  semnet_window(self, feature=feature, measure=measure, context_level=context_level, window.size=window.size, direction=direction, backbone=backbone, n.batches=n.batches, matrix_mode=set_matrix_mode)
 })
 
 
@@ -214,7 +220,7 @@ tCorpus$set('public', 'semnet_window', function(feature, measure=c('cosine', 'co
 #' @examples
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-#' tc$get() ## (example uses letters instead of words for simple query examples)
+#' tc$tokens
 #'
 #' hits = tc$search_contexts(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 #' hits          ## print shows number of hits
@@ -325,7 +331,7 @@ tCorpus$set('public', 'search_contexts', function(query, code=NULL, feature='tok
 #' @examples
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-#' tc$get() ## (example uses letters instead of words for simple query examples)
+#' tc$tokens
 #'
 #' hits = tc$search_features(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 #' hits          ## print shows number of hits
@@ -406,11 +412,11 @@ tCorpus$set('public', 'search_contexts', function(query, code=NULL, feature='tok
 #' # ghost terms (used for conditions) can be repeated
 #' tc$search_features('A AND B~g')$hits
 #'
-#' \dontrun{
+#' \donttest{
 #' ## advanced queries
 #' tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
 #'                        sentence_col = 'sentence', token_id_col = 'id')
-#' head(tc$get()) ## search in multiple feature columns with "columnname: "
+#' head(tc$tokens) ## search in multiple feature columns with "columnname: "
 #'
 #' ## using the sub/flag query to find only mary as a direct object
 #' hits = tc$search_features('mary~{relation: dobj}', context_level = 'sentence')
@@ -467,7 +473,7 @@ tCorpus$set('public', 'search_features', function(query, code=NULL, feature='tok
 #' comp = obama$compare_corpus(bush, 'feature')
 #' comp = comp[order(-comp$chi),]
 #' head(comp)
-#' \dontrun{
+#' \donttest{
 #' plot(comp)
 #' }
 tCorpus$set('public', 'compare_corpus', function(tc_y, feature, smooth=0.1, min_ratio=NULL, min_chi2=NULL, is_subset=F, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
@@ -507,7 +513,7 @@ tCorpus$set('public', 'compare_corpus', function(tc_y, feature, smooth=0.1, min_
 #' comp = tc$compare_subset('feature', subset_meta_x = president == 'Barack Obama')
 #' comp = comp[order(-comp$chi),]
 #' head(comp)
-#' \dontrun{
+#' \donttest{
 #' plot(comp)
 #' }
 #'
@@ -591,6 +597,7 @@ tCorpus$set('public', 'feature_associations', function(query=NULL, hits=NULL, fe
 #' @param meta_cols a character vector with columns in the meta data / docvars. If given, only documents for which these values are identical are compared
 #' @param hour_window A vector of length 1 or 2. If length is 1, the same value is used for the left and right side of the window. If length is 2, the first and second value determine the left and right side. For example, the value 12 will compare each document to all documents between the previous and next 12 hours, and c(-10, 36) will compare each document to all documents between the previous 10 and the next 36 hours.
 #' @param measure the similarity measure. Currently supports cosine similarity (symmetric) and overlap_pct (asymmetric)
+#' @param min_similarity  A threshold for the similarity score
 #' @param weight a weighting scheme for the document-term matrix. Default is term-frequency inverse document frequency with normalized rows (document length).
 #' @param ngrams an integer. If given, ngrams of this length are used
 #' @param from_subset An expression to select a subset. If given, only this subset will be compared to other documents
@@ -598,30 +605,13 @@ tCorpus$set('public', 'feature_associations', function(query=NULL, hits=NULL, fe
 #'
 #' @name tCorpus$compare_documents
 #' @examples
-#' d = data.frame(text = c('a b c d e',
-#'                         'e f g h i j k',
-#'                         'a b c'),
-#'                date = c('2010-01-01','2010-01-01','2012-01-01'))
-#' tc = create_tcorpus(d)
-#'
-#' g = tc$compare_documents()
-#' igraph::get.data.frame(g)
-#'
-#' g = tc$compare_documents(measure = 'overlap_pct')
-#' igraph::get.data.frame(g)
-#'
-#' g = tc$compare_documents(date_col = 'date', hour_window = c(0,36))
-#' igraph::get.data.frame(g)
+#' \donttest{
+#' ## deprecated beyond repair. Please use the new compare_documents function
+#' }
 tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NULL, meta_cols=NULL, hour_window=NULL, measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL) {
   is_deprecated()
-  weight = match.arg(weight)
-  from_subset = self$eval_meta(substitute(from_subset), parent.frame())
-  to_subset = self$eval_meta(substitute(to_subset), parent.frame())
-
-  dtm = get_dfm(self, feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
-  dtm_document_comparison(dtm, date_col=date_col, window=hour_window, meta_cols=meta_cols, min.similarity=min_similarity, measure=measure, only_from=from_subset, only_to = to_subset, verbose=TRUE)
+  stop('Due to changes in dependencies this method is gone without a grace period (but replaced by the compare_documents() function')
 })
-
 
 #' Create a document term matrix.
 #'
@@ -661,7 +651,7 @@ tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NU
 #'
 #' ## Perform additional preprocessing on the 'token' column, and save as the 'feature' column
 #' tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
-#' tc$get()
+#' tc$tokens
 #'
 #' ## default: regular sparse matrix, using the Matrix package
 #' m = tc$dtm('feature')
@@ -669,7 +659,7 @@ tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NU
 #' m
 #'
 #' ## alternatively, create quanteda ('quanteda_dfm') or tm ('tm_dtm') class for DTM
-#' \dontrun{
+#' \donttest{
 #' m = tc$dtm('feature', form = 'quanteda_dfm')
 #' class(m)
 #' m

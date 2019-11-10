@@ -10,7 +10,7 @@ compare_subset(tc, feature, subset_x = NULL, subset_meta_x = NULL,
   "no"), what = c("freq", "docfreq", "cooccurrence"))
 }
 \arguments{
-\item{tc}{a \link{tCorpus}}
+\item{tc}{a \code{\link{tCorpus}}}
 
 \item{feature}{the column name of the feature that is to be compared}
 
@@ -46,7 +46,7 @@ tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
 comp = compare_subset(tc, 'feature', subset_meta_x = president == 'Barack Obama')
 comp = comp[order(-comp$chi),]
 head(comp)
-\dontrun{
+\donttest{
 plot(comp)
 }
 

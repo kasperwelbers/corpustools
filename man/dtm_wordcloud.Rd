@@ -38,7 +38,7 @@ tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
 tc$preprocess('token', 'feature', remove_stopwords = TRUE)
 dtm = get_dtm(tc, 'feature')
 
-\dontrun{
+\donttest{
 dtm_wordcloud(dtm, nterms = 20)
 
 ## or without a DTM

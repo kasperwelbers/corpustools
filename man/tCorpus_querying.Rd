@@ -13,7 +13,8 @@
   \link[=tCorpus$code_features]{$code_features())} \tab  Add a column to the token data based on feature search results \cr
   \link[=tCorpus$search_recode]{$search_recode()} \tab Use the search_features query syntax to recode features \cr
   \link[=feature_associations]{feature_associations()} \tab Given a query, get words that often co-occur nearby \cr
-  \link[=kwic]{kwic()} \tab Get keyword-in-context (kwic) strings
+  \link[=get_kwic]{kwic()} \tab Get keyword-in-context (kwic) strings \cr
+  \link[=browse_hits]{browse_hits()} \tab Create full-text browsers with highlighted search hits
 }
 \strong{Context-level queries}
 \tabular{ll}{

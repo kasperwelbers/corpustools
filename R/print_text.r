@@ -1,50 +1,3 @@
-#' Print tokens as text
-#'
-#' \strong{Usage:}
-#'
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{
-#' text(doc_id, column='token', meta_columns = self$meta_names)}
-#'
-#' @param doc_id The doc_ids of the documents to be printed.
-#' @param column The name of the column from which the text is printed.
-#' @param meta_columns The meta data that is printed at the top of each text.
-#'
-#' @name tCorpus$read_text
-#' @aliases read_text
-#' @examples
-#' d = data.frame(text = c('First text', 'Second text', 'Third text'),
-#' medium = c('A','A','B'),
-#' date = c('2010-01-01','2010-02-01','2010-03-01'))
-#' tc = create_tcorpus(d)
-#'
-#' tc$text(1)
-#' tc$text(2)
-#' tc$text(1:3)
-tCorpus$set('public', 'text', function(doc_id, column='token', meta_columns = self$meta_names) {
-  d = self$get(c('doc_id', column), doc_id = doc_id)
-  d = split(d[[column]], f = d$doc_id)
-  texts = stringi::stri_paste_list(d, sep = ' ')
-
-  if (length(meta_columns) > 0) {
-    meta = self$get_meta(meta_columns, doc_id = doc_id, keep_df=T)
-    header = ''
-    for (j in 1:ncol(meta)) {
-      meta_field = stringi::stri_paste(colnames(meta)[j], meta[[j]], sep=': ')
-      header = if (j == 1) meta_field else paste(header, meta_field, sep=', ')
-    }
-    texts = paste(header, texts, sep='\n\n')
-  }
-
-  texts = paste(texts, collapse = '\n------------\n\n')
-  texts = pretty_text_paste(texts)
-  cat(texts)
-  invisible(texts)
-})
-
-##browse_hits
-##browse_topics
 
 #' Create and view a full text browser
 #'
@@ -74,7 +27,7 @@ tCorpus$set('public', 'text', function(doc_id, column='token', meta_columns = se
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' tc = create_tcorpus(sotu_texts, doc_column='id')
 #' url = browse_texts(tc)
 #' }
@@ -166,6 +119,7 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
 #' Creates a static HTML file to view the query hits in the tcorpus in full text mode.
 #'
 #' @param tc          a tCorpus
+#' @param hits        a featureHits object, as returned by \link{search_features}
 #' @param token_col   The name of the column in tc$tokens that contain the token text
 #' @param n           If doc_ids is NULL, Only n of the results are printed (to prevent accidentally making huge browsers).
 #' @param select      If n is smaller than the number of documents in tc, select determines how the n documents are selected
@@ -180,10 +134,10 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
 #' @export
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' tc = create_tcorpus(sotu_texts, doc_column='id')
 #' hits = search_features(tc, c("Terrorism# terroris*", "War# war*"))
-#' view_hits(tc, hits)
+#' browse_hits(tc, hits)
 #' }
 browse_hits <- function(tc, hits, token_col='token', n=500, select=c('first','random'), header='', subheader=NULL,
                       meta_cols=NULL, seed=NA, view=T, filename=NULL) {

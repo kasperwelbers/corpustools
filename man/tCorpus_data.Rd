@@ -9,8 +9,10 @@
 \details{
 \strong{Get data}
 \tabular{ll}{
-  \link[=tCorpus$get]{$get()} \tab Get token data, with the possibility to select columns and subset  \cr
-  \link[=tCorpus$get]{$get_meta()} \tab Get meta data, with the possibility to select columns and subset  \cr
+  \link[=tCorpus$get]{$get()} \tab Get (by default deep copy) token data, with the possibility to select columns and subset.
+                                   Instead of copying you can also access the token data with tc$tokens \cr
+  \link[=tCorpus$get]{$get_meta()} \tab Get meta data, with the possibility to select columns and subset. Like tokens, you can also
+                                  access meta data with tc$meta  \cr
   \link[=get_dtm]{get_dtm()} \tab Create a document term matrix \cr
   \link[=get_dfm]{get_dfm()} \tab Create a document term matrix, using the Quanteda dfm format \cr
   \link[=tCorpus$context]{$context()} \tab Get a context vector. Currently supports documents or globally unique sentences.
@@ -38,9 +40,10 @@ For subsetting, you can use the \link{tCorpus$subset} method, and to add data to
 
 \strong{Subsetting, merging/adding}
 \tabular{ll}{
-  \link[=tCorpus$subset]{$subset()} \tab Modify the token and/or meta data using the \link{tCorpus$subset} function. A subset expression can be specified for both the token data (subset) and the document meta data (subset_meta). \cr
-  \link[=tCorpus$subset]{$subset_meta()} \tab For consistency with other *_meta methods \cr
-  \link[=tCorpus$subset_query]{$subset_query()} \tab Subset the tCorpus based on a query, as used in \link[=search_contexts]{search_contexts}
+  \link[=subset]{subset()} \tab Modify the token and/or meta data using the \link{subset} function. A subset expression can be specified for both the token data (subset) and the document meta data (subset_meta). \cr
+  \link[=subset_query]{subset_query()} \tab  Subset the tCorpus based on a query, as used in \link[=search_contexts]{search_contexts} \cr
+  \link[=tCorpus$subset]{$subset()} \tab Like subset, but as an R6 method that changes the tCorpus by reference \cr
+  \link[=tCorpus$subset_query]{$subset_query()} \tab Like subset_query, but as an R6 method that changes the tCorpus by reference
 }
 
 \strong{Fields}

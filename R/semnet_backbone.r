@@ -12,11 +12,11 @@
 #' @return A graph in the Igraph format
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #' tc$preprocess('token','feature', remove_stopwords = TRUE, use_stemming = TRUE, min_docfreq = 10)
 #'
-#' g = tc$semnet_window('feature', window.size = 10)
+#' g = semnet_window(tc, 'feature', window.size = 10)
 #' igraph::vcount(g)
 #' igraph::ecount(g)
 #' gb = backbone_filter(g, max_vertices = 100)

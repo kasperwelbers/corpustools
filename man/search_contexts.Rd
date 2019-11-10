@@ -9,7 +9,7 @@ search_contexts(tc, query, code = NULL, feature = "token",
   as_ascii = F)
 }
 \arguments{
-\item{tc}{a \link{tCorpus)}}
+\item{tc}{a \code{\link{tCorpus}}}
 
 \item{query}{A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.}
 
@@ -46,7 +46,7 @@ The following operators and modifiers are supported:
 \examples{
 text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-tc$get() ## (example uses letters instead of words for simple query examples)
+tc$tokens
 
 hits = search_contexts(tc, c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 hits          ## print shows number of hits

@@ -4,6 +4,7 @@
 recursive_search <- function(tc, qlist, lookup_tables=NULL, subcontext=NULL, feature='token', mode = c('unique_hits','features','contexts'), parent_relation='', all_case_sensitive=FALSE, all_ghost=FALSE, all_flag_query=list(), keep_longest=TRUE, as_ascii=F, level=1) {
   .ghost = NULL; .term_i = NULL; .seq_i = NULL; .group_i = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
 
+
   mode = match.arg(mode) ## 'unique_hit' created complete and unique sets of hits (needed for counting) but doesn't assign all features
   ## 'features' mode does not make full sets of hits, but returns all features for which the query is true (needed for coding/dictionaries)
   i = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)

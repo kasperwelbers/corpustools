@@ -28,7 +28,7 @@
 #' @name tCorpus$lda_fit
 #' @aliases lda_fit
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #' tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE, min_freq=10)
 #' set.seed(1)
@@ -36,7 +36,7 @@
 #'
 #' m
 #' topicmodels::terms(m, 10)
-#' tc$get()
+#' tc$tokens
 #' }
 tCorpus$set('public', 'lda_fit', function(feature, create_feature=NULL, K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250, context_level=c('document','sentence'), ...) {
   require_package('topicmodels')

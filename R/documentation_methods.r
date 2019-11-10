@@ -34,7 +34,7 @@
 #' tc = create_tcorpus(d, split_sentences = TRUE)
 #'
 #' ## get token data
-#' tc$get()                     ## full data.table
+#' tc$tokens                     ## full data.table
 #' tc$get(c('doc_id','token'))  ## data.table with selected columns
 #' head(tc$get('doc_id'))       ## single column as vector
 #' head(tc$get(as.df = TRUE))      ## return as regular data.frame
@@ -48,7 +48,7 @@
 #'
 #'
 #' ##### use get for meta data with get_meta
-#' tc$get_meta()
+#' tc$meta
 #'
 #' ## option to repeat meta data to match tokens
 #' tc$get_meta(per_token = TRUE) ## (note that first doc is repeated, and rows match tc$n)
@@ -122,7 +122,7 @@ NULL
 #' @examples
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #'
-#' tc$get()  ## show original
+#' tc$tokens  ## show original
 #'
 #' ## create new column
 #' i <- 1:tc$n
@@ -134,12 +134,12 @@ NULL
 #' ## use subset to create new column with NA's
 #' tc$set('second_token', token, subset = token_id == 2)
 #'
-#' tc$get()  ## show after set
+#' tc$tokens  ## show after set
 #'
 #'
 #' ##### use set for meta data with set_meta
 #' tc$set_meta('party_pres', paste(party, president, sep=': '))
-#' tc$get_meta()
+#' tc$meta
 NULL
 
 #' Change levels of factor columns
@@ -164,7 +164,7 @@ NULL
 #' ## change factor levels of a column in the token data
 #' unique_tokens <- tc$get_levels('token')
 #' tc$set_levels('token', toupper(unique_tokens))
-#' tc$get()
+#' tc$tokens
 NULL
 
 
@@ -188,13 +188,13 @@ NULL
 #' ## change column name in token data
 #' tc$names ## original column names
 #' tc$set_name(oldname = 'token', newname = 'word')
-#' tc$get()
+#' tc$tokens
 #'
 #' ## change column name in meta data
 #' tc$meta_names ## original column names
 #' tc$set_meta_name(oldname = 'party', newname = 'clan')
 #' tc$set_meta_name(oldname = 'president', newname = 'clan leader')
-#' tc$get_meta()
+#' tc$meta
 NULL
 
 #' Delete column from the data and meta data
@@ -215,13 +215,13 @@ NULL
 #'                date = c('2010-01-01','2010-01-01','2012-01-01'))
 #' tc = create_tcorpus(d)
 #'
-#' tc$get()
+#' tc$tokens
 #' tc$delete_columns('token')
-#' tc$get()
+#' tc$tokens
 #'
-#' tc$get_meta()
+#' tc$meta
 #' tc$delete_meta_columns('date')
-#' tc$get_meta()
+#' tc$meta
 NULL
 
 #' Subset a tCorpus
@@ -279,7 +279,7 @@ NULL
 #' ## docfreq_filter() functions
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #' tc$subset( freq_filter(token, min = 20, max = 100) )
-#' tc$get()
+#' tc$tokens
 #'
 #'
 #' ###### subset can be used for meta data by using the subset_meta argument, or the subset_meta method

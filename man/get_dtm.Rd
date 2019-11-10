@@ -19,6 +19,8 @@ get_dfm(tc, feature, context_level = c("document", "sentence"),
   ngrams = NA, ngram_before_subset = F)
 }
 \arguments{
+\item{tc}{a \code{\link{tCorpus}}}
+
 \item{feature}{The name of the feature column}
 
 \item{context_level}{Select whether the rows of the dtm should represent "documents" or "sentences".}
@@ -60,21 +62,21 @@ tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
 tc$tokens
 
 ## default: regular sparse matrix, using the Matrix package
-m = dtm(tc, 'feature')
+m = get_dtm(tc, 'feature')
 class(m)
 m
 
 ## alternatively, create quanteda ('quanteda_dfm') or tm ('tm_dtm') class for DTM
-\dontrun{
-m = dtm(tc, 'feature', form = 'quanteda_dfm')
+\donttest{
+m = get_dtm(tc, 'feature', form = 'quanteda_dfm')
 class(m)
 m
 }
 
 ## create DTM with sentences as rows (instead of documents)
-m = dtm(tc, 'feature', context_level = 'sentence')
+m = get_dtm(tc, 'feature', context_level = 'sentence')
 nrow(m)
 
 ## use weighting
-m = dtm(tc, 'feature', weight = 'norm_tfidf')
+m = get_dtm(tc, 'feature', weight = 'norm_tfidf')
 }

@@ -26,7 +26,7 @@
 #' @examples
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #' tc$preprocess('token','feature', remove_stopwords = TRUE, use_stemming = TRUE, min_docfreq=10)
-#' \dontrun{
+#' \donttest{
 #' g = tc$semnet_window('feature', window.size = 10)
 #' g = backbone_filter(g, max_vertices = 100)
 #' plot_semnet(g)
@@ -63,7 +63,7 @@ plot_semnet <- function(g, weight_attr='weight', min_weight=NA, delete_isolates=
   g = plot_args_as_attributes(g, args=list(...))
 
   igraph::plot.igraph(g, ...)
-  if (return_graph) return(g)
+  if (return_graph) return(invisible(g))
 }
 
 plot_args_as_attributes <- function(g, args){
@@ -95,11 +95,11 @@ plot_args_as_attributes <- function(g, args){
 #'
 #' igraph::get.edge.attribute(g)
 #' igraph::get.vertex.attribute(g)
-#' \dontrun{plot(g)}
+#' \donttest{plot(g)}
 #' g = set_network_attributes(g, size_attribute = 'freq')
 #' igraph::get.edge.attribute(g)
 #' igraph::get.vertex.attribute(g)
-#' \dontrun{plot(g)}
+#' \donttest{plot(g)}
 #' @export
 set_network_attributes <- function(g, size_attribute='freq', color_attribute=NA, redo_layout=F, edgewidth_coef=1, layout_fun=igraph::layout_with_fr){
   g = set_vertex_attributes(g, size_attribute, color_attribute)

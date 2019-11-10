@@ -29,7 +29,7 @@ visualize vocabularyComparison
 tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
 comp = tc$compare_subset('token', query_x = 'tax*')
 
-\dontrun{
+\donttest{
 plot(comp, balance=T)
 plot(comp, mode = 'ratio_x')
 plot(comp, mode = 'ratio_y')

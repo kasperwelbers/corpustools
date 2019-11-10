@@ -44,7 +44,7 @@ x = c(-10, -5, 3, 5)
 y = c(0, 2, 5, 10)
 words = c('words', 'where', 'you', 'like')
 
-\dontrun{
+\donttest{
 plot_words(x,y,words, c(1,2,3,4))
 }
 }

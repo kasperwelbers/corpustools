@@ -9,7 +9,7 @@ search_features(tc, query, code = NULL, feature = "token",
   "sentence"), keep_longest = TRUE, as_ascii = F, verbose = F)
 }
 \arguments{
-\item{tc}{a \link{tCorpus)}}
+\item{tc}{a \code{\link{tCorpus}}}
 
 \item{query}{A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.}
 
@@ -53,7 +53,7 @@ The following operators and modifiers are supported:
 \examples{
 text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-tc$get() ## (example uses letters instead of words for simple query examples)
+tc$tokens ## (example uses letters instead of words for simple query examples)
 
 hits = tc$search_features(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 hits          ## print shows number of hits
@@ -134,11 +134,11 @@ search_features(tc, 'A AND B', mode = 'features')$hits ## in "features", match a
 # ghost terms (used for conditions) can be repeated
 search_features(tc, 'A AND B~g')$hits
 
-\dontrun{
+\donttest{
 ## advanced queries
 tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
                        sentence_col = 'sentence', token_id_col = 'id')
-head(tc$get()) ## search in multiple feature columns with "columnname: "
+head(tc$tokens) ## search in multiple feature columns with "columnname: "
 
 ## using the sub/flag query to find only mary as a direct object
 hits = search_features(tc, 'mary~{relation: dobj}', context_level = 'sentence')

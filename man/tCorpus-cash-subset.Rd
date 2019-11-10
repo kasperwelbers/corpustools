@@ -61,7 +61,7 @@ tc2$n  ## subset of tc
 ## docfreq_filter() functions
 tc = create_tcorpus(sotu_texts, doc_column = 'id')
 tc$subset( freq_filter(token, min = 20, max = 100) )
-tc$get()
+tc$tokens
 
 
 ###### subset can be used for meta data by using the subset_meta argument, or the subset_meta method

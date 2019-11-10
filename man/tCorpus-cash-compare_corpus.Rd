@@ -41,7 +41,7 @@ bush = tc$subset_meta(president == 'George W. Bush', copy=TRUE)
 comp = obama$compare_corpus(bush, 'feature')
 comp = comp[order(-comp$chi),]
 head(comp)
-\dontrun{
+\donttest{
 plot(comp)
 }
 }

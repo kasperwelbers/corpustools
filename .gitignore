@@ -27,3 +27,5 @@ src/*.so
 src/*.dll
 
 inst/ext_resources/*
+doc
+Meta

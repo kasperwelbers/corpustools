@@ -55,7 +55,7 @@ The url for the file location is returned (invisibly)
 Creates a static HTML file to view the texts in the tcorpus in full text mode.
 }
 \examples{
-\dontrun{
+\donttest{
 tc = create_tcorpus(sotu_texts, doc_column='id')
 url = browse_texts(tc)
 }

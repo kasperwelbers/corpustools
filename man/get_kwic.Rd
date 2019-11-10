@@ -4,10 +4,10 @@
 \alias{get_kwic}
 \title{Get keyword-in-context (KWIC) strings}
 \usage{
-get_kwic(tc, hits = NULL, i = NULL, feature = NULL, query = NULL,
-  code = "", ntokens = 10, n = NA, nsample = NA,
-  output_feature = "token", query_feature = "token",
-  context_level = c("document", "sentence"), kw_tag = c("<", ">"), ...)
+get_kwic(tc, hits = NULL, i = NULL, query = NULL, code = "",
+  ntokens = 10, n = NA, nsample = NA, output_feature = "token",
+  query_feature = "token", context_level = c("document", "sentence"),
+  kw_tag = c("<", ">"), ...)
 }
 \arguments{
 \item{tc}{a tCorpus}
@@ -28,6 +28,8 @@ get_kwic(tc, hits = NULL, i = NULL, feature = NULL, query = NULL,
 
 \item{output_feature}{the feature column that is used to make the KWIC.}
 
+\item{query_feature}{If query is used, the feature column that is used to perform the query}
+
 \item{context_level}{Select the maxium context (document or sentence).}
 
 \item{kw_tag}{a character vector of length 2, that gives the symbols before (first value) and after (second value) the keyword in the KWIC string. Can for instance be used to prepare KWIC with format tags for highlighting.}
@@ -36,6 +38,11 @@ get_kwic(tc, hits = NULL, i = NULL, feature = NULL, query = NULL,
 }
 \description{
 Create a data.frame with keyword-in-context strings for given indices (i), search results (hits) or search strings (keyword).
+}
+\details{
+This is mainly for viewing results in the R console. If you want to create a subset corpus based on the context
+of query results, you can use \link{subset_query} with the window argument. Also, the \link{browse_hits} function
+is a good alternative for viewing query hits in full text.
 }
 \examples{
 tc = tokens_to_tcorpus(corenlp_tokens, sentence_col = 'sentence', token_id_col = 'id')

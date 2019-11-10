@@ -9,7 +9,7 @@
 \details{
 \strong{Compare vocabulary of two corpora}
 \tabular{ll}{
-  \link[=tCorpus$compare_corpus]{$compare_corpus()} \tab Compare vocabulary of one tCorpus to another \cr
-  \link[=tCorpus$compare_subset]{$compare_subset()} \tab Compare subset of a tCorpus to the rest of the tCorpus
+  \link[=compare_corpus]{compare_corpus()} \tab Compare vocabulary of one tCorpus to another \cr
+  \link[=compare_subset]{compare_subset()} \tab Compare subset of a tCorpus to the rest of the tCorpus
 }
 }

@@ -39,7 +39,7 @@ lda_fit(feature, create_feature=NULL, K=50, num.iterations=500, alpha=50/K,
 }
 }
 \examples{
-\dontrun{
+\donttest{
 tc = create_tcorpus(sotu_texts, doc_column = 'id')
 tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE, min_freq=10)
 set.seed(1)
@@ -47,6 +47,6 @@ m = tc$lda_fit('feature', create_feature = 'lda', K = 5, alpha = 0.1)
 
 m
 topicmodels::terms(m, 10)
-tc$get()
+tc$tokens
 }
 }

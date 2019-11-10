@@ -18,6 +18,10 @@
 \item{max_freq}{an integer, specifying minimum token frequency.}
 
 \item{max_docfreq}{an integer, specifying minimum document frequency.}
+
+\item{min_char}{an integer, specifying minimum characters in a token}
+
+\item{max_char}{an integer, specifying maximum characters in a token}
 }
 \description{
 Similar to using \link{tCorpus$subset}, but instead of deleting rows it only sets rows for a specified feature to NA. This can be very convenient, because it enables only a selection of features to be used in an analysis (e.g. a topic model) but maintaining the context of the full article, so that results can be viewed in this context (e.g. a topic browser).
@@ -36,5 +40,5 @@ tc = create_tcorpus('a a a a b b b c c')
 tc$feature_subset('token', 'tokens_subset1', subset = token_id < 5)
 tc$feature_subset('token', 'tokens_subset2', subset = freq_filter(token, min = 3))
 
-tc$get()
+tc$tokens
 }

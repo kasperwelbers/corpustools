@@ -14,7 +14,7 @@
 }
 \strong{Inspect features}
 \tabular{ll}{
-  \link[=tCorpus$feature_stats]{$feature_stats()} \tab Create a data.frame with feature statistics \cr
-  \link[=tCorpus$top_features]{$top_features()} \tab Show top features, optionally grouped by a given factor
+  \link[=feature_stats]{feature_stats()} \tab Create a data.frame with feature statistics \cr
+  \link[=top_features]{top_features()} \tab Show top features, optionally grouped by a given factor
 }
 }

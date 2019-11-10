@@ -23,11 +23,11 @@ d = data.frame(text = c('Text one','Text two','Text three'),
                date = c('2010-01-01','2010-01-01','2012-01-01'))
 tc = create_tcorpus(d)
 
-tc$get()
+tc$tokens
 tc$delete_columns('token')
-tc$get()
+tc$tokens
 
-tc$get_meta()
+tc$meta
 tc$delete_meta_columns('date')
-tc$get_meta()
+tc$meta
 }

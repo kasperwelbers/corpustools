@@ -27,7 +27,7 @@ Modify the token/meta data.table by setting the values of one (existing or new) 
 \examples{
 tc = create_tcorpus(sotu_texts, doc_column = 'id')
 
-tc$get()  ## show original
+tc$tokens  ## show original
 
 ## create new column
 i <- 1:tc$n
@@ -39,10 +39,10 @@ tc$set('token', paste0('***', token, '***'), subset = token_id == 1)
 ## use subset to create new column with NA's
 tc$set('second_token', token, subset = token_id == 2)
 
-tc$get()  ## show after set
+tc$tokens  ## show after set
 
 
 ##### use set for meta data with set_meta
 tc$set_meta('party_pres', paste(party, president, sep=': '))
-tc$get_meta()
+tc$meta
 }

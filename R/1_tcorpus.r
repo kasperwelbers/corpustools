@@ -302,6 +302,7 @@ tCorpus <- R6::R6Class("tCorpus",
        protected_cols = intersect(self$names, c('doc_id', 'token_id'))
        if (any(protected_cols %in% cnames)) stop("The position columns doc_id and token_id cannot be deleted")
        for (col in cnames) self$tokens[,(col) := NULL]
+       self$tokens[]
        invisible(self)
      },
 
@@ -310,6 +311,7 @@ tCorpus <- R6::R6Class("tCorpus",
        if (grepl('^\\.', newname)) stop('column names in a tCorpus cannot start with a dot')
 
        data.table::setnames(self$tokens, oldname, newname)
+       self$tokens[]
        invisible(self)
      },
 
@@ -361,6 +363,7 @@ tCorpus <- R6::R6Class("tCorpus",
         protected_cols = intersect(self$names, c('doc_id'))
         if (any(protected_cols %in% cnames)) stop('doc_id cannot be deleted')
         for (col in cnames) self$meta[,(col) := NULL]
+        self$meta[]
         invisible(self)
       },
 
@@ -368,6 +371,7 @@ tCorpus <- R6::R6Class("tCorpus",
        if (oldname %in% c('doc_id')) stop('The doc_id column cannot be set or changed')
        if (grepl('^\\.', newname)) stop('column names in a tCorpus cannot start with a dot')
        setnames(self$meta, oldname, newname)
+       self$meta[]
        invisible(self)
      },
 
@@ -409,6 +413,7 @@ tCorpus <- R6::R6Class("tCorpus",
        private$droplevels()
        self$tokens[]
        self$meta[]
+       if (!methods::is(self$tokens$doc_id, 'factor')) self$tokens$doc_id = fast_factor(self$tokens$doc_id)
        invisible(self)
      },
 
@@ -653,7 +658,7 @@ as.tcorpus.tCorpus <- function(x, ...) x
 #' @param ... not used
 #'
 #' @examples
-#' \dontrun{
+#' \donttest{
 #' x = c('First text','Second text')
 #' as.tcorpus(x) ## x is not a tCorpus object
 #' }

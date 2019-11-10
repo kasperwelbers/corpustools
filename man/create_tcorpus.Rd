@@ -62,13 +62,13 @@ GitHub page of the \href{https://github.com/bnosac/udpipe}{udpipe package}.}
 Create a \link{tCorpus} from raw text input
 }
 \examples{
-
+## ...
 tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'))
-tc$get()
+tc$tokens
 
 tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'),
                     split_sentences = TRUE)
-tc$get()
+tc$tokens
 
 ## with meta (easier to S3 method for data.frame)
 meta = data.frame(doc_id = c(1,2), source = c('a','b'))
@@ -82,7 +82,7 @@ tc
 ##  method for a character vector.
 text = factor(c('Text one first sentence', 'Text one second sentence'))
 tc = create_tcorpus(text)
-tc$get()
+tc$tokens
 d = data.frame(text = c('Text one first sentence. Text one second sentence.',
                'Text two', 'Text three'),
                date = c('2010-01-01','2010-01-01','2012-01-01'),
@@ -90,7 +90,7 @@ d = data.frame(text = c('Text one first sentence. Text one second sentence.',
 
 tc = create_tcorpus(d, split_sentences = TRUE)
 tc
-tc$get()
+tc$tokens
 
 ## use multiple text columns
 d$headline = c('Head one', 'Head two', 'Head three')
@@ -100,8 +100,5 @@ d$doc_id = c('#1', '#2', '#3')
 tc = create_tcorpus(d, text_columns = c('headline','text'), doc_column = 'doc_id',
                     split_sentences = TRUE)
 tc
-tc$get()
-
-## (note that text from different columns is pasted together with a double newline in between)
-tc$read_text(doc_id = '#1')
+tc$tokens
 }

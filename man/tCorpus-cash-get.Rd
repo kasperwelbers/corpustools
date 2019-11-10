@@ -39,7 +39,7 @@ d = data.frame(text = c('Text one first sentence. Text one second sentence', 'Te
 tc = create_tcorpus(d, split_sentences = TRUE)
 
 ## get token data
-tc$get()                     ## full data.table
+tc$tokens                     ## full data.table
 tc$get(c('doc_id','token'))  ## data.table with selected columns
 head(tc$get('doc_id'))       ## single column as vector
 head(tc$get(as.df = TRUE))      ## return as regular data.frame
@@ -53,7 +53,7 @@ tc$get(doc_id = 'D1', token_id = 5) ## for doc_id / token pairs
 
 
 ##### use get for meta data with get_meta
-tc$get_meta()
+tc$meta
 
 ## option to repeat meta data to match tokens
 tc$get_meta(per_token = TRUE) ## (note that first doc is repeated, and rows match tc$n)

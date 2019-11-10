@@ -2,6 +2,10 @@
 #'
 #' Create a data.frame with keyword-in-context strings for given indices (i), search results (hits) or search strings (keyword).
 #'
+#' This is mainly for viewing results in the R console. If you want to create a subset corpus based on the context
+#' of query results, you can use \link{subset_query} with the window argument. Also, the \link{browse_hits} function
+#' is a good alternative for viewing query hits in full text.
+#'
 #' @param tc a tCorpus
 #' @param hits results of feature search. see \link{search_features}.
 #' @param i instead of the hits argument, you can give the indices of features directly.
@@ -10,6 +14,7 @@
 #' @param ntokens an integers specifying the size of the context, i.e. the number of tokens left and right of the keyword.
 #' @param n a number, specifying the total number of hits
 #' @param nsample like n, but with a random sample of hits. If multiple codes are used, the sample is drawn for each code individually.
+#' @param query_feature  If query is used, the feature column that is used to perform the query
 #' @param output_feature the feature column that is used to make the KWIC.
 #' @param context_level Select the maxium context (document or sentence).
 #' @param kw_tag a character vector of length 2, that gives the symbols before (first value) and after (second value) the keyword in the KWIC string. Can for instance be used to prepare KWIC with format tags for highlighting.
@@ -25,7 +30,7 @@
 #' ## or, first perform a feature search, and then get the KWIC for the results
 #' hits = search_features(tc, '(john OR mark) AND mary AND love*', context_level = 'sentence')
 #' get_kwic(tc, hits=hits, context_level = 'sentence')
-get_kwic <- function(tc, hits=NULL, i=NULL, feature=NULL, query=NULL, code='', ntokens=10, n=NA, nsample=NA, output_feature='token', query_feature='token', context_level=c('document','sentence'), kw_tag=c('<','>'), ...){
+get_kwic <- function(tc, hits=NULL, i=NULL, query=NULL, code='', ntokens=10, n=NA, nsample=NA, output_feature='token', query_feature='token', context_level=c('document','sentence'), kw_tag=c('<','>'), ...){
   if (!is.null(query)) hits = search_features(tc, query=query, code=code, feature = query_feature, ...)
   keyword_in_context(tc, hits=hits, i=i, code=code, ntokens=ntokens, n=n, nsample=nsample, output_feature=output_feature, context_level=context_level, kw_tag=kw_tag)
 }

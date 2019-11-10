@@ -40,5 +40,5 @@ tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
 g = tc$semnet_window('token', window.size = 1)
 g
 igraph::get.data.frame(g)
-\dontrun{plot_semnet(g)}
+\donttest{plot_semnet(g)}
 }

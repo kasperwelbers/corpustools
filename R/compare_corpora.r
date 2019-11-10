@@ -1,7 +1,7 @@
 
 #' Compare tCorpus vocabulary to that of another (reference) tCorpus
 #'
-#' @param tc a \link{tCorpus)}
+#' @param tc a \code{\link{tCorpus}}
 #' @param tc_y the reference tCorpus
 #' @param feature the column name of the feature that is to be compared
 #' @param smooth Laplace smoothing is used for the calculation of the ratio of the relative term frequency. Here you can set the added value.
@@ -24,7 +24,7 @@
 #' comp = compare_corpus(tc, bush, 'feature')
 #' comp = comp[order(-comp$chi),]
 #' head(comp)
-#' \dontrun{
+#' \donttest{
 #' plot(comp)
 #' }
 compare_corpus <- function(tc, tc_y, feature, smooth=0.1, min_ratio=NULL, min_chi2=NULL, is_subset=F, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
@@ -35,7 +35,7 @@ compare_corpus <- function(tc, tc_y, feature, smooth=0.1, min_ratio=NULL, min_ch
 
 #' Compare vocabulary of a subset of a tCorpus to the rest of the tCorpus
 #'
-#' @param tc a \link{tCorpus}
+#' @param tc a \code{\link{tCorpus}}
 #' @param feature the column name of the feature that is to be compared
 #' @param subset_x an expression to subset the tCorpus. The vocabulary of the subset will be compared to the rest of the tCorpus
 #' @param subset_meta_x like subset_x, but using using the meta data
@@ -57,7 +57,7 @@ compare_corpus <- function(tc, tc_y, feature, smooth=0.1, min_ratio=NULL, min_ch
 #' comp = compare_subset(tc, 'feature', subset_meta_x = president == 'Barack Obama')
 #' comp = comp[order(-comp$chi),]
 #' head(comp)
-#' \dontrun{
+#' \donttest{
 #' plot(comp)
 #' }
 #'

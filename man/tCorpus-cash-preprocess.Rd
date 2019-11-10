@@ -67,5 +67,5 @@ tc$preprocess('token', 'preprocessed_3', min_freq=2)
 ## make ngrams
 tc$preprocess('token', 'preprocessed_4', ngrams = 3)
 
-tc$get()
+tc$tokens
 }

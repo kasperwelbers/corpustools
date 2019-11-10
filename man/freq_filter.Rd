@@ -24,7 +24,7 @@ Should only be used within the tCorpus subset method, or any tCorpus method that
 \examples{
 tc = create_tcorpus(c('a a a b b'))
 
-tc$get()
+tc$tokens
 tc$subset(subset = freq_filter(token, min=3))
-tc$get()
+tc$tokens
 }

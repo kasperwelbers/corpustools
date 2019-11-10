@@ -64,6 +64,7 @@ tCorpus$set('public', 'code_dictionary', function(dict, regex_sep=' ', token_col
 #' tc = create_tcorpus(c('this is a test','This town is not big enough for a test'))
 #' search_dictionary(tc, dict)
 search_dictionary <- function(tc, dict, regex_sep=' ', token_col='token', case_sensitive=F, batchsize=50000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
+  code = NULL; hit_id = NULL
   if (!is_tcorpus(tc)) stop('tc is not a tCorpus')
   f = dictionary_lookup(tc, dict, regex_sep=regex_sep, token_col=token_col, case_sensitive=case_sensitive, batchsize=batchsize, flatten_colloc=flatten_colloc, ascii=ascii, low_memory=low_memory, verbose=verbose)
 

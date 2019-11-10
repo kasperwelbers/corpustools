@@ -9,7 +9,7 @@ compare_corpus(tc, tc_y, feature, smooth = 0.1, min_ratio = NULL,
   what = c("freq", "docfreq", "cooccurrence"))
 }
 \arguments{
-\item{tc}{a \link{tCorpus)}}
+\item{tc}{a \code{\link{tCorpus}}}
 
 \item{tc_y}{the reference tCorpus}
 
@@ -44,7 +44,7 @@ bush = tc$subset_meta(president == 'George W. Bush', copy=TRUE)
 comp = compare_corpus(tc, bush, 'feature')
 comp = comp[order(-comp$chi),]
 head(comp)
-\dontrun{
+\donttest{
 plot(comp)
 }
 }

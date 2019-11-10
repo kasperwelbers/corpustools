@@ -29,7 +29,7 @@
 #' tc = create_tcorpus('Anna and Bob are secretive')
 #'
 #' tc$code_features(c("actors# anna bob", "associations# secretive"))
-#' tc$get()
+#' tc$tokens
 #' @aliases code_features
 tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token', column='code', add_column=list(), context_level = c('document','sentence'), keep_longest=T, as_ascii=F, verbose=F, overwrite=T, ...){
   codelabel = get_query_code(query, code)
@@ -90,7 +90,7 @@ tCorpus$set('public', 'search_recode', function(feature, new_value, query, ...){
 #' Search tokens in a tokenlist using Lucene-like queries. For a detailed explanation of the query language, see the details below.
 #'
 #'
-#' @param tc a \link{tCorpus)}
+#' @param tc a \code{\link{tCorpus}}
 #' @param query A character string that is a query. See details for available query operators and modifiers. Can be multiple queries (as a vector), in which case it is recommended to also specifiy the code argument, to label results.
 #' @param code The code given to the tokens that match the query (usefull when looking for multiple queries). Can also put code label in query with # (see details)
 #' @param feature The name of the feature column within which to search.
@@ -122,7 +122,7 @@ tCorpus$set('public', 'search_recode', function(feature, new_value, query, ...){
 #' @examples
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
-#' tc$get() ## (example uses letters instead of words for simple query examples)
+#' tc$tokens ## (example uses letters instead of words for simple query examples)
 #'
 #' hits = tc$search_features(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 #' hits          ## print shows number of hits
@@ -203,11 +203,11 @@ tCorpus$set('public', 'search_recode', function(feature, new_value, query, ...){
 #' # ghost terms (used for conditions) can be repeated
 #' search_features(tc, 'A AND B~g')$hits
 #'
-#' \dontrun{
+#' \donttest{
 #' ## advanced queries
 #' tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
 #'                        sentence_col = 'sentence', token_id_col = 'id')
-#' head(tc$get()) ## search in multiple feature columns with "columnname: "
+#' head(tc$tokens) ## search in multiple feature columns with "columnname: "
 #'
 #' ## using the sub/flag query to find only mary as a direct object
 #' hits = search_features(tc, 'mary~{relation: dobj}', context_level = 'sentence')

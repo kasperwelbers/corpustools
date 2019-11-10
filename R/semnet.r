@@ -27,19 +27,20 @@
 #' g = semnet(tc, 'token')
 #' g
 #' igraph::get.data.frame(g)
-#' \dontrun{plot_semnet(g)}
-semnet <- function(tc, feature='token', measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA, alpha=2){
+#' \donttest{plot_semnet(g)}
+semnet <- function(tc, feature='token', measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA){
+  alpha = 2
   require_package('igraph')
   measure = match.arg(measure)
   context_level = match.arg(context_level)
 
-  if (!is(tc, 'tCorpus') && !is(tc, 'featureHits') && !is(tc, 'contextHits')) stop('tc has to be a tCorpus, featureHits or contextHits object')
+  if (!methods::is(tc, 'tCorpus') && !methods::is(tc, 'featureHits') && !methods::is(tc, 'contextHits')) stop('tc has to be a tCorpus, featureHits or contextHits object')
 
 
-  if (is(tc, 'featureHits') || is(tc, 'contextHits')) {
+  if (methods::is(tc, 'featureHits') || methods::is(tc, 'contextHits')) {
     sentence_col = if (anyNA(tc$hits$sentence)) NULL else 'sentence'
     hits = tc$hits
-    if (is(tc, 'contextHits')) {
+    if (methods::is(tc, 'contextHits')) {
       hits$hit_id = 1:nrow(hits)
       hits$token_id = 1:nrow(hits) ## doesn't matter for document/sentence level semnet
     }
@@ -119,7 +120,7 @@ semnet <- function(tc, feature='token', measure=c('con_prob', 'con_prob_weighted
 #' g = semnet_window(tc, 'token', window.size = 1)
 #' g
 #' igraph::get.data.frame(g)
-#' \dontrun{plot_semnet(g)}
+#' \donttest{plot_semnet(g)}
 semnet_window <- function(tc, feature='token', measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=5, matrix_mode=c('positionXwindow', 'windowXwindow')){
   require_package('igraph')
 
@@ -127,10 +128,11 @@ semnet_window <- function(tc, feature='token', measure=c('con_prob', 'cosine', '
   context_level = match.arg(context_level)
   matrix_mode = match.arg(matrix_mode)
 
-  if (!is(tc, 'tCorpus') && !is(tc, 'featureHits')) stop('tc has to be a tCorpus or featureHits object')
+  if (!methods::is(tc, 'tCorpus') && !methods::is(tc, 'featureHits')) stop('tc has to be a tCorpus or featureHits object')
 
-  if (is(tc, 'featureHits')) {
+  if (methods::is(tc, 'featureHits')) {
     sentence_col = if (anyNA(tc$hits$sentence)) NULL else 'sentence'
+    hits = tc$hits
     if (measure %in% c('count_directed','count_undirected')) hits = hits[!duplicated(hits$hit_id)]
     tc = tokens_to_tcorpus(hits, doc_col = 'doc_id', sentence_col=NULL, token_id_col = 'token_id')
     feature = 'code'

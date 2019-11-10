@@ -26,11 +26,11 @@ tc = create_tcorpus(sotu_texts, doc_column = 'id')
 ## change column name in token data
 tc$names ## original column names
 tc$set_name(oldname = 'token', newname = 'word')
-tc$get()
+tc$tokens
 
 ## change column name in meta data
 tc$meta_names ## original column names
 tc$set_meta_name(oldname = 'party', newname = 'clan')
 tc$set_meta_name(oldname = 'president', newname = 'clan leader')
-tc$get_meta()
+tc$meta
 }

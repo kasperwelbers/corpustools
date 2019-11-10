@@ -46,7 +46,7 @@
 #' ## make ngrams
 #' tc$preprocess('token', 'preprocessed_4', ngrams = 3)
 #'
-#' tc$get()
+#' tc$tokens
 tCorpus$set('public', 'preprocess', function(column='token', new_column='feature', lowercase=T, ngrams=1, ngram_context=c('document', 'sentence'), as_ascii=F, remove_punctuation=T, remove_stopwords=F, remove_numbers=F, use_stemming=F, language='english', min_freq=NULL, min_docfreq=NULL, max_freq=NULL, max_docfreq=NULL, min_char=NULL, max_char=NULL) {
   column = match.arg(column, self$names)
   invisible(preprocess_feature(self, column=column, new_column=new_column, lowercase=lowercase, ngrams=ngrams, ngram_context=ngram_context, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, remove_numbers=remove_numbers, use_stemming=use_stemming, language=language, min_freq=min_freq, min_docfreq=min_docfreq, max_freq=max_freq, max_docfreq=max_docfreq, min_char=min_char, max_char=max_char))
@@ -72,6 +72,8 @@ tCorpus$set('public', 'preprocess', function(column='token', new_column='feature
 #' @param min_docfreq an integer, specifying minimum document frequency.
 #' @param max_freq an integer, specifying minimum token frequency.
 #' @param max_docfreq an integer, specifying minimum document frequency.
+#' @param min_char an integer, specifying minimum characters in a token
+#' @param max_char an integer, specifying maximum characters in a token
 #'
 #' @name tCorpus$feature_subset
 #' @aliases feature_subset
@@ -81,8 +83,8 @@ tCorpus$set('public', 'preprocess', function(column='token', new_column='feature
 #' tc$feature_subset('token', 'tokens_subset1', subset = token_id < 5)
 #' tc$feature_subset('token', 'tokens_subset2', subset = freq_filter(token, min = 3))
 #'
-#' tc$get()
-tCorpus$set('public', 'feature_subset', function(column, subset=NULL, new_column=column, inverse=F, min_freq=NULL, min_docfreq=NULL, max_freq=NULL, max_docfreq=NULL, copy=F){
+#' tc$tokens
+tCorpus$set('public', 'feature_subset', function(column, subset=NULL, new_column=column, inverse=F, min_freq=NULL, min_docfreq=NULL, max_freq=NULL, max_docfreq=NULL, min_char=NULL, max_char=NULL, copy=F){
   column = match.arg(column, self$names)
   if (new_column %in% c('doc_id','sentence','token_id')) stop('The position columns (doc_id, sent_i, token_i) cannot be used')
   if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval(substitute(subset), parent.frame())
@@ -104,10 +106,11 @@ tCorpus$set('public', 'feature_subset', function(column, subset=NULL, new_column
     self$set(new_column, self$get(column), subset = .subset)
   }
 
-  if (!is.null(min_freq) || !is.null(max_freq) || !is.null(min_docfreq) || !is.null(max_docfreq)) {
+  if (!is.null(min_freq) || !is.null(max_freq) || !is.null(min_docfreq) || !is.null(max_docfreq) || !is.null(min_char) || !is.null(max_char)) {
     self$preprocess(column=new_column, new_column=new_column, lowercase=F, remove_punctuation=F,
-                    min_freq=min_freq, max_freq=max_freq, min_docfreq=min_docfreq, max_docfreq=max_docfreq)
+                    min_freq=min_freq, max_freq=max_freq, min_docfreq=min_docfreq, max_docfreq=max_docfreq, min_char=min_char, max_char=max_char)
   }
+
   self$tokens[]
   invisible(self)
 })

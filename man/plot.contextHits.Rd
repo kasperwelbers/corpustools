@@ -4,11 +4,14 @@
 \alias{plot.contextHits}
 \title{S3 plot for contextHits class}
 \usage{
-\method{plot}{contextHits}(object, min_weight = 0, backbone_alpha = NA,
-  ...)
+\method{plot}{contextHits}(x, min_weight = 0, backbone_alpha = NA, ...)
 }
 \arguments{
-\item{object}{a contextHits object, as returned by \link{search_contexts}}
+\item{x}{a contextHits object, as returned by \link{search_contexts}}
+
+\item{min_weight}{Optionally, the minimum weight for an edge in the network}
+
+\item{backbone_alpha}{Optionally, the alpha threshold for backbone extraction (similar to a p-value, and lower is more strict)}
 
 \item{...}{not used}
 }
@@ -18,6 +21,9 @@ S3 plot for contextHits class
 \examples{
 tc = create_tcorpus(sotu_texts, doc_column='id')
 hits = search_contexts(tc, c('War# war* OR army OR bomb*','Terrorism# terroris*',
-                              Economy# econom* OR bank*','Education# educat* OR school*'))
+                              'Economy# econom* OR bank*','Education# educat* OR school*'))
+
+\donttest{
 plot(hits)
+}
 }
