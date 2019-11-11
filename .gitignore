@@ -17,7 +17,7 @@ test.tCorpus/*
 .Rproj.user/*
 
 # produced vignettes
-vignettes/*.html
+#vignettes/*.html
 vignettes/*.pdf
 .Rproj.user
 
