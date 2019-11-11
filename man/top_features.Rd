@@ -5,7 +5,8 @@
 \title{Show top features}
 \usage{
 top_features(tc, feature, n = 10, group_by = NULL,
-  group_by_meta = NULL, return_long = F)
+  group_by_meta = NULL, relative_freq = F, dropNA = T,
+  return_long = F)
 }
 \arguments{
 \item{tc}{a tCorpus}
@@ -18,7 +19,14 @@ top_features(tc, feature, n = 10, group_by = NULL,
 
 \item{group_by_meta}{A column in the meta data to group the top features by.}
 
-\item{return_long}{if True, results will be returned in a long format. Default is a table, but this can be inconvenient if there are many grouping variables.}
+\item{relative_freq}{If TRUE, rank by Chi2 for highest relative occurence in a group compared to the total corpus.
+If return_long is used, the Chi2 score is also returned, but note that there are negative Chi2 scores.
+This is used to indicate that the relative frequency of a feature in a group was lower than
+the relative frequency in the corpus  (i.e. under-represented).}
+
+\item{dropNA}{if TRUE, drop NA features}
+
+\item{return_long}{if TRUE, results will be returned in a long format that contains more information.}
 }
 \value{
 a data.frame
@@ -30,5 +38,5 @@ Show top features
 tc = tokens_to_tcorpus(corenlp_tokens, token_id_col = 'id')
 
 top_features(tc, 'lemma')
-top_features(tc, 'lemma', group_by = 'relation')
+top_features(tc, 'lemma', group_by = 'NER', group_by_meta='doc_id')
 }

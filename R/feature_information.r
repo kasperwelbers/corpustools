@@ -30,7 +30,12 @@ feature_stats <- function(tc, feature, context_level=c('document','sentence')) {
 #' @param n Return the top n features
 #' @param group_by A column in the token data to group the top features by. For example, if token data contains part-of-speech tags (pos), then grouping by pos will show the top n feature per part-of-speech tag.
 #' @param group_by_meta A column in the meta data to group the top features by.
-#' @param return_long if True, results will be returned in a long format. Default is a table, but this can be inconvenient if there are many grouping variables.
+#' @param relative_freq  If TRUE, rank by Chi2 for highest relative occurence in a group compared to the total corpus.
+#'                       If return_long is used, the Chi2 score is also returned, but note that there are negative Chi2 scores.
+#'                       This is used to indicate that the relative frequency of a feature in a group was lower than
+#'                       the relative frequency in the corpus  (i.e. under-represented).
+#' @param dropNA      if TRUE, drop NA features
+#' @param return_long if TRUE, results will be returned in a long format that contains more information.
 #'
 #' @return a data.frame
 #' @export
@@ -38,51 +43,63 @@ feature_stats <- function(tc, feature, context_level=c('document','sentence')) {
 #' tc = tokens_to_tcorpus(corenlp_tokens, token_id_col = 'id')
 #'
 #' top_features(tc, 'lemma')
-#' top_features(tc, 'lemma', group_by = 'relation')
-top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, return_long=F){
+#' top_features(tc, 'lemma', group_by = 'NER', group_by_meta='doc_id')
+top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, relative_freq=F, dropNA=T, return_long=F){
+  .N = NULL   ## data.table bindings
   if (!is.null(group_by)) group_by = match.arg(group_by, tc$names, several.ok = T)
-  if (!is.null(group_by)) group_by_meta = match.arg(group_by_meta, tc$meta_names, several.ok = T)
+  if (!is.null(group_by_meta)) group_by_meta = match.arg(group_by_meta, tc$meta_names, several.ok = T)
 
-  group_df = NULL
-  if (!is.null(group_by)) group_df = as.data.frame(tc$get(group_by, keep_df = T))
-  if (!is.null(group_by_meta)){
-    if (is.null(group_df)) {
-      group_df = tc$get_meta(group_by_meta, keep_df=T)
-      group_df = as.data.frame(group_df[match(tc$get('doc_id'), tc$get_meta('doc_id')),])
+  feat = tc$get(c(feature, group_by), keep_df=T)
+  if (!is.null(group_by_meta))
+    feat = cbind(feat, tc$get_meta(group_by_meta, per_token = T, keep_df = T))
+  if (ncol(feat) == 1) {
+    group_by = '.TOTAL'
+    feat$.TOTAL = 'total'
+  }
+
+  feat = feat[,list(freq = .N), by=c(feature, group_by,group_by_meta)]
+  if (dropNA) feat = feat[which(!is.na(feat[,feature])),]
+
+  if (relative_freq) {
+    totals_feature = tc$tokens[,list(.total_feature=.N), by=feature]
+    data.table::setkeyv(feat, feature)
+    feat = merge(feat, totals_feature, on=feature, all.x=T)
+
+    if (group_by[1] == '.TOTAL') {
+      feat$.total_group = tc$n
     } else {
-      match_i = match(tc$get('doc_id'), tc$get_meta('doc_id'))
-      cbind(group_df,
-            as.data.frame(tc$get_meta(group_by_meta,keep_df=T)[match_i,]))
-      rm(match_i)
+      totals_group = tc$tokens[,list(.total_group=.N), by=c(group_by,group_by_meta)]
+      data.table::setkeyv(feat, c(group_by,group_by_meta))
+      feat = merge(feat, totals_group, on=c(group_by,group_by_meta), all.x=T)
     }
+
+    a=feat$freq
+    b=feat$.total_feature - feat$freq
+    c=feat$.total_group - feat$freq
+    d=tc$n - feat$.total_group
+    feat$chi = calc_chi2(a,b,c,d)
+
+    ## make Chi negative if relative frequency in group is lower than in total
+    ratio = (a/c) / (b/d)
+    if (c == 0) ratio = 0
+    if (c == 0) ratio = 0
+    ratio[is.na(ratio)] = 0
+    chi_sign = ifelse(ratio < 1, -1, 1)
+    feat$chi = feat$chi * chi_sign
+
+    data.table::setorderv(feat, 'chi', -1)
+  } else {
+    data.table::setorderv(feat, 'freq', -1)
   }
-  if (is.null(group_df)) group_df = data.frame(group=rep('tcorpus', tc$n))
 
-  ## function for ddply
-  get_top_freq <- function(d, n, feature){
-    x = d[[feature]]
-    scores = data.frame(table(x))
-    colnames(scores) = c(feature, 'freq')
-    scores = scores[order(-scores$freq),]
-    scores = head(scores, n)
-    scores = scores[scores$freq > 0,]
-    scores$rank = 1:nrow(scores)
-    scores
-  }
-
-
-  break_cols = colnames(group_df)
-  group_df[[feature]] = tc$get(feature)
-  scores = plyr::ddply(group_df, break_cols, .fun = get_top_freq, n=n, feature=feature)
+  rankfun <- function(x) 1:length(x)
+  feat[,.RANK := rankfun(freq), by=c(group_by,group_by_meta)]
+  feat = feat[feat$.RANK <= n,]
 
   if (!return_long) {
-    scores = scores[,!colnames(scores) == 'freq', drop=F]
-    scores$token = as.character(scores[[feature]])
-    scores = dcast(data.table::as.data.table(scores), ... ~ rank, value.var=feature)
-    scores = as.data.frame(scores)
-    colnames(scores)[!colnames(scores) %in% break_cols] = paste('rank', colnames(scores)[!colnames(scores) %in% break_cols], sep='_')
+    feat = data.table::dcast(feat[,c(group_by,group_by_meta,feature,'.RANK'),with=F], ... ~ .RANK, value.var=feature)
   }
-  scores
+  feat
 }
 
 ################################

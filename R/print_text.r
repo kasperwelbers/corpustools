@@ -18,6 +18,8 @@
 #' @param seed        If select is "random", seed can be used to set a random seed
 #' @param nav         Optionally, a column in tc$meta to add navigation (only supports simple filtering on unique values).
 #'                    This is not possible if annotate is used.
+#' @param top_nav     A number. If navigation based on token annotations is used, filters will only apply to top x values with highest token occurence in a document
+#' @param thres_nav    Like top_nav, but specifying a threshold for the minimum number of tokens.
 #' @param view        If TRUE (default), view the browser in the Viewer window (turn off if this is not supported)
 #' @param highlight_col If highlight is used, the color for highlighting
 #' @param scale_col     If scale is used, a vector with 2 or more colors used to create a color ramp. That is, -1 is first color, +1 is last color, if three colors are given 0 matches the middle color, and colors in between are interpolated.
@@ -33,7 +35,7 @@
 #' }
 browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('first','random'), header='',
                          subheader=NULL, highlight=NULL, scale=NULL, category=NULL, meta_cols=NULL, seed=NA,
-                         nav=NULL, view=T, highlight_col='yellow', scale_col=c('blue','red'), filename=NULL) {
+                         nav=NULL, top_nav=NULL, thres_nav=1, view=T, highlight_col='yellow', scale_col=c('blue','red'), filename=NULL) {
   if (sum(!is.null(highlight), !is.null(scale), !is.null(category)) > 1) stop('Can only use one annotation option (highlight, scale or category)')
 
   mode = 'normal'
@@ -72,12 +74,18 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
     }
     if (select == 'random') {
       subhead = sprintf('random <ndoc>%s</ndoc> / %s documents (N = %s)', n, n, length(doc_ids))
+      if (!is.na(seed)) {
+        rs = runif(1, min=1, max=100000000)
+        set.seed(seed)
+      }
       .DOC_IDS = sample(doc_ids, size=n)
+      if (!is.na(seed)) set.seed(rs)
     }
   } else {
     subhead = sprintf('<ndoc>%s</ndoc> (N = %s)', length(doc_ids), length(doc_ids))
     .DOC_IDS = doc_ids
   }
+
   #} else {
   #    subhead = sprintf('<ndoc>%s</ndoc> (N = %s)', length(doc_ids), nrow(tc$meta))
   #    .DOC_IDS = doc_ids
@@ -98,21 +106,22 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
   }
 
 
-  if (mode == 'normal') url = tokenbrowser::create_browser(sub_tc$tokens, meta=meta, token_col = token_col, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F)
+  if (mode == 'normal') url = tokenbrowser::create_browser(sub_tc$tokens, meta=meta, token_col = token_col, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
   if (mode == 'highlight') {
     v = sub_tc$tokens[[highlight]]
     if (is.character(v) || is.factor(v)) v = !is.na(v)
-    url = tokenbrowser::highlighted_browser(sub_tc$tokens, meta=meta, token_col=token_col, col = highlight_col, value=v, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F)
+    url = tokenbrowser::highlighted_browser(sub_tc$tokens, meta=meta, token_col=token_col, col = highlight_col, value=v, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
   }
-  if (mode == 'scale') url = tokenbrowser::colorscaled_browser(sub_tc$tokens, meta=meta, token_col=token_col, col_range = scale_col, value=sub_tc$tokens[[scale]], alpha=0.3, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F)
+  if (mode == 'scale') url = tokenbrowser::colorscaled_browser(sub_tc$tokens, meta=meta, token_col=token_col, col_range = scale_col, value=sub_tc$tokens[[scale]], alpha=0.3, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
   if (mode == 'category') {
     v = sub_tc$tokens[[category]]
     if (is.numeric(v)) v = as.character(v)
-    url = tokenbrowser::categorical_browser(sub_tc$tokens, meta=meta, token_col=token_col, category = v, alpha=0.3, header=header, subheader = subhead, filename=filename, n=F)
+    url = tokenbrowser::categorical_browser(sub_tc$tokens, meta=meta, token_col=token_col, category = v, alpha=0.3, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
   }
   if (view) tokenbrowser::view_browser(url)
   invisible(url)
 }
+
 
 #' View hits in a browser
 #'

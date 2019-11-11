@@ -251,9 +251,10 @@ The tokens data.table now has the new column "feature" which contains the prepro
 
 There are several packages for using NLP pipelines in R, such as `spacyr` for SpaCy, `coreNLP` for Stanford CoreNLP, and `udpipe` for UDPipe. Most of these rely on external dependencies (Python for SpaCy, Java for CoreNLP), but the `UDPipe` pipeline runs in C++ which plays nicely with R. We have built a wrapper for the `udpipe` package which provides bindings for using UDPipe directly from within R. Unlike basic preprocessing, this feature has to be used in the create_tcorpus function, because it requires the raw text input.
 
-To use a UDPipe model in create_tcorpus, you simply need to use the `udpipe_model` argument. The value for this  argument is the language/name of the model you want to use (if the name does not exist, you'll get a list of options). The first time using a language, R will automatically download the model. By default the udpipe model is stored in the current working directory, in a folder called udpipe_models, but you can set the path with the `udpipe_model_path` parameter.
+To use a UDPipe model in create_tcorpus, you simply need to use the `udpipe_model` argument. The value for this  argument is the language/name of the model you want to use (if you don't know the name, just give the language and you'll get suggestions). The first time using a language, R will automatically download the model. By default the udpipe model is stored in the current working directory, in a folder called udpipe_models, but you can set the path with the `udpipe_model_path` parameter.
 
 ```{r, eval=F}
+corpustools:::prepare_model
 tc = create_tcorpus("This is a quick example", udpipe_model='english-ewt')
 tc$tokens   ## output not shown in this vignette
 ```
@@ -364,7 +365,7 @@ Furthermore, since we are not concerned with competitive performance on huge dat
 
 A description of the query language can be found in the documentation of the search_features() function.
 
-```{r}
+```{r, eval=F}
 ?search_features()
 ```
 
@@ -529,7 +530,7 @@ This subsets tc without making a copy. Subsetting by reference is explained in m
 
 # Text analysis techniques
 
-The tCorpus is mainly intended for managing, querying, annotating and browsing tokens in a tokenlist format, but there are some additional analysis techniques. Here we use tokens with basic preprocessing as an example, but note that these techniques can be applied for all features and annotations in a tCorpus. 
+The tCorpus is mainly intended for managing, querying, annotating and browsing tokens in a tokenlist format, but there are some built-in techniques for finding patterns in frequencies and co-occurences of features. Here we use tokens with basic preprocessing as an example, but note that these techniques can be applied for all features and annotations in a tCorpus. 
 
 ## Semantic networks based on co-occurence
 

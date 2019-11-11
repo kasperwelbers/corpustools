@@ -7,9 +7,9 @@
 browse_texts(tc, doc_ids = NULL, token_col = "token", n = 500,
   select = c("first", "random"), header = "", subheader = NULL,
   highlight = NULL, scale = NULL, category = NULL,
-  meta_cols = NULL, seed = NA, nav = NULL, view = T,
-  highlight_col = "yellow", scale_col = c("blue", "red"),
-  filename = NULL)
+  meta_cols = NULL, seed = NA, nav = NULL, top_nav = NULL,
+  thres_nav = 1, view = T, highlight_col = "yellow",
+  scale_col = c("blue", "red"), filename = NULL)
 }
 \arguments{
 \item{tc}{a tCorpus}
@@ -39,6 +39,10 @@ Can also be a character vector, in which case al non-NA values are highlighted}
 
 \item{nav}{Optionally, a column in tc$meta to add navigation (only supports simple filtering on unique values).
 This is not possible if annotate is used.}
+
+\item{top_nav}{A number. If navigation based on token annotations is used, filters will only apply to top x values with highest token occurence in a document}
+
+\item{thres_nav}{Like top_nav, but specifying a threshold for the minimum number of tokens.}
 
 \item{view}{If TRUE (default), view the browser in the Viewer window (turn off if this is not supported)}
 

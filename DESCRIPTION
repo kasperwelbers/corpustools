@@ -12,7 +12,6 @@ Depends:
     R (>= 3.2.0)
 Imports: 
     methods, 
-    plyr, 
     wordcloud (>= 2.5), 
     SnowballC,
     stringi, 
