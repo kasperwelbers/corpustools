@@ -81,8 +81,8 @@ top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, r
 
     ## make Chi negative if relative frequency in group is lower than in total
     ratio = (a/c) / (b/d)
-    if (c == 0) ratio = 0
-    if (c == 0) ratio = 0
+    ratio[d==0] = 1
+    ratio[c==0] = 0
     ratio[is.na(ratio)] = 0
     chi_sign = ifelse(ratio < 1, -1, 1)
     feat$chi = feat$chi * chi_sign
