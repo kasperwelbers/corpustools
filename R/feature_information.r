@@ -12,11 +12,12 @@
 #' tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'),
 #'                     split_sentences = TRUE)
 #'
+#' \donttest{
 #' fs = feature_stats(tc, 'token')
 #' head(fs)
-#'
 #' fs = feature_stats(tc, 'token', context_level = 'sentence')
 #' head(fs)
+#' }
 feature_stats <- function(tc, feature, context_level=c('document','sentence')) {
   context_level = match.arg(context_level)
   dtm = get_dtm(tc, feature, context_level=context_level)
@@ -58,7 +59,7 @@ top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, r
   }
 
   feat = feat[,list(freq = .N), by=c(feature, group_by,group_by_meta)]
-  if (dropNA) feat = feat[which(!is.na(feat[,feature])),]
+  if (dropNA) feat = feat[which(!is.na(feat[,feature,with=F])),]
 
   if (relative_freq) {
     totals_feature = tc$tokens[,list(.total_feature=.N), by=feature]

@@ -23,9 +23,10 @@ Compute a number of useful statistics for features: term frequency, idf, etc.
 tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'),
                     split_sentences = TRUE)
 
+\donttest{
 fs = feature_stats(tc, 'token')
 head(fs)
-
 fs = feature_stats(tc, 'token', context_level = 'sentence')
 head(fs)
+}
 }

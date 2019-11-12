@@ -93,9 +93,11 @@ tc$preprocess(use_stemming = T, remove_stopwords=T)
 tc$tokens
 
 ## ---- eval=F-------------------------------------------------------------
-#  corpustools:::prepare_model
 #  tc = create_tcorpus("This is a quick example", udpipe_model='english-ewt')
 #  tc$tokens   ## output not shown in this vignette
+
+## ---- eval=F-------------------------------------------------------------
+#  tc$feats_to_columns(c('Tense','Number','Person'))
 
 ## ---- eval=F-------------------------------------------------------------
 #  ## for sake of clarity, recreate the corpus and preprocess it
@@ -170,18 +172,18 @@ hits = search_features(tc, query=queries$query, code=queries$label)
 tc$aggregate(hits=hits)
 tc$aggregate(hits=hits, meta_cols = 'president')  ## break by meta variables
 
-## ---- fig.width = 6, fig.height = 3, fig.align="center"------------------
-library(ggplot2)
-
-date_hits = tc$aggregate(hits, meta_cols='date', wide = F)
-
-ggplot(date_hits, aes(x=date, y=count, group=code)) + 
-  geom_line(aes(linetype=code))
-
-pres_hits = tc$aggregate(hits, meta_cols='president', wide = F)
-
-ggplot(pres_hits, aes(president, count)) + 
-  geom_col(aes(fill=code), width=.5, position = "dodge")
+## ---- fig.width = 6, fig.height = 3, fig.align="center", eval=F----------
+#  library(ggplot2)
+#  
+#  date_hits = tc$aggregate(hits, meta_cols='date', wide = F)
+#  
+#  ggplot(date_hits, aes(x=date, y=count, group=code)) +
+#    geom_line(aes(linetype=code))
+#  
+#  pres_hits = tc$aggregate(hits, meta_cols='president', wide = F)
+#  
+#  ggplot(pres_hits, aes(president, count)) +
+#    geom_col(aes(fill=code), width=.5, position = "dodge")
 
 ## ---- fig.width = 6, fig.height = 3, fig.align="center"------------------
 g = semnet(hits, measure = 'con_prob')

@@ -113,15 +113,15 @@ To include document meta data, a separate data.frame with meta data has to be pa
 
 Most operations for modifying data (e.g., preprocessing, rule-based annotations) have specialized functions, but in some cases it's necessary to manually modify the tCorpus. In particular: 
 
-* adding, removing or mutating columns in the tc$tokens and tc$meta data.tables
-* subsetting rows in the tc$tokens and tc$meta data.tables
+* adding, removing, renaming and mutating columns in the `tc$tokens` and `tc$meta` data.tables
+* subsetting rows in the `tc$tokens` and `tc$meta` data.tables
 
-While it is possible to directly work in the tc$tokens and tc$meta data.tables, it is recommended to use the special accessor functions. The tCorpus makes several assumptions about how the data is structured in order to work fast, and directly editing the tokens and meta data can thus break the tCorpus. Using the accessor functions should ensure that this doesn't happen.
+While it is possible to directly work in the `tc$tokens` and `tc$meta` data.tables, it is recommended to use the special accessor methods (e.g., set, subset). The tCorpus makes several assumptions about how the data is structured in order to work fast, and directly editing the tokens and meta data can break the tCorpus. Using the accessor functions should ensure that this doesn't happen. Also, the accessor methods make use of the modify by reference semantics of the `data.table` package.
 
 
 ## Adding, removing and mutating columns
 
-To add, remove or mutate columns in the tc$tokens or tc$meta data.tables, the tc$set() and tc$set_meta() methods can be used (also see `?tCorpus_data`. These methods change the tCorpus by reference (for more details about R6 methods and changing by reference, see the section  `Using the tCorpus R6 methods`.).
+To add, remove or mutate columns in the `tc$tokens` or `tc$meta` data.tables, the `tc$set()` and `tc$set_meta()` methods can be used (also see `?tCorpus_data`. These methods change the tCorpus by reference (for more details about R6 methods and changing by reference, see the section  `Using the tCorpus R6 methods`.).
 
 The `set` method (`?set`) has two mandatory arguments: `columns` and `value`. The `column` argument takes the name of the column to add or mutate, and the `value` argument takes the value to assign to the column. 
 
@@ -254,17 +254,21 @@ There are several packages for using NLP pipelines in R, such as `spacyr` for Sp
 To use a UDPipe model in create_tcorpus, you simply need to use the `udpipe_model` argument. The value for this  argument is the language/name of the model you want to use (if you don't know the name, just give the language and you'll get suggestions). The first time using a language, R will automatically download the model. By default the udpipe model is stored in the current working directory, in a folder called udpipe_models, but you can set the path with the `udpipe_model_path` parameter.
 
 ```{r, eval=F}
-corpustools:::prepare_model
 tc = create_tcorpus("This is a quick example", udpipe_model='english-ewt')
 tc$tokens   ## output not shown in this vignette
 ```
 
 By default, UDPipe will not perform dependency parsing. You can activate this part of the pipeline by using the ```use_parser = TRUE``` argument, but it takes longer to compute and not all language have good dependency parser performance.
 
+The `feats` column contains a bunch of nested features, such as Person (first, second or third) and Number (singular or plural). If you don't need this, its good to remove the colum (`tc$delete_colums('feats')`). If you want to use (some of) this information, you can use the `tc$feats_to_columns` method to cast these nested features to columns. Here we specifically select the Tense, Person and Number features. Note that the default behavior is to also delete the feats column.
+
+```{r, eval=F}
+tc$feats_to_columns(c('Tense','Number','Person'))
+```
 
 ## filtering tokens
 
-In basic preprocessing we saw that `NA` values were introduced where stopwords were filtered out. If you want to filter out more tokens, you can use the `tc$feature_subset` method. This works as a regular subset, but the difference is that the corpus is kept intact. That is, the rows of the tokens that are filtered out are not deleted.
+In basic preprocessing we saw that `NA` values were introduced where stopwords were filtered out. If you want to filter out more tokens, you can use the `tc$feature_subset()` method. This works as a regular subset, but the difference is that the corpus is kept intact. That is, the rows of the tokens that are filtered out are not deleted.
 
 As a (silly) example, we can specifically filter out the token with token_id 5. For this we take the subset of tokens that is not 5.
 
@@ -335,7 +339,7 @@ tc$preprocess(use_stemming = T, remove_stopwords=T, min_docfreq = 5)
 m = tc$lda_fit('feature', create_feature = 'topic', K = 5, alpha = 0.001)
 ```
 
-The `lda_fit` R6 method is simply a wrapper for the LDA function in the topicmodels package. However, next to returning the topic model (`m`), it also adds a column to tc$tokens with the topic assignments. 
+The `lda_fit` R6 method is simply a wrapper for the LDA function in the topicmodels package. However, next to returning the topic model (`m`), it also adds a column to `tc$tokens` with the topic assignments. 
 
 ```{r}
 head(tc$tokens, 10)
@@ -343,7 +347,7 @@ head(tc$tokens, 10)
 
 This is just an example (with a poorly trained topic model) but it demonstrates the purpose. In the tokens we now see that certain words (unfinished, restore) have topic assignments. These topic assignments are based on the topic model trained with the preprocessed versions of the tokens (unfinish, restor). Thus, we can relate the results of a text analysis technique (in this case topic modeling, but the same would work with word scaling, dictionaries, etc.) to the original text. This is important, because in the end we apply these techniques to make inferences about the text, and this approach allows us to validate the results and/or perform additional analyses on the original texts. 
 
-We can now also reconstruct the full text with the topic words coloured to visualize the topic assignments. The `browse_text` function creates an HTML browser of the full texts, and here we use the ```category = 'topic'``` argument to indicate that the tokens$topic column should be used to colour the words. If you use the ```view = TRUE``` argument, you'll also directly see the browser in the viewer panel. 
+We can now also reconstruct the full text with the topic words coloured to visualize the topic assignments. The `browse_text` function creates an HTML browser of the full texts, and here we use the ```category = 'topic'``` argument to indicate that the `tokens$topic` column should be used to colour the words. If you use the ```view = TRUE``` argument, you'll also directly see the browser in the viewer panel. 
 
 ```{r, eval=F}
 url = browse_texts(tc, category='topic', view=T)
@@ -425,7 +429,7 @@ tc$aggregate(hits=hits, meta_cols = 'president')  ## break by meta variables
 
 By setting the wide argument to FALSE, the query results are stacked in a long format, with the columns `code` and `count` for the labels and scores. Among other things, this makes it easy to prepare data for plotting with ggplot2.
 
-```{r, fig.width = 6, fig.height = 3, fig.align="center"}
+```{r, fig.width = 6, fig.height = 3, fig.align="center", eval=F}
 library(ggplot2)
 
 date_hits = tc$aggregate(hits, meta_cols='date', wide = F)

@@ -62,5 +62,15 @@ Creates a static HTML file to view the texts in the tcorpus in full text mode.
 \donttest{
 tc = create_tcorpus(sotu_texts, doc_column='id')
 url = browse_texts(tc)
+
+
+## tokens can be highlighted, scaled or coloured for different categories
+## to validate analyses such as dictionaries, scaling and topic modeling
+tc = create_tcorpus(sotu_texts, doc_column = 'id', udpipe_model='english-ewt')
+tc$preprocess('lemma', 'feature', min_docfreq = 10)
+tc$feature_subset('feature', POS \%in\% c('NOUN','PROPN','VERB'))
+m = tc$lda_fit('feature', create_feature = 'topic', K = 5, alpha = 0.001)
+
+browse_texts(tc, category='topic', view=T, top_nav=1)
 }
 }

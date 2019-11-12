@@ -1,8 +1,8 @@
 ## Here the main tCorpus class is created
 ## Additional methods are specified in the matching r files (e.g. dtm method in document_term_matrix.r)
 
-## The additional methods should always use only the accessor methods (so never use self$tokens and self$meta directly).
-## This way, all validations, assumptions and optimalizations stay intact
+## The additional methods should where possible use only the accessor methods (instead of working with self$tokens and self$meta directly).
+## This way, all validations, assumptions and optimizations stay intact
 
 ## this file has to be named 1_*, because in building the package the r files are processed in order by name,
 ## and the tCorpus class has to be created before the additional methods
@@ -68,8 +68,8 @@ tCorpus <- R6::R6Class("tCorpus",
      validate_tokens = function() {
         cnames = self$names
         e = c()
-        if (!'doc_id' %in% cnames) e = c(e, '\t- tokens data does not have a "doc_id" column. You can try to fix the data in $tokens')
-        if (!'token_id' %in% cnames) e = c(e, '\t- tokens data does not have "token_id" column. You can try to fi the data in $tokens')
+        if (!'doc_id' %in% cnames) e = c(e, '\t- tokens data does not have a "doc_id" column.')
+        if (!'token_id' %in% cnames) e = c(e, '\t- tokens data does not have "token_id" column.')
         if (any(grepl('^\\.', cnames))) e = c(e, '\t- column names in a tCorpus cannot start with a dot. You can change the column names in $tokens or with the $set_name method')
         if (length(e) > 0) {
           e_message = paste0('TOKEN DATA BROKEN:\n', paste(e, collapse='\n'))

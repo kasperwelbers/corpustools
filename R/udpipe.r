@@ -1,4 +1,5 @@
 prepare_model <- function(udpipe_model, local_path=getwd()) {
+
   udpipe_models = eval(formals(udpipe::udpipe_download_model)[[1]])
 
   if (!udpipe_model %in% udpipe_models) {
@@ -12,10 +13,12 @@ prepare_model <- function(udpipe_model, local_path=getwd()) {
     stop(message)
   }
 
-  language = stringi::stri_extract(udpipe_model, regex='.*(?=-)')
-  path = make_dir(local_path, 'udpipe_models', language)
+  model_folder = gsub('-', '_', udpipe_model)
+  path = make_dir(local_path, 'udpipe_models', model_folder)
 
-  fname = list.files(path, full.names = T)[1]
+  fname = list.files(path, full.names = T, include.dirs = F)
+  fname = fname[grep('udpipe', fname)]
+  if (length(fname) == 0) fname = NA
   if (!is.na(fname)) {
     m = udpipe::udpipe_load_model(fname)
     if (grepl('(nil)', deparse(m$model), fixed=T)) fname = NA   ## (nil) pointer indicates model is broken (e.g., partially downloaded), so needs to be downloaded again
@@ -50,8 +53,8 @@ show_udpipe_models <- function() {
 }
 
 
-udpipe_parse <- function(x, udpipe_model, udpipe_model_path, doc_id=1:length(x), use_parser=use_parser, max_sentences=NULL, max_tokens=NULL, verbose=F){
-  udpipe_model = prepare_model(udpipe_model, udpipe_model_path)
+udpipe_parse <- function(x, udpipe_model, udpipe_model_path, cache=T, doc_id=1:length(x), use_parser=use_parser, max_sentences=NULL, max_tokens=NULL, verbose=F){
+  m = prepare_model(udpipe_model, udpipe_model_path)
 
   batch_i = get_batch_i(length(doc_id), batchsize=100, return_list=T)
   n = length(batch_i)
@@ -59,13 +62,34 @@ udpipe_parse <- function(x, udpipe_model, udpipe_model_path, doc_id=1:length(x),
     pb = utils::txtProgressBar(min = 1, max = n, style = 3)
     pb$up(1)
   }
+
+  if (cache) {
+    cache_file = paste0('cache_', digest::digest(x))
+    current_cache = grep('^cache', list.files(file.path(udpipe_model_path, 'udpipe_models')), value=T)
+    for (cc in current_cache) {
+      if (!cc == cache_file) {
+        if (verbose) message('Created new cache for udpipe (removed old cache)')
+        unlink(file.path(udpipe_model_path, 'udpipe_models', cc), recursive=T)
+      }
+    }
+    fc = memoise::cache_filesystem(file.path(udpipe_model_path,'udpipe_models',cache_file))
+    udpipe_parse_batch_mem = memoise::memoise(udpipe_parse_batch, cache = fc)
+  }
+
   tokens = vector('list', n)
   for (i in 1:n){
-    tokens[[i]] = udpipe_parse_batch(x[batch_i[[i]]], udpipe_model, doc_id=doc_id[batch_i[[i]]],
-                                              use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)
+    if (cache) {
+      tokens[[i]] = udpipe_parse_batch_mem(x[batch_i[[i]]], m, doc_id=doc_id[batch_i[[i]]],
+                                           use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)
+    } else {
+      tokens[[i]] = udpipe_parse_batch(x[batch_i[[i]]], m, doc_id=doc_id[batch_i[[i]]],
+                                       use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)
+    }
+
     if (verbose && n > 1) pb$up(i+1)
   }
   tokens = data.table::rbindlist(tokens)
+
 
   ## set factors
   tokens[, doc_id := fast_factor(tokens$doc_id)]
@@ -118,12 +142,67 @@ make_dir <- function(path=getwd(), ...) {
   } else {
     path = if (path == '') getwd() else normalizePath(gsub('\\/$', '', path))
   }
-  if (file.access(path,"6") == -1) stop('You do not have write permission for this location, and therefore cannot download the model here')
+  if (file.access(path,"6") == -1) stop('You do not have write permission for this location')
   #path = paste(path, 'ext_resources', sep='/')
 
   add = paste(unlist(list(...)), collapse='/')
-  if (!add == '') path = paste(path, add, sep='/')
+  if (!add == '') path = file.path(path, add)
 
   if (!dir.exists(path)) dir.create(path, recursive = TRUE)
   path
 }
+
+
+#' Cast the "feats" column in UDpipe tokens to columns
+#'
+#' If the UDpipe parser is used in \code{\link{create_tcorpus}}, the 'feats' column contains strings with features
+#' (e.g, Number=Sing|PronType=Dem). To work with these nested features it is more convenient to cast them to columns.
+#'
+#' \strong{Usage:}
+#'
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{
+#' feats_to_columns(keep=NULL, drop=NULL, rm_column=T)
+#' }
+#'
+#' @param keep     Optionally, the names of features to keep
+#' @param drop     Optionally, the names of features to drop
+#' @param rm_column If TRUE (default), remove the original column
+#'
+#' @name tCorpus$feats_to_columns
+#' @aliases feats_to_columms
+#' @examples
+#' \donttest{
+#' tc = create_tcorpus('This is a test Bobby.', udpipe_model='english-ewt')
+#' tc$feats_to_columns()
+#' tc$tokens
+#'
+#' tc = create_tcorpus('This is a test Bobby.', udpipe_model='english-ewt')
+#' tc$feats_to_columns(keep = c('Gender','Tense','Person'))
+#' tc$tokens
+#' }
+tCorpus$set('public', 'feats_to_columns', function(keep=NULL, drop=NULL, rm_column=T) {
+  if (!'feats' %in% self$names) return(invisible(self))
+
+  get_even <- function(x) x[1:length(x) %% 2 == 0]
+  get_uneven <- function(x) x[1:length(x) %% 2 != 0]
+
+  d = stringi::stri_split(self$tokens$feats, regex='[=|]')
+  if (rm_column) self$delete_columns('feats')
+  d[sapply(d, length) == 1] = list(NULL)  ## skip NA values
+  d = data.table::data.table(.I = rep(1:self$n, sapply(d, length)/2),
+                             name = get_uneven(unlist(d)),
+                             value = get_even(unlist(d)))
+  d = dcast(.I ~ name, value.var = 'value', data = d)
+
+  for (col in colnames(d)[-1]) {
+    if (!is.null(keep) && !col %in% keep) next
+    if (col %in% drop) next
+    cname = if (col %in% self$names) paste0('feats.', col) else col
+    self$tokens[d$.I, (cname) := d[[col]]]
+  }
+
+  tc$tokens[]
+  invisible(self)
+})

@@ -12,18 +12,18 @@ create_tcorpus(x, ...)
 \method{create_tcorpus}{character}(x, doc_id = 1:length(x),
   meta = NULL, udpipe_model = NULL, split_sentences = F,
   max_sentences = NULL, max_tokens = NULL,
-  udpipe_model_path = getwd(), use_parser = F,
+  udpipe_model_path = getwd(), udpipe_cache = T, use_parser = F,
   remember_spaces = FALSE, verbose = T, ...)
 
 \method{create_tcorpus}{factor}(x, doc_id = 1:length(x), meta = NULL,
   udpipe_model = NULL, split_sentences = F, max_sentences = NULL,
-  max_tokens = NULL, udpipe_model_path = getwd(), use_parser = F,
-  remember_spaces = FALSE, verbose = T, ...)
+  max_tokens = NULL, udpipe_model_path = getwd(), udpipe_cache = T,
+  use_parser = F, remember_spaces = FALSE, verbose = T, ...)
 
 \method{create_tcorpus}{data.frame}(x, text_columns = "text",
   doc_column = "doc_id", udpipe_model = NULL, split_sentences = F,
   max_sentences = NULL, max_tokens = NULL,
-  udpipe_model_path = getwd(), use_parser = F,
+  udpipe_model_path = getwd(), udpipe_cache = T, use_parser = F,
   remember_spaces = FALSE, verbose = T, ...)
 }
 \arguments{
@@ -47,6 +47,10 @@ GitHub page of the \href{https://github.com/bnosac/udpipe}{udpipe package}.}
 \item{max_tokens}{An integer. Limits the number of tokens per document to the specified number}
 
 \item{udpipe_model_path}{If udpipe_model is used, this path wil be used to look for the model, and if the model doesn't yet exist it will be downloaded to this location. Defaults to working directory}
+
+\item{udpipe_cache}{If TRUE (default), create persistent cache for the udpipe output (in batches of 100 documents) for the most recent input of udpipe in create_tcorpus.
+This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start all over.
+The cache is stored in the udpipe_models folder (in udpipe_model_path), and will be replaced by the new cache if different input is given.}
 
 \item{use_parser}{If TRUE, use dependency parser (only if udpipe_model is used)}
 
