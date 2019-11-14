@@ -1,5 +1,5 @@
 Package: corpustools
-Version: 0.3.3
+Version: 0.4.1
 Date: 2018-03-23
 Title: Managing, Querying and Analyzing Tokenized Text
 Description: Provides text analysis in R, focusing on the use of a tokenized text format. In this format, the positions of tokens are maintained, and each token can be annotated (e.g., part-of-speech tags, dependency relations).
@@ -19,7 +19,6 @@ Imports:
     R6,
     udpipe,
     digest,
-    memoise,
     data.table (>= 1.10.4),
     tokenbrowser,
     RNewsflow (>= 1.2.1),

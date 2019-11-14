@@ -17,9 +17,9 @@
 #' @param doc_column If x is a data.frame, this specifies the column with the document ids.
 #' @param text_columns if x is a data.frame, this specifies the column(s) that contains text. The texts are paste together in the order specified here.
 #' @param udpipe_model_path If udpipe_model is used, this path wil be used to look for the model, and if the model doesn't yet exist it will be downloaded to this location. Defaults to working directory
-#' @param udpipe_cache      If TRUE (default), create persistent cache for the udpipe output (in batches of 100 documents) for the most recent input of udpipe in create_tcorpus.
-#'                          This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start all over.
-#'                          The cache is stored in the udpipe_models folder (in udpipe_model_path), and will be replaced by the new cache if different input is given.
+#' @param udpipe_cache      The number of persistent caches to keep for inputs of udpipe. The caches store tokens per batch (100 documents).
+#'                          This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start over.
+#'                          The caches are stored in the udpipe_models folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.
 #' @param use_parser If TRUE, use dependency parser (only if udpipe_model is used)
 #' @param remember_spaces If TRUE, a column with spaces after each token is included. Enables correct reconstruction of original text and keeps annotations at the level of character positions (e.g., brat) intact.
 #' @param verbose If TRUE, report progress
@@ -50,7 +50,7 @@ create_tcorpus <- function(x, ...) {
 #'                     meta = meta)
 #' tc
 #' @export
-create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=T, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
+create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
   space = NULL; misc = NULL ## data.table bindings
 
   if (any(duplicated(doc_id))) stop('doc_id should not contain duplicate values')
@@ -90,7 +90,7 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
 #' tc = create_tcorpus(text)
 #' tc$tokens
 #' @export
-create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=T, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
+create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
   create_tcorpus(as.character(x), doc_id=doc_id, meta=meta, udpipe_model=udpipe_model, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, udpipe_model_path=udpipe_model_path, udpipe_cache=udpipe_cache, use_parser=use_parser, remember_spaces=remember_spaces, verbose=verbose)
 }
 
@@ -116,7 +116,7 @@ create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model
 #' tc
 #' tc$tokens
 #' @export
-create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id', udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=T, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
+create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id', udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
   for(cname in text_columns) if (!cname %in% colnames(x)) stop(sprintf('text_column "%s" not in data.frame', cname))
 
   if (length(text_columns) > 1){

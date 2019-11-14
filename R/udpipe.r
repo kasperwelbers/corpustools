@@ -53,37 +53,55 @@ show_udpipe_models <- function() {
 }
 
 
-udpipe_parse <- function(x, udpipe_model, udpipe_model_path, cache=T, doc_id=1:length(x), use_parser=use_parser, max_sentences=NULL, max_tokens=NULL, verbose=F){
+udpipe_parse <- function(x, udpipe_model, udpipe_model_path, cache=1, doc_id=1:length(x), use_parser=use_parser, max_sentences=NULL, max_tokens=NULL, verbose=F){
   m = prepare_model(udpipe_model, udpipe_model_path)
 
-  batch_i = get_batch_i(length(doc_id), batchsize=100, return_list=T)
+  batchsize = 100  ## keep constant, but if we ever change our minds, note that it is used to hash the cache ids
+  batch_i = get_batch_i(length(doc_id), batchsize=batchsize, return_list=T)
   n = length(batch_i)
   if (verbose && n > 1) {
     pb = utils::txtProgressBar(min = 1, max = n, style = 3)
     pb$up(1)
   }
 
-  if (cache) {
-    cache_file = paste0('cache_', digest::digest(x))
-    current_cache = grep('^cache', list.files(file.path(udpipe_model_path, 'udpipe_models')), value=T)
-    for (cc in current_cache) {
-      if (!cc == cache_file) {
-        if (verbose) message('Created new cache for udpipe (removed old cache)')
-        unlink(file.path(udpipe_model_path, 'udpipe_models', cc), recursive=T)
+  if (cache > 0) {
+    cache_path = make_dir(file.path(udpipe_model_path, 'udpipe_models'), 'caches')
+    cache_hash =  digest::digest(list(x, udpipe_model, doc_id, use_parser, max_sentences, max_tokens, batchsize))
+
+    current_caches = list.files(cache_path, full.names = T)
+    cache_exists = grep(cache_hash, current_caches, fixed = T, value=T)
+    if (length(cache_exists) > 0) {
+      if (length(cache_exists) > 1) {
+        ## should not happen, so remove if true
+        for (cc in cache_exists[-1]) unlink(cc, recursive=T)
       }
+      cache_dir = gsub('[0-9\\.]*$', '', cache_exists)  ## remove old time
+      cache_dir = paste0(cache_dir, as.numeric(Sys.time())) ## add new time
+      file.rename(cache_exists, cache_dir)
+    } else {
+      cache_dir = make_dir(cache_path, paste(cache_hash, as.numeric(Sys.time()), sep='_'))
     }
-    fc = memoise::cache_filesystem(file.path(udpipe_model_path,'udpipe_models',cache_file))
-    udpipe_parse_batch_mem = memoise::memoise(udpipe_parse_batch, cache = fc)
-  }
+
+    ## remove old caches
+    current_caches = list.files(cache_path, full.names = T)
+    cache_time = as.numeric(gsub('.*_', '', current_caches))
+    remove_caches = current_caches[order(cache_time)]
+    remove_caches = head(remove_caches, -cache)
+    for (cc in remove_caches) {
+        unlink(cc, recursive=T)
+    }
+
+    cached_batches = list.files(cache_dir)
+  } else cached_batches = c()
 
   tokens = vector('list', n)
   for (i in 1:n){
-    if (cache) {
-      tokens[[i]] = udpipe_parse_batch_mem(x[batch_i[[i]]], m, doc_id=doc_id[batch_i[[i]]],
-                                           use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)
+    if (i %in% cached_batches) {
+      tokens[[i]] = readRDS(file.path(cache_dir, i))
     } else {
       tokens[[i]] = udpipe_parse_batch(x[batch_i[[i]]], m, doc_id=doc_id[batch_i[[i]]],
                                        use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)
+      if (cache > 0) saveRDS(tokens[[i]], file = file.path(cache_dir, i))
     }
 
     if (verbose && n > 1) pb$up(i+1)

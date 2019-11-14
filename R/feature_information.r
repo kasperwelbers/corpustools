@@ -31,7 +31,8 @@ feature_stats <- function(tc, feature, context_level=c('document','sentence')) {
 #' @param n Return the top n features
 #' @param group_by A column in the token data to group the top features by. For example, if token data contains part-of-speech tags (pos), then grouping by pos will show the top n feature per part-of-speech tag.
 #' @param group_by_meta A column in the meta data to group the top features by.
-#' @param relative_freq  If TRUE, rank by Chi2 for highest relative occurence in a group compared to the total corpus.
+#' @param rank_by        The method for ranking the terms. Currently supports frequency (default) and the 'Chi2' value for the
+#'                       relative frequency of a term in a topic compared to the overall corpus.
 #'                       If return_long is used, the Chi2 score is also returned, but note that there are negative Chi2 scores.
 #'                       This is used to indicate that the relative frequency of a feature in a group was lower than
 #'                       the relative frequency in the corpus  (i.e. under-represented).
@@ -45,10 +46,12 @@ feature_stats <- function(tc, feature, context_level=c('document','sentence')) {
 #'
 #' top_features(tc, 'lemma')
 #' top_features(tc, 'lemma', group_by = 'NER', group_by_meta='doc_id')
-top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, relative_freq=F, dropNA=T, return_long=F){
+top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, rank_by=c('freq','chi2'), dropNA=T, return_long=F){
+  rank_by = match.arg(rank_by)
   .N = NULL   ## data.table bindings
   if (!is.null(group_by)) group_by = match.arg(group_by, tc$names, several.ok = T)
   if (!is.null(group_by_meta)) group_by_meta = match.arg(group_by_meta, tc$meta_names, several.ok = T)
+  if (!length(feature) == 1 || !methods::is(feature,'character')) stop("feature argument has to be a single character value")
 
   feat = tc$get(c(feature, group_by), keep_df=T)
   if (!is.null(group_by_meta))
@@ -58,10 +61,17 @@ top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, r
     feat$.TOTAL = 'total'
   }
 
-  feat = feat[,list(freq = .N), by=c(feature, group_by,group_by_meta)]
-  if (dropNA) feat = feat[which(!is.na(feat[,feature,with=F])),]
+  by_cols = unique(c(feature,group_by,group_by_meta))
+  feat = feat[,list(freq = .N), by=by_cols]
+  feat = data.table::as.data.table(feat)  ## something really weird is going on here...
 
-  if (relative_freq) {
+  if (dropNA) {
+    is_na = is.na(feat[[feature]])
+    feat = feat[!is_na,]
+  }
+
+
+  if (rank_by == 'chi2') {
     totals_feature = tc$tokens[,list(.total_feature=.N), by=feature]
     data.table::setkeyv(feat, feature)
     feat = merge(feat, totals_feature, on=feature, all.x=T)

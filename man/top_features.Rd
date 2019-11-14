@@ -5,7 +5,7 @@
 \title{Show top features}
 \usage{
 top_features(tc, feature, n = 10, group_by = NULL,
-  group_by_meta = NULL, relative_freq = F, dropNA = T,
+  group_by_meta = NULL, rank_by = c("freq", "chi2"), dropNA = T,
   return_long = F)
 }
 \arguments{
@@ -19,7 +19,8 @@ top_features(tc, feature, n = 10, group_by = NULL,
 
 \item{group_by_meta}{A column in the meta data to group the top features by.}
 
-\item{relative_freq}{If TRUE, rank by Chi2 for highest relative occurence in a group compared to the total corpus.
+\item{rank_by}{The method for ranking the terms. Currently supports frequency (default) and the 'Chi2' value for the
+relative frequency of a term in a topic compared to the overall corpus.
 If return_long is used, the Chi2 score is also returned, but note that there are negative Chi2 scores.
 This is used to indicate that the relative frequency of a feature in a group was lower than
 the relative frequency in the corpus  (i.e. under-represented).}
