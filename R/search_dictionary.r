@@ -129,7 +129,7 @@ melt_quanteda_dict <- function(dict, column='code', .index=NULL) {
 #' @export
 #'
 #' @examples
-#' dict = data.frame(string = c('this is', 'for a', 'not big enough'), code=c('a','c','c'))
+#' dict = data.frame(string = c('this is', 'for a', 'not big enough'), code=c('a','c','b'))
 #' tc = create_tcorpus(c('this is a test','This town is not big enough for a test'))
 #' search_dictionary(tc, dict)$hits
 search_dictionary <- function(tc, dict, token_col='token', case_sensitive=F, batchsize=50000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
@@ -268,6 +268,8 @@ fast_multitoken_stringmatch <- function(dict, fi, regex_sep=' ', case_sensitive=
     dict = dict[exp_i,]
     nterms = nterms[exp_i]
     i = i[exp_i]
+  } else {
+    names(sn) = 1:length(sn)
   }
 
   lt = data.table::data.table(feature = sapply(sn, data.table::first), id=dict$id, nterms=nterms, s_i=i, key='feature')
@@ -284,16 +286,13 @@ fast_multitoken_stringmatch <- function(dict, fi, regex_sep=' ', case_sensitive=
   snl[, nr := get_nr(feature), by='s_i']
 
   for(i in 1:length(candidates)){
-    #browser()
     terms = snl[snl$nr == (i+1),]
-    terms[is.na(terms$term)]
-    term_hits = fi[terms$term,,on='feature', allow.cartesian=T]
+    term_hits = fi[terms$feature,,on='feature', allow.cartesian=T]
 
     hits = merge(terms, fi, by='feature', allow.cartesian = T)
-    hits[, global_i := global_i - 1]
+    hits$global_i = hits$global_i - i
 
     lt = lt[hits, on=c('s_i','global_i'), nomatch=0]
-
     is_end = lt$nterms == i+1
     candidates[[i+1]] = lt[is_end,c('i','global_i','id','nterms'), with=F]
     lt = lt[!is_end,]

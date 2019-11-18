@@ -4,3 +4,5 @@
 ^test$
 ^doc$
 ^Meta$
+^udpipe_models$
+

@@ -39,7 +39,7 @@ A vector with the id value (taken from dict$id) for each row in tc$tokens
 Similar to search_features, but for fast matching of large dictionaries.
 }
 \examples{
-dict = data.frame(string = c('this is', 'for a', 'not big enough'), code=c('a','c','c'))
+dict = data.frame(string = c('this is', 'for a', 'not big enough'), code=c('a','c','b'))
 tc = create_tcorpus(c('this is a test','This town is not big enough for a test'))
 search_dictionary(tc, dict)$hits
 }
