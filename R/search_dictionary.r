@@ -283,6 +283,7 @@ fast_multitoken_stringmatch <- function(dict, fi, regex_sep=' ', case_sensitive=
   snl = data.table::data.table(s_i = rep(floor(as.numeric(names(sn))), sn_n),
                                feature = unlist(sn))
   get_nr <- function(x) 1:length(x)
+  nr = feature = NULL
   snl[, nr := get_nr(feature), by='s_i']
 
   for(i in 1:length(candidates)){

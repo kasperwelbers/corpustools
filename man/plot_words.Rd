@@ -31,6 +31,8 @@ plot_words(x, y = NULL, words, wordfreq = rep(1, length(x)),
 
 \item{ylim}{Starting value of y axis}
 
+\item{col}{A vector of colors that is passed to colorRamp to interpolate colors over x axis}
+
 \item{...}{additional parameters passed to the plot function}
 }
 \value{

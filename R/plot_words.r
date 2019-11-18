@@ -13,6 +13,7 @@
 #' @param random.y if TRUE, the y position of words is random, otherwise it represents the word frequency.
 #' @param xlim Starting value of x axis
 #' @param ylim Starting value of y axis
+#' @param col  A vector of colors that is passed to colorRamp to interpolate colors over x axis
 #' @param ... additional parameters passed to the plot function
 #'
 #' @return nothing
@@ -38,7 +39,7 @@ plot_words <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', yl
 
   cramp = grDevices::colorRamp(col)
   col = cramp(rescale_var(wl$x, 0, 1))
-  col = rgb(col[,1], col[,2], col[3,], maxColorValue=255, alpha=255)
+  col = grDevices::rgb(col[,1], col[,2], col[3,], maxColorValue=255, alpha=255)
   graphics::text(wl$x + 0.5 * wl$width, wl$y + 0.5 * wl$ht, words, cex = wordsize, col=col, ...)
 }
 
