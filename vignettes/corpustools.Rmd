@@ -505,25 +505,43 @@ You can also subset a tCorpus with a query
 ```{r}
 tc = create_tcorpus(sotu_texts, doc_column = 'id', text_columns = 'text', split_sentences=T)
 tc_war = subset_query(tc, 'war')
-
-## original number of articles
-tc$n_meta   
-
-## number of articles after subsetting
-tc_war$n_meta  
 ```
 
 As with regular subset, there is also an R6 method for subset_query that subsets the tCorpus by reference. 
 
 ```{r}
 tc$subset_query('war')
-tc$n_meta
 ```
 
 This subsets tc without making a copy. Subsetting by reference is explained in more detail in the `Using the tcorpus R6 methods` section.
 
 
+## search_dictionary
 
+The search_dictionary function, and the related code_dictionary method, are alternative to search_features and search_context for working with larger but less complex dictionaries. For example, dictionaries with names of people, organizations or countries, or scores for certain emotions. Most of these dictionaries do not use Boolean operators such as AND and more complicated patterns such as word proximity. 
+
+
+The following code shows an example (not shown in this vignette, because it depends on quanteda). We first 
+
+```{r, eval=F}
+library(quanteda)
+dict = quanteda::data_dictionary_LSD2015
+  
+tc = create_tcorpus(sotu_texts, doc_col='id')
+tc$code_dictionary(dict)
+```
+
+The tokens data now has an additional column "code" with the labels of the dictionary. For the LSD2015 dictionary these labels are "positive" and "negative", and the negated terms "neg_positive" and "neg_negative". If we represent these labels as a scale from -1 (negative) to 1 (positive), we can create a browser in which the sentiment scores of words are visualized with a color scale.
+
+While it is possible to create the numeric scores for sentiment within the tCorpus, we'll show another option here. Instead of using the quanteda dictionary, we can use a data.frame as a dictionary as long as it has a column named "string" that contains the dictionary pattern. All other columns in the data.frame are then added to $tokens. With the `melt_quanteda_dict` function we can also convert a quanteda dictionary to this type of data.frame. The code is then as follows:
+
+```{r, eval=F}
+  dict = melt_quanteda_dict(dict)
+  dict$sentiment = ifelse(dict$code %in% c('positive','neg_negative'), 1, -1)
+  tc$code_dictionary(dict)
+  browse_texts(tc, scale='sentiment')
+```
+  
 # Text analysis techniques
 
 The tCorpus is mainly intended for managing, querying, annotating and browsing tokens in a tokenlist format, but there are some built-in techniques for finding patterns in frequencies and co-occurences of features. Here we use tokens with basic preprocessing as an example, but note that these techniques can be applied for all features and annotations in a tCorpus. 
@@ -563,7 +581,7 @@ The output `comp` is a data.frame with for each feature how often it occured in 
 
 For a quick peek, we can plot the most strongly overrepresented (ratio > 1) and underrepresented (ratio < 1). By default, the plot method for the output of a vocabulary comparison function(such as compare_subset) plots the log ratio on the x axis, and uses the chi2 score to determine the size of words (chi2 can be larger for more frequent terms, but also relies on how strongly a term is over/under-represented). 
 
-```{r, fig.width = 8, fig.height = 6, fig.align="center"}
+```{r, fig.width = 6, fig.height = 4, fig.align="center"}
 plot(comp)
 ```
 
@@ -592,8 +610,8 @@ head(fa)
 
 We can also plot the output as a wordcloud.
 
-```{r, fig.width = 8, fig.height = 7, fig.align="center"}
-plot(fa)
+```{r, fig.width = 6, fig.height = 6, fig.align="center"}
+plot(fa, col=c('lightblue','navyblue'))
 ```
 
 For more details see `?plot.featureAssociations`.

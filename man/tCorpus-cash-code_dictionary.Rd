@@ -5,15 +5,20 @@
 \alias{code_dictionary}
 \title{Dictionary lookup}
 \arguments{
-\item{dict}{A data.frame with the columns "string" and "id". The text in "string" will be matched to the tokens, and "id" will be the id given to tokens that matched}
-
-\item{regex_sep}{A regular expression for splitting multiple terms in dict$string. By default whitespace.}
+\item{dict}{A dictionary. Can be either a data.frame or a quanteda dictionary. If a data.frame is given, it has to
+have a column named "string" that contains the dictionary terms. All other columns are added to the
+tCorpus $tokens data. Each row has a single string, that can be
+a single word or a sequence of words seperated by a whitespace (e.g., "not bad"), and can have the common ? and * wildcards.
+If a quanteda dictionary is given, it is automatically converted to this type of data.frame with the
+\code{\link{melt_quanteda_dict}} function. This can be done manually for more control over labels.}
 
 \item{token_col}{The feature in tc that contains the token text.}
 
-\item{column}{The name of the new column in tc$tokens. Default is "code"}
-
 \item{case_sensitive}{logical, should lookup be case sensitive?}
+
+\item{column}{The name of the column added to $tokens. [column]_id contains the unique id of the match.
+If a quanteda dictionary is given, the label for the match is in the column named [column].
+If a dictionary has multiple levels, these are added as [column]_l[level].}
 
 \item{batchsize}{Very large dictionaries will be matched in batches to prevent memory issues.}
 
@@ -38,8 +43,8 @@ Add a column to the token data that contains a code (the query label) for tokens
 \preformatted{code_dictionary(...)}
 }
 \examples{
-dict = data.frame(string = c('this is', 'a', 'test'), id=1:3)
-tc = create_tcorpus(c('this is a test','This town is not big enough for a test'))
+dict = data.frame(string = c('good','bad','ugl*','nice','not pret*'), sentiment=c(1,-1,-1,1,-1))
+tc = create_tcorpus(c('The good, the bad and the ugly, is nice but not pretty'))
 tc$code_dictionary(dict)
 print(tc$tokens)
 }

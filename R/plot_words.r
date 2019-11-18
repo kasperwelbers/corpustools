@@ -25,8 +25,8 @@
 #' plot_words(x,y,words, c(1,2,3,4))
 #' }
 #' @export
-plot_words <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', ylab='', yaxt='n', scale=2, random.y=T, xlim=NULL, ylim=NULL, ...){
-  wordsize = rescale_var(wordfreq, 0.75, scale) + 1
+plot_words <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', ylab='', yaxt='n', scale=1, random.y=T, xlim=NULL, ylim=NULL, col=c('darkred','navyblue'), ...){
+  wordsize = rescale_var(wordfreq, 0.25, scale) + 1
   if (is.null(y) && random.y) y = sample(seq(-1, 1, by = 0.001), length(x))
   if (is.null(y) && !random.y) y = wordsize
   xmargin = (max(x) - min(x)) * 0.2
@@ -36,7 +36,10 @@ plot_words <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', yl
   graphics::plot(x, y, type = "n", xlim = xlim, ylim = ylim, frame.plot = F, yaxt = yaxt, ylab = ylab, xlab = xlab, ...)
   wl <- as.data.frame(wordcloud::wordlayout(x, y, words, cex = wordsize))
 
-  graphics::text(wl$x + 0.5 * wl$width, wl$y + 0.5 * wl$ht, words, cex = wordsize, ...)
+  cramp = grDevices::colorRamp(col)
+  col = cramp(rescale_var(wl$x, 0, 1))
+  col = rgb(col[,1], col[,2], col[3,], maxColorValue=255, alpha=255)
+  graphics::text(wl$x + 0.5 * wl$width, wl$y + 0.5 * wl$ht, words, cex = wordsize, col=col, ...)
 }
 
 #' Plot a word cloud from a dtm
@@ -68,7 +71,7 @@ plot_words <- function(x, y=NULL, words, wordfreq=rep(1, length(x)), xlab='', yl
 #' dtm_wordcloud(terms = c('in','the','cloud'), freqs = c(2,5,10))
 #' }
 #' @export
-dtm_wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs=NULL, scale=c(6, .5), min.freq=1, rot.per=.15, ...) {
+dtm_wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs=NULL, scale=c(4, .5), min.freq=1, rot.per=.15, ...) {
   if (!is.null(dtm)) {
     t = dtm_term_statistics(dtm)
     t = t[order(t$termfreq, decreasing=T), ]
@@ -82,12 +85,13 @@ dtm_wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs
     terms = terms[select]
     freqs = freqs[select]
   }
+
+
   if (is.null(terms) | is.null(freqs)) stop("Please provide dtm or terms and freqs")
   wordcloud::wordcloud(terms, freqs,
                         scale=scale, min.freq=min.freq, max.words=Inf, random.order=FALSE,
                         rot.per=rot.per, ...)
 }
-
 
 #' visualize vocabularyComparison
 #'

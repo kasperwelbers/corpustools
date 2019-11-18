@@ -5,8 +5,8 @@
 \title{Plot a wordcloud with words ordered and coloured according to a dimension (x)}
 \usage{
 plot_words(x, y = NULL, words, wordfreq = rep(1, length(x)),
-  xlab = "", ylab = "", yaxt = "n", scale = 2, random.y = T,
-  xlim = NULL, ylim = NULL, ...)
+  xlab = "", ylab = "", yaxt = "n", scale = 1, random.y = T,
+  xlim = NULL, ylim = NULL, col = c("darkred", "navyblue"), ...)
 }
 \arguments{
 \item{x}{The (approximate) x positions of the words}

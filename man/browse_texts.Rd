@@ -9,7 +9,7 @@ browse_texts(tc, doc_ids = NULL, token_col = "token", n = 500,
   highlight = NULL, scale = NULL, category = NULL,
   meta_cols = NULL, seed = NA, nav = NULL, top_nav = NULL,
   thres_nav = 1, view = T, highlight_col = "yellow",
-  scale_col = c("blue", "red"), filename = NULL)
+  scale_col = c("red", "blue", "green"), filename = NULL)
 }
 \arguments{
 \item{tc}{a tCorpus}

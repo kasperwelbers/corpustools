@@ -45,7 +45,7 @@
 #' }
 browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('first','random'), header='',
                          subheader=NULL, highlight=NULL, scale=NULL, category=NULL, meta_cols=NULL, seed=NA,
-                         nav=NULL, top_nav=NULL, thres_nav=1, view=T, highlight_col='yellow', scale_col=c('blue','red'), filename=NULL) {
+                         nav=NULL, top_nav=NULL, thres_nav=1, view=T, highlight_col='yellow', scale_col=c('red','blue','green'), filename=NULL) {
   if (sum(!is.null(highlight), !is.null(scale), !is.null(category)) > 1) stop('Can only use one annotation option (highlight, scale or category)')
 
   mode = 'normal'
@@ -54,14 +54,14 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
     if (!highlight %in% tc$names) stop('highlight is not a valid column name in tc$tokens')
     if (!(is.numeric(tc$tokens[[highlight]]) || is.character(tc$tokens[[highlight]]) || is.factor(tc$tokens[[highlight]]))) stop("highlight has to be a numeric or character value")
     if (is.numeric(tc$tokens[[highlight]])) {
-      if (min(tc$tokens[[highlight]]) < 0 || max(tc$tokens[[highlight]] > 1)) stop('highlight has to be a value between 0 and 1')
+      if (min(tc$tokens[[highlight]], na.rm=T) < 0 || max(tc$tokens[[highlight]], na.rm=T) > 1) stop('highlight has to be a value between 0 and 1')
     }
   }
   if (!is.null(scale)) {
     mode = 'scale'
     if (!scale %in% tc$names) stop('scale is not a valid column name in tc$tokens')
     if (!is.numeric(tc$tokens[[scale]])) stop("scale has to be a numeric value")
-    if (min(tc$tokens[[scale]]) < -1 || max(tc$tokens[[scale]] > 1)) stop('scale has to be a value between -1 and 1')
+    if (min(tc$tokens[[scale]], na.rm=T) < -1 || max(tc$tokens[[scale]], na.rm=T) > 1) stop('scale has to be a value between -1 and 1')
   }
   if (!is.null(category)) {
     mode = 'category'

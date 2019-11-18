@@ -4,16 +4,19 @@
 \alias{search_dictionary}
 \title{Dictionary lookup}
 \usage{
-search_dictionary(tc, dict, regex_sep = " ", token_col = "token",
-  case_sensitive = F, batchsize = 50000, flatten_colloc = T,
-  ascii = F, low_memory = F, verbose = F)
+search_dictionary(tc, dict, token_col = "token", case_sensitive = F,
+  batchsize = 50000, flatten_colloc = T, ascii = F, low_memory = F,
+  verbose = F)
 }
 \arguments{
 \item{tc}{A tCorpus}
 
-\item{dict}{A data.frame with the columns "string" and "id". The text in "string" will be matched to the tokens, and "id" will be the id given to tokens that matched}
-
-\item{regex_sep}{A regular expression for splitting multiple terms in dict$string. By default whitespace.}
+\item{dict}{A dictionary. Can be either a data.frame or a quanteda dictionary. If a data.frame is given, it has to
+have a column named "string" that contains the dictionary terms, and a column "code" that contains the
+label/code represented by this string. Each row has a single string, that can be
+a single word or a sequence of words seperated by a whitespace (e.g., "not bad"), and can have the common ? and * wildcards.
+If a quanteda dictionary is given, it is automatically converted to this type of data.frame with the
+\code{\link{melt_quanteda_dict}} function. This can be done manually for more control over labels.}
 
 \item{token_col}{The feature in tc that contains the token text.}
 
@@ -25,7 +28,7 @@ search_dictionary(tc, dict, regex_sep = " ", token_col = "token",
 
 \item{ascii}{If true, convert text to ascii before matching}
 
-\item{low_memory}{if true, use slower but more memory efficient algorithm}
+\item{low_memory}{if true, use slower but more memory efficient computation}
 
 \item{verbose}{If true, report progress}
 }
@@ -33,10 +36,10 @@ search_dictionary(tc, dict, regex_sep = " ", token_col = "token",
 A vector with the id value (taken from dict$id) for each row in tc$tokens
 }
 \description{
-Fast matching of large lookup dictionaries.
+Similar to search_features, but for fast matching of large dictionaries.
 }
 \examples{
-dict = data.frame(string = c('this is', 'a', 'test'), id=1:3)
+dict = data.frame(string = c('this is', 'for a', 'not big enough'), code=c('a','c','c'))
 tc = create_tcorpus(c('this is a test','This town is not big enough for a test'))
-search_dictionary(tc, dict)
+search_dictionary(tc, dict)$hits
 }

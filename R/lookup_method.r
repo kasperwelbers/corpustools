@@ -1,7 +1,6 @@
 ## implementation of tCorpus$lookup
 
 lookup_terms <- function(patterns, lookup_table, ignore_case=T, raw_regex=T, perl=F, batchsize=25, useBytes=T, as_ascii=FALSE){
-  #forget_if_new(x) ## hacky use of memoise. If input is not in cache because the feature column changed, reset cache
 
   if (as_ascii) {
     patterns = stringi::stri_trans_general(patterns, "any-latin")

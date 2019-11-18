@@ -12,6 +12,10 @@
 \item{value}{An expression to be evaluated within the token/meta data, or a vector of the same length as the number of rows in the data. Note that if a subset is used, the length of value should be the same as the length of the subset (the TRUE cases of the subset expression) or a single value.}
 
 \item{subset}{logical expression indicating rows to keep in the tokens data or meta data}
+
+\item{subset_value}{If subset is used, should value also be subsetted? Default is TRUE, which is what you want if
+the value has the same length as the full data.table (which is the case if a column in tokens is used).
+However, if the vector of values is already of the length of the subset, subset_value should be FALSE}
 }
 \description{
 Modify the token/meta data.table by setting the values of one (existing or new) column. The subset argument can be used to modify only subsets of columns, and can be a logical vector (select TRUE rows), numeric vector (indices of TRUE rows) or logical expression (e.g. pos == 'noun'). If a new column is made whie using a subset, then the rows outside of the selection are set to NA.

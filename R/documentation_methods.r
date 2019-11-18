@@ -116,6 +116,10 @@ NULL
 #' @param column Name of a new column (to create) or existing column (to transform)
 #' @param value An expression to be evaluated within the token/meta data, or a vector of the same length as the number of rows in the data. Note that if a subset is used, the length of value should be the same as the length of the subset (the TRUE cases of the subset expression) or a single value.
 #' @param subset logical expression indicating rows to keep in the tokens data or meta data
+#' @param subset_value If subset is used, should value also be subsetted? Default is TRUE, which is what you want if
+#'                     the value has the same length as the full data.table (which is the case if a column in tokens is used).
+#'                     However, if the vector of values is already of the length of the subset, subset_value should be FALSE
+#'
 #'
 #' @name tCorpus$set
 #' @aliases tCorpus$set_meta set set_meta

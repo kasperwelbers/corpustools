@@ -209,15 +209,21 @@ con
 tc = create_tcorpus(sotu_texts, doc_column = 'id', text_columns = 'text', split_sentences=T)
 tc_war = subset_query(tc, 'war')
 
-## original number of articles
-tc$n_meta   
-
-## number of articles after subsetting
-tc_war$n_meta  
-
 ## ------------------------------------------------------------------------
 tc$subset_query('war')
-tc$n_meta
+
+## ---- eval=F-------------------------------------------------------------
+#  library(quanteda)
+#  dict = quanteda::data_dictionary_LSD2015
+#  
+#  tc = create_tcorpus(sotu_texts, doc_col='id')
+#  tc$code_dictionary(dict)
+
+## ---- eval=F-------------------------------------------------------------
+#    dict = melt_quanteda_dict(dict)
+#    dict$sentiment = ifelse(dict$code %in% c('positive','neg_negative'), 1, -1)
+#    tc$code_dictionary(dict)
+#    browse_texts(tc, scale='sentiment')
 
 ## ------------------------------------------------------------------------
 tc = create_tcorpus(sotu_texts, doc_col='id')
@@ -233,7 +239,7 @@ plot_semnet(gb)
 comp = compare_subset(tc, feature='feature',
                       subset_meta_x = president == "Barack Obama")
 
-## ---- fig.width = 8, fig.height = 6, fig.align="center"------------------
+## ---- fig.width = 6, fig.height = 4, fig.align="center"------------------
 plot(comp)
 
 ## ------------------------------------------------------------------------
@@ -245,8 +251,8 @@ fa = feature_associations(tc, 'feature', query = 'terror*')
 ## ------------------------------------------------------------------------
 head(fa)
 
-## ---- fig.width = 8, fig.height = 7, fig.align="center"------------------
-plot(fa)
+## ---- fig.width = 6, fig.height = 6, fig.align="center"------------------
+plot(fa, col=c('lightblue','navyblue'))
 
 ## ---- eval=F-------------------------------------------------------------
 #  tc$subset()
