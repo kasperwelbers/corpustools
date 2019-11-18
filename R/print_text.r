@@ -15,7 +15,7 @@
 #' @param scale       The name of a numeric column in tc$tokens with values between -1 and 1, used to color tokens on a scale (set colors with scale_col)
 #' @param category    The name of a character or factor column in tc$tokens. Each unique value will have its own color, and navigation for categories will be added (nav cannot be used with this option)
 #' @param meta_cols   A character vector with names of columns in tc$meta, used to only show the selected columns
-#' @param seed        If select is "random", seed can be used to set a random seed
+#' @param seed        If select is "random", seed can be used to set a random seed. After sampling the seed is re-initialized with set.seed(NULL).
 #' @param nav         Optionally, a column in tc$meta to add navigation (only supports simple filtering on unique values).
 #'                    This is not possible if annotate is used.
 #' @param top_nav     A number. If navigation based on token annotations is used, filters will only apply to top x values with highest token occurence in a document
@@ -84,12 +84,9 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
     }
     if (select == 'random') {
       subhead = sprintf('random <ndoc>%s</ndoc> / %s documents (N = %s)', n, n, length(doc_ids))
-      if (!is.na(seed)) {
-        rs = runif(1, min=1, max=100000000)
-        set.seed(seed)
-      }
+      if (!is.na(seed)) set.seed(seed)
       .DOC_IDS = sample(doc_ids, size=n)
-      if (!is.na(seed)) set.seed(rs)
+      if (!is.na(seed)) set.seed(NULL)
     }
   } else {
     subhead = sprintf('<ndoc>%s</ndoc> (N = %s)', length(doc_ids), length(doc_ids))

@@ -35,7 +35,7 @@ Can also be a character vector, in which case al non-NA values are highlighted}
 
 \item{meta_cols}{A character vector with names of columns in tc$meta, used to only show the selected columns}
 
-\item{seed}{If select is "random", seed can be used to set a random seed}
+\item{seed}{If select is "random", seed can be used to set a random seed. After sampling the seed is re-initialized with set.seed(NULL).}
 
 \item{nav}{Optionally, a column in tc$meta to add navigation (only supports simple filtering on unique values).
 This is not possible if annotate is used.}

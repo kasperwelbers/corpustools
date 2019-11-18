@@ -191,6 +191,7 @@ plot_associations <- function(hits, min_weight=0, backbone_alpha=NA, measure=c('
   if (!methods::is(hits, 'featureHits') && !methods::is(hits, 'contextHits')) stop('hits has to be a featureHits or contextHits object')
   if (methods::is(hits, 'contextHits') && n=='hits') stop('count cannot be "hits" for contextHits results')
   measure = match.arg(measure)
+  context_level = match.arg(context_level)
 
   g = semnet(hits, measure = 'con_prob_weighted', backbone = !is.na(backbone_alpha))
 

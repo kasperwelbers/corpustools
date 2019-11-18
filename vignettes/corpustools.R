@@ -23,9 +23,6 @@ head(tc$tokens)
 head(tc$meta)
 
 ## ------------------------------------------------------------------------
-head(corenlp_tokens)
-
-## ------------------------------------------------------------------------
 tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
                        sentence_col = 'sentence', token_id_col = 'id')
 tc
@@ -33,24 +30,20 @@ tc
 ## ------------------------------------------------------------------------
 tc = create_tcorpus('This is an example')
 
-tc$set('new_column', 999)
+tc$set('new_column', "any value")
 tc$tokens
 
 ## ------------------------------------------------------------------------
 tc$set('new_column', toupper(token))
-tc$tokens
 
 ## ------------------------------------------------------------------------
 tc$set('new_column', tolower(token), token_id <= 2)
-tc$tokens
 
 ## ------------------------------------------------------------------------
 tc$set_name('new_column', 'token2')
-tc$tokens
 
 ## ------------------------------------------------------------------------
 tc$delete_columns('token2')
-tc$tokens
 
 ## ------------------------------------------------------------------------
 tc = create_tcorpus(sotu_texts, doc_col='id', split_sentences = T)

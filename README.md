@@ -26,16 +26,14 @@ install_github("kasperwelbers/corpustools")
 library(corpustools)
 ```
 
-tCorpus is built around the tCorpus R6 class. This means that the methods for working with the tCorpus object are accessed with the dollar symbol (e.g., tc$subset(...), tc$semnet(...)). An overview of the methods, including links with more detailed method documentation, is available through a central documentation hub:
+A vignette is provided ([HTML version](http://htmlpreview.github.io/?https://github.com/kasperwelbers/corpustools/blob/master/vignettes/corpustools.html)) with instructions on how to use corpustools and an overview of usefull features.
+
+```{r}
+vignette('corpustools')
+```
+
+In addition, an overview of the methods, including links with more detailed method documentation, is available through a central documentation hub:
 
 ```{r}
 ?tCorpus
 ```
-
-
-About this package
-============
-
-A previous version of corpustools has been around for quite a while, and is still available on https://github.com/kasperwelbers/corpus-tools (the current page dropped the hyphen). We decided to make a fresh start due to the introduction of the tCorpus R6 class that is now the backbone of corpustools, due to which a major overhaul of the package structure was needed. 
-
-Also, where the first corpustools was mostly a collection of convenient functions, driven by the ad-hoc needs of collegues, students and ourselves, the new corpustools is a more concerted effort. The main reason for this endeavour is that amidst the existing text analysis packages in R we did not find a class for a text corpus that fit our specific needs. We often use advanced pre-processing techniques from external tools (CoreNLP, Alpino), and we wanted a way to bind the detailed token output of these tools with document meta information in a single object. The new tCorpus class serves this purpose, and offers methods to manage, explore, analyze and visualize this data. 

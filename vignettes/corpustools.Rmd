@@ -93,10 +93,6 @@ The create_tcorpus function has some additional parameters.
 
 If you already have a tokenlist it can be imported as a tcorpus with the `tokens_to_tcorpus` function. The tokenlist has to be formatted as a data.frame. As an example we provide the corenlp_tokens demo data, which is the output of the Stanford CoreNLP parser.
 
-```{r}
-head(corenlp_tokens)
-```
-
 This type of data.frame can be passed to the `tokens_to_tcorpus` function. The names of the columns that describe the token positions (document_id, sentence and token_id) also need to be specified.
 
 ```{r}
@@ -128,7 +124,7 @@ The `set` method (`?set`) has two mandatory arguments: `columns` and `value`. Th
 ```{r}
 tc = create_tcorpus('This is an example')
 
-tc$set('new_column', 999)
+tc$set('new_column', "any value")
 tc$tokens
 ```
 
@@ -136,28 +132,24 @@ The `value` can also be an expression, which will be evaluated in the $tokens da
 
 ```{r}
 tc$set('new_column', toupper(token))
-tc$tokens
 ```
 
 Optionally, the `subset` argument can be used to only mutate values for the rows where the subset expression evaluates to TRUE. For example, the following operation changes the new_column values to lowercase if token_id <= 2.
 
 ```{r}
 tc$set('new_column', tolower(token), token_id <= 2)
-tc$tokens
 ```
 
 Set cannot be used to change a column name, so for this we have the `$set_name()` method
 
 ```{r}
 tc$set_name('new_column', 'token2')
-tc$tokens
 ```
 
 To remove columns, you can use the `delete_columns` method.
 
 ```{r}
 tc$delete_columns('token2')
-tc$tokens
 ```
 
 To add, remove and mutate columns in the $meta data.table, the `set_meta`, `set_meta_name` and `delete_meta_columns` methods can be used. 
@@ -427,18 +419,18 @@ tc$aggregate(hits=hits)
 tc$aggregate(hits=hits, meta_cols = 'president')  ## break by meta variables
 ```
 
-By setting the wide argument to FALSE, the query results are stacked in a long format, with the columns `code` and `count` for the labels and scores. Among other things, this makes it easy to prepare data for plotting with ggplot2.
+By setting the wide argument to FALSE, the query results are stacked in a long format, with the columns `code` and `count` for the labels and scores. Among other things, this makes it easy to prepare data for plotting with ggplot2. 
 
 ```{r, fig.width = 6, fig.height = 3, fig.align="center", eval=F}
-library(ggplot2)
+library(ggplot2) 
 
 date_hits = tc$aggregate(hits, meta_cols='date', wide = F)
-
+  
 ggplot(date_hits, aes(x=date, y=count, group=code)) + 
   geom_line(aes(linetype=code))
-
+  
 pres_hits = tc$aggregate(hits, meta_cols='president', wide = F)
-
+  
 ggplot(pres_hits, aes(president, count)) + 
   geom_col(aes(fill=code), width=.5, position = "dodge")
 ```

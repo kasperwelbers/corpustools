@@ -104,6 +104,7 @@ top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, r
   }
 
   rankfun <- function(x) 1:length(x)
+  .RANK = freq = NULL
   feat[,.RANK := rankfun(freq), by=c(group_by,group_by_meta)]
   feat = feat[feat$.RANK <= n,]
 

@@ -44,6 +44,7 @@ tokenize_to_dataframe_batch <- function(x, doc_id, split_sentences=F, max_senten
     x = stringi::stri_split_boundaries(x, type='sentence')
 
     if (!is.null(max_sentences)) x = sapply(x, head, max_sentences)
+
     x = lapply(x, function(x) unlist_to_df(split_tokens(x, max_tokens, remember_spaces),
                                            global_position=T))
     doclen = sapply(x, function(x) length(x$id))
@@ -66,6 +67,7 @@ tokenize_to_dataframe_batch <- function(x, doc_id, split_sentences=F, max_senten
 
 unlist_to_df <- function(l, ids=1:length(l), global_position=F){
   len = sapply(l, length)
+  if (sum(len) == 0) return(NULL)
   filter = len > 0
   if (global_position){
     position = 1:sum(len)
