@@ -9,14 +9,6 @@ uncollapse_terms_cpp <- function(term, sep = " ") {
     .Call('_corpustools_uncollapse_terms_cpp', PACKAGE = 'corpustools', term, sep)
 }
 
-compare_documents_cpp <- function(m, group, order, lwindow = 0L, rwindow = 0L, measure = "cosine", min_value = 0, verbose = TRUE) {
-    .Call('_corpustools_compare_documents_cpp', PACKAGE = 'corpustools', m, group, order, lwindow, rwindow, measure, min_value, verbose)
-}
-
-compare_documents_xy_cpp <- function(m_x, group_x, order_x, m_y, group_y, order_y, lwindow = 0L, rwindow = 0L, measure = "cosine", min_value = 0, verbose = TRUE) {
-    .Call('_corpustools_compare_documents_xy_cpp', PACKAGE = 'corpustools', m_x, group_x, order_x, m_y, group_y, order_y, lwindow, rwindow, measure, min_value, verbose)
-}
-
 fast_factor_cpp <- function(x, levs) {
     .Call('_corpustools_fast_factor_cpp', PACKAGE = 'corpustools', x, levs)
 }

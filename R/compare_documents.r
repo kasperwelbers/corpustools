@@ -62,6 +62,7 @@ compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL
   RNewsflow::as_document_network(g)
 }
 
+data.table::data.table(x=3,y=3,z=NULL)
 
 #' Deduplicate documents
 #'

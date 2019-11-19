@@ -12,7 +12,7 @@ std::vector<std::string> collapse_terms_cpp(std::vector<std::string>& term, Logi
   std::vector<std::string> out(sum(!collapse)+1);
   int pos = 0;
   bool use_sep2 = false;
-  for (int i; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     if (!collapse[i] or i == 0) {
       out[pos] = term[i];
       pos++;
@@ -37,7 +37,7 @@ std::map<std::string,std::vector<std::string>> uncollapse_terms_cpp(std::vector<
   std::vector<std::string> right(term.size());
   std::string t;
   int split_i;
-  for (int i; i < n; i++) {
+  for (int i = 0; i < n; i++) {
     t = term[i];
     split_i = t.find(sep);
 

@@ -307,14 +307,11 @@ expand_wildcards <- function(query_list, voc) {
   ## get a new list where terms with wildcards are repeated for all matches in vocabulary
   ## the names of the list contain ids of which the floor is the index of the dictionary
 
-  #ql = list('a', c('test','this'), c('test*','that','fish'), c('testint','what?'))
   n = sapply(query_list, length)
   i = rep(1:length(query_list), n)
   ql = data.table(t = unlist(query_list), i = i)
-  add_n <- function(x) 1:length(x)
+  add_n <- function(x) (1:length(x)) + 0  ## (suspected altrep issues)
   ql[, n := add_n(t), by='i']
-
-  #voc = c('testing','whatsapp','what','tests','bananas')
 
   ql$is_wc =  grepl('[?*]', ql$t)
   if (!any(ql$is_wc)) {
@@ -330,7 +327,7 @@ expand_wildcards <- function(query_list, voc) {
   nreg = sapply(full_t, length)
   full_t = data.table(t = rep(wct, nreg),
                       full_t = unlist(full_t),
-                      nr = 1:sum(nreg))
+                      nr = (1:sum(nreg)) + 0)
 
   full_t = merge(full_t, ql[,c('i','t')], by='t')
   out = merge(full_t, ql, by='i', all=T)
