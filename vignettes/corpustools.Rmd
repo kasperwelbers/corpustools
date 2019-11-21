@@ -518,28 +518,45 @@ This subsets tc without making a copy. Subsetting by reference is explained in m
 
 ## search_dictionary
 
-The search_dictionary function, and the related code_dictionary method, are alternative to search_features and search_context for working with larger but less complex dictionaries. For example, dictionaries with names of people, organizations or countries, or scores for certain emotions. Most of these dictionaries do not use Boolean operators such as AND and more complicated patterns such as word proximity. 
+The search_dictionary function, and the related code_dictionary method, are alternative to search_features and search_context for working with larger but less complex dictionaries. For example, dictionaries with names of people, organizations or countries, or scores for certain emotions. Most of these dictionaries do not use Boolean operators such as AND and more complicated patterns such as word proximity.
 
-
-The following code shows an example (not shown in this vignette, because it depends on quanteda). We first 
+The following code shows an example (not shown in this vignette, because it depends on quanteda). Here we use one of the dictionaries provided by quanteda. The quanteda dictionary class (dictionary2) can be used as input for the search dictionary functions.
 
 ```{r, eval=F}
 library(quanteda)
 dict = quanteda::data_dictionary_LSD2015
-  
-tc = create_tcorpus(sotu_texts, doc_col='id')
+```
+
+Given a tCorpus, the dictionary can be used (by default on the "token" column) with the `search_dictionary` function. 
+
+```{r, eval=F}
+tc = create_tcorpus(sotu_texts, doc_column = 'id', text_columns = 'text', split_sentences=T)
+hits = search_dictionary(tc, dict)
+```
+
+The output of this function is the same as `search_features`, so we can do anything with it as discussed above. For example, we can aggregate and plot the data.
+
+```{r, eval=F}
+library(ggplot2)
+agg_hits = tc$aggregate('date', hits, wide = F)
+ggplot(agg_hits, aes(x=date, y=count, group=code)) + 
+  geom_line(aes(linetype=code))
+```
+
+Like `code_features`, the `code_dictionary` R6 method can be used to annotate the tokens data with the results. For the LSD2015 dictionary this would add a column with the labels "positive" and "negative", and the negated terms "neg_positive" and "neg_negative".  
+
+Instead of using these labels, we can also convert them to scores on a scale from -1 (negative) to 1 (positive). While it is possible to create the numeric scores for sentiment within the tCorpus, we'll show another option here. Instead of using the quanteda dictionary, we can use a data.frame as a dictionary as long as it has a column named "string" that contains the dictionary pattern. All other columns in the data.frame are then added to $tokens. With the `melt_quanteda_dict` function we can also convert a quanteda dictionary to this type of data.frame. The code is then as follows:
+
+```{r, eval=F}
+dict = melt_quanteda_dict(dict)
+dict$sentiment = ifelse(dict$code %in% c('positive','neg_negative'), 1, -1)
 tc$code_dictionary(dict)
 ```
 
-The tokens data now has an additional column "code" with the labels of the dictionary. For the LSD2015 dictionary these labels are "positive" and "negative", and the negated terms "neg_positive" and "neg_negative". If we represent these labels as a scale from -1 (negative) to 1 (positive), we can create a browser in which the sentiment scores of words are visualized with a color scale.
-
-While it is possible to create the numeric scores for sentiment within the tCorpus, we'll show another option here. Instead of using the quanteda dictionary, we can use a data.frame as a dictionary as long as it has a column named "string" that contains the dictionary pattern. All other columns in the data.frame are then added to $tokens. With the `melt_quanteda_dict` function we can also convert a quanteda dictionary to this type of data.frame. The code is then as follows:
+The `browse_texts` function can also color words based on a scale value between -1 and 1. This is a nice way to inspect and validate the results of a sentiment dictionary.
 
 ```{r, eval=F}
-  dict = melt_quanteda_dict(dict)
-  dict$sentiment = ifelse(dict$code %in% c('positive','neg_negative'), 1, -1)
-  tc$code_dictionary(dict)
-  browse_texts(tc, scale='sentiment')
+browse_texts(tc, scale='sentiment')
 ```
   
 # Text analysis techniques

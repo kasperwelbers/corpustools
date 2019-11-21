@@ -232,6 +232,7 @@ tCorpus$set('public', 'semnet_window', function(feature, measure=c('cosine', 'co
 #'                           context_level = 'sentence')
 #' hits$hits     ## hits is a list, with hits$hits being a data.frame with specific contexts
 #'
+#' \donttest{
 #'
 #' ## query language examples
 #'
@@ -282,6 +283,7 @@ tCorpus$set('public', 'semnet_window', function(feature, measure=c('cosine', 'co
 #'
 #' tc$search_contexts('"a b"~s')$hits   ## use ~s flag on everything between quotes
 #' tc$search_contexts('"A B"~s')$hits   ## use ~s flag on everything between quotes
+#' }
 tCorpus$set('public', 'search_contexts', function(query, code=NULL, feature='token', context_level=c('document','sentence'), verbose=F){
   is_deprecated()
   search_contexts(self, query, code=code, feature=feature, context_level=context_level, verbose=verbose)
@@ -345,6 +347,8 @@ tCorpus$set('public', 'search_contexts', function(query, code=NULL, feature='tok
 #'
 #'
 #' ## query language examples
+#'
+#' \donttest{
 #'
 #' ## single term
 #' tc$search_features('A')$hits
@@ -412,7 +416,6 @@ tCorpus$set('public', 'search_contexts', function(query, code=NULL, feature='tok
 #' # ghost terms (used for conditions) can be repeated
 #' tc$search_features('A AND B~g')$hits
 #'
-#' \donttest{
 #' ## advanced queries
 #' tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
 #'                        sentence_col = 'sentence', token_id_col = 'id')

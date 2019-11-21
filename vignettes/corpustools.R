@@ -215,15 +215,24 @@ tc$subset_query('war')
 ## ---- eval=F-------------------------------------------------------------
 #  library(quanteda)
 #  dict = quanteda::data_dictionary_LSD2015
-#  
-#  tc = create_tcorpus(sotu_texts, doc_col='id')
+
+## ---- eval=F-------------------------------------------------------------
+#  tc = create_tcorpus(sotu_texts, doc_column = 'id', text_columns = 'text', split_sentences=T)
+#  hits = search_dictionary(tc, dict)
+
+## ---- eval=F-------------------------------------------------------------
+#  library(ggplot2)
+#  agg_hits = tc$aggregate('date', hits, wide = F)
+#  ggplot(agg_hits, aes(x=date, y=count, group=code)) +
+#    geom_line(aes(linetype=code))
+
+## ---- eval=F-------------------------------------------------------------
+#  dict = melt_quanteda_dict(dict)
+#  dict$sentiment = ifelse(dict$code %in% c('positive','neg_negative'), 1, -1)
 #  tc$code_dictionary(dict)
 
 ## ---- eval=F-------------------------------------------------------------
-#    dict = melt_quanteda_dict(dict)
-#    dict$sentiment = ifelse(dict$code %in% c('positive','neg_negative'), 1, -1)
-#    tc$code_dictionary(dict)
-#    browse_texts(tc, scale='sentiment')
+#  browse_texts(tc, scale='sentiment')
 
 ## ------------------------------------------------------------------------
 tc = create_tcorpus(sotu_texts, doc_col='id')

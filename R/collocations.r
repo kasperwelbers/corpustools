@@ -84,7 +84,7 @@ flatten_collocations <- function(d, feature_col, position_col, sep='_', reset_ke
 }
 
 flatten_collocations_table <- function(feature, position, i=1:length(feature), sep=' |_'){
-  colloc = grep('_', feature)
+  colloc = grep(sep, feature)
   colloc_list = stringi::stri_split(feature[colloc], regex = sep)
   colloc = data.frame(i=i[colloc], feature=feature[colloc], position=position[colloc], n=sapply(colloc_list, length))
   flat_colloc = colloc[rep(1:nrow(colloc), colloc$n),]

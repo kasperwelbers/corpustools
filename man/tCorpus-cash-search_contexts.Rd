@@ -51,6 +51,7 @@ hits = tc$search_contexts(c('query label# A AND B', 'second query# (A AND Q) OR 
                           context_level = 'sentence')
 hits$hits     ## hits is a list, with hits$hits being a data.frame with specific contexts
 
+\donttest{
 
 ## query language examples
 
@@ -101,4 +102,5 @@ tc$search_contexts('(a OR G)~s')$hits   ## use ~s flag on everything between par
 
 tc$search_contexts('"a b"~s')$hits   ## use ~s flag on everything between quotes
 tc$search_contexts('"A B"~s')$hits   ## use ~s flag on everything between quotes
+}
 }

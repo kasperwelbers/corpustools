@@ -109,7 +109,11 @@ top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, r
   feat = feat[feat$.RANK <= n,]
 
   if (!return_long) {
-    feat = data.table::dcast(feat[,c(group_by,group_by_meta,feature,'.RANK'),with=F], ... ~ .RANK, value.var=feature)
+    feat[[feature]] = as.character(feat[[feature]])
+    .feature = feature
+    feat = data.table::dcast(feat[,c(group_by,group_by_meta,.feature,'.RANK'),with=F], ... ~ .RANK, value.var=.feature)
+    is_rank = grepl('^[0-9]*$', colnames(feat))
+    colnames(feat)[is_rank] = paste0('r',colnames(feat)[is_rank])
   }
   feat
 }

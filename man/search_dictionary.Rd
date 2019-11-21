@@ -5,7 +5,7 @@
 \title{Dictionary lookup}
 \usage{
 search_dictionary(tc, dict, token_col = "token", case_sensitive = F,
-  batchsize = 50000, flatten_colloc = T, ascii = F, low_memory = F,
+  batchsize = 1000, flatten_colloc = T, ascii = F, low_memory = F,
   verbose = F)
 }
 \arguments{

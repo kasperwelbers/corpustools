@@ -1,7 +1,7 @@
 featureHits <- function(hits, queries) {
   ## S3 class
   sentence = NULL ## used in data.table syntax, but need to have bindings for R CMD check
-  if(is.null(hits)) hits = data.frame(code=character(), feature=character(), doc_id=character(), sentence = numeric(), hit_id=numeric())
+  if(is.null(hits)) hits = data.frame(code=character(), feature=character(), doc_id=character(), sentence = numeric(), hit_id=numeric(),token_id=numeric())
   if (!'sentence' %in% colnames(hits)) {
     if (nrow(hits) > 0) hits[, sentence := NA] else hits$sentence = numeric()
   }

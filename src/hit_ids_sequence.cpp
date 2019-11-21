@@ -8,11 +8,12 @@ NumericVector sequence_hit_ids_cpp(NumericVector con, NumericVector subcon, Nume
   bool use_subcon = subcon.size() > 0;  // as.Numeric(NULL) in R returns a vector of length 0
   NumericVector out(n);
 
-  double seq_i;
-  double fill_i;
+  double seq_i = 0;
+  double fill_i = 0;
   double hit_id = 1;
   for (double i = 0; i < n; i++) {
     for (seq_i = 0; seq_i < length; seq_i++) {
+      if ((i+seq_i) >= n) break;
       if (out[i+seq_i] > 0) continue;            // skip already assigned
       if (term_i[i+seq_i] != seq_i+1) break;     // seq_i (starting at 0) should match the number of the word in the sequence (starting at 1)
 

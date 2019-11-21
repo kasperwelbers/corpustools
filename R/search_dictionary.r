@@ -40,24 +40,36 @@
 #' tc$code_dictionary(dict)
 #' print(tc$tokens)
 #' @aliases code_dictionary
-tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', case_sensitive=F, column='code', batchsize=50000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
+tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', case_sensitive=F, column='code', batchsize=1000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
   if (methods::is(dict, 'dictionary2')) dict = melt_quanteda_dict(dict, column = column)
   if (!methods::is(dict, 'data.frame')) stop('dict has to be a data.frame or a quanteda dictionary2 class')
   if (!'string' %in% colnames(dict)) stop('dict must have a column named "string"')
 
+  column_id = paste0(column, '_id')
+  if (column_id %in% self$names) self$delete_columns(column_id)
+
   fl = dictionary_lookup(self, data.frame(string=dict$string, id = 1:nrow(dict)),
                         token_col=token_col, case_sensitive=case_sensitive, batchsize=batchsize, flatten_colloc=flatten_colloc, ascii=ascii, low_memory=low_memory, verbose=verbose)
+
+  if (is.null(fl)) {
+    self$set(column_id, numeric())
+    return(invisible(self))
+  }
 
   is_hit = !is.na(fl$dict_i)
   anno = dict[as.numeric(fl$dict_i[is_hit]),]
   hit_id = fl$hit_id[is_hit]
 
+  self$set(column_id, hit_id, subset = is_hit, subset_value=F)
+
   for (.col in colnames(anno)) {
     if (.col == 'string') next
-    if (!paste0(column, '_id') %in% self$names) self$set(paste0(column, '_id'), hit_id, subset = is_hit, subset_value=F)
+    if (.col %in% c('doc_id','sentence','token_id')) next  ## cant overwrite these
+    if (.col %in% self$names) self$delete_columns(.col)
     .value = anno[[.col]]
     self$set(.col, anno[[.col]], subset = is_hit, subset_value=F)
   }
+  invisible(self)
 })
 
 
@@ -132,7 +144,7 @@ melt_quanteda_dict <- function(dict, column='code', .index=NULL) {
 #' dict = data.frame(string = c('this is', 'for a', 'not big enough'), code=c('a','c','b'))
 #' tc = create_tcorpus(c('this is a test','This town is not big enough for a test'))
 #' search_dictionary(tc, dict)$hits
-search_dictionary <- function(tc, dict, token_col='token', case_sensitive=F, batchsize=50000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
+search_dictionary <- function(tc, dict, token_col='token', case_sensitive=F, batchsize=1000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
   hit_id = NULL
   if (!is_tcorpus(tc)) stop('tc is not a tCorpus')
   if (methods::is(dict, 'dictionary2')) dict = melt_quanteda_dict(dict)
@@ -143,8 +155,7 @@ search_dictionary <- function(tc, dict, token_col='token', case_sensitive=F, bat
 
   fl = dictionary_lookup(tc, data.frame(string=dict$string, id = 1:nrow(dict)),
                         token_col=token_col, case_sensitive=case_sensitive, batchsize=batchsize, flatten_colloc=flatten_colloc, ascii=ascii, low_memory=low_memory, verbose=verbose)
-
-
+  if (is.null(fl)) return(featureHits(NULL, data.frame()))
 
   not_na = !is.na(fl$dict_i)
   hits = tc$get(subset = not_na)
@@ -159,7 +170,7 @@ search_dictionary <- function(tc, dict, token_col='token', case_sensitive=F, bat
   featureHits(hits, queries)
 }
 
-dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_sensitive=F, batchsize=50000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
+dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_sensitive=F, batchsize=1000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
   if (!token_col %in% tc$names) stop(sprintf('To use search_dictionary, the tCorpus must have a feature column with clean (not preprocessed) text, labeled "%s"', token_col))
   if (!'string' %in% colnames(dict)) stop('Dictionary must have column named "string"')
   if (!'id' %in% colnames(dict)) stop('Dictionary must have column named "id"')
@@ -184,6 +195,9 @@ dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_s
     }
   }
 
+
+
+
   #if (use_regex) re = expand_resource_regex(re, features=levels(fi$features)) ## not yet implemented. expand resource ir use_regex=T: if there are regular expressions in the resource and use_regex==T, then first stringmatch the regex in the vocabulary and expand the resource with all returned strings
   ## make batches of the resource
   n.batches = ceiling(nrow(dict) / batchsize)
@@ -195,15 +209,17 @@ dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_s
   batches = split(dict, batch_i)
 
   candidates = vector('list', length(batches))
-  counter = verbose_sum_counter(nrow(dict))
+
+  if (verbose && length(batches) > 1) pb = utils::txtProgressBar(min = 1, max = nrow(dict), style = 3)
   for(i in seq_along(batches)){
-    candidates[[i]] = fast_multitoken_stringmatch(batches[[i]], fi=fi, regex_sep=regex_sep, case_sensitive=case_sensitive)
-    if (verbose) counter(nrow(batches[[i]]))
+    candidates[[i]] = multitoken_stringmatch(batches[[i]], fi=fi, regex_sep=regex_sep, case_sensitive=case_sensitive)
+    if (verbose && length(batches) > 1) pb$up(pb$getVal() + nrow(batches[[i]]))
   }
-  if (verbose) message('Binding results')
   candidates = data.table::rbindlist(candidates)
 
-  ## select candidates (at some point candidate selection could be done better. Perhaps even taking context into account. BUT NOT TODAY!!)
+  if (nrow(candidates) == 0) return(NULL)
+
+  ## select candidates
   candidates = candidates[order(-candidates$nterms),] ## go for candidates with the most terms (= most specific)
   candidates = unique(candidates, by = c('global_i'))
 
@@ -211,6 +227,7 @@ dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_s
   index_i = rep(1:nrow(candidates), times=candidates$nterms)
   index_nr = unlist(sapply(candidates$nterms, function(x) seq(1,x), simplify = F))
   index = candidates[index_i, c('global_i','id', 'i')]
+
   if (flatten_colloc){
     ## if collocations have been flattened, the real i in the tcorpus (which is still a collocation) has multiple global_i (which have been flattened)
     index$global_i = index$global_i + (index_nr - 1)
@@ -218,6 +235,12 @@ dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_s
   } else {
     index$i = index$i + (index_nr - 1) ## if global_i's have only one match to i's, we can recalculate the i's directly
   }
+
+  ## Now remove based on 1 to prevent double assignment
+  ## e.g., "not good" being matched as "not good" (negative) and "good" (positive)
+  ## this is not caught before (unique on global_i), because we first needed to flatten
+  index = unique(index, by='i')
+
 
   index$hit_id = match(index$global_i, sort(unique(index$global_i)))
   dict_i = rep(NA, tc$n)
@@ -247,8 +270,7 @@ normalize_string <- function(x, lowercase=T, ascii=T, trim=T){
 }
 
 
-
-fast_multitoken_stringmatch <- function(dict, fi, regex_sep=' ', case_sensitive=T){
+multitoken_stringmatch <- function(dict, fi, regex_sep=' ', case_sensitive=T){
   i = 1:length(dict$string)
 
   if (!case_sensitive) {
@@ -260,17 +282,21 @@ fast_multitoken_stringmatch <- function(dict, fi, regex_sep=' ', case_sensitive=
   nterms = sapply(sn, length)
   candidates = vector('list', max(nterms))
 
+
   if (any(grepl('[?*]', dict$string))) {
-    ## if wildcards are found, expand the query by looking for all terms in the vocabulary
-    ## that match the query term
     sn = expand_wildcards(sn, levels(fi$feature))
-    exp_i = floor(as.numeric(names(sn)))
-    dict = dict[exp_i,]
-    nterms = nterms[exp_i]
-    i = i[exp_i]
   } else {
     names(sn) = 1:length(sn)
   }
+  sn = drop_na_feature(sn, levels(fi$feature))
+  if (length(sn) == 0) return(NULL)
+
+  ## after expanding wildcards and/or dropping na features,
+  ## the dict, nterms and i need to be matched
+  exp_i = floor(as.numeric(names(sn)))
+  dict = dict[exp_i,]
+  nterms = nterms[exp_i]
+  i = i[exp_i]
 
   lt = data.table::data.table(feature = sapply(sn, data.table::first), id=dict$id, nterms=nterms, s_i=i, key='feature')
   lt = merge(fi, lt, by=c('feature'), allow.cartesian=T)
@@ -282,34 +308,34 @@ fast_multitoken_stringmatch <- function(dict, fi, regex_sep=' ', case_sensitive=
   sn_n = sapply(sn, length)
   snl = data.table::data.table(s_i = rep(floor(as.numeric(names(sn))), sn_n),
                                feature = unlist(sn))
+
   get_nr <- function(x) 1:length(x)
   nr = feature = NULL
   snl[, nr := get_nr(feature), by='s_i']
+  data.table::setkeyv(snl, 'nr')
 
   for(i in 1:length(candidates)){
-    terms = snl[snl$nr == (i+1),]
-    term_hits = fi[terms$feature,,on='feature', allow.cartesian=T]
+    terms = snl[list(i+1), , on='nr']
 
     hits = merge(terms, fi, by='feature', allow.cartesian = T)
     hits$global_i = hits$global_i - i
 
     lt = lt[hits, on=c('s_i','global_i'), nomatch=0]
+
     is_end = lt$nterms == i+1
     candidates[[i+1]] = lt[is_end,c('i','global_i','id','nterms'), with=F]
     lt = lt[!is_end,]
   }
-  candidates = data.table::rbindlist(candidates)
-  candidates = candidates[order(-candidates$nterms),] ## first go for candidates with the most terms (likely to be most specific)
-  unique(candidates, by = c('global_i'))
+  data.table::rbindlist(candidates)
 }
+
 
 expand_wildcards <- function(query_list, voc) {
   ## get a new list where terms with wildcards are repeated for all matches in vocabulary
   ## the names of the list contain ids of which the floor is the index of the dictionary
-
   n = sapply(query_list, length)
   i = rep(1:length(query_list), n)
-  ql = data.table(t = unlist(query_list), i = i)
+  ql = data.table::data.table(t = unlist(query_list), i = i)
   add_n <- function(x) (1:length(x)) + 0  ## (suspected altrep issues)
   ql[, n := add_n(t), by='i']
 
@@ -325,9 +351,11 @@ expand_wildcards <- function(query_list, voc) {
 
   full_t = sapply(wctreg, grep, x=voc, value=T, simplify = F)
   nreg = sapply(full_t, length)
+
+  if (sum(nreg) > 0) nr = (1:sum(nreg)) + 0 else nr = numeric()
   full_t = data.table(t = rep(wct, nreg),
                       full_t = unlist(full_t),
-                      nr = (1:sum(nreg)) + 0)
+                      nr = nr)
 
   full_t = merge(full_t, ql[,c('i','t')], by='t')
   out = merge(full_t, ql, by='i', all=T)
@@ -335,6 +363,19 @@ expand_wildcards <- function(query_list, voc) {
   out$nr[is.na(out$nr)] = 0
   data.table::setorderv(out, 'n', 1)
   out$id = out$i + (out$nr / (max(out$nr)+1))
-  split(ifelse(out$is_wc, out$full_t, out$t.y), out$id)
+  out = split(ifelse(out$is_wc, out$full_t, out$t.y), out$id)
+  has_na = sapply(out, anyNA)
+  out[!has_na]
+}
+
+drop_na_feature <- function(query_list, voc) {
+  n = sapply(query_list, length)
+  i = rep(names(query_list), n)
+  ql = data.table::data.table(t = unlist(query_list), i = i)
+  i = ql[!list(voc), on='t', which=T]
+  ql$t[i] = NA
+  out = split(ql$t, ql$i)
+  has_na = sapply(out, anyNA)
+  out[!has_na]
 }
 

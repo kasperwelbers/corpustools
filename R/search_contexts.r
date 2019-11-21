@@ -107,6 +107,7 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
 #'                           context_level = 'sentence')
 #' hits$hits     ## hits is a list, with hits$hits being a data.frame with specific contexts
 #'
+#' \donttest{
 #'
 #' ## query language examples
 #'
@@ -157,6 +158,8 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
 #'
 #' search_contexts(tc, '"a b"~s')$hits   ## use ~s flag on everything between quotes
 #' search_contexts(tc, '"A B"~s')$hits   ## use ~s flag on everything between quotes
+#'
+#' }
 search_contexts <- function(tc, query, code=NULL, feature='token', context_level=c('document','sentence'), verbose=F, as_ascii=F){
   is_tcorpus(tc, T)
   context_level = match.arg(context_level)

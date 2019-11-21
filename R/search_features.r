@@ -135,6 +135,8 @@ tCorpus$set('public', 'search_recode', function(feature, new_value, query, ...){
 #' hits$hits     ## hits is a list, with hits$hits being a data.frame with specific features
 #'
 #'
+#' \donttest{
+#'
 #' ## query language examples
 #'
 #' ## single term
@@ -203,7 +205,6 @@ tCorpus$set('public', 'search_recode', function(feature, new_value, query, ...){
 #' # ghost terms (used for conditions) can be repeated
 #' search_features(tc, 'A AND B~g')$hits
 #'
-#' \donttest{
 #' ## advanced queries
 #' tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
 #'                        sentence_col = 'sentence', token_id_col = 'id')

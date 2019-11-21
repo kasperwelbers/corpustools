@@ -67,6 +67,8 @@ hits$hits     ## hits is a list, with hits$hits being a data.frame with specific
 
 ## query language examples
 
+\donttest{
+
 ## single term
 tc$search_features('A')$hits
 
@@ -133,7 +135,6 @@ tc$search_features('A AND B', mode = 'features')$hits ## in "features", match an
 # ghost terms (used for conditions) can be repeated
 tc$search_features('A AND B~g')$hits
 
-\donttest{
 ## advanced queries
 tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
                        sentence_col = 'sentence', token_id_col = 'id')

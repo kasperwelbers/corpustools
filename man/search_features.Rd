@@ -66,6 +66,8 @@ hits = search_features(tc, c('query label# A AND B', 'second query# (A AND Q) OR
 hits$hits     ## hits is a list, with hits$hits being a data.frame with specific features
 
 
+\donttest{
+
 ## query language examples
 
 ## single term
@@ -134,7 +136,6 @@ search_features(tc, 'A AND B', mode = 'features')$hits ## in "features", match a
 # ghost terms (used for conditions) can be repeated
 search_features(tc, 'A AND B~g')$hits
 
-\donttest{
 ## advanced queries
 tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
                        sentence_col = 'sentence', token_id_col = 'id')
