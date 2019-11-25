@@ -666,13 +666,10 @@ as.tcorpus.tCorpus <- function(x, ...) x
 as.tcorpus.default <- function(x, ...) stop('x has to be a tCorpus object')
 ## params: preprocess_params=list, filter_params,
 
-is_tcorpus <- function(x, allow_stc=F){
-  if (!class(x)[1] %in% c('tCorpus', 'shattered_tCorpus')) stop('not a tCorpus object')
-  if (is_shattered(x) && !allow_stc) stop('function not implemented for shattered_tCorpus')
+is_tcorpus <- function(x){
+  if (!class(x)[1] %in% c('tCorpus')) stop('not a tCorpus object')
   TRUE
 }
-
-is_shattered <- function(x) methods::is(x, 'shattered_tCorpus')
 
 ###  utility
 
@@ -683,21 +680,6 @@ safe_selection <- function(d, selection){
   selection
 }
 
-eval_subset <- function(d, subset){
-  subset = if (class(substitute(subset)) %in% c('call')) deparse(substitute(subset)) else subset
-  subset = if (methods::is(substitute(subset), 'character')) parse(text=subset) else substitute(subset)
-  eval(subset, d, parent.frame(2))
-}
-
-elip_names <- function(...) names(as.list(match.call()))[-1]
-
-expr_names <- function(expr){
-  if (!methods::is(expr, 'character')) expr = deparse(substitute(expr))
-  expr = expr[!expr %in% c('{','}')]
-  expr = stringi::stri_trim(gsub('[<=[].*', '', expr))
-  if (grepl('(', expr, fixed = T)) expr = gsub('.*\\((.*)[,\\)].*', '\\1', expr)
-  expr
-}
 
 get_context <- function(tc, context_level = c('document','sentence'), with_labels=T){
   context_level = match.arg(context_level)

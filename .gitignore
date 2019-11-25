@@ -10,8 +10,6 @@
 #inst/tcorpus_ext_resources/*.rds
 udpipe_models/*
 
-# shattered tcorpus test files
-test.tCorpus/*
 
 # RStudio files
 .Rproj.user/*

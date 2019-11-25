@@ -9,7 +9,7 @@ Description: Provides text analysis in R, focusing on the use of a tokenized tex
 Author: Kasper Welbers and Wouter van Atteveldt
 Maintainer: Kasper Welbers <kasperwelbers@gmail.com>
 Depends: 
-    R (>= 3.2.0)
+    R (>= 3.5.0)
 Imports: 
     methods, 
     wordcloud (>= 2.5), 

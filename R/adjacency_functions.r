@@ -53,7 +53,7 @@ transform_count <- function(m, count_mode=c('normal','dicho','prob'), alpha=2){
 }
 
 feature_cooccurrence <- function(tc, feature, matrix_mode=c('dtm', 'windowXwindow', 'positionXwindow'), count_mode=c('normal','dicho','prob'), mat_stats=c('sum.x','sum.y','magnitude.x','magnitude.y', 'nrow'), context_level=c('document','sentence'), direction='<>', window.size=10, n.batches=1, alpha=2){
-  is_tcorpus(tc, allow_stc = T)
+  is_tcorpus(tc)
 
   matrix_mode = match.arg(matrix_mode)
   count_mode = match.arg(count_mode)

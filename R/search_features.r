@@ -233,7 +233,7 @@ tCorpus$set('public', 'search_recode', function(feature, new_value, query, ...){
 #' }
 search_features <- function(tc, query, code=NULL, feature='token', mode = c('unique_hits','features'), context_level=c('document','sentence'), keep_longest=TRUE, as_ascii=F, verbose=F){
   .ghost = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
-  is_tcorpus(tc, T)
+  is_tcorpus(tc)
   mode = match.arg(mode)
   context_level = match.arg(context_level)
 

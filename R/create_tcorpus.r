@@ -1,6 +1,12 @@
 #' Create a tCorpus
 #'
-#' Create a \link{tCorpus} from raw text input
+#' Create a \link{tCorpus} from raw text input. Input can be a character (or factor) vector, data.frame or quanteda corpus.
+#' If a data.frame is given, all columns other than the document id and text columns are included as meta data. If a quanteda
+#' corpus is given, the ids and texts are already specified, and the docvars will be included in the tCorpus as meta data.
+#'
+#' By default, texts will only be tokenized, and basic preprocessing techniques (lowercasing, stemming) can be applied with the
+#' \code{\link{preprocess}} method. Alternatively, the udpipe package can be used to apply more advanced NLP preprocessing, by
+#' using the udpipe_model argument.
 #'
 #' @rdname create_tcorpus
 #'
@@ -23,7 +29,7 @@
 #' @param use_parser If TRUE, use dependency parser (only if udpipe_model is used)
 #' @param remember_spaces If TRUE, a column with spaces after each token is included. Enables correct reconstruction of original text and keeps annotations at the level of character positions (e.g., brat) intact.
 #' @param verbose If TRUE, report progress
-#' @param ... not used
+#' @param ...          Arguments passed to create_tcorpus.character
 #'
 #' @export
 #' @name create_tcorpus
@@ -83,20 +89,6 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
 
 #' @rdname create_tcorpus
 #' @examples
-#' ## It makes little sense to have full texts as factors, but it tends to happen.
-#' ## The create_tcorpus S3 method for factors is essentially identical to the
-#' ##  method for a character vector.
-#' text = factor(c('Text one first sentence', 'Text one second sentence'))
-#' tc = create_tcorpus(text)
-#' tc$tokens
-#' @export
-create_tcorpus.factor <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
-  create_tcorpus(as.character(x), doc_id=doc_id, meta=meta, udpipe_model=udpipe_model, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, udpipe_model_path=udpipe_model_path, udpipe_cache=udpipe_cache, use_parser=use_parser, remember_spaces=remember_spaces, verbose=verbose)
-}
-
-
-#' @rdname create_tcorpus
-#' @examples
 #' d = data.frame(text = c('Text one first sentence. Text one second sentence.',
 #'                'Text two', 'Text three'),
 #'                date = c('2010-01-01','2010-01-01','2012-01-01'),
@@ -134,6 +126,33 @@ create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id
                  doc_id = doc_id,
                  meta = x[,!colnames(x) %in% c(text_columns, doc_column), drop=F],
                  udpipe_model=udpipe_model, split_sentences = split_sentences, max_sentences = max_sentences, max_tokens = max_tokens, udpipe_model_path=udpipe_model_path, udpipe_cache=udpipe_cache, use_parser=use_parser, remember_spaces=remember_spaces, verbose=verbose)
+}
+
+#' @rdname create_tcorpus
+#' @examples
+#' ## It makes little sense to have full texts as factors, but it tends to happen.
+#' ## The create_tcorpus S3 method for factors is essentially identical to the
+#' ##  method for a character vector.
+#' text = factor(c('Text one first sentence', 'Text one second sentence'))
+#' tc = create_tcorpus(text)
+#' tc$tokens
+#' @export
+create_tcorpus.factor <- function(x, ...) {
+  create_tcorpus(as.character(x), ...)
+}
+
+#' @rdname create_tcorpus
+#' @examples
+#'
+#' \donttest{
+#' library(quanteda)
+#' create_tcorpus(data_corpu_inaugural)
+#' }
+#' @export
+create_tcorpus.corpus <- function(x, ...) {
+  x = x$documents
+  x$doc_id = rownames(x)
+  create_tcorpus(x, text_columns='texts', doc_column=doc_id, ...)
 }
 
 #' Create a tcorpus based on tokens (i.e. preprocessed texts)

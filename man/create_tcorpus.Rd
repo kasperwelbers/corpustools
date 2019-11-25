@@ -3,8 +3,9 @@
 \name{create_tcorpus}
 \alias{create_tcorpus}
 \alias{create_tcorpus.character}
-\alias{create_tcorpus.factor}
 \alias{create_tcorpus.data.frame}
+\alias{create_tcorpus.factor}
+\alias{create_tcorpus.corpus}
 \title{Create a tCorpus}
 \usage{
 create_tcorpus(x, ...)
@@ -15,21 +16,20 @@ create_tcorpus(x, ...)
   udpipe_model_path = getwd(), udpipe_cache = 3, use_parser = F,
   remember_spaces = FALSE, verbose = T, ...)
 
-\method{create_tcorpus}{factor}(x, doc_id = 1:length(x), meta = NULL,
-  udpipe_model = NULL, split_sentences = F, max_sentences = NULL,
-  max_tokens = NULL, udpipe_model_path = getwd(), udpipe_cache = 3,
-  use_parser = F, remember_spaces = FALSE, verbose = T, ...)
-
 \method{create_tcorpus}{data.frame}(x, text_columns = "text",
   doc_column = "doc_id", udpipe_model = NULL, split_sentences = F,
   max_sentences = NULL, max_tokens = NULL,
   udpipe_model_path = getwd(), udpipe_cache = 3, use_parser = F,
   remember_spaces = FALSE, verbose = T, ...)
+
+\method{create_tcorpus}{factor}(x, ...)
+
+\method{create_tcorpus}{corpus}(x, ...)
 }
 \arguments{
 \item{x}{main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.}
 
-\item{...}{not used}
+\item{...}{Arguments passed to create_tcorpus.character}
 
 \item{doc_id}{if x is a character/factor vector, doc_id can be used to specify document ids. This has to be a vector of the same length as x}
 
@@ -63,7 +63,14 @@ The caches are stored in the udpipe_models folder (in udpipe_model_path). Only t
 \item{doc_column}{If x is a data.frame, this specifies the column with the document ids.}
 }
 \description{
-Create a \link{tCorpus} from raw text input
+Create a \link{tCorpus} from raw text input. Input can be a character (or factor) vector, data.frame or quanteda corpus.
+If a data.frame is given, all columns other than the document id and text columns are included as meta data. If a quanteda
+corpus is given, the ids and texts are already specified, and the docvars will be included in the tCorpus as meta data.
+}
+\details{
+By default, texts will only be tokenized, and basic preprocessing techniques (lowercasing, stemming) can be applied with the
+\code{\link{preprocess}} method. Alternatively, the udpipe package can be used to apply more advanced NLP preprocessing, by
+using the udpipe_model argument.
 }
 \examples{
 ## ...
@@ -81,12 +88,6 @@ tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text
                     doc_id = c(1,2),
                     meta = meta)
 tc
-## It makes little sense to have full texts as factors, but it tends to happen.
-## The create_tcorpus S3 method for factors is essentially identical to the
-##  method for a character vector.
-text = factor(c('Text one first sentence', 'Text one second sentence'))
-tc = create_tcorpus(text)
-tc$tokens
 d = data.frame(text = c('Text one first sentence. Text one second sentence.',
                'Text two', 'Text three'),
                date = c('2010-01-01','2010-01-01','2012-01-01'),
@@ -105,4 +106,15 @@ tc = create_tcorpus(d, text_columns = c('headline','text'), doc_column = 'doc_id
                     split_sentences = TRUE)
 tc
 tc$tokens
+## It makes little sense to have full texts as factors, but it tends to happen.
+## The create_tcorpus S3 method for factors is essentially identical to the
+##  method for a character vector.
+text = factor(c('Text one first sentence', 'Text one second sentence'))
+tc = create_tcorpus(text)
+tc$tokens
+
+\donttest{
+library(quanteda)
+create_tcorpus(data_corpu_inaugural)
+}
 }

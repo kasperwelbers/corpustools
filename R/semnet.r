@@ -52,7 +52,7 @@ semnet <- function(tc, feature='token', measure=c('con_prob', 'con_prob_weighted
     tc = tokens_to_tcorpus(hits, doc_col = 'doc_id', sentence_col=NULL, token_id_col = 'token_id')
     feature = 'code'
   }
-  is_tcorpus(tc, T)
+  is_tcorpus(tc)
   feature = match.arg(feature, tc$feature_names)
 
   g = create_semnet(tc, feature, measure=measure, matrix_mode='dtm', context_level=context_level, n.batches=n.batches, alpha=alpha)
@@ -137,7 +137,7 @@ semnet_window <- function(tc, feature='token', measure=c('con_prob', 'cosine', '
     tc = tokens_to_tcorpus(hits, doc_col = 'doc_id', sentence_col=NULL, token_id_col = 'token_id')
     feature = 'code'
   }
-  is_tcorpus(tc, T)
+  is_tcorpus(tc)
   feature = match.arg(feature, tc$feature_names)
 
 

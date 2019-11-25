@@ -10,6 +10,10 @@ test_that("Testing: Dictionary lookup", {
   dict = data.frame(string = c('this is', 'a', 'test'), code=c('a','b','c'))
   hits = search_dictionary(tc, dict)
   expect_equal(hits$hits$token_id, c(1,2,3,4,8,9))
+
+  tc = create_tcorpus('yay :) :* happy')
+  tc$replace_dictionary(emoticon_dict)
+  expect_equal(as.character(tc$tokens$token), c('yay',':)',':*','happy'))
 })
 
 

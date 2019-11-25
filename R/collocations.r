@@ -7,13 +7,15 @@
 # Some features can be grouped in categories that span over multiple rows. For instance, unique ids for named entities. This function groups these collocation categories, and collapses the features into collocation strings.
 # This can be used to count how often each collocation string occurs. Also, it is used in the add_collocation_label function to choosse labels for collocation categories based on the most frequent occurring string
 
+
+
 collocation_strings <- function(tc, colloc_id, feature='token', pref=NULL){
   f = tc$get(c(feature, colloc_id))
   colnames(f) = c('feature','id')
   f$pref = F
   f$pref[pref] = T
 
-  lag_id = shift(f$id, fill=as.factor(NA))
+  lag_id = data.table::shift(f$id, fill=as.factor(NA))
   f$new_id = !f$id == lag_id | (!is.na(f$id) & is.na(lag_id))
   f = f[!is.na(f$id),]
   f$new_id = cumsum(f$new_id)
@@ -40,7 +42,7 @@ add_collocation_label <- function(tc, colloc_id, feature='token', new_feature=sp
   .pref_subset = deparse(substitute(pref_subset))
   if (!pref_subset == 'NULL') pref = tc$get_token_id(subset_meta=.pref_subset) else pref = NULL
 
-  label = collocation_strings(tc, colloc_id, feature=feature, pref=pref) ## for shattered_tCorpus, this has to be done for the entire corpus first, or labels will not match across shards
+  label = collocation_strings(tc, colloc_id, feature=feature, pref=pref)
   ## select most frequent labels, prioritzing pref is true
   setkeyv(label, c('pref','N'))
   label = as.data.frame(label)[!duplicated(label$id, fromLast = T),]

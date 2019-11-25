@@ -71,7 +71,7 @@ do_get_dtm <- function(tc, feature, context_level=c('document','sentence'), weig
   form = match.arg(form)
   if(form == 'tm_dtm') require_package('tm', '0.6')
   if(form == 'quanteda_dfm') require_package('quanteda', '1.1.1')
-  is_tcorpus(tc, T)
+  is_tcorpus(tc)
   weight = match.arg(weight)
   context_levels = match.arg(context_level)
 

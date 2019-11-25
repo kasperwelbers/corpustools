@@ -19,3 +19,11 @@
 #' @format A named list, with names matching the languages used by SnowballC
 "stopwords_list"
 
+#' Dictionary with common ASCII emoticons
+#'
+#' Obtained from the Wikipedia List_of_emoticons page.
+#'
+#' @docType data
+#' @usage data(emoticon_dict)
+#' @format A data.frame with a "string" and "code" column.
+"emoticon_dict"

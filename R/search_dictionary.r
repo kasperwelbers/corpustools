@@ -14,16 +14,21 @@
 #' \preformatted{code_dictionary(...)}
 #'
 #' @param dict            A dictionary. Can be either a data.frame or a quanteda dictionary. If a data.frame is given, it has to
-#'                        have a column named "string" that contains the dictionary terms. All other columns are added to the
+#'                        have a column named "string" (or use string_col argument) that contains the dictionary terms. All other columns are added to the
 #'                        tCorpus $tokens data. Each row has a single string, that can be
 #'                        a single word or a sequence of words seperated by a whitespace (e.g., "not bad"), and can have the common ? and * wildcards.
 #'                        If a quanteda dictionary is given, it is automatically converted to this type of data.frame with the
 #'                        \code{\link{melt_quanteda_dict}} function. This can be done manually for more control over labels.
 #' @param token_col       The feature in tc that contains the token text.
+#' @param string_col      If dict is a data.frame, the name of the column in dict that contains the dictionary lookup string
+#' @param sep             A regular expression for separating multi-word lookup strings (default is " ", which is what quanteda dictionaries use).
+#'                        For example, if the dictionary contains "Barack Obama", sep should be " " so that it matches the consequtive tokens "Barack" and "Obama".
+#'                        In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\+' should be used.
 #' @param case_sensitive  logical, should lookup be case sensitive?
 #' @param column          The name of the column added to $tokens. [column]_id contains the unique id of the match.
 #'                        If a quanteda dictionary is given, the label for the match is in the column named [column].
 #'                        If a dictionary has multiple levels, these are added as [column]_l[level].
+#' @param use_wildcards   Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used
 #' @param batchsize       Very large dictionaries will be matched in batches to prevent memory issues.
 #' @param flatten_colloc  If true, collocations in the tokens (rows in tc$tokens) will be considered separate words. For example, "President_Obama" will be split to "president" "obama", so that "president obama" in the dictionary matches correctly.
 #' @param ascii           If true, convert text to ascii before matching
@@ -40,16 +45,17 @@
 #' tc$code_dictionary(dict)
 #' print(tc$tokens)
 #' @aliases code_dictionary
-tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', case_sensitive=F, column='code', batchsize=1000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
+tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', string_col='string', sep=' ', case_sensitive=F, column='code', use_wildcards=T, batchsize=1000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
   if (methods::is(dict, 'dictionary2')) dict = melt_quanteda_dict(dict, column = column)
   if (!methods::is(dict, 'data.frame')) stop('dict has to be a data.frame or a quanteda dictionary2 class')
-  if (!'string' %in% colnames(dict)) stop('dict must have a column named "string"')
+  if (!string_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', string_col))
 
   column_id = paste0(column, '_id')
   if (column_id %in% self$names) self$delete_columns(column_id)
 
-  fl = dictionary_lookup(self, data.frame(string=dict$string, id = 1:nrow(dict)),
-                        token_col=token_col, case_sensitive=case_sensitive, batchsize=batchsize, flatten_colloc=flatten_colloc, ascii=ascii, low_memory=low_memory, verbose=verbose)
+  fl = dictionary_lookup(self, data.frame(string=dict[[string_col]], id = 1:nrow(dict)), regex_sep = sep,
+                        token_col=token_col, case_sensitive=case_sensitive, batchsize=batchsize,
+                        flatten_colloc=flatten_colloc, ascii=ascii, low_memory=low_memory, use_wildcards=use_wildcards, verbose=verbose)
 
   if (is.null(fl)) {
     self$set(column_id, numeric())
@@ -63,7 +69,7 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', case_
   self$set(column_id, hit_id, subset = is_hit, subset_value=F)
 
   for (.col in colnames(anno)) {
-    if (.col == 'string') next
+    if (.col == string_col) next
     if (.col %in% c('doc_id','sentence','token_id')) next  ## cant overwrite these
     if (.col %in% self$names) self$delete_columns(.col)
     .value = anno[[.col]]
@@ -72,6 +78,87 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', case_
   invisible(self)
 })
 
+
+#' Replace tokens with dictionary match
+#'
+#' @description
+#' Uses \code{\link{search_dictionary}}, and replaces tokens that match the dictionary lookup term with the dictionary code.
+#' Multi-token matches (e.g., "Barack Obama") will become single tokens. Multiple lookup terms per code can be used to deal with
+#' alternatives such as "Barack Obama", "president Obama" and "Obama".
+#'
+#' This method can also be use to concatenate ASCII symbols into emoticons, given a dictionary of emoticons.
+#' A dictionary with common emoticons is included in the corpustools data as "emoticon_dict" (see examples).
+#'
+#' \strong{Usage:}
+#'
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{replace_dictionary(...)}
+#'
+#' @param dict            A dictionary. Can be either a data.frame or a quanteda dictionary. If a data.frame is given, it has to
+#'                        have a column named "string"  (or use string_col argument) that contains the dictionary terms, and a column "code" (or use code_col argument) that contains the
+#'                        label/code represented by this string. Each row has a single string, that can be
+#'                        a single word or a sequence of words seperated by a whitespace (e.g., "not bad"), and can have the common ? and * wildcards.
+#'                        If a quanteda dictionary is given, it is automatically converted to this type of data.frame with the
+#'                        \code{\link{melt_quanteda_dict}} function. This can be done manually for more control over labels.
+#' @param token_col       The feature in tc that contains the token text.
+#' @param string_col      If dict is a data.frame, the name of the column in dict with the dictionary lookup string. Default is "string"
+#' @param code_col        The name of the column in dict with the dictionary code/label. Default is "code".
+#'                        If dict is a quanteda dictionary with multiple levels, "code_l2", "code_l3", etc. can be used to select levels.
+#' @param replace_cols    The names of the columns in tc$tokens that will be replaced by the dictionary code. Default is the column on which the dictionary is applied,
+#'                        but in some cases it might make sense to replace multiple columns (like token and lemma)
+#' @param sep             A regular expression for separating multi-word lookup strings (default is " ", which is what quanteda dictionaries use).
+#'                        For example, if the dictionary contains "Barack Obama", sep should be " " so that it matches the consequtive tokens "Barack" and "Obama".
+#'                        In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\+' should be used.
+#' @param decrement_ids   If TRUE (default), decrement token ids after concatenating multi-token matches. So, if the tokens c(":", ")", "yay") have token_id c(1,2,3),
+#'                        then after concatenating ASCII emoticons, the tokens will be c(":)", "yay") with token_id c(1,2)
+#' @param case_sensitive  logical, should lookup be case sensitive?
+#' @param use_wildcards   Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used
+#' @param batchsize       Very large dictionaries will be matched in batches to prevent memory issues.
+#' @param flatten_colloc  If true, collocations in the tokens (tokens with spaces or underscores) will be considered separate words. For example, "President_Obama" will be split to "president" "obama", so that "president obama" in the dictionary matches correctly.
+#' @param ascii           If true, convert text to ascii before matching
+#' @param low_memory      if true, use slower but more memory efficient algorithm
+#' @param verbose         If true, report progress
+#'
+#' @return A vector with the id value (taken from dict$id) for each row in tc$tokens
+#'
+#' @name tCorpus$replace_dictionary
+#'
+#' @examples
+#' tc = create_tcorpus('yay :) :* happy')
+#' tc$replace_dictionary(emoticon_dict)
+#' tc$tokens
+#'
+#' @aliases replace_dictionary
+tCorpus$set('public', 'replace_dictionary', function(dict, token_col='token', string_col='string', code_col='code', replace_cols=token_col, sep=' ', decrement_ids=T, case_sensitive=F, use_wildcards=T, batchsize=1000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
+  m = search_dictionary(self, dict, token_col=token_col, string_col=string_col, code_col=code_col, sep=sep,
+                        case_sensitive=case_sensitive, use_wildcards=use_wildcards,
+                        batchsize=batchsize, flatten_colloc=flatten_colloc, ascii=ascii, low_memory=low_memory, verbose=verbose)
+  m = m$hits
+
+  if (nrow(m) == 0) return(invisible(self))
+
+  rename = unique(m, by=c('doc_id','hit_id'))
+  remove = m[!rename]
+
+  for (col in replace_cols) {
+    self$tokens[rename, (col) := rename$code, on=c('doc_id','token_id')]
+  }
+
+  if (nrow(remove) > 0) {
+    if (decrement_ids) {
+      .REMOVE = F
+      self$tokens[, .REMOVE:=.REMOVE]
+      self$tokens[remove, .REMOVE := T]
+      self$tokens[, token_id := token_id - cumsum(.REMOVE), by=c('doc_id')]
+      self$tokens = subset(self$tokens, !.REMOVE)
+      self$tokens[, .REMOVE := NULL]
+    } else {
+      self$tokens = self$tokens[!remove, on=c('doc_id','token_id')]
+    }
+  }
+  return(invisible(self))
+})
 
 #' Convert a quanteda dictionary to a long data.table format
 #'
@@ -124,13 +211,20 @@ melt_quanteda_dict <- function(dict, column='code', .index=NULL) {
 #'
 #' @param tc              A tCorpus
 #' @param dict            A dictionary. Can be either a data.frame or a quanteda dictionary. If a data.frame is given, it has to
-#'                        have a column named "string" that contains the dictionary terms, and a column "code" that contains the
+#'                        have a column named "string"  (or use string_col argument) that contains the dictionary terms, and a column "code" (or use code_col argument) that contains the
 #'                        label/code represented by this string. Each row has a single string, that can be
 #'                        a single word or a sequence of words seperated by a whitespace (e.g., "not bad"), and can have the common ? and * wildcards.
 #'                        If a quanteda dictionary is given, it is automatically converted to this type of data.frame with the
 #'                        \code{\link{melt_quanteda_dict}} function. This can be done manually for more control over labels.
 #' @param token_col       The feature in tc that contains the token text.
+#' @param string_col      If dict is a data.frame, the name of the column in dict with the dictionary lookup string. Default is "string"
+#' @param code_col        The name of the column in dict with the dictionary code/label. Default is "code".
+#'                        If dict is a quanteda dictionary with multiple levels, "code_l2", "code_l3", etc. can be used to select levels..
+#' @param sep             A regular expression for separating multi-word lookup strings (default is " ", which is what quanteda dictionaries use).
+#'                        For example, if the dictionary contains "Barack Obama", sep should be " " so that it matches the consequtive tokens "Barack" and "Obama".
+#'                        In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\+' should be used.
 #' @param case_sensitive  logical, should lookup be case sensitive?
+#' @param use_wildcards   Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used
 #' @param batchsize       Very large dictionaries will be matched in batches to prevent memory issues.
 #' @param flatten_colloc  If true, collocations in the tokens (rows in tc$tokens) will be considered separate words. For example, "President_Obama" will be split to "president" "obama", so that "president obama" in the dictionary matches correctly.
 #' @param ascii           If true, convert text to ascii before matching
@@ -144,23 +238,23 @@ melt_quanteda_dict <- function(dict, column='code', .index=NULL) {
 #' dict = data.frame(string = c('this is', 'for a', 'not big enough'), code=c('a','c','b'))
 #' tc = create_tcorpus(c('this is a test','This town is not big enough for a test'))
 #' search_dictionary(tc, dict)$hits
-search_dictionary <- function(tc, dict, token_col='token', case_sensitive=F, batchsize=1000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
+search_dictionary <- function(tc, dict, token_col='token', string_col='string', code_col='code', sep=' ', case_sensitive=F, use_wildcards=T, batchsize=1000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
   hit_id = NULL
   if (!is_tcorpus(tc)) stop('tc is not a tCorpus')
   if (methods::is(dict, 'dictionary2')) dict = melt_quanteda_dict(dict)
   if (!methods::is(dict, 'data.frame')) stop('dict has to be a data.frame or a quanteda dictionary2 class')
-  if (!'string' %in% colnames(dict)) stop('dict must have a column named "string"')
-  if (!'code' %in% colnames(dict)) stop('dict must have a column named "code"')
+  if (!string_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', string_col))
+  if (!code_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', code_col))
 
 
-  fl = dictionary_lookup(tc, data.frame(string=dict$string, id = 1:nrow(dict)),
-                        token_col=token_col, case_sensitive=case_sensitive, batchsize=batchsize, flatten_colloc=flatten_colloc, ascii=ascii, low_memory=low_memory, verbose=verbose)
+  fl = dictionary_lookup(tc, data.frame(string=dict[[string_col]], id = 1:nrow(dict)), regex_sep=sep,
+                        token_col=token_col, case_sensitive=case_sensitive, batchsize=batchsize, flatten_colloc=flatten_colloc, ascii=ascii, low_memory=low_memory, use_wildcards=use_wildcards, verbose=verbose)
   if (is.null(fl)) return(featureHits(NULL, data.frame()))
 
   not_na = !is.na(fl$dict_i)
   hits = tc$get(subset = not_na)
   hits$hit_id = fl$hit_id[not_na]
-  hits$code = dict$code[as.numeric(fl$dict_i[not_na])]
+  hits$code = dict[[code_col]][as.numeric(fl$dict_i[not_na])]
   if (!'sentence' %in% colnames(hits)) hits[, 'sentence' := numeric()]
   hits = subset(hits, select = intersect(c('doc_id','token_id','sentence','code','hit_id',token_col), colnames(hits)))
   data.table::setnames(hits, token_col, 'feature')
@@ -170,7 +264,7 @@ search_dictionary <- function(tc, dict, token_col='token', case_sensitive=F, bat
   featureHits(hits, queries)
 }
 
-dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_sensitive=F, batchsize=1000, flatten_colloc=T, ascii=F, low_memory=F, verbose=F){
+dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_sensitive=F, batchsize=1000, flatten_colloc=T, ascii=F, low_memory=F, use_wildcards=T, verbose=F){
   if (!token_col %in% tc$names) stop(sprintf('To use search_dictionary, the tCorpus must have a feature column with clean (not preprocessed) text, labeled "%s"', token_col))
   if (!'string' %in% colnames(dict)) stop('Dictionary must have column named "string"')
   if (!'id' %in% colnames(dict)) stop('Dictionary must have column named "id"')
@@ -212,7 +306,7 @@ dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_s
 
   if (verbose && length(batches) > 1) pb = utils::txtProgressBar(min = 1, max = nrow(dict), style = 3)
   for(i in seq_along(batches)){
-    candidates[[i]] = multitoken_stringmatch(batches[[i]], fi=fi, regex_sep=regex_sep, case_sensitive=case_sensitive)
+    candidates[[i]] = multitoken_stringmatch(batches[[i]], fi=fi, regex_sep=regex_sep, case_sensitive=case_sensitive, use_wildcards=use_wildcards)
     if (verbose && length(batches) > 1) pb$up(pb$getVal() + nrow(batches[[i]]))
   }
   candidates = data.table::rbindlist(candidates)
@@ -270,7 +364,7 @@ normalize_string <- function(x, lowercase=T, ascii=T, trim=T){
 }
 
 
-multitoken_stringmatch <- function(dict, fi, regex_sep=' ', case_sensitive=T){
+multitoken_stringmatch <- function(dict, fi, regex_sep=' ', case_sensitive=T, use_wildcards=T){
   i = 1:length(dict$string)
 
   if (!case_sensitive) {
@@ -283,7 +377,7 @@ multitoken_stringmatch <- function(dict, fi, regex_sep=' ', case_sensitive=T){
   candidates = vector('list', max(nterms))
 
 
-  if (any(grepl('[?*]', dict$string))) {
+  if (use_wildcards && any(grepl('[?*]', dict$string))) {
     sn = expand_wildcards(sn, levels(fi$feature))
   } else {
     names(sn) = 1:length(sn)
@@ -345,9 +439,12 @@ expand_wildcards <- function(query_list, voc) {
     return(query_list)
   }
   wct = unique(ql$t[ql$is_wc])
-  wctreg = gsub('*', '.*', wct, fixed = T)
-  wctreg = gsub('?', '.{0,1}', wctreg, fixed = T)
+
+  wctreg = gsub('([^a-zA-Z0-9\\*\\?])', '\\\\\\1', wct)
+  wctreg = gsub('[^\\*]\\*', '.*', wctreg)
+  wctreg = gsub('[^\\?]\\?', '.{0,1}', wctreg)
   wctreg = paste0('\\b',wctreg,'\\b')
+
 
   full_t = sapply(wctreg, grep, x=voc, value=T, simplify = F)
   nreg = sapply(full_t, length)
@@ -358,7 +455,7 @@ expand_wildcards <- function(query_list, voc) {
                       nr = nr)
 
   full_t = merge(full_t, ql[,c('i','t')], by='t')
-  out = merge(full_t, ql, by='i', all=T)
+  out = merge(full_t, ql, by='i', all=T, allow.cartesian = T)
 
   out$nr[is.na(out$nr)] = 0
   data.table::setorderv(out, 'n', 1)

@@ -6,7 +6,7 @@
 \title{Dictionary lookup}
 \arguments{
 \item{dict}{A dictionary. Can be either a data.frame or a quanteda dictionary. If a data.frame is given, it has to
-have a column named "string" that contains the dictionary terms. All other columns are added to the
+have a column named "string" (or use string_col argument) that contains the dictionary terms. All other columns are added to the
 tCorpus $tokens data. Each row has a single string, that can be
 a single word or a sequence of words seperated by a whitespace (e.g., "not bad"), and can have the common ? and * wildcards.
 If a quanteda dictionary is given, it is automatically converted to this type of data.frame with the
@@ -14,11 +14,19 @@ If a quanteda dictionary is given, it is automatically converted to this type of
 
 \item{token_col}{The feature in tc that contains the token text.}
 
+\item{string_col}{If dict is a data.frame, the name of the column in dict that contains the dictionary lookup string}
+
+\item{sep}{A regular expression for separating multi-word lookup strings (default is " ", which is what quanteda dictionaries use).
+For example, if the dictionary contains "Barack Obama", sep should be " " so that it matches the consequtive tokens "Barack" and "Obama".
+In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\+' should be used.}
+
 \item{case_sensitive}{logical, should lookup be case sensitive?}
 
 \item{column}{The name of the column added to $tokens. [column]_id contains the unique id of the match.
 If a quanteda dictionary is given, the label for the match is in the column named [column].
 If a dictionary has multiple levels, these are added as [column]_l[level].}
+
+\item{use_wildcards}{Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used}
 
 \item{batchsize}{Very large dictionaries will be matched in batches to prevent memory issues.}
 
