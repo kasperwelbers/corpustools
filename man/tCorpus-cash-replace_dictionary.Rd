@@ -33,13 +33,9 @@ then after concatenating ASCII emoticons, the tokens will be c(":)", "yay") with
 
 \item{use_wildcards}{Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used}
 
-\item{batchsize}{Very large dictionaries will be matched in batches to prevent memory issues.}
-
 \item{flatten_colloc}{If true, collocations in the tokens (tokens with spaces or underscores) will be considered separate words. For example, "President_Obama" will be split to "president" "obama", so that "president obama" in the dictionary matches correctly.}
 
 \item{ascii}{If true, convert text to ascii before matching}
-
-\item{low_memory}{if true, use slower but more memory efficient algorithm}
 
 \item{verbose}{If true, report progress}
 }

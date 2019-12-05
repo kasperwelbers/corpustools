@@ -9,6 +9,10 @@ uncollapse_terms_cpp <- function(term, sep = " ") {
     .Call('_corpustools_uncollapse_terms_cpp', PACKAGE = 'corpustools', term, sep)
 }
 
+do_code_dictionary <- function(feature, context, which, dict, verbose) {
+    .Call('_corpustools_do_code_dictionary', PACKAGE = 'corpustools', feature, context, which, dict, verbose)
+}
+
 fast_factor_cpp <- function(x, levs) {
     .Call('_corpustools_fast_factor_cpp', PACKAGE = 'corpustools', x, levs)
 }

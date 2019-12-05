@@ -31,6 +31,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// do_code_dictionary
+DataFrame do_code_dictionary(NumericVector feature, std::vector<int> context, NumericVector which, List dict, bool verbose);
+RcppExport SEXP _corpustools_do_code_dictionary(SEXP featureSEXP, SEXP contextSEXP, SEXP whichSEXP, SEXP dictSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type feature(featureSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type context(contextSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type which(whichSEXP);
+    Rcpp::traits::input_parameter< List >::type dict(dictSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(do_code_dictionary(feature, context, which, dict, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fast_factor_cpp
 SEXP fast_factor_cpp(SEXP x, SEXP levs);
 RcppExport SEXP _corpustools_fast_factor_cpp(SEXP xSEXP, SEXP levsSEXP) {
@@ -126,6 +141,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_corpustools_collapse_terms_cpp", (DL_FUNC) &_corpustools_collapse_terms_cpp, 4},
     {"_corpustools_uncollapse_terms_cpp", (DL_FUNC) &_corpustools_uncollapse_terms_cpp, 2},
+    {"_corpustools_do_code_dictionary", (DL_FUNC) &_corpustools_do_code_dictionary, 5},
     {"_corpustools_fast_factor_cpp", (DL_FUNC) &_corpustools_fast_factor_cpp, 2},
     {"_corpustools_AND_hit_ids_cpp", (DL_FUNC) &_corpustools_AND_hit_ids_cpp, 8},
     {"_corpustools_proximity_hit_ids_cpp", (DL_FUNC) &_corpustools_proximity_hit_ids_cpp, 10},

@@ -31,7 +31,7 @@ Suggests:
     igraph,
     knitr,
     rmarkdown
-LinkingTo: Rcpp
+LinkingTo: Rcpp, RcppProgress
 LazyData: true
 Encoding: UTF-8
 SystemRequirements: C++11

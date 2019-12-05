@@ -26,15 +26,11 @@ In some dictionaries, however, it might say "Barack+Obama", so in that case sep 
 If a quanteda dictionary is given, the label for the match is in the column named [column].
 If a dictionary has multiple levels, these are added as [column]_l[level].}
 
-\item{use_wildcards}{Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used}
-
-\item{batchsize}{Very large dictionaries will be matched in batches to prevent memory issues.}
+\item{use_wildcards}{Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used.}
 
 \item{flatten_colloc}{If true, collocations in the tokens (rows in tc$tokens) will be considered separate words. For example, "President_Obama" will be split to "president" "obama", so that "president obama" in the dictionary matches correctly.}
 
 \item{ascii}{If true, convert text to ascii before matching}
-
-\item{low_memory}{if true, use slower but more memory efficient algorithm}
 
 \item{verbose}{If true, report progress}
 }

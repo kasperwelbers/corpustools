@@ -152,7 +152,7 @@ create_tcorpus.factor <- function(x, ...) {
 create_tcorpus.corpus <- function(x, ...) {
   x = x$documents
   x$doc_id = rownames(x)
-  create_tcorpus(x, text_columns='texts', doc_column=doc_id, ...)
+  create_tcorpus(x, text_columns='texts', doc_column='doc_id', ...)
 }
 
 #' Create a tcorpus based on tokens (i.e. preprocessed texts)
