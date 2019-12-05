@@ -425,56 +425,9 @@ tCorpus <- R6::R6Class("tCorpus",
       },
 
      aggregate = function(meta_cols=NULL, hits=NULL, feature=NULL, count=c('documents','tokens', 'hits'), wide=T){
-        self$validate()
-
-        count = match.arg(count)
-
-        meta = data.table::copy(self$meta)
-        if (is.null(meta_cols)) {
-          meta[,group := 'total']
-          meta_cols = 'group'
-        }
-
-        len = self$tokens[, list(len=.N), by='doc_id']
-        meta = merge(meta, len, by='doc_id', all.x=T)
-        d = meta[, list(N=.N, V=sum(len)), by=meta_cols]
-
-        if (!is.null(hits) | !is.null(feature)){
-          if (!is.null(hits) && !is.null(feature)) stop('Cannot specify both hits and feature')
-          if (!is.null(hits)) {
-            if (!methods::is(hits, c('featureHits', 'contextHits'))) stop('hits must be a featureHits or contextHits object (see the search_features and search_contexts functions)')
-            if (methods::is(hits, 'featureHits')) {
-              coldata = hits$hits[!duplicated(hits$hits[,c('code', 'hit_id')]),]
-            } else {
-              coldata = hits$hits
-            }
-          }
-
-          if (!is.null(feature)) {
-            coldata = data.frame(doc_id = self$tokens$doc_id, code = self$tokens[[feature]])
-            coldata = coldata[!is.na(coldata$code),]
-          }
-
-          if (count == 'documents') coldata = coldata[!duplicated(coldata[,c('doc_id','code')]),]
-          if (count == 'hits') coldata = coldata[!duplicated(coldata[,c('doc_id','code','hit_id')]),]
-
-          meta = merge(meta, coldata, by='doc_id', all=T)
-          count_d = subset(meta, select = c('code', meta_cols))
-          agg_cols = c(meta_cols, 'code')
-
-          count_d = count_d[, list(count=.N), by = agg_cols]
-          d = merge(d, count_d, meta_cols, all=T)
-          d$count[is.na(d$count)] = 0
-          if (wide) {
-            d = dcast(d, ... ~ code, value.var='count')
-            d[['NA']] = NULL
-            d[is.na(d)] = 0
-          } else {
-            d = subset(d, !is.na(code))
-          }
-        }
-
-        as.data.frame(d)
+        msg = "This function is deprecated because it is badly named, and the R6 method style is confusion. This is now the regular function count_tcorpus. Also see agg_tcorpus for aggregation"
+        warning(warningCondition(msg, class = "deprecatedWarning"))
+        as.data.frame(count_tcorpus(self, meta_cols, hits, feature, count, wide=T))
       },
 
       lookup = function(x, feature='token', ignore_case=TRUE, batchsize=25, raw_regex=FALSE, fixed=FALSE, with_i=FALSE, as_ascii=FALSE, sub_query=list(), only_context=F, subcontext=NULL, lookup_table=NULL){

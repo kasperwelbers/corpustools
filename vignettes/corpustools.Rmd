@@ -402,7 +402,7 @@ hits$queries
 head(hits$hits)
 ```
 
-### Aggregating and plotting 
+### Counting hits and plotting 
 
 Say we have the following search results.
 
@@ -412,11 +412,11 @@ queries = data.frame(label = c('War','Terrorism','Economy','Education'),
 hits = search_features(tc, query=queries$query, code=queries$label)
 ```
 
-We can use the aggregate method to aggregate hits. Here we use `wide = TRUE` to return results in wide format.
+We can use the count_tcorpus method to count hits. Here we use `wide = TRUE` to return results in wide format.
 
 ```{r}
-tc$aggregate(hits=hits)
-tc$aggregate(hits=hits, meta_cols = 'president')  ## break by meta variables
+count_tcorpus(tc, hits=hits)
+count_tcorpus(tc, hits=hits, meta_cols = 'president')  ## break by meta variables
 ```
 
 By setting the wide argument to FALSE, the query results are stacked in a long format, with the columns `code` and `count` for the labels and scores. Among other things, this makes it easy to prepare data for plotting with ggplot2. 
@@ -424,12 +424,12 @@ By setting the wide argument to FALSE, the query results are stacked in a long f
 ```{r, fig.width = 6, fig.height = 3, fig.align="center", eval=F}
 library(ggplot2) 
 
-date_hits = tc$aggregate(hits, meta_cols='date', wide = F)
+date_hits = count_tcorpus(tc, hits, meta_cols='date', wide = F)
   
 ggplot(date_hits, aes(x=date, y=count, group=code)) + 
   geom_line(aes(linetype=code))
   
-pres_hits = tc$aggregate(hits, meta_cols='president', wide = F)
+pres_hits = count_tcorpus(tc, hits, meta_cols='president', wide = F)
   
 ggplot(pres_hits, aes(president, count)) + 
   geom_col(aes(fill=code), width=.5, position = "dodge")
@@ -534,11 +534,11 @@ tc = create_tcorpus(sotu_texts, doc_column = 'id', text_columns = 'text', split_
 hits = search_dictionary(tc, dict)
 ```
 
-The output of this function is the same as `search_features`, so we can do anything with it as discussed above. For example, we can aggregate and plot the data.
+The output of this function is the same as `search_features`, so we can do anything with it as discussed above. For example, we can count and plot the data.
 
 ```{r, eval=F}
 library(ggplot2)
-agg_hits = tc$aggregate('date', hits, wide = F)
+agg_hits = count_tcorpus(tc, 'date', hits, wide = F)
 ggplot(agg_hits, aes(x=date, y=count, group=code)) + 
   geom_line(aes(linetype=code))
 ```
@@ -551,12 +551,27 @@ Instead of using these labels, we can also convert them to scores on a scale fro
 dict = melt_quanteda_dict(dict)
 dict$sentiment = ifelse(dict$code %in% c('positive','neg_negative'), 1, -1)
 tc$code_dictionary(dict)
+tc$tokens
 ```
 
 The `browse_texts` function can also color words based on a scale value between -1 and 1. This is a nice way to inspect and validate the results of a sentiment dictionary.
 
 ```{r, eval=F}
 browse_texts(tc, scale='sentiment')
+```
+
+We can use `agg_tcorpus` to aggregate the results. This is a convenient wrapper for data.table aggregation for tokens data. Especially important is the .id argument, which allows us to specify an id column. In the dictionary results, there are matches that span multiple rows (e.g., "not good"), and we only want to count these values once. By using the code_id column that code_dictionary
+added to indicate unique matches, we only aggregate unique non-NA rows in tokens.
+
+```{r, eval=F}
+agg_tcorpus(tc, sent = mean(sentiment), N = length(sentiment), .id = 'code_id')
+```
+
+The by argument also lets us group by columns in the tokens or meta data.
+
+```{r, eval=F}
+agg_tcorpus(tc, sent = mean(sentiment), .id = 'code_id', by='president')
+agg_tcorpus(tc, sent = mean(sentiment), .id = 'code_id', by=c('token','president'))
 ```
   
 # Text analysis techniques

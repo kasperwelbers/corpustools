@@ -16,12 +16,12 @@ test_that("Query search works", {
   expect_equal(as.character(hits$hits$feature), c('fuel','fuel'))
 
   ## aggregating results
-  res = tc$aggregate(hits=hits)
+  res = count_tcorpus(tc, hits=hits)
   expect_equal(colnames(res), c('group','N','V', 'query_1'))
 
   ## ensure aggregate counts correctly (ignoring duplicateh hit_ids within codes)
   hits = search_features(tc, c('fuel', 'mark'))  ## ensure hit_ids are counted well
-  agg = tc$aggregate(hits=hits)
+  agg = count_tcorpus(tc, hits=hits)
   expect_true(agg$query_1 == 2)
   expect_true(agg$query_2 == 1)
 
