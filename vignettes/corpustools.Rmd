@@ -574,6 +574,29 @@ agg_tcorpus(tc, sent = mean(sentiment), .id = 'code_id', by='president')
 agg_tcorpus(tc, sent = mean(sentiment), .id = 'code_id', by=c('token','president'))
 ```
   
+### replace_dictionary
+
+A variation on search_dictionary is replace_dictionary. This immediately replaces the matched tokens with the code on a single row. 
+For example, the emoticon_dict (included in the corpustools package) contains common emoticons in ascii format. 
+
+```{r}
+head(emoticon_dict)
+```
+
+With create_tcorpus, the different ascii symbols of an emoticon are split into separate tokens (because there is no universal list of which combinations of ascii symbols are emoticons). 
+
+```{r}
+tc = create_tcorpus('yay :) :* happy')
+tc$tokens
+```
+
+With `replace_dictionary`, we can replace these tokens with a code. In this case the full emoticon, but we could for instance also have used words for the expressed emotions such as "happy" or "sad".
+
+```{r}
+tc$replace_dictionary(emoticon_dict)
+tc$tokens
+```  
+  
 # Text analysis techniques
 
 The tCorpus is mainly intended for managing, querying, annotating and browsing tokens in a tokenlist format, but there are some built-in techniques for finding patterns in frequencies and co-occurences of features. Here we use tokens with basic preprocessing as an example, but note that these techniques can be applied for all features and annotations in a tCorpus. 

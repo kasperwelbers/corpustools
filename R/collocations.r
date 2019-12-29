@@ -57,10 +57,10 @@ add_collocation_label <- function(tc, colloc_id, feature='token', new_feature=sp
 
 ################## undo collocations
 
-flatten_collocations <- function(d, feature_col, position_col, sep='_', reset_key=T){
+flatten_collocations <- function(d, feature_col, position_col, sep=' |_', reset_key=T){
   ## position needs to be an integer (or at least shouldn not have decimals)
   if (reset_key) k = key(d)
-  fc = flatten_collocations_table(d[[feature_col]], d[[position_col]])
+  fc = flatten_collocations_table(d[[feature_col]], d[[position_col]], sep = sep)
 
   new_levels = setdiff(unique(fc$feature), levels(d))
   levels(d[[feature_col]]) = c(levels(d[[feature_col]]), new_levels)

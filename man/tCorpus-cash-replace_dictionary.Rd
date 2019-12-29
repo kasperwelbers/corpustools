@@ -26,6 +26,12 @@ but in some cases it might make sense to replace multiple columns (like token an
 For example, if the dictionary contains "Barack Obama", sep should be " " so that it matches the consequtive tokens "Barack" and "Obama".
 In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\+' should be used.}
 
+\item{code_from_features}{If TRUE, instead of replacing features with the matched code columnm, use the most frequent occuring string in the features.}
+
+\item{code_sep}{If code_from_features is TRUE, the separator for pasting features together. Default is an underscore, which is recommended because it has special
+features in corpustools. Most importantly, if a query or dictionary search is performed, multi-word tokens concatenated with an underscore are treated
+as separate consecutive words. So, "Bob_Smith" would still match a lookup for the two consequtive words "bob smith"}
+
 \item{decrement_ids}{If TRUE (default), decrement token ids after concatenating multi-token matches. So, if the tokens c(":", ")", "yay") have token_id c(1,2,3),
 then after concatenating ASCII emoticons, the tokens will be c(":)", "yay") with token_id c(1,2)}
 

@@ -7,13 +7,16 @@ using namespace Rcpp;
 
 int terms_i_binsearch(std::vector<double> n, const double& value) {
   // assumes list is named and has unique values
+
+  if (n.size() == 0) Rcpp::stop("2");
+
   std::vector<double>::iterator low;
   low = std::lower_bound(n.begin(), n.end(), value);
 
   int i = low - n.begin();
 
-  if ((unsigned)i > n.size())
-    return(i);
+  if ((unsigned)i >= n.size())
+    return(-1);
   if (n[i] == value)
     return(i);
   return(-1);
@@ -25,7 +28,7 @@ void match_dictionary(NumericVector& code_vec, NumericVector& hit_id, int hit_id
   int nterms = 0;
   int code = -1;
 
-  for (int j=0; j < 10; j++) {
+  for (int j=0; j < 100; j++) {
     if (dict.containsElementNamed("code"))
       code = as<int>(dict["code"]);
 
@@ -37,8 +40,10 @@ void match_dictionary(NumericVector& code_vec, NumericVector& hit_id, int hit_id
     }
 
     if (dict.containsElementNamed("terms")){
+      std::vector<double> test = dict["terms_i"];
       li = terms_i_binsearch(dict["terms_i"], feat);
       if (li < 0) break;
+
       dict = dict["terms"];
       dict = dict[li];
 

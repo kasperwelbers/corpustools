@@ -19,6 +19,7 @@
 #' count_tcorpus(tc, hits=hits, meta_cols='president', wide=FALSE)
 #' }
 count_tcorpus <- function(tc, meta_cols=NULL, hits=NULL, feature=NULL, count=c('documents','tokens', 'hits'), wide=T){
+  group = NULL; code = NULL
   tc$validate()
 
   count = match.arg(count)
@@ -85,6 +86,7 @@ count_tcorpus <- function(tc, meta_cols=NULL, hits=NULL, feature=NULL, count=c('
 #' @param .id         If an id column is given, only rows for which this id is not NA are used, and only one row for each id is used.
 #'                    This prevents double counting of values in annotations that span multiple rows. For example, a sentiment dictionary can match the tokens "not good", in which case
 #'                    the sentiment score (-1) will be assigned to both tokens. These annotations should have an _id column that indicates the unique matches.
+#' @param wide        Should results be in wide or long format?
 #'
 #'
 #' @return A data table
@@ -104,7 +106,7 @@ count_tcorpus <- function(tc, meta_cols=NULL, hits=NULL, feature=NULL, count=c('
 #' agg_tcorpus(tc, sent = mean(sentiment), .id='code_id', by='president')
 #' agg_tcorpus(tc, sent = mean(sentiment), .id='code_id', by=c('president', 'token'))
 #' }
-agg_tcorpus <- function(tc, ..., by=NULL, .id=NULL) {
+agg_tcorpus <- function(tc, ..., by=NULL, .id=NULL, wide=T) {
   e = substitute(list(...))
   f = tc$tokens
 
@@ -127,6 +129,10 @@ agg_tcorpus <- function(tc, ..., by=NULL, .id=NULL) {
     if (length(in_meta) > 0) f = cbind(f, tc$get_meta(in_meta, per_token = T, keep_df = T))
   }
   if (!is.null(.id)) f = subset(f, !is.na(f[[.id]]) & !duplicated(f[[.id]]))
-  f[,eval(e), by=by]
+  f = f[,eval(e), by=by]
+  if (!wide) {
+    f = data.table::melt(f, id.vars = by)
+  }
+  f
 }
 

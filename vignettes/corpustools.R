@@ -243,6 +243,17 @@ tc$subset_query('war')
 #  agg_tcorpus(tc, sent = mean(sentiment), .id = 'code_id', by=c('token','president'))
 
 ## ------------------------------------------------------------------------
+head(emoticon_dict)
+
+## ------------------------------------------------------------------------
+tc = create_tcorpus('yay :) :* happy')
+tc$tokens
+
+## ------------------------------------------------------------------------
+tc$replace_dictionary(emoticon_dict)
+tc$tokens
+
+## ------------------------------------------------------------------------
 tc = create_tcorpus(sotu_texts, doc_col='id')
 tc$preprocess(min_docfreq = 20, remove_stopwords = T, remove_numbers = T)
 

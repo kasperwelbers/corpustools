@@ -4,7 +4,7 @@
 \alias{agg_tcorpus}
 \title{Aggregate the tokens data}
 \usage{
-agg_tcorpus(tc, ..., by = NULL, .id = NULL)
+agg_tcorpus(tc, ..., by = NULL, .id = NULL, wide = T)
 }
 \arguments{
 \item{tc}{A tCorpus}
@@ -18,6 +18,8 @@ will calculate the mean score for a column with sentiment scores.}
 \item{.id}{If an id column is given, only rows for which this id is not NA are used, and only one row for each id is used.
 This prevents double counting of values in annotations that span multiple rows. For example, a sentiment dictionary can match the tokens "not good", in which case
 the sentiment score (-1) will be assigned to both tokens. These annotations should have an _id column that indicates the unique matches.}
+
+\item{wide}{Should results be in wide or long format?}
 }
 \value{
 A data table

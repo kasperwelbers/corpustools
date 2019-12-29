@@ -51,7 +51,7 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', strin
   column_id = paste0(column, '_id')
   if (column_id %in% self$names) self$delete_columns(column_id)
 
-  fl = dictionary_lookup(self, data.frame(string=dict[[string_col]], id = 1:nrow(dict)), regex_sep = sep,
+  fl = dictionary_lookup(self, data.table::data.table(string=dict[[string_col]], id = 1:nrow(dict), stringsAsFactors = F), regex_sep = sep,
                         token_col=token_col, case_sensitive=case_sensitive,
                         flatten_colloc=flatten_colloc, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
 
@@ -108,6 +108,10 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', strin
 #' @param sep             A regular expression for separating multi-word lookup strings (default is " ", which is what quanteda dictionaries use).
 #'                        For example, if the dictionary contains "Barack Obama", sep should be " " so that it matches the consequtive tokens "Barack" and "Obama".
 #'                        In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\+' should be used.
+#' @param code_from_features If TRUE, instead of replacing features with the matched code columnm, use the most frequent occuring string in the features.
+#' @param code_sep        If code_from_features is TRUE, the separator for pasting features together. Default is an underscore, which is recommended because it has special
+#'                        features in corpustools. Most importantly, if a query or dictionary search is performed, multi-word tokens concatenated with an underscore are treated
+#'                        as separate consecutive words. So, "Bob_Smith" would still match a lookup for the two consequtive words "bob smith"
 #' @param decrement_ids   If TRUE (default), decrement token ids after concatenating multi-token matches. So, if the tokens c(":", ")", "yay") have token_id c(1,2,3),
 #'                        then after concatenating ASCII emoticons, the tokens will be c(":)", "yay") with token_id c(1,2)
 #' @param case_sensitive  logical, should lookup be case sensitive?
@@ -126,13 +130,15 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', strin
 #' tc$tokens
 #'
 #' @aliases replace_dictionary
-tCorpus$set('public', 'replace_dictionary', function(dict, token_col='token', string_col='string', code_col='code', replace_cols=token_col, sep=' ', decrement_ids=T, case_sensitive=F, use_wildcards=T, flatten_colloc=T, ascii=F, verbose=F){
+tCorpus$set('public', 'replace_dictionary', function(dict, token_col='token', string_col='string', code_col='code', replace_cols=token_col, sep=' ', code_from_features=F, code_sep='_', decrement_ids=T, case_sensitive=F, use_wildcards=T, flatten_colloc=T, ascii=F, verbose=F){
   m = search_dictionary(self, dict, token_col=token_col, string_col=string_col, code_col=code_col, sep=sep,
                         case_sensitive=case_sensitive, use_wildcards=use_wildcards,
                         flatten_colloc=flatten_colloc, ascii=ascii, verbose=verbose)
   m = m$hits
 
   if (nrow(m) == 0) return(invisible(self))
+
+  if (code_from_features) m = code_from_features(m, collapse_sep=code_sep)
 
   rename = unique(m, by=c('doc_id','hit_id'))
   remove = m[!rename]
@@ -201,7 +207,6 @@ melt_quanteda_dict <- function(dict, column='code', .index=NULL) {
   melt_quanteda_dict(dict, column, .index)
 }
 
-
 #' Dictionary lookup
 #'
 #' Similar to search_features, but for fast matching of large dictionaries.
@@ -235,14 +240,14 @@ melt_quanteda_dict <- function(dict, column='code', .index=NULL) {
 #' search_dictionary(tc, dict)$hits
 search_dictionary <- function(tc, dict, token_col='token', string_col='string', code_col='code', sep=' ', case_sensitive=F, use_wildcards=T, flatten_colloc=T, ascii=F, verbose=F){
   hit_id = NULL
+
   if (!is_tcorpus(tc)) stop('tc is not a tCorpus')
   if (methods::is(dict, 'dictionary2')) dict = melt_quanteda_dict(dict)
   if (!methods::is(dict, 'data.frame')) stop('dict has to be a data.frame or a quanteda dictionary2 class')
   if (!string_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', string_col))
   if (!code_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', code_col))
 
-
-  fl = dictionary_lookup(tc, data.frame(string=dict[[string_col]], id = 1:nrow(dict)), regex_sep=sep,
+  fl = dictionary_lookup(tc, data.table::data.table(string=dict[[string_col]], id = 1:nrow(dict)), regex_sep=sep,
                         token_col=token_col, case_sensitive=case_sensitive, flatten_colloc=flatten_colloc, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
   if (is.null(fl)) return(featureHits(NULL, data.frame()))
 
@@ -266,6 +271,7 @@ dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_s
   if (!'id' %in% colnames(dict)) stop('Dictionary must have column named "id"')
   context_level = match.arg(context_level)
 
+  if (verbose) message("Preparing features")
   fi = data.table::data.table(feature=tc$get(token_col),
                               i=1:tc$n,
                               context = as.numeric(tc$context(context_level)))
@@ -273,7 +279,6 @@ dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_s
 
   levels(fi$feature) = normalize_string(levels(fi$feature), lowercase=!case_sensitive, ascii = ascii)
   #data.table::setkey(fi, 'feature')
-
   if (flatten_colloc) {
     is_colloc = grep(' |_', levels(fi$feature))
     if (length(is_colloc) > 0){
@@ -285,6 +290,7 @@ dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_s
     }
   }
 
+  if (verbose) message("Preparing dictionary")
   d = collapse_dict(dict$string, regex_sep, use_wildcards, case_sensitive, ascii, levels(fi$feature))
   if (!'terms' %in% names(d)) return(NULL)
 
@@ -293,7 +299,8 @@ dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_s
   initial_i = fi[list(feature=first_terms), on='feature', which=T, nomatch=0]
   initial_i = sort(unique(initial_i))
 
-  out = do_code_dictionary(as.numeric(fi$feature), context = fi$context, which = initial_i, dict = d, verbose)
+  if (verbose) message("Coding features")
+  out = do_code_dictionary(as.numeric(fi$feature), context = fi$context, which = initial_i, dict = d, verbose=verbose)
 
   out$hit_id[out$hit_id == 0] = NA
   out$dict_i[out$dict_i == 0] = NA
@@ -310,6 +317,10 @@ normalize_string <- function(x, lowercase=T, ascii=T, trim=T){
 collapse_dict <- function(string, regex_sep, use_wildcards, case_sensitive, ascii, feature_levels) {
   dict = data.table::data.table(string = normalize_string(string, lowercase=!case_sensitive, ascii=ascii))
 
+  ## remove separator if at start or end of word
+  first_or_last = paste0('^',regex_sep, '|', regex_sep, '$')
+  dict$string = gsub(first_or_last, '', dict$string)
+
   sn = stringi::stri_split(dict$string, regex=regex_sep)
   if (use_wildcards && any(grepl('[?*]', dict$string))) {
     sn = expand_wildcards(sn, feature_levels)
@@ -318,9 +329,13 @@ collapse_dict <- function(string, regex_sep, use_wildcards, case_sensitive, asci
     names(sn) = 1:length(sn)
   }
 
+  if (length(sn) == 0) return(NULL)
+
   ## for binary search in c++, there are issues with different ordering of terms in R and c++ (and more genrally encoding issues)
   ## here we replace all terms in the dictionary with factor levels
   sn = replace_string_with_factor(sn, feature_levels)
+
+  if (length(sn) == 0) return(NULL)
   rec_collapse_dict(sn, regex_sep=regex_sep)
 }
 
@@ -336,6 +351,7 @@ rec_collapse_dict <- function(l, i=1, regex_sep=' ') {
 
   term = sapply(l, '[', j=i, simplify = T)
   terms = split(l, term)
+
   out$terms = sapply(terms, rec_collapse_dict, i=i+1, regex_sep=regex_sep, USE.NAMES = F, simplify=F)
   if (length(out$terms) == 0) {
     out$terms = NULL
@@ -351,7 +367,9 @@ replace_string_with_factor <- function(query_list, l) {
   ## query_list is the list with split dictionary terms
   ## l is the levels of the features
   n = sapply(query_list, length)
+
   i = rep(1:length(query_list), n)
+
   ql = data.table::data.table(t = unlist(query_list), i = i)
   ql$t = as.numeric(factor(ql$t, levels=l))
   new = split(ql$t, ql$i)
@@ -378,9 +396,18 @@ expand_wildcards <- function(query_list, voc) {
 
   wctreg = gsub('([^a-zA-Z0-9\\*\\?])', '\\\\\\1', wct)
 
+
   ## find more elegant solution for not matching escaped * and ?
   wctreg = gsub('\\\\\\*', '##ASTER##', wctreg)
   wctreg = gsub('\\\\\\?', '##QUEST##', wctreg)
+
+  wctreg = gsub('\\?+', '?', wctreg)
+  wctreg = gsub('\\*+', '*', wctreg)
+  justast = wctreg == '*'
+  if (any(justast)) {
+    warning('Some terms are only an asterisk wildcard, and so could be anything. These are ignored')
+    wctreg[justast] = '###IGNORE###'
+  }
 
   wctreg = gsub('\\*', '.*', wctreg)
   wctreg = gsub('\\?', '.{0,1}', wctreg)
@@ -397,7 +424,7 @@ expand_wildcards <- function(query_list, voc) {
                       full_t = unlist(full_t),
                       nr = nr)
 
-  full_t = merge(full_t, ql[,c('i','t')], by='t')
+  full_t = merge(full_t, ql[,c('i','t')], by='t', allow.cartesian=T)
   out = merge(full_t, ql, by='i', all=T, allow.cartesian = T)
 
   out$nr[is.na(out$nr)] = 0
@@ -406,4 +433,15 @@ expand_wildcards <- function(query_list, voc) {
   out = split(ifelse(out$is_wc, out$full_t, out$t.y), out$id)
   has_na = sapply(out, anyNA)
   out[!has_na]
+}
+
+code_from_features <- function(hits, collapse_sep='_') {
+  feature = NULL; hit_id = NULL; group = NULL; code = NULL
+  code = hits[, list(.new_code = paste(feature, collapse=collapse_sep)), by=c('hit_id','code')]
+  code = code[, list(N = length(hit_id)), by=c('code','.new_code')]
+  data.table::setorderv(code, 'N', order = -1)
+  code = unique(code, by='code')
+  hits = merge(hits, code[,c('code','.new_code')], by='code')
+  hits$code = hits$.new_code
+  hits
 }

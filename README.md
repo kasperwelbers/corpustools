@@ -7,8 +7,6 @@ The corpustools package offers various tools for anayzing text corpora. The back
 
 One of the primary goals of corpustools is to make computational text analysis available and intuitive for users that are not experienced programmers. Notably, the authors are both active as researchers in the social sciences, and strive to promote the use of computational text analysis as a research method. This is also why we double down on the feature to reconstruct the original texts to enable a more qualitative investigation and validation of results. 
 
-In time, we will add tutorials for the different analysis techniques. With the introduction of the tCorpus class pretty much everything about the first corpustools version has changed, so we still have to add a lot of new documentation and rewrite the tutorials.
-
 
 Getting started
 ============
@@ -30,10 +28,4 @@ A vignette is provided ([HTML version](http://htmlpreview.github.io/?https://git
 
 ```{r}
 vignette('corpustools')
-```
-
-In addition, an overview of the methods, including links with more detailed method documentation, is available through a central documentation hub:
-
-```{r}
-?tCorpus
 ```
