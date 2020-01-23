@@ -13,7 +13,9 @@
 
 \item{n}{the number of words in the plot}
 
-\item{mode}{use "both" to plot both overrepresented and underrepresented words using the plot_words function. Use "ratio_x" or "ratio_y" to only plot overrepresented or underrepresented words using dtm_wordcloud}
+\item{mode}{use "both" to plot both overrepresented and underrepresented words using the plot_words function.
+Whether a term is under- or overrepresented is indicated on the x-axis, which shows the log ratios (negative is underrepresented, positive is overrepresented).
+Use "ratio_x" or "ratio_y" to only plot overrepresented or underrepresented words using dtm_wordcloud}
 
 \item{balance}{if TRUE, get an equal amount of terms on the left (underrepresented) and right (overrepresented) side. If FALSE, the top chi words are used, regardless of ratio.}
 

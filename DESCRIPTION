@@ -1,6 +1,6 @@
 Package: corpustools
-Version: 0.4.1
-Date: 2019-11-18
+Version: 0.4.2
+Date: 2020-01-22
 Title: Managing, Querying and Analyzing Tokenized Text
 Description: Provides text analysis in R, focusing on the use of a tokenized text format. In this format, the positions of tokens are maintained, and each token can be annotated (e.g., part-of-speech tags, dependency relations).
     Prominent features include advanced Lucene-like querying for specific tokens or contexts (e.g., documents, sentences),
@@ -17,18 +17,18 @@ Imports:
     stringi, 
     Rcpp (>= 0.12.12), 
     R6,
-    udpipe,
+    udpipe (>= 0.8.3),
     digest,
     data.table (>= 1.10.4),
+    quanteda (>= 1.5.1),
+    igraph,
     tokenbrowser,
     RNewsflow (>= 1.2.1),
     Matrix (>= 1.2)
 Suggests:
     testthat,
-    quanteda (>= 1.1.1),
     tm (>= 0.6),
     topicmodels,
-    igraph,
     knitr,
     rmarkdown
 LinkingTo: Rcpp, RcppProgress

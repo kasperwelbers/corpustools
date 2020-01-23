@@ -1,3 +1,8 @@
+CRAN v0.4.2 (Release date: 2020-01-22)
+================
+
+This is a minor update that mainly made dictionary search much faster (enabling the use of huge dictionary resources, such as named entity lists). 
+
 CRAN v0.4.1 (Release date: 2019-11-18)
 ================
   

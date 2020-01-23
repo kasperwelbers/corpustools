@@ -13,7 +13,7 @@ dtm_compare(dtm.x, dtm.y = NULL, smooth = 0.1, min_ratio = NULL,
 
 \item{dtm.y}{the 'reference' document-term matrix}
 
-\item{smooth}{the smoothing parameter for Laplace smoothing.}
+\item{smooth}{Laplace smoothing is used for the calculation of the probabilities. Here you can set the added (pseuocount) value.}
 
 \item{min_ratio}{threshold for the ratio value, which is the ratio of the relative frequency of a term in dtm.x and dtm.y}
 

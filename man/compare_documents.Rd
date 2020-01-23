@@ -8,7 +8,7 @@ compare_documents(tc, feature = "token", date_col = NULL,
   meta_cols = NULL, hour_window = c(24), measure = c("cosine",
   "overlap_pct"), min_similarity = 0, weight = c("norm_tfidf", "tfidf",
   "termfreq", "docfreq"), ngrams = NA, from_subset = NULL,
-  to_subset = NULL, verbose = T)
+  to_subset = NULL, return_igraph = T, verbose = T)
 }
 \arguments{
 \item{tc}{A \link{tCorpus}}
@@ -32,6 +32,8 @@ compare_documents(tc, feature = "token", date_col = NULL,
 \item{from_subset}{An expression to select a subset. If given, only this subset will be compared to other documents}
 
 \item{to_subset}{An expression to select a subset. If given, documents are only compared to this subset}
+
+\item{return_igraph}{If TRUE, return as an igraph network. Otherwise, return as a list with the edgelist and meta data.}
 
 \item{verbose}{If TRUE, report progress}
 }

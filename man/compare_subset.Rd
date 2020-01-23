@@ -22,7 +22,7 @@ compare_subset(tc, feature, subset_x = NULL, subset_meta_x = NULL,
 
 \item{query_feature}{if query_x is used, the column name of the feature used in the query search.}
 
-\item{smooth}{Laplace smoothing is used for the calculation of the ratio of the relative term frequency. Here you can set the added value.}
+\item{smooth}{Laplace smoothing is used for the calculation of the probabilities. Here you can set the added (pseuocount) value.}
 
 \item{min_ratio}{threshold for the ratio value, which is the ratio of the relative frequency of a term in dtm.x and dtm.y}
 

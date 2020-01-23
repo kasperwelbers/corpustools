@@ -15,7 +15,7 @@ compare_corpus(tc, tc_y, feature, smooth = 0.1, min_ratio = NULL,
 
 \item{feature}{the column name of the feature that is to be compared}
 
-\item{smooth}{Laplace smoothing is used for the calculation of the ratio of the relative term frequency. Here you can set the added value.}
+\item{smooth}{Laplace smoothing is used for the calculation of the probabilities. Here you can set the added (pseuocount) value.}
 
 \item{min_ratio}{threshold for the ratio value, which is the ratio of the relative frequency of a term in dtm.x and dtm.y}
 

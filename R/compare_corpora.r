@@ -4,7 +4,7 @@
 #' @param tc a \code{\link{tCorpus}}
 #' @param tc_y the reference tCorpus
 #' @param feature the column name of the feature that is to be compared
-#' @param smooth Laplace smoothing is used for the calculation of the ratio of the relative term frequency. Here you can set the added value.
+#' @param smooth Laplace smoothing is used for the calculation of the probabilities. Here you can set the added (pseuocount) value.
 #' @param min_ratio threshold for the ratio value, which is the ratio of the relative frequency of a term in dtm.x and dtm.y
 #' @param min_chi2 threshold for the chi^2 value
 #' @param yates_cor mode for using yates correctsion in the chi^2 calculation. Can be turned on ("yes") or off ("no"), or set to "auto", in which case cochrans rule is used to determine whether yates' correction is used.
@@ -41,7 +41,7 @@ compare_corpus <- function(tc, tc_y, feature, smooth=0.1, min_ratio=NULL, min_ch
 #' @param subset_meta_x like subset_x, but using using the meta data
 #' @param query_x like subset_x, but using a query search to select documents (see \link{search_contexts})
 #' @param query_feature if query_x is used, the column name of the feature used in the query search.
-#' @param smooth Laplace smoothing is used for the calculation of the ratio of the relative term frequency. Here you can set the added value.
+#' @param smooth Laplace smoothing is used for the calculation of the probabilities. Here you can set the added (pseuocount) value.
 #' @param min_ratio threshold for the ratio value, which is the ratio of the relative frequency of a term in dtm.x and dtm.y
 #' @param min_chi2 threshold for the chi^2 value
 #' @param yates_cor mode for using yates correctsion in the chi^2 calculation. Can be turned on ("yes") or off ("no"), or set to "auto", in which case cochrans rule is used to determine whether yates' correction is used.
@@ -101,7 +101,7 @@ tcorpus_compare <- function(tc_x, tc_y, feature, smooth=0.1, min_ratio=NULL, min
 #' @param select_rows Alternative to using dtm.y. Has to be a vector with rownames, by which
 #' @param yates_cor mode for using yates correctsion in the chi^2 calculation. Can be turned on ("yes") or off ("no"), or set to "auto", in which case cochrans rule is used to determine whether yates' correction is used.
 #' @param x_is_subset Specify whether dtm.x is a subset of dtm.y. In this case, the term frequencies of dtm.x will be subtracted from the term frequencies in dtm.y
-#' @param smooth the smoothing parameter for Laplace smoothing.
+#' @param smooth Laplace smoothing is used for the calculation of the probabilities. Here you can set the added (pseuocount) value.
 #' @param what choose whether to compare the frequency ("freq") of terms, or the document frequency ("docfreq"). This also affects how chi^2 is calculated, comparing either freq relative to vocabulary size or docfreq relative to corpus size (N)
 #'
 #' @return A data frame with rows corresponding to the terms in dtm and the statistics in the columns

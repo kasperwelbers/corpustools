@@ -98,7 +98,9 @@ dtm_wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs
 #'
 #' @param x a vocabularyComparison object, created with the \link{compare_corpus} or \link{compare_subset} method
 #' @param n the number of words in the plot
-#' @param mode use "both" to plot both overrepresented and underrepresented words using the plot_words function. Use "ratio_x" or "ratio_y" to only plot overrepresented or underrepresented words using dtm_wordcloud
+#' @param mode use "both" to plot both overrepresented and underrepresented words using the plot_words function.
+#'             Whether a term is under- or overrepresented is indicated on the x-axis, which shows the log ratios (negative is underrepresented, positive is overrepresented).
+#'             Use "ratio_x" or "ratio_y" to only plot overrepresented or underrepresented words using dtm_wordcloud
 #' @param balance if TRUE, get an equal amount of terms on the left (underrepresented) and right (overrepresented) side. If FALSE, the top chi words are used, regardless of ratio.
 #' @param size use "freq", "chi2" or "ratio" for determining the size of words
 #' @param ... additional arguments passed to plot_words ("both" mode) or dtm_wordcloud (ratio modes)

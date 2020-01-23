@@ -12,6 +12,7 @@
 #' @param ngrams an integer. If given, ngrams of this length are used
 #' @param from_subset An expression to select a subset. If given, only this subset will be compared to other documents
 #' @param to_subset An expression to select a subset. If given, documents are only compared to this subset
+#' @param return_igraph If TRUE, return as an igraph network. Otherwise, return as a list with the edgelist and meta data.
 #' @param verbose If TRUE, report progress
 #'
 #' @return An igraph graph in which nodes are documents and edges represent similarity scores
@@ -31,7 +32,7 @@
 #'
 #' g = compare_documents(tc, date_col = 'date', hour_window = c(0,36))
 #' igraph::get.data.frame(g)
-compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, hour_window=c(24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL, verbose=T) {
+compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, hour_window=c(24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL, return_igraph=T, verbose=T) {
   weight = match.arg(weight)
   measure = match.arg(measure)
   from_subset = tc$eval_meta(substitute(from_subset), parent.frame())
@@ -59,10 +60,9 @@ compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL
   g = RNewsflow::compare_documents(dtm, dtm_y, only_complete_window = F,
                                    date_var=date_col, hour_window=hour_window, group_var=group_col,
                                    min_similarity=min_similarity, measure=measure, verbose=verbose)
-  RNewsflow::as_document_network(g)
+  if (return_igraph) g = RNewsflow::as_document_network(g)
+  g
 }
-
-data.table::data.table(x=3,y=3,z=NULL)
 
 #' Deduplicate documents
 #'
