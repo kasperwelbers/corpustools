@@ -121,6 +121,7 @@ dfm_weighted = get_dfm(tc, 'feature', weight = 'tfidf')
 ##  Only use a subset of the tCorpus
 dfm_obama = get_dfm(tc, 'feature', subset_meta = president == "Barack Obama")
 
+
 ## ------------------------------------------------------------------------
 ## create tcorpus and preprocess tokens
 tc = create_tcorpus(sotu_texts, doc_column = 'id', text_columns = 'text')

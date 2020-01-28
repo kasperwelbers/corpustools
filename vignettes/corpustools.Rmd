@@ -312,6 +312,7 @@ dfm_weighted = get_dfm(tc, 'feature', weight = 'tfidf')
 
 ##  Only use a subset of the tCorpus
 dfm_obama = get_dfm(tc, 'feature', subset_meta = president == "Barack Obama")
+
 ```
 
 By preprocessing the tokens within the tCorpus, the features in the dfm can be linked to the original tokens in the tCorpus. In the next section, `Keeping the full corpus intact`, we show how this can be used to annotate the tCorpus with results from bag-of-words style text analyses. 

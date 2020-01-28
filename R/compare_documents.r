@@ -38,6 +38,7 @@ compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL
   from_subset = tc$eval_meta(substitute(from_subset), parent.frame())
   to_subset = tc$eval_meta(substitute(to_subset), parent.frame())
 
+
   dtm = get_dfm(tc, feature=feature, weight = weight, drop_empty_terms = F, context_labels = T, feature_labels=F, ngrams=ngrams)
 
   if (!is.null(meta_cols)) {
@@ -48,11 +49,13 @@ compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL
 
   dtm_y = NULL
   if (!is.null(to_subset)) {
-    dtm_y = quanteda::dfm_subset(dtm, subset=to_subset)
+    .to_doc = tc$meta$doc_id[to_subset]
+    dtm_y = quanteda::dfm_subset(dtm, subset= quanteda::docnames(dtm) %in% .to_doc)
   }
   if (!is.null(from_subset)) {
     if (is.null(dtm_y)) dtm_y = dtm
-    dtm = quanteda::dfm_subset(dtm, subset=from_subset)
+    .from_doc = tc$meta$doc_id[from_subset]
+    dtm = quanteda::dfm_subset(dtm, subset= quanteda::docnames(dtm) %in% .from_doc)
   }
 
   if (length(hour_window) == 1) hour_window = c(-hour_window, hour_window)
