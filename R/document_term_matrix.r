@@ -103,9 +103,15 @@ do_get_dtm <- function(tc, feature, context_level=c('document','sentence'), weig
   if(drop_empty_terms && methods::is(feature, 'factor')) feature = droplevels(feature)
   notNA = !is.na(feature)
 
-  cols = if (methods::is(feature, 'factor')) length(levels(feature)) else length(unique(feature))
+  if (methods::is(feature, 'factor')) {
+    cols = length(levels(feature))
+    j = as.numeric(feature)[notNA]
+  } else {
+    cols = length(unique(feature))
+    j = as.numeric(feature)[notNA] + 1
+  }
   m = Matrix::spMatrix(length(levels(i)), cols,
-                       as.numeric(i)[notNA], as.numeric(feature)[notNA],
+                       as.numeric(i)[notNA], j,
                        rep(1, sum(notNA)))
   dimnames(m) = list(levels(i), levels(feature))
 
