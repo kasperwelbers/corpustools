@@ -247,7 +247,7 @@ grouped_ngrams <- function(tokens, group, n, filter=rep(T, length(tokens)), labe
     }
   } else {
     if (skip_empty) {
-      ngrams = vector('numeric', length(filter))
+      ngrams = rep(NA, length(filter))
       ngrams[which(filter)] = create_ngrams(tokens, group, n, label=label)
     } else {
       ngrams = create_ngrams(tokens, group, n, label=label)

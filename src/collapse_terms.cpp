@@ -9,7 +9,7 @@ std::vector<std::string> collapse_terms_cpp(std::vector<std::string>& term, Logi
   int n = term.size();
   if (n != collapse.size()) stop("term and collapse arguments need to be vectors of the same size");
 
-  std::vector<std::string> out(sum(!collapse)+1);
+  std::vector<std::string> out(sum(!collapse));
   int pos = 0;
   bool use_sep2 = false;
   for (int i = 0; i < n; i++) {

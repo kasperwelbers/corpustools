@@ -81,14 +81,3 @@ unlist_to_df <- function(l, ids=1:length(l), global_position=F){
              position = position,
              value = unlist(l[filter]))
 }
-
-function(){
-test = create_tcorpus('test\n\n\ndit. ok\t\t. en dat\t ook\n.\n\n', udpipe_model='dutch', remember_spaces=T)$tokens
-cat(as.character(test$space))
-
-test$space
-cat(paste(test$token, test$space))
-
-test = create_tcorpus('test\n\n\ndit. ok\t\t. en dat\t ook\n.\n\n', remember_spaces=T)$tokens
-cat(paste(test$token, test$space))
-}
