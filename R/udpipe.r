@@ -101,7 +101,7 @@ udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, c
 
   if (udpipe_cores > 1) {
     if (.Platform$OS.type %in% c("windows")) {
-      cl = parallel::makeCluster(parallel.cores)
+      cl = parallel::makeCluster(udpipe_cores)
       on.exit(parallel::stopCluster(cl))
     }
     else
@@ -109,7 +109,7 @@ udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, c
   } else cl = NULL
 
   tokens = pbapply::pblapply(1:n, cl=cl, FUN=udpipe_parse_batch,
-                   texts=texts, batch_i=batch_i, udpipe_model=m, udpipe_cores=udpipe_cores,
+                   texts=texts, batch_i=batch_i, udpipe_model=m,
                    doc_ids=doc_ids, cache_dir=cache_dir, cached_batches=cached_batches,
                    use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)
   tokens = data.table::rbindlist(tokens)
@@ -136,7 +136,7 @@ udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, c
   tokens
 }
 
-udpipe_parse_batch <- function(i, texts, batch_i, udpipe_model, udpipe_cores, doc_ids, cache_dir, cached_batches, use_parser, max_sentences, max_tokens) {
+udpipe_parse_batch <- function(i, texts, batch_i, udpipe_model, doc_ids, cache_dir, cached_batches, use_parser, max_sentences, max_tokens) {
   if (i %in% cached_batches) {
     return(readRDS(file.path(cache_dir, i)))
   }
