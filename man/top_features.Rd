@@ -4,9 +4,16 @@
 \alias{top_features}
 \title{Show top features}
 \usage{
-top_features(tc, feature, n = 10, group_by = NULL,
-  group_by_meta = NULL, rank_by = c("freq", "chi2"), dropNA = T,
-  return_long = F)
+top_features(
+  tc,
+  feature,
+  n = 10,
+  group_by = NULL,
+  group_by_meta = NULL,
+  rank_by = c("freq", "chi2"),
+  dropNA = T,
+  return_long = F
+)
 }
 \arguments{
 \item{tc}{a tCorpus}

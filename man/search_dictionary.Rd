@@ -4,9 +4,19 @@
 \alias{search_dictionary}
 \title{Dictionary lookup}
 \usage{
-search_dictionary(tc, dict, token_col = "token", string_col = "string",
-  code_col = "code", sep = " ", case_sensitive = F,
-  use_wildcards = T, flatten_colloc = T, ascii = F, verbose = F)
+search_dictionary(
+  tc,
+  dict,
+  token_col = "token",
+  string_col = "string",
+  code_col = "code",
+  sep = " ",
+  case_sensitive = F,
+  use_wildcards = T,
+  flatten_colloc = T,
+  ascii = F,
+  verbose = F
+)
 }
 \arguments{
 \item{tc}{A tCorpus}

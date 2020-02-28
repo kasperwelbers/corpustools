@@ -4,8 +4,7 @@
 \alias{plot.featureAssociations}
 \title{visualize feature associations}
 \usage{
-\method{plot}{featureAssociations}(x, n = 25, size = c("chi2", "freq",
-  "ratio"), ...)
+\method{plot}{featureAssociations}(x, n = 25, size = c("chi2", "freq", "ratio"), ...)
 }
 \arguments{
 \item{x}{a featureAssociations object, created with the \link{feature_associations} function}

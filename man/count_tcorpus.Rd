@@ -4,8 +4,14 @@
 \alias{count_tcorpus}
 \title{Count results of search hits, or of a given feature in tokens}
 \usage{
-count_tcorpus(tc, meta_cols = NULL, hits = NULL, feature = NULL,
-  count = c("documents", "tokens", "hits"), wide = T)
+count_tcorpus(
+  tc,
+  meta_cols = NULL,
+  hits = NULL,
+  feature = NULL,
+  count = c("documents", "tokens", "hits"),
+  wide = T
+)
 }
 \arguments{
 \item{tc}{A tCorpus}

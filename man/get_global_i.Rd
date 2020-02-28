@@ -4,8 +4,11 @@
 \alias{get_global_i}
 \title{Compute global feature positions}
 \usage{
-get_global_i(tc, context_level = c("document", "sentence"),
-  max_window_size = 200)
+get_global_i(
+  tc,
+  context_level = c("document", "sentence"),
+  max_window_size = 200
+)
 }
 \arguments{
 \item{tc}{tCorpus object}

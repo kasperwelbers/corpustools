@@ -4,9 +4,15 @@
 \alias{search_contexts}
 \title{Search for documents or sentences using Boolean queries}
 \usage{
-search_contexts(tc, query, code = NULL, feature = "token",
-  context_level = c("document", "sentence"), verbose = F,
-  as_ascii = F)
+search_contexts(
+  tc,
+  query,
+  code = NULL,
+  feature = "token",
+  context_level = c("document", "sentence"),
+  verbose = F,
+  as_ascii = F
+)
 }
 \arguments{
 \item{tc}{a \code{\link{tCorpus}}}

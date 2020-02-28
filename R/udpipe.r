@@ -53,7 +53,7 @@ show_udpipe_models <- function() {
 }
 
 
-udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, cache=1, doc_ids=1:length(x), use_parser=T, max_sentences=NULL, max_tokens=NULL, remember_spaces=F, verbose=F){
+udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, cache=1, doc_ids=1:length(texts), use_parser=T, max_sentences=NULL, max_tokens=NULL, remember_spaces=F, verbose=F){
   m = prepare_model(udpipe_model, udpipe_model_path)
 
   batchsize = length(texts) / udpipe_cores
@@ -105,6 +105,7 @@ udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, c
     pbapply::pboptions(type='none')
 
   if (udpipe_cores > 1) {
+    if (udpipe_cores > parallel::detectCores()) stop(sprintf('You are trying to use more cores (%s) than parallel::detectCores() can detect (%s).', udpipe_cores, parallel::detectCores()))
     if (.Platform$OS.type %in% c("windows")) {
       cl = parallel::makeCluster(udpipe_cores)
       on.exit(parallel::stopCluster(cl))
@@ -120,12 +121,14 @@ udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, c
   tokens = data.table::rbindlist(tokens)
 
   ## set factors
+  doc_id = NULL
   tokens[, doc_id := fast_factor(tokens$doc_id)]
   for(col in colnames(tokens)) {
     if (class(tokens[[col]]) %in% c('character')) tokens[,(col) := fast_factor(tokens[[col]])]
   }
 
   if (remember_spaces) {
+    space = NULL; misc = NULL ## data.table bindings
     levels(tokens$misc) = c(levels(tokens$misc), " ")
     tokens$misc[is.na(tokens$misc)] = " "
     tokens[, space := fast_factor(gsub('Space[s]?After=', '', misc))]

@@ -4,9 +4,17 @@
 \alias{dtm_wordcloud}
 \title{Plot a word cloud from a dtm}
 \usage{
-dtm_wordcloud(dtm = NULL, nterms = 100, freq.fun = NULL,
-  terms = NULL, freqs = NULL, scale = c(4, 0.5), min.freq = 1,
-  rot.per = 0.15, ...)
+dtm_wordcloud(
+  dtm = NULL,
+  nterms = 100,
+  freq.fun = NULL,
+  terms = NULL,
+  freqs = NULL,
+  scale = c(4, 0.5),
+  min.freq = 1,
+  rot.per = 0.15,
+  ...
+)
 }
 \arguments{
 \item{dtm}{the document-term matrix}

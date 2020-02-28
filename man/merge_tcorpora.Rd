@@ -4,9 +4,13 @@
 \alias{merge_tcorpora}
 \title{Merge tCorpus objects}
 \usage{
-merge_tcorpora(..., keep_data = c("intersect", "all"),
-  keep_meta = c("intersect", "all"), if_duplicate = c("stop", "rename",
-  "drop"), duplicate_tag = "#D")
+merge_tcorpora(
+  ...,
+  keep_data = c("intersect", "all"),
+  keep_meta = c("intersect", "all"),
+  if_duplicate = c("stop", "rename", "drop"),
+  duplicate_tag = "#D"
+)
 }
 \arguments{
 \item{...}{tCorpus objects, or a list with tcorpus objects}

@@ -4,10 +4,15 @@
 \alias{semnet}
 \title{Create a semantic network based on the co-occurence of tokens in documents}
 \usage{
-semnet(tc, feature = "token", measure = c("con_prob",
-  "con_prob_weighted", "cosine", "count_directed", "count_undirected",
-  "chi2"), context_level = c("document", "sentence"), backbone = F,
-  n.batches = NA)
+semnet(
+  tc,
+  feature = "token",
+  measure = c("con_prob", "con_prob_weighted", "cosine", "count_directed",
+    "count_undirected", "chi2"),
+  context_level = c("document", "sentence"),
+  backbone = F,
+  n.batches = NA
+)
 }
 \arguments{
 \item{tc}{a tCorpus or a featureHits object (i.e. the result of search_features)}

@@ -22,6 +22,7 @@
 
 The token and meta data can be modified with the set* and delete* methods. All modifications are performed by reference.
 
+
 \tabular{ll}{
   \link[=tCorpus$set]{$set()} \tab Modify the token data by setting the values of one (existing or new) column. \cr
   \link[=tCorpus$set]{$set_meta()} \tab The set method for the document meta data \cr
@@ -45,6 +46,7 @@ For subsetting, you can use the \link{tCorpus$subset} method, and to add data to
   \link[=tCorpus$subset]{$subset()} \tab Like subset, but as an R6 method that changes the tCorpus by reference \cr
   \link[=tCorpus$subset_query]{$subset_query()} \tab Like subset_query, but as an R6 method that changes the tCorpus by reference
 }
+
 
 \strong{Fields}
 

@@ -4,10 +4,20 @@
 \alias{feature_associations}
 \title{Get common nearby features given a query or query hits}
 \usage{
-feature_associations(tc, feature, query = NULL, hits = NULL,
-  query_feature = "token", window = 15, n = 25, min_freq = 1,
-  sort_by = c("chi2", "ratio", "freq"), subset = NULL,
-  subset_meta = NULL, include_self = F)
+feature_associations(
+  tc,
+  feature,
+  query = NULL,
+  hits = NULL,
+  query_feature = "token",
+  window = 15,
+  n = 25,
+  min_freq = 1,
+  sort_by = c("chi2", "ratio", "freq"),
+  subset = NULL,
+  subset_meta = NULL,
+  include_self = F
+)
 }
 \arguments{
 \item{tc}{a \link{tCorpus}}

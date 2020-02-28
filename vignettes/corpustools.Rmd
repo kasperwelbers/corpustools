@@ -248,8 +248,6 @@ To use a UDPipe model in create_tcorpus, you simply need to use the `udpipe_mode
 ```{r, eval=F}
 tc = create_tcorpus("This is a quick example", udpipe_model='english-ewt')
 tc$tokens   ## output not shown in this vignette
-
-tc = create_tcorpus(sotu_texts, udpipe_model='english-ewt', udpipe_cores = 1)
 ```
 
 By default, UDPipe will not perform dependency parsing. You can activate this part of the pipeline by using the ```use_parser = TRUE``` argument, but it takes longer to compute and not all language have good dependency parser performance.
@@ -258,6 +256,21 @@ The `feats` column contains a bunch of nested features, such as Person (first, s
 
 ```{r, eval=F}
 tc$feats_to_columns(c('Tense','Number','Person'))
+
+```
+
+### Create_tcorpus keeps a persistent cache
+
+NLP Parsing lots of articles can take quite a while, and you don't want to spend several hours parsing just to see that you crashed your R session and lost all progress. By default, create_tcorpus therefore keeps a persistent cache of the most recent three unique uses of create_tcorpus with udpipe (i.e. calling create_tcorpus with the same input and arguments). If you like to keep more caches, you can set the udpipe_cache argument. 
+
+Thus, if you run the create_tcorpus function (using udpipe) a second time with the same input and parameters, it will continue where you last left of, or load all data from cache if it already finished the first time. So if your R session crashes or you need to shut down your laptop, simply fire create_tcorpus up again next time.
+
+### Using multiple cores
+
+If you are parsing a lot of data and you have CPU cores to spare, you can use them to parse the data faster. Simply set the udpipe_cores argument in create_tcorpus. The following example processes the sotu_texts data with four cores (if you have them).
+
+```{r, eval=F}
+tc = create_tcorpus(sotu_texts, doc_column = 'id', udpipe_model='english-ewt', updipe_cores=4)
 ```
 
 ## Filtering tokens

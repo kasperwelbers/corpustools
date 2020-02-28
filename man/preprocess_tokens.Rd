@@ -4,12 +4,26 @@
 \alias{preprocess_tokens}
 \title{Preprocess tokens in a character vector}
 \usage{
-preprocess_tokens(x, context = NULL, language = "english",
-  use_stemming = F, lowercase = T, ngrams = 1,
-  replace_whitespace = F, as_ascii = F, remove_punctuation = T,
-  remove_stopwords = F, remove_numbers = F, min_freq = NULL,
-  min_docfreq = NULL, max_freq = NULL, max_docfreq = NULL,
-  min_char = NULL, max_char = NULL, ngram_skip_empty = T)
+preprocess_tokens(
+  x,
+  context = NULL,
+  language = "english",
+  use_stemming = F,
+  lowercase = T,
+  ngrams = 1,
+  replace_whitespace = F,
+  as_ascii = F,
+  remove_punctuation = T,
+  remove_stopwords = F,
+  remove_numbers = F,
+  min_freq = NULL,
+  min_docfreq = NULL,
+  max_freq = NULL,
+  max_docfreq = NULL,
+  min_char = NULL,
+  max_char = NULL,
+  ngram_skip_empty = T
+)
 }
 \arguments{
 \item{x}{A character or factor vector in which each element is a token (i.e. a tokenized text)}

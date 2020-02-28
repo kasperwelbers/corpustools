@@ -4,9 +4,19 @@
 \alias{browse_hits}
 \title{View hits in a browser}
 \usage{
-browse_hits(tc, hits, token_col = "token", n = 500,
-  select = c("first", "random"), header = "", subheader = NULL,
-  meta_cols = NULL, seed = NA, view = T, filename = NULL)
+browse_hits(
+  tc,
+  hits,
+  token_col = "token",
+  n = 500,
+  select = c("first", "random"),
+  header = "",
+  subheader = NULL,
+  meta_cols = NULL,
+  seed = NA,
+  view = T,
+  filename = NULL
+)
 }
 \arguments{
 \item{tc}{a tCorpus}

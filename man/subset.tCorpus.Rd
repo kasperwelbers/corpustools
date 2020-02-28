@@ -4,8 +4,7 @@
 \alias{subset.tCorpus}
 \title{S3 subset for tCorpus class}
 \usage{
-\method{subset}{tCorpus}(x, subset = NULL, subset_meta = NULL,
-  window = NULL, ...)
+\method{subset}{tCorpus}(x, subset = NULL, subset_meta = NULL, window = NULL, ...)
 }
 \arguments{
 \item{x}{a tCorpus object}

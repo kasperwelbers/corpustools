@@ -4,10 +4,21 @@
 \alias{get_kwic}
 \title{Get keyword-in-context (KWIC) strings}
 \usage{
-get_kwic(tc, hits = NULL, i = NULL, query = NULL, code = "",
-  ntokens = 10, n = NA, nsample = NA, output_feature = "token",
-  query_feature = "token", context_level = c("document", "sentence"),
-  kw_tag = c("<", ">"), ...)
+get_kwic(
+  tc,
+  hits = NULL,
+  i = NULL,
+  query = NULL,
+  code = "",
+  ntokens = 10,
+  n = NA,
+  nsample = NA,
+  output_feature = "token",
+  query_feature = "token",
+  context_level = c("document", "sentence"),
+  kw_tag = c("<", ">"),
+  ...
+)
 }
 \arguments{
 \item{tc}{a tCorpus}

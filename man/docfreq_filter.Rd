@@ -4,8 +4,14 @@
 \alias{docfreq_filter}
 \title{Support function for subset method}
 \usage{
-docfreq_filter(x, min = -Inf, max = Inf, top = NULL, bottom = NULL,
-  doc_id = parent.frame()$doc_id)
+docfreq_filter(
+  x,
+  min = -Inf,
+  max = Inf,
+  top = NULL,
+  bottom = NULL,
+  doc_id = parent.frame()$doc_id
+)
 }
 \arguments{
 \item{x}{the name of the feature column. Can be given as a call or a string.}

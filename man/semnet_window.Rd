@@ -4,11 +4,17 @@
 \alias{semnet_window}
 \title{Create a semantic network based on the co-occurence of tokens in token windows}
 \usage{
-semnet_window(tc, feature = "token", measure = c("con_prob", "cosine",
-  "count_directed", "count_undirected", "chi2"),
-  context_level = c("document", "sentence"), window.size = 10,
-  direction = "<>", backbone = F, n.batches = 5,
-  matrix_mode = c("positionXwindow", "windowXwindow"))
+semnet_window(
+  tc,
+  feature = "token",
+  measure = c("con_prob", "cosine", "count_directed", "count_undirected", "chi2"),
+  context_level = c("document", "sentence"),
+  window.size = 10,
+  direction = "<>",
+  backbone = F,
+  n.batches = 5,
+  matrix_mode = c("positionXwindow", "windowXwindow")
+)
 }
 \arguments{
 \item{tc}{a tCorpus or a featureHits object (i.e. the result of search_features)}

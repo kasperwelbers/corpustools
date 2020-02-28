@@ -4,9 +4,17 @@
 \alias{compare_corpus}
 \title{Compare tCorpus vocabulary to that of another (reference) tCorpus}
 \usage{
-compare_corpus(tc, tc_y, feature, smooth = 0.1, min_ratio = NULL,
-  min_chi2 = NULL, is_subset = F, yates_cor = c("auto", "yes", "no"),
-  what = c("freq", "docfreq", "cooccurrence"))
+compare_corpus(
+  tc,
+  tc_y,
+  feature,
+  smooth = 0.1,
+  min_ratio = NULL,
+  min_chi2 = NULL,
+  is_subset = F,
+  yates_cor = c("auto", "yes", "no"),
+  what = c("freq", "docfreq", "cooccurrence")
+)
 }
 \arguments{
 \item{tc}{a \code{\link{tCorpus}}}

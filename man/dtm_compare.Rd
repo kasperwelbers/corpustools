@@ -4,9 +4,17 @@
 \alias{dtm_compare}
 \title{Compare two document term matrices}
 \usage{
-dtm_compare(dtm.x, dtm.y = NULL, smooth = 0.1, min_ratio = NULL,
-  min_chi2 = NULL, select_rows = NULL, yates_cor = c("auto", "yes",
-  "no"), x_is_subset = F, what = c("freq", "docfreq", "cooccurrence"))
+dtm_compare(
+  dtm.x,
+  dtm.y = NULL,
+  smooth = 0.1,
+  min_ratio = NULL,
+  min_chi2 = NULL,
+  select_rows = NULL,
+  yates_cor = c("auto", "yes", "no"),
+  x_is_subset = F,
+  what = c("freq", "docfreq", "cooccurrence")
+)
 }
 \arguments{
 \item{dtm.x}{the main document-term matrix}

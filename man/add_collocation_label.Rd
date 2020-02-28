@@ -4,8 +4,13 @@
 \alias{add_collocation_label}
 \title{Choose and add collocation strings based on collocation categories}
 \usage{
-add_collocation_label(tc, colloc_id, feature = "token",
-  new_feature = sprintf("\%s_l", colloc_id), pref_subset = NULL)
+add_collocation_label(
+  tc,
+  colloc_id,
+  feature = "token",
+  new_feature = sprintf("\%s_l", colloc_id),
+  pref_subset = NULL
+)
 }
 \arguments{
 \item{tc}{a tcorpus object}

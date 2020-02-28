@@ -58,8 +58,6 @@ create_tcorpus <- function(x, ...) {
 #' tc
 #' @export
 create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, udpipe_cores=1, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
-  space = NULL; misc = NULL ## data.table bindings
-
   if (any(duplicated(doc_id))) stop('doc_id should not contain duplicate values')
   if (!is.null(meta)){
     if (!methods::is(meta, 'data.frame')) stop('"meta" is not a data.frame or data.table')
@@ -73,7 +71,7 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
   meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
 
   if (!is.null(udpipe_model)) {
-    data = udpipe_parse(x, udpipe_model, udpipe_model_path, udpipe_cores=udpipe_cores, cache=udpipe_cache, doc_id=doc_id, use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens, remember_spaces=remember_spaces, verbose=verbose)
+    data = udpipe_parse(x, udpipe_model, udpipe_model_path, udpipe_cores=udpipe_cores, cache=udpipe_cache, doc_ids=doc_id, use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens, remember_spaces=remember_spaces, verbose=verbose)
   } else {
     data = tokenize_to_dataframe(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, remember_spaces=remember_spaces, verbose=verbose)
   }

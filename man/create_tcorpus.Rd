@@ -10,17 +10,39 @@
 \usage{
 create_tcorpus(x, ...)
 
-\method{create_tcorpus}{character}(x, doc_id = 1:length(x),
-  meta = NULL, udpipe_model = NULL, split_sentences = F,
-  max_sentences = NULL, max_tokens = NULL,
-  udpipe_model_path = getwd(), udpipe_cache = 3, use_parser = F,
-  remember_spaces = FALSE, verbose = T, ...)
+\method{create_tcorpus}{character}(
+  x,
+  doc_id = 1:length(x),
+  meta = NULL,
+  udpipe_model = NULL,
+  split_sentences = F,
+  max_sentences = NULL,
+  max_tokens = NULL,
+  udpipe_model_path = getwd(),
+  udpipe_cache = 3,
+  udpipe_cores = 1,
+  use_parser = F,
+  remember_spaces = FALSE,
+  verbose = T,
+  ...
+)
 
-\method{create_tcorpus}{data.frame}(x, text_columns = "text",
-  doc_column = "doc_id", udpipe_model = NULL, split_sentences = F,
-  max_sentences = NULL, max_tokens = NULL,
-  udpipe_model_path = getwd(), udpipe_cache = 3, use_parser = F,
-  remember_spaces = FALSE, verbose = T, ...)
+\method{create_tcorpus}{data.frame}(
+  x,
+  text_columns = "text",
+  doc_column = "doc_id",
+  udpipe_model = NULL,
+  split_sentences = F,
+  max_sentences = NULL,
+  max_tokens = NULL,
+  udpipe_model_path = getwd(),
+  udpipe_cache = 3,
+  udpipe_cores = 1,
+  use_parser = F,
+  remember_spaces = FALSE,
+  verbose = T,
+  ...
+)
 
 \method{create_tcorpus}{factor}(x, ...)
 
@@ -48,15 +70,17 @@ GitHub page of the \href{https://github.com/bnosac/udpipe}{udpipe package}.}
 
 \item{udpipe_model_path}{If udpipe_model is used, this path wil be used to look for the model, and if the model doesn't yet exist it will be downloaded to this location. Defaults to working directory}
 
-\item{udpipe_cache}{The number of persistent caches to keep for inputs of udpipe. The caches store tokens per batch (100 documents).
+\item{udpipe_cache}{The number of persistent caches to keep for inputs of udpipe. The caches store tokens in batches.
 This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start over.
 The caches are stored in the udpipe_models folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.}
+
+\item{udpipe_cores}{If udpipe_model is used, this sets the number of parallel cores.}
 
 \item{use_parser}{If TRUE, use dependency parser (only if udpipe_model is used)}
 
 \item{remember_spaces}{If TRUE, a column with spaces after each token is included. Enables correct reconstruction of original text and keeps annotations at the level of character positions (e.g., brat) intact.}
 
-\item{verbose}{If TRUE, report progress}
+\item{verbose}{If TRUE, report progress. Only if x is large enough to require multiple sequential batches}
 
 \item{text_columns}{if x is a data.frame, this specifies the column(s) that contains text. The texts are paste together in the order specified here.}
 

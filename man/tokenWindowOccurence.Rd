@@ -4,9 +4,16 @@
 \alias{tokenWindowOccurence}
 \title{Gives the window in which a term occured in a matrix.}
 \usage{
-tokenWindowOccurence(tc, feature, context_level = c("document",
-  "sentence"), window.size = 10, direction = "<>",
-  distance_as_value = F, batch_rows = NULL, drop_empty_terms = T)
+tokenWindowOccurence(
+  tc,
+  feature,
+  context_level = c("document", "sentence"),
+  window.size = 10,
+  direction = "<>",
+  distance_as_value = F,
+  batch_rows = NULL,
+  drop_empty_terms = T
+)
 }
 \arguments{
 \item{tc}{a tCorpus object}

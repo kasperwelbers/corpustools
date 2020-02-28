@@ -4,9 +4,17 @@
 \alias{search_features}
 \title{Find tokens using a Lucene-like search query}
 \usage{
-search_features(tc, query, code = NULL, feature = "token",
-  mode = c("unique_hits", "features"), context_level = c("document",
-  "sentence"), keep_longest = TRUE, as_ascii = F, verbose = F)
+search_features(
+  tc,
+  query,
+  code = NULL,
+  feature = "token",
+  mode = c("unique_hits", "features"),
+  context_level = c("document", "sentence"),
+  keep_longest = TRUE,
+  as_ascii = F,
+  verbose = F
+)
 }
 \arguments{
 \item{tc}{a \code{\link{tCorpus}}}

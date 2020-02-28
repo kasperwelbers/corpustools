@@ -4,8 +4,13 @@
 \alias{subset_query}
 \title{Subset tCorpus token data using a query}
 \usage{
-subset_query(tc, query, feature = "token",
-  context_level = c("document", "sentence"), window = NA)
+subset_query(
+  tc,
+  query,
+  feature = "token",
+  context_level = c("document", "sentence"),
+  window = NA
+)
 }
 \arguments{
 \item{tc}{A \code{\link{tCorpus}}}

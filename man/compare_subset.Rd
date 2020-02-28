@@ -4,10 +4,19 @@
 \alias{compare_subset}
 \title{Compare vocabulary of a subset of a tCorpus to the rest of the tCorpus}
 \usage{
-compare_subset(tc, feature, subset_x = NULL, subset_meta_x = NULL,
-  query_x = NULL, query_feature = "token", smooth = 0.1,
-  min_ratio = NULL, min_chi2 = NULL, yates_cor = c("auto", "yes",
-  "no"), what = c("freq", "docfreq", "cooccurrence"))
+compare_subset(
+  tc,
+  feature,
+  subset_x = NULL,
+  subset_meta_x = NULL,
+  query_x = NULL,
+  query_feature = "token",
+  smooth = 0.1,
+  min_ratio = NULL,
+  min_chi2 = NULL,
+  yates_cor = c("auto", "yes", "no"),
+  what = c("freq", "docfreq", "cooccurrence")
+)
 }
 \arguments{
 \item{tc}{a \code{\link{tCorpus}}}

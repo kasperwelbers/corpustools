@@ -4,11 +4,21 @@
 \alias{compare_documents}
 \title{Calculate the similarity of documents}
 \usage{
-compare_documents(tc, feature = "token", date_col = NULL,
-  meta_cols = NULL, hour_window = c(24), measure = c("cosine",
-  "overlap_pct"), min_similarity = 0, weight = c("norm_tfidf", "tfidf",
-  "termfreq", "docfreq"), ngrams = NA, from_subset = NULL,
-  to_subset = NULL, return_igraph = T, verbose = T)
+compare_documents(
+  tc,
+  feature = "token",
+  date_col = NULL,
+  meta_cols = NULL,
+  hour_window = c(24),
+  measure = c("cosine", "overlap_pct"),
+  min_similarity = 0,
+  weight = c("norm_tfidf", "tfidf", "termfreq", "docfreq"),
+  ngrams = NA,
+  from_subset = NULL,
+  to_subset = NULL,
+  return_igraph = T,
+  verbose = T
+)
 }
 \arguments{
 \item{tc}{A \link{tCorpus}}

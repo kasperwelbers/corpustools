@@ -4,9 +4,14 @@
 \alias{plot.vocabularyComparison}
 \title{visualize vocabularyComparison}
 \usage{
-\method{plot}{vocabularyComparison}(x, n = 25, mode = c("both",
-  "ratio_x", "ratio_y"), balance = T, size = c("chi2", "freq",
-  "ratio"), ...)
+\method{plot}{vocabularyComparison}(
+  x,
+  n = 25,
+  mode = c("both", "ratio_x", "ratio_y"),
+  balance = T,
+  size = c("chi2", "freq", "ratio"),
+  ...
+)
 }
 \arguments{
 \item{x}{a vocabularyComparison object, created with the \link{compare_corpus} or \link{compare_subset} method}
