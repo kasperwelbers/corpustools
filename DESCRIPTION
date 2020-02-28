@@ -24,7 +24,9 @@ Imports:
     igraph,
     tokenbrowser,
     RNewsflow (>= 1.2.1),
-    Matrix (>= 1.2)
+    Matrix (>= 1.2),
+    parallel,
+    pbapply (>= 1.4)
 Suggests:
     testthat,
     tm (>= 0.6),

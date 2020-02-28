@@ -26,6 +26,7 @@
 #' @param udpipe_cache      The number of persistent caches to keep for inputs of udpipe. The caches store tokens per batch (100 documents).
 #'                          This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start over.
 #'                          The caches are stored in the udpipe_models folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.
+#' @param udpipe_cores      If udpipe_model is used, this sets the number of parallel cores.
 #' @param use_parser If TRUE, use dependency parser (only if udpipe_model is used)
 #' @param remember_spaces If TRUE, a column with spaces after each token is included. Enables correct reconstruction of original text and keeps annotations at the level of character positions (e.g., brat) intact.
 #' @param verbose If TRUE, report progress
@@ -56,7 +57,7 @@ create_tcorpus <- function(x, ...) {
 #'                     meta = meta)
 #' tc
 #' @export
-create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
+create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, udpipe_cores=1, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
   space = NULL; misc = NULL ## data.table bindings
 
   if (any(duplicated(doc_id))) stop('doc_id should not contain duplicate values')
@@ -72,15 +73,7 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
   meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
 
   if (!is.null(udpipe_model)) {
-    data = udpipe_parse(x, udpipe_model, udpipe_model_path, cache=udpipe_cache, doc_id=doc_id, use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens, verbose=verbose)
-    if (remember_spaces) {
-      levels(data$misc) = c(levels(data$misc), " ")
-      data$misc[is.na(data$misc)] = " "
-      data[, space := fast_factor(gsub('Space[s]?After=', '', misc))]
-      levels(data$space) = ifelse(levels(data$space) == 'No', '', levels(data$space))
-      levels(data$space) = double_to_single_slash(levels(data$space))
-    }
-    data$misc = NULL
+    data = udpipe_parse(x, udpipe_model, udpipe_model_path, udpipe_cores=udpipe_cores, cache=udpipe_cache, doc_id=doc_id, use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens, remember_spaces=remember_spaces, verbose=verbose)
   } else {
     data = tokenize_to_dataframe(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, remember_spaces=remember_spaces, verbose=verbose)
   }
@@ -108,7 +101,7 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
 #' tc
 #' tc$tokens
 #' @export
-create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id', udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
+create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id', udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, udpipe_cores=1, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
   for(cname in text_columns) if (!cname %in% colnames(x)) stop(sprintf('text_column "%s" not in data.frame', cname))
 
   if (length(text_columns) > 1){
@@ -125,7 +118,7 @@ create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id
   create_tcorpus(text,
                  doc_id = doc_id,
                  meta = x[,!colnames(x) %in% c(text_columns, doc_column), drop=F],
-                 udpipe_model=udpipe_model, split_sentences = split_sentences, max_sentences = max_sentences, max_tokens = max_tokens, udpipe_model_path=udpipe_model_path, udpipe_cache=udpipe_cache, use_parser=use_parser, remember_spaces=remember_spaces, verbose=verbose)
+                 udpipe_model=udpipe_model, split_sentences = split_sentences, max_sentences = max_sentences, max_tokens = max_tokens, udpipe_model_path=udpipe_model_path, udpipe_cache=udpipe_cache, udpipe_cores=udpipe_cores, use_parser=use_parser, remember_spaces=remember_spaces, verbose=verbose)
 }
 
 #' @rdname create_tcorpus

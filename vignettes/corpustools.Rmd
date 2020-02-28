@@ -216,7 +216,7 @@ Splitting texts into a tokenlist is a form of text preprocessing called tokeniza
 
 Corpustools support various preprocessing techniques. We make a rough distinction between **basic** and **advanced** preprocessing. By basic preprocessing we mean the common lightweight techniques such as stemming, lowercasing and stopword removal. By advanced preprocessing we refer to techniques such as lemmatization, part-of-speech tagging and dependency parsing, that require more sophisticated NLP pipelines. Also, it is often usefull to **filter** out certain terms. For instance, you might want to look only at nouns, drop all terms that occur less than 10 times in the corpus, or perhaps use more stopwords. 
 
-## basic preprocessing
+## Basic preprocessing
 
 The basic preprocessing techniques can be performed on a `tcorpus` with the `preprocess` method. The main arguments are:
 
@@ -239,7 +239,7 @@ tc$tokens
 
 The tokens data.table now has the new column "feature" which contains the preprocessed token. 
 
-## advanced preprocessing
+## Advanced preprocessing with UDPipe
 
 There are several packages for using NLP pipelines in R, such as `spacyr` for SpaCy, `coreNLP` for Stanford CoreNLP, and `udpipe` for UDPipe. Most of these rely on external dependencies (Python for SpaCy, Java for CoreNLP), but the `UDPipe` pipeline runs in C++ which plays nicely with R. We have built a wrapper for the `udpipe` package which provides bindings for using UDPipe directly from within R. Unlike basic preprocessing, this feature has to be used in the create_tcorpus function, because it requires the raw text input.
 
@@ -248,6 +248,8 @@ To use a UDPipe model in create_tcorpus, you simply need to use the `udpipe_mode
 ```{r, eval=F}
 tc = create_tcorpus("This is a quick example", udpipe_model='english-ewt')
 tc$tokens   ## output not shown in this vignette
+
+tc = create_tcorpus(sotu_texts, udpipe_model='english-ewt', udpipe_cores = 1)
 ```
 
 By default, UDPipe will not perform dependency parsing. You can activate this part of the pipeline by using the ```use_parser = TRUE``` argument, but it takes longer to compute and not all language have good dependency parser performance.
@@ -258,7 +260,7 @@ The `feats` column contains a bunch of nested features, such as Person (first, s
 tc$feats_to_columns(c('Tense','Number','Person'))
 ```
 
-## filtering tokens
+## Filtering tokens
 
 In basic preprocessing we saw that `NA` values were introduced where stopwords were filtered out. If you want to filter out more tokens, you can use the `tc$feature_subset()` method. This works as a regular subset, but the difference is that the corpus is kept intact. That is, the rows of the tokens that are filtered out are not deleted.
 

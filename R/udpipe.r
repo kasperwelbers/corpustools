@@ -53,20 +53,17 @@ show_udpipe_models <- function() {
 }
 
 
-udpipe_parse <- function(x, udpipe_model, udpipe_model_path, cache=1, doc_id=1:length(x), use_parser=use_parser, max_sentences=NULL, max_tokens=NULL, verbose=F){
+udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, cache=1, doc_ids=1:length(x), use_parser=T, max_sentences=NULL, max_tokens=NULL, remember_spaces=F, verbose=F){
   m = prepare_model(udpipe_model, udpipe_model_path)
 
   batchsize = 100  ## keep constant, but if we ever change our minds, note that it is used to hash the cache ids
-  batch_i = get_batch_i(length(doc_id), batchsize=batchsize, return_list=T)
+  batch_i = get_batch_i(length(doc_ids), batchsize=batchsize, return_list=T)
   n = length(batch_i)
-  if (verbose && n > 1) {
-    pb = utils::txtProgressBar(min = 1, max = n, style = 3)
-    pb$up(1)
-  }
+
 
   if (cache > 0) {
     cache_path = make_dir(file.path(udpipe_model_path, 'udpipe_models'), 'caches')
-    cache_hash =  digest::digest(list(x, udpipe_model, doc_id, use_parser, max_sentences, max_tokens, batchsize))
+    cache_hash =  digest::digest(list(texts, udpipe_model, doc_ids, use_parser, max_sentences, max_tokens, batchsize))
 
     current_caches = list.files(cache_path, full.names = T)
     cache_exists = grep(cache_hash, current_caches, fixed = T, value=T)
@@ -92,40 +89,66 @@ udpipe_parse <- function(x, udpipe_model, udpipe_model_path, cache=1, doc_id=1:l
     }
 
     cached_batches = list.files(cache_dir)
-  } else cached_batches = c()
-
-  tokens = vector('list', n)
-  for (i in 1:n){
-    if (i %in% cached_batches) {
-      tokens[[i]] = readRDS(file.path(cache_dir, i))
-    } else {
-      tokens[[i]] = udpipe_parse_batch(x[batch_i[[i]]], m, doc_id=doc_id[batch_i[[i]]],
-                                       use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)
-      if (cache > 0) saveRDS(tokens[[i]], file = file.path(cache_dir, i))
-    }
-
-    if (verbose && n > 1) pb$up(i+1)
+  } else {
+    cache_dir=NULL
+    cached_batches = c()
   }
-  tokens = data.table::rbindlist(tokens)
 
+  if (verbose && n > 1)
+    pbapply::pboptions(type = "txt", style=3)
+  else
+    pbapply::pboptions(type='none')
+
+  if (udpipe_cores > 1) {
+    if (.Platform$OS.type %in% c("windows")) {
+      cl = parallel::makeCluster(parallel.cores)
+      on.exit(parallel::stopCluster(cl))
+    }
+    else
+      cl = udpipe_cores
+  } else cl = NULL
+
+  tokens = pbapply::pblapply(1:n, cl=cl, FUN=udpipe_parse_batch,
+                   texts=texts, batch_i=batch_i, udpipe_model=m, udpipe_cores=udpipe_cores,
+                   doc_ids=doc_ids, cache_dir=cache_dir, cached_batches=cached_batches,
+                   use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)
+  tokens = data.table::rbindlist(tokens)
 
   ## set factors
   tokens[, doc_id := fast_factor(tokens$doc_id)]
   for(col in colnames(tokens)) {
     if (class(tokens[[col]]) %in% c('character')) tokens[,(col) := fast_factor(tokens[[col]])]
   }
+
+  if (remember_spaces) {
+    levels(tokens$misc) = c(levels(tokens$misc), " ")
+    tokens$misc[is.na(tokens$misc)] = " "
+    tokens[, space := fast_factor(gsub('Space[s]?After=', '', misc))]
+    levels(tokens$space) = ifelse(levels(tokens$space) == 'No', '', levels(tokens$space))
+    levels(tokens$space) = double_to_single_slash(levels(tokens$space))
+  } else {
+    tokens$start = NULL
+    tokens$end = NULL
+  }
+  tokens$misc = NULL
+  tokens$term_id = NULL
+
   tokens
 }
 
-udpipe_parse_batch <- function(x, udpipe_model, doc_id, use_parser, max_sentences, max_tokens) {
+udpipe_parse_batch <- function(i, texts, batch_i, udpipe_model, udpipe_cores, doc_ids, cache_dir, cached_batches, use_parser, max_sentences, max_tokens) {
+  if (i %in% cached_batches) {
+    return(readRDS(file.path(cache_dir, i)))
+  }
+
   token_id = NULL; head_token_id = NULL; sentence_id = NULL ## prevent no visible bindings error (due to data table syntax)
-
   parser = if (use_parser) 'default' else 'none'
+  x = texts[batch_i[[i]]]
+  doc_id = doc_ids[batch_i[[i]]]
 
-  x <- udpipe::udpipe_annotate(udpipe_model, x = x, doc_id=doc_id, parser = parser)
+  names(x) = doc_id
+  x = udpipe::udpipe(x, object=udpipe_model, paralell.cores=1, parser=parser)
   x = as.data.table(x)
-
-  #warning('let op zum')
 
   x[,token_id := as.numeric(token_id)]
   x[,head_token_id := as.numeric(head_token_id)]
@@ -149,6 +172,8 @@ udpipe_parse_batch <- function(x, udpipe_model, doc_id, use_parser, max_sentence
   x = subset(x, select=cols)
   data.table::setnames(x, old = c('sentence_id', 'upos'), new = c('sentence', 'POS'))
   if (use_parser) data.table::setnames(x, old = c('head_token_id', 'dep_rel'), new = c('parent','relation'))
+
+  if (!is.null(cache_dir)) saveRDS(x, file.path(cache_dir, i))
 
   x
 }
