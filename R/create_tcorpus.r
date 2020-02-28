@@ -23,14 +23,14 @@
 #' @param doc_column If x is a data.frame, this specifies the column with the document ids.
 #' @param text_columns if x is a data.frame, this specifies the column(s) that contains text. The texts are paste together in the order specified here.
 #' @param udpipe_model_path If udpipe_model is used, this path wil be used to look for the model, and if the model doesn't yet exist it will be downloaded to this location. Defaults to working directory
-#' @param udpipe_cache      The number of persistent caches to keep for inputs of udpipe. The caches store tokens per batch (100 documents).
+#' @param udpipe_cache      The number of persistent caches to keep for inputs of udpipe. The caches store tokens in batches.
 #'                          This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start over.
 #'                          The caches are stored in the udpipe_models folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.
 #' @param udpipe_cores      If udpipe_model is used, this sets the number of parallel cores.
 #' @param use_parser If TRUE, use dependency parser (only if udpipe_model is used)
 #' @param remember_spaces If TRUE, a column with spaces after each token is included. Enables correct reconstruction of original text and keeps annotations at the level of character positions (e.g., brat) intact.
-#' @param verbose If TRUE, report progress
-#' @param ...          Arguments passed to create_tcorpus.character
+#' @param verbose If TRUE, report progress. Only if x is large enough to require multiple sequential batches
+#' @param ...     Arguments passed to create_tcorpus.character
 #'
 #' @export
 #' @name create_tcorpus

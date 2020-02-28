@@ -56,10 +56,15 @@ show_udpipe_models <- function() {
 udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, cache=1, doc_ids=1:length(x), use_parser=T, max_sentences=NULL, max_tokens=NULL, remember_spaces=F, verbose=F){
   m = prepare_model(udpipe_model, udpipe_model_path)
 
-  batchsize = 100  ## keep constant, but if we ever change our minds, note that it is used to hash the cache ids
+  batchsize = length(texts) / udpipe_cores
+  if (batchsize > 50) {
+    batchsize = 50
+    usefull_verbose=T
+  } else {
+    usefull_verbose=F
+  }
   batch_i = get_batch_i(length(doc_ids), batchsize=batchsize, return_list=T)
   n = length(batch_i)
-
 
   if (cache > 0) {
     cache_path = make_dir(file.path(udpipe_model_path, 'udpipe_models'), 'caches')
@@ -94,7 +99,7 @@ udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, c
     cached_batches = c()
   }
 
-  if (verbose && n > 1)
+  if (verbose && usefull_verbose)
     pbapply::pboptions(type = "txt", style=3)
   else
     pbapply::pboptions(type='none')
@@ -140,7 +145,6 @@ udpipe_parse_batch <- function(i, texts, batch_i, udpipe_model, doc_ids, cache_d
   if (i %in% cached_batches) {
     return(readRDS(file.path(cache_dir, i)))
   }
-
   token_id = NULL; head_token_id = NULL; sentence_id = NULL ## prevent no visible bindings error (due to data table syntax)
   parser = if (use_parser) 'default' else 'none'
   x = texts[batch_i[[i]]]
