@@ -130,7 +130,7 @@ semnet_window <- function(tc, feature='token', measure=c('con_prob', 'cosine', '
   if (methods::is(tc, 'featureHits')) {
     sentence_col = if (anyNA(tc$hits$sentence)) NULL else 'sentence'
     hits = tc$hits
-    if (measure %in% c('count_directed','count_undirected')) hits = hits[!duplicated(hits$hit_id)]
+    if (measure %in% c('count_directed','count_undirected')) hits = hits[!duplicated(hits[,c('code','hit_id')])]
     tc = tokens_to_tcorpus(hits, doc_col = 'doc_id', sentence_col=NULL, token_id_col = 'token_id')
     feature = 'code'
   }
