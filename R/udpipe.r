@@ -53,12 +53,12 @@ show_udpipe_models <- function() {
 }
 
 
-udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, cache=1, doc_ids=1:length(texts), use_parser=T, max_sentences=NULL, max_tokens=NULL, remember_spaces=F, verbose=F){
+udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, cache=1, max_batchsize=50, doc_ids=1:length(texts), use_parser=T, max_sentences=NULL, max_tokens=NULL, remember_spaces=F, verbose=F){
   m = prepare_model(udpipe_model, udpipe_model_path)
 
   batchsize = length(texts) / udpipe_cores
-  if (batchsize > 50) {
-    batchsize = 50
+  if (batchsize > max_batchsize) {
+    batchsize = max_batchsize
     usefull_verbose=T
   } else {
     usefull_verbose=F

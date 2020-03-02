@@ -21,6 +21,7 @@ create_tcorpus(x, ...)
   udpipe_model_path = getwd(),
   udpipe_cache = 3,
   udpipe_cores = 1,
+  udpipe_batchsize = 50,
   use_parser = F,
   remember_spaces = FALSE,
   verbose = T,
@@ -38,6 +39,7 @@ create_tcorpus(x, ...)
   udpipe_model_path = getwd(),
   udpipe_cache = 3,
   udpipe_cores = 1,
+  udpipe_batchsize = 50,
   use_parser = F,
   remember_spaces = FALSE,
   verbose = T,
@@ -75,6 +77,10 @@ This way, if a lot of data has to be parsed, or if R crashes, udpipe can continu
 The caches are stored in the udpipe_models folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.}
 
 \item{udpipe_cores}{If udpipe_model is used, this sets the number of parallel cores.}
+
+\item{udpipe_batchsize}{In order to report progress and cache results, texts are parsed with udpipe in batches of 50.
+The price is that there will be some overhead for each batch, so for very large jobs it can be faster to increase the batchsize.  
+If the number of texts divided by the number of parallel cores is lower than the batchsize, the texts are evenly distributed over cores.}
 
 \item{use_parser}{If TRUE, use dependency parser (only if udpipe_model is used)}
 
