@@ -1,10 +1,8 @@
 
 
 
-recursive_search <- function(tc, qlist, lookup_tables=NULL, subcontext=NULL, feature='token', mode = c('unique_hits','features','contexts'), parent_relation='', all_case_sensitive=FALSE, all_ghost=FALSE, all_flag_query=list(), keep_longest=TRUE, as_ascii=F, level=1) {
+recursive_search <- function(tokens, qlist, lookup_tables=NULL, subcontext=NULL, feature='token', mode = c('unique_hits','features','contexts'), parent_relation='', all_case_sensitive=FALSE, all_ghost=FALSE, all_flag_query=list(), keep_longest=TRUE, as_ascii=F, level=1) {
   .ghost = NULL; .term_i = NULL; .seq_i = NULL; .group_i = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
-
-
 
   mode = match.arg(mode) ## 'unique_hit' created complete and unique sets of hits (needed for counting) but doesn't assign all features
   ## 'features' mode does not make full sets of hits, but returns all features for which the query is true (needed for coding/dictionaries)
@@ -27,7 +25,7 @@ recursive_search <- function(tc, qlist, lookup_tables=NULL, subcontext=NULL, fea
     if (is_nested) {
 
 
-      jhits = recursive_search(tc, q, lookup_tables=lookup_tables, subcontext=subcontext, feature=feature, mode=mode, parent_relation=qlist$relation, all_case_sensitive, all_ghost, all_flag_query, keep_longest, as_ascii, level=level+1)
+      jhits = recursive_search(tokens, q, lookup_tables=lookup_tables, subcontext=subcontext, feature=feature, mode=mode, parent_relation=qlist$relation, all_case_sensitive, all_ghost, all_flag_query, keep_longest, as_ascii, level=level+1)
 
       if (nterms == 1) {
         if (level == 1 && mode == 'contexts' & !is.null(jhits)) jhits = unique(subset(jhits, select=c('doc_id',subcontext)))
@@ -54,9 +52,9 @@ recursive_search <- function(tc, qlist, lookup_tables=NULL, subcontext=NULL, fea
         #lookup_table_key = sprintf('%s; ignore_case=%s; as_ascii=%s', feature, !.case_sensitive, as_ascii)
         lookup_table_key = create_lookup_table_key(feature, !.case_sensitive, as_ascii)
         lookup_table = lookup_tables[[lookup_table_key]]
-      } else lookup_table = NULL  ## if NULL, lookup_table will be created within tc$lookup, but providing one can be faster
+      } else lookup_table = NULL  ## if NULL, lookup_table will be created within lookup, but providing one can be faster
 
-      jhits = tc$lookup(q$term, lookup_table=lookup_table,
+      jhits = lookup(tokens, q$term, lookup_table=lookup_table,
                         feature=feature, ignore_case=!.case_sensitive, sub_query=flag_query, only_context=only_context, subcontext=subcontext, as_ascii=as_ascii)
 
       if (!is.null(jhits)) {

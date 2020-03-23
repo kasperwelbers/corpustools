@@ -1,4 +1,66 @@
-## implementation of tCorpus$lookup
+lookup <- function(tokens, x, feature='token', ignore_case=TRUE, batchsize=25, raw_regex=FALSE, fixed=FALSE, with_i=FALSE, as_ascii=FALSE, sub_query=list(), only_context=F, subcontext=NULL, lookup_table=NULL){
+  has_sub_query = length(sub_query) > 0
+  if (has_sub_query) {
+    sub_feature = names(sub_query)[1]
+    sub_x = sub_query[[sub_feature]]
+    sub_query[[sub_feature]] = NULL
+    sub_out = lookup(tokens, sub_x, feature=sub_feature, ignore_case=TRUE, sub_query=sub_query, only_context=F)
+  }
+
+  if (any(x == '*')) {
+    if (only_context) {
+      out = unique(tokens, by = c('doc_id', subcontext))
+    } else {
+      out = data.table::copy(tokens)
+    }
+    if (with_i && !only_context) out[, i:=1:nrow(out)]
+    if (has_sub_query) {
+      if (is.null(sub_out)) return(NULL)
+      out = data.table::fintersect(out, sub_out)
+      if (is.null(out)) return(NULL)
+    }
+    return(out)
+  }
+
+  ## prepare lookup table: set a (secondary) data.table index
+  if (!feature %in% indices(tokens)) {
+
+    data.table::setindexv(tokens, feature)
+    message(sprintf('created index for "%s" column', feature))
+  }
+
+  ## if not fixed (exact value matching), first lookup x as regex in unique values
+  if (!fixed) {
+    if (is.null(lookup_table)) {
+      uval = if (is.factor(tokens[[feature]])) levels(tokens[[feature]]) else unique(tokens[[feature]])
+      #lookup_table = mem_create_lookup_table(uval, ignore_case, as_ascii)
+      lookup_table = create_lookup_table(uval, ignore_case, as_ascii)
+
+    }
+    #x = mem_lookup_terms(x, lookup_table, ignore_case=ignore_case, raw_regex=raw_regex, batchsize=batchsize, useBytes=T, as_ascii=as_ascii)
+    x = lookup_terms(x, lookup_table, ignore_case=ignore_case, raw_regex=raw_regex, batchsize=batchsize, useBytes=T, as_ascii=as_ascii)
+  }
+
+  if (length(x) == 0) return(NULL)
+  if (with_i && !only_context) {
+    i = stats::na.omit(tokens[list(x), on=feature, which=T])
+    out = tokens[i,]
+    out[,i:=i]
+  } else {
+    out = tokens[list(x), on=feature, which=F]
+  }
+  if (only_context) out = unique(out, by=c('doc_id',subcontext))
+
+  #if (length(sub_query) > 0) out = filter_sub_query(out, sub_query)
+  if (nrow(out) == 0) return(NULL)
+  if (has_sub_query) {
+    if (is.null(sub_out)) return(NULL)
+    out = data.table::fintersect(out, sub_out)
+    if (is.null(out)) return(NULL)
+  }
+  return(out)
+}
+
 
 lookup_terms <- function(patterns, lookup_table, ignore_case=T, raw_regex=T, perl=F, batchsize=25, useBytes=T, as_ascii=FALSE){
 
@@ -66,20 +128,20 @@ create_lookup_table <- function(x, ignore_case, as_ascii) {
 ## prepares a list of lookup tables
 ## this is used for more efficient use of the recursive_search function
 ## if no lookup_tables are provided to the recursive_search function, they are created for each term separately
-prepare_lookup_tables <- function(tc, qlist, lookup_tables, feature='', as_ascii=F, all_case_sensitive=FALSE) {
+prepare_lookup_tables <- function(tokens, qlist, lookup_tables, feature='', as_ascii=F, all_case_sensitive=FALSE) {
   if ('terms' %in% names(qlist)) {
     if (qlist$all_case_sensitive) all_case_sensitive = TRUE
     if (!qlist$feature == "") feature = qlist[['feature']]
 
     for (i in seq_along(qlist$terms)) {
-      lookup_tables = prepare_lookup_tables(tc, qlist$terms[[i]], lookup_tables, feature=feature, as_ascii=as_ascii, all_case_sensitive=all_case_sensitive)
+      lookup_tables = prepare_lookup_tables(tokens, qlist$terms[[i]], lookup_tables, feature=feature, as_ascii=as_ascii, all_case_sensitive=all_case_sensitive)
     }
   } else {
     case_sensitive = qlist$case_sensitive | all_case_sensitive
     lookup_table_key = sprintf('feature=%s; ignore_case=%s; as_ascii=%s', feature, !case_sensitive, as_ascii)
     if (!lookup_table_key %in% names(lookup_tables)) {
-      if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(tc$feature_names, collapse=', ')))
-      uval = if (is.factor(tc$tokens[[feature]])) levels(tc$tokens[[feature]]) else unique(tc$tokens[[feature]])
+      if (!feature %in% colnames(tokens)) stop(sprintf('Feature (%s) is not a valid column in tokens', feature))
+      uval = if (is.factor(tokens[[feature]])) levels(tokens[[feature]]) else unique(tokens[[feature]])
       #lookup_tables[[lookup_table_key]] = mem_create_lookup_table(uval, ignore_case=!case_sensitive, as_ascii=as_ascii)
       lookup_tables[[lookup_table_key]] = create_lookup_table(uval, ignore_case=!case_sensitive, as_ascii=as_ascii)
     }

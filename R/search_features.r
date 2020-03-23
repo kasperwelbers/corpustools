@@ -4,7 +4,10 @@
 #' Code features in a tCorpus based on a search string
 #'
 #' @description
-#' Add a column to the token data that contains a code (the query label) for tokens that match the query (see \link{tCorpus$search_features}).
+#' like \code{\link{search_features}}, but instead of return hits only adds a column to the token data that contains a code (the query label) for tokens that match the query.
+#' Note that only one code can be assigned to each token, so if there are overlapping results for different queries, the code for the last query
+#' will be used. This means that the order of queries (in the query argument) matters.
+#'
 #'
 #' \strong{Usage:}
 #'
@@ -18,7 +21,6 @@
 #' @param column The name of the column that is added to the data
 #' @param add_column list of name-value pairs, used to add additional columns. The name will become the column name, and the value should be a vector of the same length as the query vector.
 #' @param context_level Select whether the queries should occur within while "documents" or specific "sentences".
-#' @param keep_longest If TRUE, then overlapping in case of overlapping queries strings in unique_hits mode, the query with the most separate terms is kept. For example, in the text "mr. Bob Smith", the query [smith OR "bob smith"] would match "Bob" and "Smith". If keep_longest is FALSE, the match that is used is determined by the order in the query itself. The same query would then match only "Smith".
 #' @param as_ascii if TRUE, perform search in ascii.
 #' @param verbose If TRUE, progress messages will be printed
 #' @param overwrite If TRUE (default) and column already exists, overwrite previous results.
@@ -31,10 +33,10 @@
 #' tc$code_features(c("actors# anna bob", "associations# secretive"))
 #' tc$tokens
 #' @aliases code_features
-tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token', column='code', add_column=list(), context_level = c('document','sentence'), keep_longest=T, as_ascii=F, verbose=F, overwrite=T, ...){
+tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token', column='code', add_column=list(), context_level = c('document','sentence'), as_ascii=F, verbose=F, overwrite=T, ...){
   codelabel = get_query_code(query, code)
   code = 1:length(query)
-  hits = search_features(self, query, code=code, feature=feature, mode='features', context_level=context_level, keep_longest=keep_longest, as_ascii=as_ascii, verbose=verbose)
+  hits = search_features(self, query, code=code, feature=feature, mode='features', context_level=context_level, keep_longest=F, as_ascii=as_ascii, verbose=verbose)
 
   .i = self$get_token_id(doc_id = hits$hits$doc_id, token_id = hits$hits$token_id)
   .value = codelabel[as.numeric(hits$hits$code)]
@@ -248,8 +250,8 @@ search_features <- function(tc, query, code=NULL, feature='token', mode = c('uni
     if (verbose) cat(as.character(codelabel[i]), '\n')
     q = parse_query_cpp(as.character(query[i]))
 
-    lookup_tables = prepare_lookup_tables(tc, q, lookup_tables, feature = feature, as_ascii = as_ascii)
-    h = recursive_search(tc, q, lookup_tables=lookup_tables, subcontext=subcontext, feature=feature, mode = mode, keep_longest=keep_longest, as_ascii=as_ascii)
+    lookup_tables = prepare_lookup_tables(tc$tokens, q, lookup_tables, feature = feature, as_ascii = as_ascii)
+    h = recursive_search(tc$tokens, q, lookup_tables=lookup_tables, subcontext=subcontext, feature=feature, mode = mode, keep_longest=keep_longest, as_ascii=as_ascii)
 
     if (!is.null(h)) {
       h[, code := codelabel[i]]

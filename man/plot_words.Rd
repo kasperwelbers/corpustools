@@ -17,6 +17,7 @@ plot_words(
   xlim = NULL,
   ylim = NULL,
   col = c("darkred", "navyblue"),
+  fixed_col = NULL,
   ...
 )
 }
@@ -44,6 +45,8 @@ plot_words(
 \item{ylim}{Starting value of y axis}
 
 \item{col}{A vector of colors that is passed to colorRamp to interpolate colors over x axis}
+
+\item{fixed_col}{Optionally, a vector of the exact colors given to words.}
 
 \item{...}{additional parameters passed to the plot function}
 }

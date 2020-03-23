@@ -176,9 +176,9 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
     if (verbose) print(code[i])
     q = parse_query_cpp(as.character(query[i]))
 
-    lookup_tables = prepare_lookup_tables(tc, q, lookup_tables, feature = feature, as_ascii = as_ascii)
+    lookup_tables = prepare_lookup_tables(tc$tokens, q, lookup_tables, feature = feature, as_ascii = as_ascii)
 
-    h = recursive_search(tc, q, lookup_tables, subcontext=subcontext, feature=feature, mode = 'contexts', as_ascii=as_ascii)
+    h = recursive_search(tc$tokens, q, lookup_tables, subcontext=subcontext, feature=feature, mode = 'contexts', as_ascii=as_ascii)
     if (!is.null(h)) {
       h[, code := codelabel[i]]
       hits[[i]] = h
