@@ -30,7 +30,9 @@ semnet(feature, measure = c('con_prob', 'con_prob_weighted', 'cosine', 'count_di
 text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
 
-g = tc$semnet('token')
+suppressWarnings({
+   g = semnet(tc, 'token')
+})  ## deprecated warning
 g
 igraph::get.data.frame(g)
 \donttest{plot_semnet(g)}

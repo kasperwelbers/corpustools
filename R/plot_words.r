@@ -114,7 +114,7 @@ dtm_wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs
 #' @examples
 #' ## as example, compare SOTU paragraphs about taxes to rest
 #' tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
-#' comp = tc$compare_subset('token', query_x = 'tax*')
+#' comp = compare_subset(tc, 'token', query_x = 'tax*')
 #'
 #' \donttest{
 #' plot(comp, balance=T)
@@ -155,7 +155,7 @@ plot.vocabularyComparison <- function(x, n=25, mode=c('both', 'ratio_x','ratio_y
 #' @examples
 #' ## as example, compare SOTU paragraphs about taxes to rest
 #' tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
-#' comp = tc$compare_subset('token', query_x = 'tax*')
+#' comp = compare_subset(tc, 'token', query_x = 'tax*')
 #'
 #' \donttest{
 #' plot(comp, balance=T)

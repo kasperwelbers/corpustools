@@ -44,9 +44,16 @@ kwic(hits = NULL, i = NULL, query = NULL, code = '',
 tc = tokens_to_tcorpus(corenlp_tokens, sentence_col = 'sentence', token_id_col = 'id')
 
 ## look directly for a term (or complex query)
-tc$kwic(query = 'love*')
+suppressWarnings({
+   tc$kwic(query = 'love*')
+})  ## deprecated warning
 
 ## or, first perform a feature search, and then get the KWIC for the results
 hits = search_features(tc, '(john OR mark) AND mary AND love*', context_level = 'sentence')
-tc$kwic(hits, context_level = 'sentence')
+
+
+suppressWarnings({
+   tc$kwic(hits, context_level = 'sentence')
+})  ## deprecated warning
+
 }

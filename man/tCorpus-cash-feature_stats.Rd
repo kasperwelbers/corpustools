@@ -21,9 +21,15 @@ Compute a number of useful statistics for features: term frequency, idf, etc.
 tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'),
                     split_sentences = TRUE)
 
-fs = tc$feature_stats('token')
+suppressWarnings({
+   fs = tc$feature_stats('token')
+})  ## deprecated warning
+
 head(fs)
 
-fs = tc$feature_stats('token', context_level = 'sentence')
+suppressWarnings({
+   fs = tc$feature_stats('token', context_level = 'sentence')
+})  ## deprecated warning
+
 head(fs)
 }

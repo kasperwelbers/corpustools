@@ -34,7 +34,7 @@ The purpose of this function is to create some default network attribute options
 }
 \examples{
 tc = create_tcorpus(c('A B C', 'B C', 'B D'))
-g = tc$semnet('token')
+g = semnet(tc, 'token')
 
 igraph::get.edge.attribute(g)
 igraph::get.vertex.attribute(g)

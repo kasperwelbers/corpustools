@@ -39,14 +39,18 @@ tc = create_tcorpus(sotu_texts, doc_column = 'id')
 
 tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
 
-comp = tc$compare_subset('feature', subset_meta_x = president == 'Barack Obama')
+suppressWarnings({
+   comp = tc$compare_subset('feature', subset_meta_x = president == 'Barack Obama')
+})
 comp = comp[order(-comp$chi),]
 head(comp)
 \donttest{
 plot(comp)
 }
 
-comp = tc$compare_subset('feature', query_x = 'terroris*')
+suppressWarnings({
+   comp = tc$compare_subset('feature', query_x = 'terroris*')
+})
 comp = comp[order(-comp$chi),]
 head(comp, 10)
 }

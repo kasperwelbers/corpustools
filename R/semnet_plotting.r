@@ -27,7 +27,7 @@
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #' tc$preprocess('token','feature', remove_stopwords = TRUE, use_stemming = TRUE, min_docfreq=10)
 #' \donttest{
-#' g = tc$semnet_window('feature', window.size = 10)
+#' g = semnet_window(tc, 'feature', window.size = 10)
 #' g = backbone_filter(g, max_vertices = 100)
 #' plot_semnet(g)
 #' }
@@ -91,7 +91,7 @@ plot_args_as_attributes <- function(g, args){
 #' @return a network in the Igraph format
 #' @examples
 #' tc = create_tcorpus(c('A B C', 'B C', 'B D'))
-#' g = tc$semnet('token')
+#' g = semnet(tc, 'token')
 #'
 #' igraph::get.edge.attribute(g)
 #' igraph::get.vertex.attribute(g)

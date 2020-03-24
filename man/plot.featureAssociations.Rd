@@ -21,7 +21,7 @@ visualize feature associations
 \examples{
 ## as example, compare SOTU paragraphs about taxes to rest
 tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
-comp = tc$compare_subset('token', query_x = 'tax*')
+comp = compare_subset(tc, 'token', query_x = 'tax*')
 
 \donttest{
 plot(comp, balance=T)

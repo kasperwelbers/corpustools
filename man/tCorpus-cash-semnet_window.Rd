@@ -37,7 +37,9 @@ semnet_window(feature, measure = c('con_prob', 'cosine', 'count_directed', 'coun
 text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
 
-g = tc$semnet_window('token', window.size = 1)
+suppressWarnings({
+   g = semnet_window(tc, 'token', window.size = 1)
+})  ## deprecated warning
 g
 igraph::get.data.frame(g)
 \donttest{plot_semnet(g)}

@@ -83,23 +83,6 @@ NULL
 
 ############### MODIFY DATA
 
-#' Designate column as columns with special meaning (token, lemma, POS, relation, parent)
-#'
-#' \strong{Usage:}
-#'
-#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
-#'
-#' \preformatted{set_special(token=NULL, lemma=NULL, POS=NULL, relation=NULL, parent=NULL)}
-#'
-#' @param token Name of the column that will be designated as the token, and renamed to 'token'
-#' @param lemma Name of the column that will be designated as the lemma of the token, and renamed to 'lemma'
-#' @param pos Name of the column that will be designated as the part-of-speech tag of the token, and renamed to 'POS'
-#' @param relation Name of the column that will be designated as the dependency relation of the token to its parent, and renamed to 'relation'
-#' @param parent Name of the column that will be designated as the parent of the token, and renamed to 'parent'
-#'
-#' @name tCorpus$set_special
-#' @aliases set_special
-NULL
 
 
 #' Modify the token and meta data.tables of a tCorpus

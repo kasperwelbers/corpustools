@@ -52,6 +52,9 @@ tc = create_tcorpus(c("First text first sentence. First text first sentence.",
 tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
 tc$tokens
 
+
+suppressWarnings({
+
 ## default: regular sparse matrix, using the Matrix package
 m = tc$dtm('feature')
 class(m)
@@ -70,4 +73,5 @@ nrow(m)
 
 ## use weighting
 m = tc$dtm('feature', weight = 'norm_tfidf')
+})
 }

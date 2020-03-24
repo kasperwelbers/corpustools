@@ -25,7 +25,8 @@
 \examples{
 tc = tokens_to_tcorpus(corenlp_tokens, token_id_col = 'id')
 
-top_features(tc, 'lemma')
-tc$top_features('lemma')
-tc$top_features('lemma', group_by = 'relation')
+suppressWarnings({
+   tc$top_features('lemma')
+   tc$top_features('lemma', group_by = 'relation')
+})  ## deprecated warning
 }

@@ -72,7 +72,7 @@ Before plotting the network, the set_network_attributes() function is used to se
 tc = create_tcorpus(sotu_texts, doc_column = 'id')
 tc$preprocess('token','feature', remove_stopwords = TRUE, use_stemming = TRUE, min_docfreq=10)
 \donttest{
-g = tc$semnet_window('feature', window.size = 10)
+g = semnet_window(tc, 'feature', window.size = 10)
 g = backbone_filter(g, max_vertices = 100)
 plot_semnet(g)
 }

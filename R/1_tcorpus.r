@@ -226,14 +226,6 @@ tCorpus <- R6::R6Class("tCorpus",
 
 ## DATA MODIFICATION METHODS ##
 
-     set_special = function(token=NULL, lemma=NULL, POS=NULL, relation=NULL, parent=NULL) {
-       if(!is.null(token)) self$set_name(token, 'token')
-       if(!is.null(lemma)) self$set_name(lemma, 'lemma')
-       if(!is.null(POS)) self$set_name(POS, 'POS')
-       if(!is.null(relation)) self$set_name(relation, 'relation')
-       if(!is.null(parent)) self$set_name(parent, 'parent')
-     },
-
      set = function(column, value, subset=NULL, subset_value=T){
        self$validate_tokens()
 

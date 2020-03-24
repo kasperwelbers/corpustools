@@ -35,6 +35,8 @@
 \examples{
 tc = create_tcorpus(sotu_texts, doc_column = 'id')
 
+suppressWarnings({
+
 ## directly from query
 topf = tc$feature_associations('war')
 head(topf, 20) ## frequent words close to "war"
@@ -48,4 +50,5 @@ hits = tc$search_features('"war terror"~10')
 topf = tc$feature_associations(hits = hits)
 head(topf, 20) ## frequent words close to the combination of "war" and "terror" within 10 words
 
+})
 }

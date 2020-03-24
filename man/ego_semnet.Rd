@@ -43,7 +43,7 @@ The function is similar to the ego function in igraph, but with some notable dif
 }
 \examples{
 tc = create_tcorpus(c('a b c', 'd e f', 'a d'))
-g = tc$semnet('token')
+g = semnet(tc, 'token')
 
 igraph::get.data.frame(g)
 \donttest{plot_semnet(g)}

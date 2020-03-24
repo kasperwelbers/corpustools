@@ -12,8 +12,8 @@ bool match_shortest(std::string &x, std::set<std::string> &group_set){
 }
 
 // [[Rcpp::export]]
-NumericVector AND_hit_ids_cpp(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector term_i, double n_unique, std::vector<std::string> group_i, LogicalVector replace, bool feature_mode) {
-  double n = pos.size();
+NumericVector AND_hit_ids_cpp(NumericVector con, NumericVector subcon, NumericVector term_i, double n_unique, std::vector<std::string> group_i, LogicalVector replace, bool feature_mode) {
+  double n = con.size();
   bool use_subcon = subcon.size() > 0;  // use the fact that as.Numeric(NULL) in R returns a vector of length 0 (NULL handling in Rcpp is cumbersome)
   bool new_assign;
   NumericVector out(n);

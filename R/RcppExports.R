@@ -17,8 +17,8 @@ fast_factor_cpp <- function(x, levs) {
     .Call('_corpustools_fast_factor_cpp', PACKAGE = 'corpustools', x, levs)
 }
 
-AND_hit_ids_cpp <- function(con, subcon, pos, term_i, n_unique, group_i, replace, feature_mode) {
-    .Call('_corpustools_AND_hit_ids_cpp', PACKAGE = 'corpustools', con, subcon, pos, term_i, n_unique, group_i, replace, feature_mode)
+AND_hit_ids_cpp <- function(con, subcon, term_i, n_unique, group_i, replace, feature_mode) {
+    .Call('_corpustools_AND_hit_ids_cpp', PACKAGE = 'corpustools', con, subcon, term_i, n_unique, group_i, replace, feature_mode)
 }
 
 proximity_hit_ids_cpp <- function(con, subcon, pos, term_i, n_unique, window, seq_i, replace, feature_mode, directed) {

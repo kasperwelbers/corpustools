@@ -1,4 +1,4 @@
-is_deprecated <- function(f = as.character(sys.call(sys.parent()))[1L], new=NULL, warn=F){
+is_deprecated <- function(f = as.character(sys.call(sys.parent()))[1L], new=NULL, warn=T){
   ## wrapper for .Deprecated
   f = gsub('.*\\$', '', f)
   if (is.null(new)) new = f
@@ -40,17 +40,23 @@ is_deprecated <- function(f = as.character(sys.call(sys.parent()))[1L], new=NULL
 #' tc = tokens_to_tcorpus(corenlp_tokens, sentence_col = 'sentence', token_id_col = 'id')
 #'
 #' ## look directly for a term (or complex query)
-#' tc$kwic(query = 'love*')
+#' suppressWarnings({
+#'    tc$kwic(query = 'love*')
+#' })  ## deprecated warning
 #'
 #' ## or, first perform a feature search, and then get the KWIC for the results
 #' hits = search_features(tc, '(john OR mark) AND mary AND love*', context_level = 'sentence')
-#' tc$kwic(hits, context_level = 'sentence')
+#'
+#'
+#' suppressWarnings({
+#'    tc$kwic(hits, context_level = 'sentence')
+#' })  ## deprecated warning
+#'
 tCorpus$set('public', 'kwic', function(hits=NULL, i=NULL, feature=NULL, query=NULL, code='', ntokens=10, n=NA, nsample=NA, output_feature='token', query_feature='token', context_level=c('document','sentence'), kw_tag=c('<','>'), ...){
   is_deprecated(new='get_kwic')
   if (!is.null(query)) hits = search_features(self, query=query, code=code, feature = query_feature, ...)
   keyword_in_context(self, hits=hits, i=i, code=code, ntokens=ntokens, n=n, nsample=nsample, output_feature=output_feature, context_level=context_level, kw_tag=kw_tag)
 })
-
 
 #' Feature statistics
 #'
@@ -71,10 +77,16 @@ tCorpus$set('public', 'kwic', function(hits=NULL, i=NULL, feature=NULL, query=NU
 #' tc = create_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'),
 #'                     split_sentences = TRUE)
 #'
-#' fs = tc$feature_stats('token')
+#' suppressWarnings({
+#'    fs = tc$feature_stats('token')
+#' })  ## deprecated warning
+#'
 #' head(fs)
 #'
-#' fs = tc$feature_stats('token', context_level = 'sentence')
+#' suppressWarnings({
+#'    fs = tc$feature_stats('token', context_level = 'sentence')
+#' })  ## deprecated warning
+#'
 #' head(fs)
 tCorpus$set('public', 'feature_stats', function(feature, context_level=c('document','sentence')){
   is_deprecated()
@@ -100,9 +112,10 @@ tCorpus$set('public', 'feature_stats', function(feature, context_level=c('docume
 #' @examples
 #' tc = tokens_to_tcorpus(corenlp_tokens, token_id_col = 'id')
 #'
-#' top_features(tc, 'lemma')
-#' tc$top_features('lemma')
-#' tc$top_features('lemma', group_by = 'relation')
+#' suppressWarnings({
+#'    tc$top_features('lemma')
+#'    tc$top_features('lemma', group_by = 'relation')
+#' })  ## deprecated warning
 tCorpus$set('public', 'top_features', function(feature, n=10, group_by=NULL, group_by_meta=NULL, return_long=F){
   is_deprecated()
   top_features(self, feature=feature, n=n, group_by=group_by, group_by_meta=group_by_meta, return_long=return_long)
@@ -134,7 +147,9 @@ tCorpus$set('public', 'top_features', function(feature, n=10, group_by=NULL, gro
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
 #'
-#' g = tc$semnet('token')
+#' suppressWarnings({
+#'    g = semnet(tc, 'token')
+#' })  ## deprecated warning
 #' g
 #' igraph::get.data.frame(g)
 #' \donttest{plot_semnet(g)}
@@ -174,7 +189,9 @@ tCorpus$set('public', 'semnet', function(feature, measure=c('cosine', 'con_prob'
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
 #'
-#' g = tc$semnet_window('token', window.size = 1)
+#' suppressWarnings({
+#'    g = semnet_window(tc, 'token', window.size = 1)
+#' })  ## deprecated warning
 #' g
 #' igraph::get.data.frame(g)
 #' \donttest{plot_semnet(g)}
@@ -221,6 +238,9 @@ tCorpus$set('public', 'semnet_window', function(feature, measure=c('cosine', 'co
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
 #' tc$tokens
+#'
+#' ## deprecated warning
+#' suppressWarnings({
 #'
 #' hits = tc$search_contexts(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 #' hits          ## print shows number of hits
@@ -283,11 +303,14 @@ tCorpus$set('public', 'semnet_window', function(feature, measure=c('cosine', 'co
 #'
 #' tc$search_contexts('"a b"~s')$hits   ## use ~s flag on everything between quotes
 #' tc$search_contexts('"A B"~s')$hits   ## use ~s flag on everything between quotes
+#'
 #' }
+#' })
 tCorpus$set('public', 'search_contexts', function(query, code=NULL, feature='token', context_level=c('document','sentence'), verbose=F){
   is_deprecated()
   search_contexts(self, query, code=code, feature=feature, context_level=context_level, verbose=verbose)
 })
+
 
 #' Find tokens using a Lucene-like search query
 #'
@@ -334,6 +357,12 @@ tCorpus$set('public', 'search_contexts', function(query, code=NULL, feature='tok
 #' text = c('A B C', 'D E F. G H I', 'A D', 'GGG')
 #' tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
 #' tc$tokens
+#'
+#' ## deprecated warning
+#' suppressWarnings({
+#'
+#'
+#'
 #'
 #' hits = tc$search_features(c('query label# A AND B', 'second query# (A AND Q) OR ("D E") OR I'))
 #' hits          ## print shows number of hits
@@ -441,7 +470,9 @@ tCorpus$set('public', 'search_contexts', function(query, code=NULL, feature='tok
 #' ## sequence: nsubj say*
 #' hits = tc$search_features('"(relation: nsubj) say*"')
 #' hits$hits
+#'
 #' }
+#' })
 tCorpus$set('public', 'search_features', function(query, code=NULL, feature='token', mode = c('unique_hits','features'), context_level = c('document','sentence'), keep_longest=T, as_ascii=F, verbose=F){
   is_deprecated()
   search_features(self, query, code=code, feature=feature, mode=mode, context_level=context_level, keep_longest=keep_longest, as_ascii=as_ascii, verbose=verbose)
@@ -473,7 +504,9 @@ tCorpus$set('public', 'search_features', function(query, code=NULL, feature='tok
 #' obama = tc$subset_meta(president == 'Barack Obama', copy=TRUE)
 #' bush = tc$subset_meta(president == 'George W. Bush', copy=TRUE)
 #'
-#' comp = obama$compare_corpus(bush, 'feature')
+#' suppressWarnings({
+#'    comp = obama$compare_corpus(bush, 'feature')
+#'  })
 #' comp = comp[order(-comp$chi),]
 #' head(comp)
 #' \donttest{
@@ -485,7 +518,6 @@ tCorpus$set('public', 'compare_corpus', function(tc_y, feature, smooth=0.1, min_
   what = match.arg(what)
   tcorpus_compare(self, tc_y, feature, smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, x_is_subset=is_subset, what=what)
 })
-
 
 
 #' Compare vocabulary of a subset of a tCorpus to the rest of the tCorpus
@@ -513,14 +545,18 @@ tCorpus$set('public', 'compare_corpus', function(tc_y, feature, smooth=0.1, min_
 #'
 #' tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
 #'
-#' comp = tc$compare_subset('feature', subset_meta_x = president == 'Barack Obama')
+#' suppressWarnings({
+#'    comp = tc$compare_subset('feature', subset_meta_x = president == 'Barack Obama')
+#' })
 #' comp = comp[order(-comp$chi),]
 #' head(comp)
 #' \donttest{
 #' plot(comp)
 #' }
 #'
-#' comp = tc$compare_subset('feature', query_x = 'terroris*')
+#' suppressWarnings({
+#'    comp = tc$compare_subset('feature', query_x = 'terroris*')
+#' })
 #' comp = comp[order(-comp$chi),]
 #' head(comp, 10)
 tCorpus$set('public', 'compare_subset', function(feature, subset_x=NULL, subset_meta_x=NULL, query_x=NULL, query_feature='token', smooth=0.1, min_ratio=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
@@ -536,8 +572,8 @@ tCorpus$set('public', 'compare_subset', function(feature, subset_x=NULL, subset_
     tc_x = self$subset(subset=.subset_x, subset_meta = .subset_meta_x, copy=T)
   }
   if(!is.null(query_x)) tc_x = self$subset_query(query_x, feature=query_feature, copy=T)
-
-  comp = tc_x$compare_corpus(self, feature=feature, smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, is_subset=T, what=what)
+         ## suppress deprecated warning
+  comp = suppressWarnings(tc_x$compare_corpus(self, feature=feature, smooth=smooth, min_ratio=min_ratio, min_chi2=min_chi2, yates_cor=yates_cor, is_subset=T, what=what))
   comp
 })
 
@@ -565,6 +601,8 @@ tCorpus$set('public', 'compare_subset', function(feature, subset_x=NULL, subset_
 #' @examples
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #'
+#' suppressWarnings({
+#'
 #' ## directly from query
 #' topf = tc$feature_associations('war')
 #' head(topf, 20) ## frequent words close to "war"
@@ -578,6 +616,7 @@ tCorpus$set('public', 'compare_subset', function(feature, subset_x=NULL, subset_
 #' topf = tc$feature_associations(hits = hits)
 #' head(topf, 20) ## frequent words close to the combination of "war" and "terror" within 10 words
 #'
+#' })
 tCorpus$set('public', 'feature_associations', function(query=NULL, hits=NULL, feature='token', window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'), subset=NULL, subset_meta=NULL) {
   is_deprecated()
   if (is.null(query) & is.null(hits)) stop('either keyword or hits has to be specified')
@@ -656,6 +695,9 @@ tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NU
 #' tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
 #' tc$tokens
 #'
+#'
+#' suppressWarnings({
+#'
 #' ## default: regular sparse matrix, using the Matrix package
 #' m = tc$dtm('feature')
 #' class(m)
@@ -674,6 +716,7 @@ tCorpus$set('public', 'compare_documents', function(feature='token', date_col=NU
 #'
 #' ## use weighting
 #' m = tc$dtm('feature', weight = 'norm_tfidf')
+#' })
 tCorpus$set('public', 'dtm', function(feature, context_level=c('document','sentence'), weight=c('termfreq','docfreq','tfidf','norm_tfidf'), drop_empty_terms=T, form=c('Matrix', 'tm_dtm', 'quanteda_dfm'), subset_tokens=NULL, subset_meta=NULL, context=NULL, context_labels=T, feature_labels=T, ngrams=NA, ngram_before_subset=F) {
   is_deprecated(new='get_dtm')
   if (class(substitute(subset_tokens)) %in% c('call', 'name')) subset_tokens = self$eval(substitute(subset_tokens), parent.frame())

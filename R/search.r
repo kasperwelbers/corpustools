@@ -1,6 +1,4 @@
 
-
-
 recursive_search <- function(tokens, qlist, lookup_tables=NULL, subcontext=NULL, feature='token', mode = c('unique_hits','features','contexts'), parent_relation='', all_case_sensitive=FALSE, all_ghost=FALSE, all_flag_query=list(), keep_longest=TRUE, as_ascii=F, level=1) {
   .ghost = NULL; .term_i = NULL; .seq_i = NULL; .group_i = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
 
@@ -172,7 +170,7 @@ get_AND_hit <- function(d, n_unique, subcontext=NULL, group_i=NULL, replace=NULL
   if (!is.null(subcontext)) subcontext = d[[subcontext]]
   if (!is.null(group_i)) group_i = d[[group_i]]
   if (!is.null(replace)) replace = d[[replace]]
-  .hit_id = AND_hit_ids_cpp(as.numeric(d[['doc_id']]), as.numeric(subcontext), as.numeric(d[['token_id']]), as.numeric(d[['.term_i']]), n_unique, as.character(group_i), replace, feature_mode)
+  .hit_id = AND_hit_ids_cpp(as.numeric(d[['doc_id']]), as.numeric(subcontext), as.numeric(d[['.term_i']]), n_unique, as.character(group_i), replace, feature_mode)
   d[,hit_id := .hit_id]
 }
 

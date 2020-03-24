@@ -28,7 +28,7 @@
 #'                          The caches are stored in the udpipe_models folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.
 #' @param udpipe_cores      If udpipe_model is used, this sets the number of parallel cores.
 #' @param udpipe_batchsize  In order to report progress and cache results, texts are parsed with udpipe in batches of 50.
-#'                          The price is that there will be some overhead for each batch, so for very large jobs it can be faster to increase the batchsize.  
+#'                          The price is that there will be some overhead for each batch, so for very large jobs it can be faster to increase the batchsize.
 #'                          If the number of texts divided by the number of parallel cores is lower than the batchsize, the texts are evenly distributed over cores.
 #' @param use_parser If TRUE, use dependency parser (only if udpipe_model is used)
 #' @param remember_spaces If TRUE, a column with spaces after each token is included. Enables correct reconstruction of original text and keeps annotations at the level of character positions (e.g., brat) intact.
@@ -149,130 +149,9 @@ create_tcorpus.corpus <- function(x, ...) {
   create_tcorpus(x, text_columns='texts', doc_column='doc_id', ...)
 }
 
-#' Create a tcorpus based on tokens (i.e. preprocessed texts)
-#'
-#' @param tokens A data.frame in which rows represent tokens, and columns indicate (at least) the document in which the token occured (doc_col) and the position of the token in that document or globally (token_id_col)
-#' @param doc_col The name of the column that contains the document ids/names
-#' @param token_id_col The name of the column that contains the positions of tokens. If NULL, it is assumed that the data.frame is ordered by the order of tokens and does not contain gaps (e.g., filtered out tokens)
-#' @param sentence_col Optionally, the name of the column that indicates the sentences in which tokens occured.
-#' @param token_col Optionally, the name of the column that contains the token text
-#' @param lemma_col Optionally, the name of the column that contains the lemma of the token
-#' @param pos_col Optionally, the name of the column that contains the part-of-speech tag of the token
-#' @param relation_col Optionally, the name of the column that contains the relation of the token to its parent
-#' @param parent_col Optionally, the name of the column that contains the id of the parent
-#' @param meta Optionally, a data.frame with document meta data. Needs to contain a column with the document ids (with the same name)
-#' @param meta_cols Alternatively, if there are document meta columns in the tokens data.table, meta_cols can be used to recognized them. Note that these values have to be unique within documents.
-#' @param feature_cols Optionally, specify which columns to include in the tcorpus. If NULL, all column are included (except the specified columns for documents, sentences and positions)
-#' @param sent_is_local Sentences in the tCorpus are assumed to be locally unique within documents. If sent_is_local is FALSE, then sentences are transformed to be locally unique. However,  it is then assumed that the first sentence in a document is sentence 1, which might not be the case if tokens (input) is a subset.
-#' @param token_is_local Same as sent_is_local, but for token_id. Note that if a parent column is present, it will not be changed along.
-#'
-#' @examples
-#' head(corenlp_tokens)
-#'
-#' tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
-#'                        sentence_col = 'sentence', token_id_col = 'id')
-#' tc
-#'
-#' meta = data.frame(doc_id = 1, medium = 'A', date = '2010-01-01')
-#' tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
-#'                        sentence_col = 'sentence', token_id_col = 'id', meta=meta)
-#' tc
-#' @export
-tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col='token_id', sentence_col='sentence', token_col=NULL, lemma_col=NULL, pos_col=NULL, relation_col=NULL, parent_col=NULL, meta=NULL, meta_cols=NULL, feature_cols=NULL, sent_is_local=T, token_is_local=T) {
-  tokens = data.table::as.data.table(tokens)
-  sentence = token_id = NULL ## used in data.table syntax, but need to have bindings for R CMD check
-
-  ## check whether the columns specified in the arguments exist
-  for(cname in c(doc_col, token_id_col, sentence_col, meta_cols)){
-    if (!cname %in% colnames(tokens)) stop(sprintf('"%s" is not an existing columnname in "tokens"', cname))
-  }
-  if (!is.null(meta)){
-    if (!doc_col %in% colnames(meta)) stop(sprintf('"meta" does not contain the document id column (%s)', doc_col))
-  }
-
-  ## change column names, make doc_id factor (both in reference, for efficiency) and check whether the right types are used
-  data.table::setnames(tokens, which(colnames(tokens) == doc_col), 'doc_id')
-  tokens[,'doc_id' := fast_factor(tokens$doc_id)]
-  if (!is.null(sentence_col)) {
-    data.table::setnames(tokens, which(colnames(tokens) == sentence_col), 'sentence')
-    if (!methods::is(tokens$sentence, 'numeric')) stop('sentence_col has to be numeric/integer')
-    if (!methods::is(tokens$sentence, 'integer')) tokens[,sentence := as.numeric(sentence)]
-  }
-
-  if (!is.null(token_id_col)) {
-    data.table::setnames(tokens, which(colnames(tokens) == token_id_col), 'token_id')
-    if (!methods::is(tokens$token_id, 'numeric')) stop('token_id_col has to be numeric/integer')
-    if (!methods::is(tokens$token_id, 'integer')) tokens[,token_id := as.numeric(token_id)]
-  } else {
-    warning('No token_id column specified. token order used instead (see documentation).')
-    tokens$token_id = 1:nrow(tokens)
-    token_is_local = F
-  }
-
-  ## delete unused columns
-  if (is.null(feature_cols)) feature_cols = colnames(tokens)[!colnames(tokens) %in% c(doc_col, sentence_col, token_id_col, meta_cols)]
-  used_columns = c('doc_id','sentence','token_id', meta_cols, feature_cols)
-  unused_columns = setdiff(colnames(tokens), used_columns)
-  if(length(unused_columns) > 0) tokens[, (unused_columns) := NULL]
-
-  for(fcol in feature_cols) {
-    if (class(tokens[[fcol]]) %in% c('factor','character')) tokens[,(fcol) := fast_factor(tokens[[fcol]])]
-  }
-
-  ## set data.table keys (sorting the data) and verify that there are no duplicates
-  if (!is.null(sentence_col)) {
-    data.table::setkeyv(tokens, c('doc_id','sentence','token_id'))
-    if (!anyDuplicated(tokens, by=c('doc_id','sentence','token_id')) == 0) stop('tokens should not contain duplicate triples of documents (doc_col), sentences (sentence_col) and token positions (token_id_col)')
-  } else {
-    data.table::setkeyv(tokens, c('doc_id','token_id'))
-    if (!anyDuplicated(tokens, by=c('doc_id','token_id')) == 0) stop('tokens should not contain duplicate pairs of documents (doc_col) and token positions (token_id_col)')
-  }
-
-  ## make sure that sentence and token_id are locally unique within documents
-  ndoc = nrow(unique(tokens, by='doc_id'))
-  if (!is.null(sentence_col)){
-    #if (sent_is_local) {
-    #    #if (ndoc > 10) if (!anyDuplicated(unique(tokens, by=c('doc_id','sentence')), by='sentence') == 0) warning("Sentence positions (sentence) do not appear to be locally unique within documents (no duplicates in at least 10 documents). Unless you are sure they are, set sent_is_local to FALSE (and read documentation)")
-    #}
-    if (!sent_is_local) tokens[,'sentence' := local_position(tokens$sentence, tokens$doc_id, presorted = T)] ## make sure sentences are locally unique within documents (and not globally)
-    if (!token_is_local) tokens[,'token_id' := global_position(tokens$token_id,
-                                                            global_position(tokens$sentence, tokens$doc_id, presorted = T, position_is_local=T),
-                                                            presorted = T)]  ## make token positions globally unique, taking sentence id into account (in case tokens are locally unique within sentences)
-  }
-  if (token_is_local) {
-    if (!anyDuplicated(tokens, by=c('doc_id','token_id')) == 0) warning("Duplicate token ids (doc_id - token_id pairs) found. If token ids are not local at the document level, you can set token_is_local to False to use a token's position within a document as the token ids")
-    #if (ndoc > 10) if (!anyDuplicated(tokens, by=c('doc_id','token_id')) == 0) warning("token positions (token_id) do not appear to be locally unique within documents (no duplicates in at least 10 documents). Unless you are sure they are, set token_is_local to FALSE (and read documentation)")
-  } else {
-    tokens[,'token_id' := local_position(tokens$token_id, tokens$doc_id, presorted=T)] ## make tokens locally unique within documents
-  }
-
-  ## arrange the meta data
-  if (!is.null(meta)) {
-    meta = data.table::as.data.table(meta)
-    data.table::setnames(meta, which(colnames(meta) == doc_col), 'doc_id')
-    meta[,'doc_id' := as.character(meta$doc_id)]
-    data.table::setkeyv(meta, 'doc_id')
-
-    if (!all(levels(tokens$doc_id) %in% meta$doc_id)) warning('For some documents in tokens the meta data is missing')
-    if (!all(meta$doc_id %in% levels(tokens$doc_id))) warning('For some documents in the meta data there are no tokens. These documents will not be included in the meta data')
-    meta = meta[list(levels(tokens$doc_id)),]
-  } else {
-    meta = data.table::data.table(doc_id=as.character(levels(tokens$doc_id)), key='doc_id')
-  }
-
-  if (!is.null(meta_cols)){
-    add_meta = unique(tokens[,c('doc_id', meta_cols), with=F])
-    if (nrow(add_meta) > nrow(meta)) stop('The document meta columns specified in meta_cols are not unique within documents')
-    meta = cbind(meta, add_meta[,meta_cols,with=F])
-  }
-  meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
-
-  tc = tCorpus$new(tokens=tokens, meta = meta)
-  tc$set_special(token=token_col, lemma=lemma_col, POS=pos_col, relation=relation_col, parent=parent_col)
-  tc
-}
 
 
-## alternative:: add formal data check and correction methods, and then simply create the tcorpus from the data and then perform the checks and corrections
+
+
 
 

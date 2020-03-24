@@ -59,20 +59,19 @@ BEGIN_RCPP
 END_RCPP
 }
 // AND_hit_ids_cpp
-NumericVector AND_hit_ids_cpp(NumericVector con, NumericVector subcon, NumericVector pos, NumericVector term_i, double n_unique, std::vector<std::string> group_i, LogicalVector replace, bool feature_mode);
-RcppExport SEXP _corpustools_AND_hit_ids_cpp(SEXP conSEXP, SEXP subconSEXP, SEXP posSEXP, SEXP term_iSEXP, SEXP n_uniqueSEXP, SEXP group_iSEXP, SEXP replaceSEXP, SEXP feature_modeSEXP) {
+NumericVector AND_hit_ids_cpp(NumericVector con, NumericVector subcon, NumericVector term_i, double n_unique, std::vector<std::string> group_i, LogicalVector replace, bool feature_mode);
+RcppExport SEXP _corpustools_AND_hit_ids_cpp(SEXP conSEXP, SEXP subconSEXP, SEXP term_iSEXP, SEXP n_uniqueSEXP, SEXP group_iSEXP, SEXP replaceSEXP, SEXP feature_modeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type con(conSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type subcon(subconSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type pos(posSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type term_i(term_iSEXP);
     Rcpp::traits::input_parameter< double >::type n_unique(n_uniqueSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type group_i(group_iSEXP);
     Rcpp::traits::input_parameter< LogicalVector >::type replace(replaceSEXP);
     Rcpp::traits::input_parameter< bool >::type feature_mode(feature_modeSEXP);
-    rcpp_result_gen = Rcpp::wrap(AND_hit_ids_cpp(con, subcon, pos, term_i, n_unique, group_i, replace, feature_mode));
+    rcpp_result_gen = Rcpp::wrap(AND_hit_ids_cpp(con, subcon, term_i, n_unique, group_i, replace, feature_mode));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -143,7 +142,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_corpustools_uncollapse_terms_cpp", (DL_FUNC) &_corpustools_uncollapse_terms_cpp, 2},
     {"_corpustools_do_code_dictionary", (DL_FUNC) &_corpustools_do_code_dictionary, 5},
     {"_corpustools_fast_factor_cpp", (DL_FUNC) &_corpustools_fast_factor_cpp, 2},
-    {"_corpustools_AND_hit_ids_cpp", (DL_FUNC) &_corpustools_AND_hit_ids_cpp, 8},
+    {"_corpustools_AND_hit_ids_cpp", (DL_FUNC) &_corpustools_AND_hit_ids_cpp, 7},
     {"_corpustools_proximity_hit_ids_cpp", (DL_FUNC) &_corpustools_proximity_hit_ids_cpp, 10},
     {"_corpustools_sequence_hit_ids_cpp", (DL_FUNC) &_corpustools_sequence_hit_ids_cpp, 5},
     {"_corpustools_ngrams_cpp", (DL_FUNC) &_corpustools_ngrams_cpp, 5},

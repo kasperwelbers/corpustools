@@ -38,7 +38,9 @@ tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
 obama = tc$subset_meta(president == 'Barack Obama', copy=TRUE)
 bush = tc$subset_meta(president == 'George W. Bush', copy=TRUE)
 
-comp = obama$compare_corpus(bush, 'feature')
+suppressWarnings({
+   comp = obama$compare_corpus(bush, 'feature')
+ })
 comp = comp[order(-comp$chi),]
 head(comp)
 \donttest{
