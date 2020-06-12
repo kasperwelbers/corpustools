@@ -41,6 +41,7 @@
 #' tc$feature_subset('feature', POS %in% c('NOUN','PROPN','VERB'))
 #' m = tc$lda_fit('feature', create_feature = 'topic', K = 5, alpha = 0.001)
 #'
+#' tc$meta = tc$meta[,'doc_id']
 #' browse_texts(tc, category='topic', view=T, top_nav=1)
 #' }
 browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('first','random'), header='',

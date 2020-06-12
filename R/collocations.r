@@ -80,6 +80,7 @@ flatten_collocations <- function(d, feature_col, position_col, sep=' |_', reset_
   int = floor(d[[position_col]])
   is_inserted = !int == d[[position_col]]
   d[[position_col]] = int + cumsum(is_inserted)
+  d$orig_i = int
 
   if (reset_key) setkeyv(d, k)
   d

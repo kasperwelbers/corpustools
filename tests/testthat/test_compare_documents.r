@@ -4,11 +4,13 @@ test_that("comparing documents works", {
   d = data.frame(text = c('Renewable fuel is better than fossil fuels!',
                           'A fueled debate about fuel',
                           'Mark Rutte is simply Rutte'),
-                 date = as.POSIXct(c('2010-01-01','2010-01-01','2012-01-01')))
+                 date = as.POSIXct(c('2010-01-01','2010-01-01','2012-01-01')),
+                 meta = c('a','a','b'))
   tc = create_tcorpus(d)
 
   ## compare as DTM
   dtm = get_dtm(tc, 'token', weight = 'norm_tfidf')
+
   #igraph::get.data.frame(dtm_document_comparison(dtm, meta=tc$get_meta(), date_col = 'date', verbose=F))
   #igraph::get.data.frame(compare_documents_dtm(dtm, meta=tc$get_meta(), date_col = 'date', verbose=F))
 

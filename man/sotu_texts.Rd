@@ -4,7 +4,9 @@
 \name{sotu_texts}
 \alias{sotu_texts}
 \title{State of the Union addresses}
-\format{data.frame}
+\format{
+data.frame
+}
 \usage{
 data(sotu_texts)
 }

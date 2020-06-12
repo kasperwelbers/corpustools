@@ -40,5 +40,5 @@ SystemRequirements: C++11
 License: GPL-3
 URL: http://github.com/kasperwelbers/corpustools
 Roxygen: list(wrap = FALSE)
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.0
 VignetteBuilder: knitr

@@ -43,7 +43,7 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, n=NA,
   if (class(i) == 'logical') i = which(i)
   ## remove i and code parameters
 
-  if(!is.featureHits(hits)) stop('hits must be a featureHits object (created with search_features()')
+  if(!is.null(hits) && !is.featureHits(hits)) stop('hits must be a featureHits object (created with search_features()')
   hits$hits$hit_id = stringi::stri_paste(hits$hits$code, hits$hits$hit_id, sep=' ')
   d = hits$hits
 
@@ -55,6 +55,8 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, n=NA,
       d = d[d$hit_id %in% hit_ids,]
     }
   }
+
+  ?search_features()
 
   shifts = -ntokens:ntokens
   n = nrow(d)

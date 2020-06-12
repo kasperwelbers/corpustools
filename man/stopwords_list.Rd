@@ -4,7 +4,9 @@
 \name{stopwords_list}
 \alias{stopwords_list}
 \title{Basic stopword lists}
-\format{A named list, with names matching the languages used by SnowballC}
+\format{
+A named list, with names matching the languages used by SnowballC
+}
 \usage{
 data(stopwords_list)
 }

@@ -64,6 +64,7 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', strin
   anno = dict[as.numeric(fl$dict_i[is_hit]),]
   hit_id = fl$hit_id[is_hit]
 
+
   self$set(column_id, hit_id, subset = is_hit, subset_value=F)
 
   for (.col in colnames(anno)) {
@@ -301,6 +302,15 @@ dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_s
 
   if (verbose) message("Coding features")
   out = do_code_dictionary(as.numeric(fi$feature), context = fi$context, which = initial_i, dict = d, verbose=verbose)
+
+
+  if (flatten_colloc) {
+    out$orig_i = fi$orig_i
+    data.table::setorderv(out, 'hit_id', -1)
+    out = out[!duplicated(out$orig_i),]
+    data.table::setorderv(out, 'orig_i')
+  }
+  out
 
   out$hit_id[out$hit_id == 0] = NA
   out$dict_i[out$dict_i == 0] = NA

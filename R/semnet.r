@@ -48,6 +48,9 @@ semnet <- function(tc, feature='token', measure=c('con_prob', 'con_prob_weighted
     } else {
       hits = unique(hits, by=c('code', 'hit_id'))
     }
+    ## tcorpus normally doesn't allow duplicate token_id, so this ignores that by adding an insignificant decimal
+    ## should solve more elegantly at some point
+    hits$token_id = hits$token_id + ((1:nrow(hits)) / nrow(hits)*3)
     tc = tokens_to_tcorpus(hits, doc_col = 'doc_id', sentence_col=NULL, token_id_col = 'token_id')
     feature = 'code'
   }
@@ -131,6 +134,9 @@ semnet_window <- function(tc, feature='token', measure=c('con_prob', 'cosine', '
     sentence_col = if (anyNA(tc$hits$sentence)) NULL else 'sentence'
     hits = tc$hits
     if (measure %in% c('count_directed','count_undirected')) hits = hits[!duplicated(hits[,c('code','hit_id')])]
+    ## tcorpus normally doesn't allow duplicate token_id, so this ignores that by adding an insignificant decimal
+    ## should solve more elegantly at some point
+    hits$token_id = hits$token_id + ((1:nrow(hits)) / nrow(hits)*3)
     tc = tokens_to_tcorpus(hits, doc_col = 'doc_id', sentence_col=NULL, token_id_col = 'token_id')
     feature = 'code'
   }

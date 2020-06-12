@@ -73,6 +73,9 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
   }
   meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
 
+
+
+  x = stringi::stri_trim(x)
   if (!is.null(udpipe_model)) {
     data = udpipe_parse(x, udpipe_model, udpipe_model_path, udpipe_cores=udpipe_cores, cache=udpipe_cache, max_batchsize=udpipe_batchsize, doc_ids=doc_id, use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens, remember_spaces=remember_spaces, verbose=verbose)
   } else {

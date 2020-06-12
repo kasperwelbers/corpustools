@@ -256,6 +256,7 @@ tCorpus <- R6::R6Class("tCorpus",
          .value = value
          self$tokens[subset, (column) := .value]
 
+
        } else {
          if (column %in% c('sentence','token_id')) {
            if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')

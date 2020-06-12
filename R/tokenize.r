@@ -25,9 +25,6 @@ tokenize_to_dataframe <- function(x, doc_id=1:length(x), split_sentences=F, max_
   tokens
 }
 
-
-
-
 split_tokens <- function(x, max_tokens, remember_spaces=F) {
   x = stringi::stri_split_boundaries(x, type='word')
   if (remember_spaces) {

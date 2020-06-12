@@ -4,7 +4,9 @@
 \name{emoticon_dict}
 \alias{emoticon_dict}
 \title{Dictionary with common ASCII emoticons}
-\format{A data.frame with a "string" and "code" column.}
+\format{
+A data.frame with a "string" and "code" column.
+}
 \usage{
 data(emoticon_dict)
 }
