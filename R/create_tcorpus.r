@@ -141,18 +141,13 @@ create_tcorpus.factor <- function(x, ...) {
 #' @rdname create_tcorpus
 #' @examples
 #'
-#' \donttest{
 #' library(quanteda)
-#' create_tcorpus(data_corpu_inaugural)
-#' }
+#' create_tcorpus(data_corpus_inaugural)
 #' @export
 create_tcorpus.corpus <- function(x, ...) {
-  x = x$documents
-  x$doc_id = rownames(x)
-  create_tcorpus(x, text_columns='texts', doc_column='doc_id', ...)
+  x = quanteda::convert(x, 'data.frame')
+  create_tcorpus(x, text_columns='text', doc_column='doc_id', ...)
 }
-
-
 
 
 

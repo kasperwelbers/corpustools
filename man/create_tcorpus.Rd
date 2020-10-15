@@ -143,8 +143,6 @@ text = factor(c('Text one first sentence', 'Text one second sentence'))
 tc = create_tcorpus(text)
 tc$tokens
 
-\donttest{
 library(quanteda)
-create_tcorpus(data_corpu_inaugural)
-}
+create_tcorpus(data_corpus_inaugural)
 }
