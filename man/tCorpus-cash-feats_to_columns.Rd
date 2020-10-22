@@ -21,7 +21,7 @@ If the UDpipe parser is used in \code{\link{create_tcorpus}}, the 'feats' column
 ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 
 \preformatted{
-feats_to_columns(keep=NULL, drop=NULL, rm_column=T)
+feats_to_columns(keep=NULL, drop=NULL, rm_column=TRUE)
 }
 }
 \examples{

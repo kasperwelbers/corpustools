@@ -159,7 +159,7 @@ summary.contextHits <- function(object, ...){
 #' hits = search_contexts(tc, c('War# war* OR army OR bomb*','Terrorism# terroris*',
 #'                               'Economy# econom* OR bank*','Education# educat* OR school*'))
 #'
-#' \donttest{
+#' \dontrun{
 #' plot(hits)
 #' }
 #' @export

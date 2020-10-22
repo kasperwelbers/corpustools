@@ -56,8 +56,6 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, n=NA,
     }
   }
 
-  ?search_features()
-
   shifts = -ntokens:ntokens
   n = nrow(d)
   d = d[rep(1:nrow(d), each=length(shifts)), c('doc_id','hit_id','token_id')]
@@ -67,8 +65,9 @@ keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, n=NA,
   d = d[!is.na(d$feature),] ## positions that do not exist (token_id out of bounds) returned NA in tc$get
 
   d$feature = as.character(d$feature)
+  #d$feature[d$is_kw] = sprintf('%s%s%s', kw_tag[1], d$feature[d$is_kw], kw_tag[2])
   d$feature[d$is_kw] = sprintf('%s%s%s', kw_tag[1], d$feature[d$is_kw], kw_tag[2])
-
+  
   ## kwic's of the same hit_id should be merged.
   d = d[order(d$hit_id, d$token_id, -d$is_kw),]
   d = d[!duplicated(d[,c('hit_id','token_id')]),]

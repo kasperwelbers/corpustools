@@ -60,7 +60,7 @@ create_tcorpus <- function(x, ...) {
 #'                     meta = meta)
 #' tc
 #' @export
-create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, udpipe_cores=1, udpipe_batchsize=50, use_parser=F, remember_spaces=FALSE, verbose=T, ...) {
+create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, udpipe_cores=1, udpipe_batchsize=50, use_parser=F, remember_spaces=TRUE, verbose=T, ...) {
   if (any(duplicated(doc_id))) stop('doc_id should not contain duplicate values')
   if (!is.null(meta)){
     if (!methods::is(meta, 'data.frame')) stop('"meta" is not a data.frame or data.table')
@@ -72,8 +72,6 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
     meta = data.table::data.table(doc_id=doc_id, key = 'doc_id')
   }
   meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
-
-
 
   x = stringi::stri_trim(x)
   if (!is.null(udpipe_model)) {

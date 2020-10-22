@@ -26,7 +26,8 @@ Imports:
     RNewsflow (>= 1.2.1),
     Matrix (>= 1.2),
     parallel,
-    pbapply (>= 1.4)
+    pbapply (>= 1.4),
+    rsyntax (>= 0.1.1)
 Suggests:
     testthat,
     tm (>= 0.6),

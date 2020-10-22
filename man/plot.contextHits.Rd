@@ -23,7 +23,7 @@ tc = create_tcorpus(sotu_texts, doc_column='id')
 hits = search_contexts(tc, c('War# war* OR army OR bomb*','Terrorism# terroris*',
                               'Economy# econom* OR bank*','Education# educat* OR school*'))
 
-\donttest{
+\dontrun{
 plot(hits)
 }
 }

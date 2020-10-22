@@ -67,7 +67,7 @@ tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{
-#' search_recode(feature, new_value, keyword, condition = NA, condition_once = F)
+#' search_recode(feature, new_value, keyword, condition = NA, condition_once = FALSE)
 #' }
 #'
 #' @param feature The feature in which to search

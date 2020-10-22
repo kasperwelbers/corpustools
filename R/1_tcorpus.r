@@ -537,7 +537,7 @@ as.tcorpus.tCorpus <- function(x, ...) x
 #' @param ... not used
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' x = c('First text','Second text')
 #' as.tcorpus(x) ## x is not a tCorpus object
 #' }

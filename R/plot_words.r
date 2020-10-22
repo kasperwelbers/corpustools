@@ -117,7 +117,7 @@ dtm_wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs
 #' comp = compare_subset(tc, 'token', query_x = 'tax*')
 #'
 #' \donttest{
-#' plot(comp, balance=T)
+#' plot(comp, balance=TRUE)
 #' plot(comp, mode = 'ratio_x')
 #' plot(comp, mode = 'ratio_y')
 #' }
@@ -158,7 +158,7 @@ plot.vocabularyComparison <- function(x, n=25, mode=c('both', 'ratio_x','ratio_y
 #' comp = compare_subset(tc, 'token', query_x = 'tax*')
 #'
 #' \donttest{
-#' plot(comp, balance=T)
+#' plot(comp, balance=TRUE)
 #' plot(comp, mode = 'ratio_x')
 #' plot(comp, mode = 'ratio_y')
 #' }

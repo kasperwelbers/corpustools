@@ -39,8 +39,6 @@ tc$n_meta
 tc1 = create_tcorpus(sotu_texts[1:10,], doc_column = 'id')
 tc2 = create_tcorpus(sotu_texts[6:15,], doc_column = 'id')
 
-## duplicate error
-\donttest{tc = merge_tcorpora(tc1,tc2)}
 
 ## with "rename", has 20 documents of which 5 duplicates
 tc = merge_tcorpora(tc1,tc2, if_duplicate = 'rename')

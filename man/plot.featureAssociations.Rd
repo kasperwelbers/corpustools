@@ -24,7 +24,7 @@ tc = create_tcorpus(sotu_texts[1:100,], doc_column = 'id')
 comp = compare_subset(tc, 'token', query_x = 'tax*')
 
 \donttest{
-plot(comp, balance=T)
+plot(comp, balance=TRUE)
 plot(comp, mode = 'ratio_x')
 plot(comp, mode = 'ratio_y')
 }

@@ -23,7 +23,7 @@ create_tcorpus(x, ...)
   udpipe_cores = 1,
   udpipe_batchsize = 50,
   use_parser = F,
-  remember_spaces = FALSE,
+  remember_spaces = TRUE,
   verbose = T,
   ...
 )

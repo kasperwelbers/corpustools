@@ -213,7 +213,7 @@ make_dir <- function(path=getwd(), ...) {
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{
-#' feats_to_columns(keep=NULL, drop=NULL, rm_column=T)
+#' feats_to_columns(keep=NULL, drop=NULL, rm_column=TRUE)
 #' }
 #'
 #' @param keep     Optionally, the names of features to keep
