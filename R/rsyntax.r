@@ -1,3 +1,4 @@
+
 #' Annotate tokens based on rsyntax queries
 #'
 #' @description 
@@ -26,7 +27,7 @@
 #' @param verbose     If TRUE, report progress (only usefull if multiple queries are given)
 #' 
 #' @name tCorpus$annotate_rsyntax
-#' @alias annotate_rsyntax
+#' @aliases annotate_rsyntax
 #' @examples
 #' library(rsyntax)
 #' 
@@ -50,11 +51,92 @@
 #' syntax_reader(tc$tokens, annotation = 'clause', value='subject')
 #' }
 tCorpus$set('public', 'annotate_rsyntax', function(column, ..., block=NULL, fill=TRUE, overwrite=NA, block_fill=FALSE, verbose=FALSE) {
-  ## change tc to self
-  if (column %in% tc$names && is.na(overwrite)) stop(sprintf('The specified column (%s) already exists. Set overwrite argument to TRUE to overwrite the column or FALSE to consider existing annotations as a chain.', column))
+  if (column %in% self$names && is.na(overwrite)) stop(sprintf('The specified column (%s) already exists. Set overwrite argument to TRUE to overwrite the column or FALSE to consider existing annotations as a chain.', column))
   cnames = paste0(column, c('','_id','_fill'))
   ti = rsyntax::annotate_tqueries(self$tokens, column = column, ..., block = block, fill = fill, overwrite = overwrite, block_fill = block_fill, copy=T, verbose=F) 
   ti = subset(ti, select = c('doc_id','token_id',cnames))
   for (cn in cnames) if (cn %in% self$names) self$set(cn, NULL)
   self$tokens = merge(self$tokens, ti, by=c('doc_id','token_id'))
 })
+
+
+#' Add columns indicating who said what
+#'
+#' An off-the-shelf application of rsyntax for extracting quotes. Designed for working with a tCorpus created with \code{\link{udpipe_tcorpus}}.
+#'
+#' @param column      The name of the column in $tokens to store the results. 
+#' @param tqueries    A list of tQueries. By default uses the off-the-shelf tqueries in \code{\link{udpipe_quote_tqueries}}
+#' @param span_quotes If True, also look for quotes indicated with quotation marks, that can span multiple sentences. The source will be the most recent source in the previous 2 sentences, or if there is none, simple tqueries are used to find the most recent proper names that said/did something.
+#' @param say_verbs   If span_quotes is used, say_verbs can be required to find sources. say_verbs should be a character vector of verb lemma that indicate speech (e.g., say, state). A default list is included in verb_lemma('quote'), but certain lemma might be more accurate/appropriate depending on the corpus.
+#'
+#' @return a tCorpus
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' txt = 'Bob said that he likes Mary. John did not like that: "how dare he!". "It is I, John, who likes Mary!!"'
+#' tc = udpipe_tcorpus(txt, model = 'english-ewt')
+#' tc$annotate_quotes()
+#' rsyntax::plot_tree(tc$tokens, token, lemma, POS, annotation='quotes')
+#' rsyntax::syntax_reader(tc$tokens, annotation='quotes', value='source', value2='quote')
+#' }
+tCorpus$set('public', 'annotate_quotes', function(column='quotes', tqueries = udpipe_quote_tqueries(verb_lemma('quote')), span_quotes=T, say_verbs=verb_lemma('quote')) {
+  cnames = paste0(column, c('','_id','_fill'))
+  ti = rsyntax::annotate_tqueries(self$tokens, column = column, overwrite = T, copy=T, verbose=F, tqueries) 
+  if (span_quotes) ti = ud_span_quotes(ti, quote_column = column, say_verbs=say_verbs)
+  ti = subset(ti, select = c('doc_id','token_id',cnames))
+  for (cn in cnames) if (cn %in% self$names) self$set(cn, NULL)
+  self$tokens = merge(self$tokens, ti, by=c('doc_id','token_id'))
+})
+
+#' Add columns indicating who did what
+#'
+#' An off-the-shelf application of rsyntax for extracting subject-verb clauses. Designed for working with a tCorpus created with \code{\link{udpipe_tcorpus}}.
+#'
+#' @param column      The name of the column in $tokens to store the results. 
+#' @param tqueries    A list of tQueries. By default uses the off-the-shelf tqueries in \code{\link{udpipe_clause_tqueries}}
+#'
+#' @return a tCorpus
+#' @export
+#'
+#' @examples
+#' \donttest{
+#' tc = tc_sotu_udpipe$copy()
+#' tc$annotate_clauses()
+#' rsyntax::plot_tree(tc$tokens, token, lemma, POS, annotation='clauses')
+#' rsyntax::syntax_reader(tc$tokens, annotation='clauses', value='subject')
+#' }
+tCorpus$set('public', 'annotate_clauses', function(column='clauses', tqueries = udpipe_clause_tqueries()) {
+  tc$annotate_rsyntax(column, tqueries)
+})
+
+#' Apply rsyntax transformations
+#'
+#' This is an experimental function for applying rsyntax transformations directly on a tcorpus,
+#' to create a new tcorpus with the transformed tokens. The argument f should be self defined function
+#' that wraps rsyntax transformations. Or more generally, a function that takes a tokens data.frame (or data.table) as input, and returns a tokens data.frame (or data.table). 
+#' For examples, see corpustools:::ud_relcl, or corpustools::udpipe_simplify for a function that wraps multiple transformations.
+#'
+#' @param tc    a tCorpus
+#' @param f     functions that perform rsyntax tree transformations
+#' @param ...   arguments passed to f
+#'
+#' @return a tCorpus after applying the transformations
+#' @export
+#'
+#' @examples
+#' tc2 = transform_rsyntax(tc, udpipe_simplify)
+#' 
+#' browse_texts(tc2)
+#' if (interactive()) {
+#'    rsyntax::plot_tree(tc_sotu_udpipe$tokens, token, lemma, POS, sentence_i=20)
+#'    rsyntax::plot_tree(tc2$tokens, token, lemma, POS, sentence_i=20)
+#' }
+transform_rsyntax <- function(tc, f, ...) {
+  tokens = as_tokenindex(tc$tokens)
+  tokens = f(tokens, ...)
+  tokens_to_tcorpus(tokens, meta=tc$meta)
+}
+
+
+

@@ -147,7 +147,3 @@ create_tcorpus.corpus <- function(x, ...) {
   create_tcorpus(x, text_columns='text', doc_column='doc_id', ...)
 }
 
-
-
-
-

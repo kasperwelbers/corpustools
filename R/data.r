@@ -12,6 +12,13 @@
 #' @format data.frame
 'corenlp_tokens'
 
+#' A tCorpus with a small sample of sotu paragraphs parsed with udpipe
+#'
+#' @docType data
+#' @usage data(tc_sotu_udpipe)
+#' @format data.frame
+'tc_sotu_udpipe'
+
 #' Basic stopword lists
 #'
 #' @docType data

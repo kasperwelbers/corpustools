@@ -49,7 +49,7 @@ test_that("tCorpus class works", {
   expect_equal(token, fast_factor(c('Renewable','fuel','is','better','than','fossil','fuels','!','A','fueled','debate','about','fuel','Mark','Rutte','is','simply','Rutte')))
 
   meta_medium = tc$get_meta('medium')
-  expect_equal(meta_medium, as.factor(c('a','a','b')))
+  expect_equal(as.character(meta_medium), c('a','a','b'))
 
   ## change data
   token = tc$get('token')

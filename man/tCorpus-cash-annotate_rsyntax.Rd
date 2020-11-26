@@ -2,6 +2,7 @@
 % Please edit documentation in R/rsyntax.r
 \name{tCorpus$annotate_rsyntax}
 \alias{tCorpus$annotate_rsyntax}
+\alias{annotate_rsyntax}
 \title{Annotate tokens based on rsyntax queries}
 \arguments{
 \item{column}{The name of the column in which the annotations are added. The unique ids are added as column_id}
