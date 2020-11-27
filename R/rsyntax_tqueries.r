@@ -15,9 +15,8 @@ udpipe_clause_tqueries <- function(verbs=NULL, exclude_verbs=verb_lemma('quote')
   verb_lookup = AND(lemma=verbs, NOT(lemma = exclude_verbs))
   verb_fill = custom_fill(relation=c('prt','aux','neg','punct','advmod','acomp'), POS = c('PART','VERB','AUX','ADV','ADJ'), connected=T)
   
-  predicate_lookup = NOT(relation=c('su', 'nsubj', 'agent', 'nmod:agent','aux','prt','advmod','neg','aux','auxpass', 'punct','mark'))
-  predicate_fill = custom_fill(NOT(relation=c('relcl','acl','acl:relcl','punct')), connected=T)
-  
+  predicate_lookup = NOT(relation=c('nsubj', 'agent', 'nmod:agent','aux','prt','advmod','neg','aux','auxpass', 'punct','mark','cc'))
+  predicate_fill = custom_fill(NOT(relation=c('relcl','acl:relcl')), connected=T)
   
   relcl = tquery(label='verb', relation = 'relcl', verb_lookup, verb_fill,
                  parents(label='subject', subject_lookup, subject_fill),
@@ -54,7 +53,7 @@ udpipe_clause_tqueries <- function(verbs=NULL, exclude_verbs=verb_lemma('quote')
                         children(label='subject', subject_lookup, subject_fill)))
   
   xcomp = tquery(label = 'verb', relation='xcomp', verb_fill,
-                 parents(label='subject', subject_fill),
+                 parents(label='subject', subject_lookup, subject_fill),
                  children(label='predicate', predicate_lookup, predicate_fill))
   
   list(relcl=relcl, relcl_xcomp=relcl_xcomp, pas=passive, dir=direct, cop1=cop1, cop2=cop2, pacl=poss_acl, acl=acl, xcomp=xcomp)
@@ -146,4 +145,19 @@ ud_mods <- function(tokens, should_verbs = verb_lemma('should'), verbose=T) {
   tokens$mod_id = NULL
   tokens$mod_fill = NULL
   tokens
+}
+
+function() {
+  tc = tc_sotu_udpipe$copy()
+  tc$annotate_quotes()
+  tc$annotate_clauses()
+  
+  
+  tc_syntax_reader(tc, annotation='quote', value='source')
+  tc_syntax_reader(tc, annotation='clause', value='subject')
+  
+  tc_plot_tree(tc, annotation='clause', sentence_i=3)
+  tc_plot_tree(tc, doc_id = '2', annotation='clause')
+  
+  
 }

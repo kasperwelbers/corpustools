@@ -6,6 +6,7 @@
 \alias{create_tcorpus.data.frame}
 \alias{create_tcorpus.factor}
 \alias{create_tcorpus.corpus}
+\alias{udpipe_tcorpus.corpus}
 \title{Create a tCorpus}
 \usage{
 create_tcorpus(x, ...)
@@ -50,7 +51,7 @@ create_tcorpus(x, ...)
 
 \method{create_tcorpus}{corpus}(x, ...)
 
-\method{create_tcorpus}{corpus}(x, ...)
+\method{udpipe_tcorpus}{corpus}(x, ...)
 }
 \arguments{
 \item{x}{main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.}

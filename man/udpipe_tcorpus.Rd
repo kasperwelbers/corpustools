@@ -5,64 +5,64 @@
 \alias{udpipe_tcorpus}
 \alias{udpipe_tcorpus.character}
 \alias{udpipe_tcorpus.data.frame}
-\alias{create_tcorpus.factor}
+\alias{udpipe_tcorpus.factor}
 \title{Create a tCorpus using udpipe}
 \usage{
 udpipe_tcorpus(x, ...)
 
 \method{udpipe_tcorpus}{character}(
   x,
+  model = "english-ewt",
   doc_id = 1:length(x),
-  model,
   meta = NULL,
   max_sentences = NULL,
-  max_tokens = NULL,
   feats = NULL,
   model_path = getwd(),
   cache = 3,
   cores = 1,
   batchsize = 50,
   use_parser = T,
+  start_end = F,
+  coref = T,
   verbose = T,
   ...
 )
 
 \method{udpipe_tcorpus}{data.frame}(
   x,
-  model,
+  model = "english-ewt",
   text_columns = "text",
   doc_column = "doc_id",
   max_sentences = NULL,
-  max_tokens = NULL,
   feats = NULL,
   model_path = getwd(),
   cache = 3,
   cores = 1,
   batchsize = 50,
   use_parser = T,
+  start_end = F,
+  coref = T,
   verbose = T,
   ...
 )
 
-\method{create_tcorpus}{factor}(x, ...)
+\method{udpipe_tcorpus}{factor}(x, ...)
 }
 \arguments{
 \item{x}{main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.}
 
 \item{...}{Arguments passed to create_tcorpus.character}
 
-\item{doc_id}{if x is a character/factor vector, doc_id can be used to specify document ids. This has to be a vector of the same length as x}
-
-\item{model}{Optionally, the name of a Universal Dependencies language model (e.g., "english-ewt", "dutch-alpino"), to use the udpipe package
-(\code{\link[udpipe]{udpipe_annotate}}) for natural language processing. You can use \code{\link{show_udpipe_models}} to get
+\item{model}{The name of a Universal Dependencies language model (e.g., "english-ewt", "dutch-alpino"), to use the udpipe package
+(\code{\link[udpipe]{udpipe_annotate}}). If you don't know the model name, just type the language and you'll get a suggestion. Otherwise, use \code{\link{show_udpipe_models}} to get
 an overview of the available models. For more information about udpipe and performance benchmarks of the UD models, see the
 GitHub page of the \href{https://github.com/bnosac/udpipe}{udpipe package}.}
 
+\item{doc_id}{if x is a character/factor vector, doc_id can be used to specify document ids. This has to be a vector of the same length as x}
+
 \item{meta}{A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x}
 
-\item{max_sentences}{An integer. Limits the number of sentences per document to the specified number. If set when split_sentences == FALSE, split_sentences will be set to TRUE.}
-
-\item{max_tokens}{An integer. Limits the number of tokens per document to the specified number}
+\item{max_sentences}{An integer. Limits the number of sentences per document to the specified number.}
 
 \item{feats}{Optionally, a character vector of additional features (options: Case, Definite, Degree, Gender, Mood, NumType, Number, Person, Poss, PronType, Reflex, Tense, Typo, VerbForm, Voice) to include in the tokens data. Default is none. Can also use 'all' to get all features.}
 
@@ -79,6 +79,10 @@ The price is that there will be some overhead for each batch, so for very large 
 If the number of texts divided by the number of parallel cores is lower than the batchsize, the texts are evenly distributed over cores.}
 
 \item{use_parser}{If TRUE, use dependency parser (only if udpipe_model is used)}
+
+\item{start_end}{If TRUE, include start and end positions of tokens}
+
+\item{coref}{An experimental, simple rule based implementation for co-reference resolution of proper nouns}
 
 \item{verbose}{If TRUE, report progress. Only if x is large enough to require multiple sequential batches}
 

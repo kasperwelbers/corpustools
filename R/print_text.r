@@ -13,11 +13,11 @@
 #' @param highlight   The name of a numeric column in tc$tokens with values between 0 and 1, used to highlight tokens.
 #'                    Can also be a character vector, in which case al non-NA values are highlighted
 #' @param scale       The name of a numeric column in tc$tokens with values between -1 and 1, used to color tokens on a scale (set colors with scale_col)
-#' @param category    The name of a character or factor column in tc$tokens. Each unique value will have its own color, and navigation for categories will be added (nav cannot be used with this option)
+#' @param category    The name of a character or factor column in tc$tokens. Each unique value will have its own color, and navigation for categories will be added (nav cannot be used with this option)z
 #' @param meta_cols   A character vector with names of columns in tc$meta, used to only show the selected columns
 #' @param seed        If select is "random", seed can be used to set a random seed. After sampling the seed is re-initialized with set.seed(NULL).
 #' @param nav         Optionally, a column in tc$meta to add navigation (only supports simple filtering on unique values).
-#'                    This is not possible if annotate is used.
+#'                    This is not possible if category is used.
 #' @param top_nav     A number. If navigation based on token annotations is used, filters will only apply to top x values with highest token occurence in a document
 #' @param thres_nav    Like top_nav, but specifying a threshold for the minimum number of tokens.
 #' @param view        If TRUE (default), view the browser in the Viewer window (turn off if this is not supported)
@@ -67,6 +67,10 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
   select = match.arg(select)
   if (!is.null(nav)) {
     if (!nav %in% tc$meta_names) stop('nav is not a valid column in tc$meta')
+    if (!is.null(category)) {
+      warning('nav argument ignored, since it cannot be used if category argument is used.')
+      nav = NULL
+    }
   }
 
   subhead = ''
@@ -107,18 +111,19 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
     meta = meta[order(meta[[nav]]),]
   }
 
+  space_column = if ('space' %in% colnames(tokens)) 'space' else NULL
 
-  if (mode == 'normal') url = tokenbrowser::create_browser(sub_tc$tokens, meta=meta, token_col = token_col, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
+  if (mode == 'normal') url = tokenbrowser::create_browser(sub_tc$tokens, meta=meta, token_col = token_col, space_col = space_column, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
   if (mode == 'highlight') {
     v = sub_tc$tokens[[highlight]]
     if (is.character(v) || is.factor(v)) v = !is.na(v)
-    url = tokenbrowser::highlighted_browser(sub_tc$tokens, meta=meta, token_col=token_col, col = highlight_col, value=v, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
+    url = tokenbrowser::highlighted_browser(sub_tc$tokens, meta=meta, token_col=token_col, space_col = space_column, col = highlight_col, value=v, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
   }
-  if (mode == 'scale') url = tokenbrowser::colorscaled_browser(sub_tc$tokens, meta=meta, token_col=token_col, col_range = scale_col, value=sub_tc$tokens[[scale]], alpha=0.3, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
+  if (mode == 'scale') url = tokenbrowser::colorscaled_browser(sub_tc$tokens, meta=meta, token_col=token_col, space_col = space_column, col_range = scale_col, value=sub_tc$tokens[[scale]], alpha=0.3, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
   if (mode == 'category') {
     v = sub_tc$tokens[[category]]
     if (is.numeric(v)) v = as.character(v)
-    url = tokenbrowser::categorical_browser(sub_tc$tokens, meta=meta, token_col=token_col, category = v, alpha=0.3, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
+    url = tokenbrowser::categorical_browser(sub_tc$tokens, meta=meta, token_col=token_col, space_col = space_column, category = v, alpha=0.3, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
   }
   if (view) tokenbrowser::view_browser(url)
   invisible(url)

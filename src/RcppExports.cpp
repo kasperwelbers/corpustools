@@ -31,6 +31,36 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// coref_ids
+NumericVector coref_ids(NumericVector x, NumericVector y, int n);
+RcppExport SEXP _corpustools_coref_ids(SEXP xSEXP, SEXP ySEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type y(ySEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(coref_ids(x, y, n));
+    return rcpp_result_gen;
+END_RCPP
+}
+// coref_candidate_select
+NumericVector coref_candidate_select(CharacterVector doc_id, CharacterVector gn, CharacterVector so, NumericVector pos, NumericVector coref_id, int lag, int lead);
+RcppExport SEXP _corpustools_coref_candidate_select(SEXP doc_idSEXP, SEXP gnSEXP, SEXP soSEXP, SEXP posSEXP, SEXP coref_idSEXP, SEXP lagSEXP, SEXP leadSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< CharacterVector >::type doc_id(doc_idSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type gn(gnSEXP);
+    Rcpp::traits::input_parameter< CharacterVector >::type so(soSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type pos(posSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type coref_id(coref_idSEXP);
+    Rcpp::traits::input_parameter< int >::type lag(lagSEXP);
+    Rcpp::traits::input_parameter< int >::type lead(leadSEXP);
+    rcpp_result_gen = Rcpp::wrap(coref_candidate_select(doc_id, gn, so, pos, coref_id, lag, lead));
+    return rcpp_result_gen;
+END_RCPP
+}
 // do_code_dictionary
 DataFrame do_code_dictionary(NumericVector feature, std::vector<int> context, NumericVector which, List dict, bool verbose);
 RcppExport SEXP _corpustools_do_code_dictionary(SEXP featureSEXP, SEXP contextSEXP, SEXP whichSEXP, SEXP dictSEXP, SEXP verboseSEXP) {
@@ -140,6 +170,8 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_corpustools_collapse_terms_cpp", (DL_FUNC) &_corpustools_collapse_terms_cpp, 4},
     {"_corpustools_uncollapse_terms_cpp", (DL_FUNC) &_corpustools_uncollapse_terms_cpp, 2},
+    {"_corpustools_coref_ids", (DL_FUNC) &_corpustools_coref_ids, 3},
+    {"_corpustools_coref_candidate_select", (DL_FUNC) &_corpustools_coref_candidate_select, 7},
     {"_corpustools_do_code_dictionary", (DL_FUNC) &_corpustools_do_code_dictionary, 5},
     {"_corpustools_fast_factor_cpp", (DL_FUNC) &_corpustools_fast_factor_cpp, 2},
     {"_corpustools_AND_hit_ids_cpp", (DL_FUNC) &_corpustools_AND_hit_ids_cpp, 7},

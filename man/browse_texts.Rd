@@ -46,14 +46,14 @@ Can also be a character vector, in which case al non-NA values are highlighted}
 
 \item{scale}{The name of a numeric column in tc$tokens with values between -1 and 1, used to color tokens on a scale (set colors with scale_col)}
 
-\item{category}{The name of a character or factor column in tc$tokens. Each unique value will have its own color, and navigation for categories will be added (nav cannot be used with this option)}
+\item{category}{The name of a character or factor column in tc$tokens. Each unique value will have its own color, and navigation for categories will be added (nav cannot be used with this option)z}
 
 \item{meta_cols}{A character vector with names of columns in tc$meta, used to only show the selected columns}
 
 \item{seed}{If select is "random", seed can be used to set a random seed. After sampling the seed is re-initialized with set.seed(NULL).}
 
 \item{nav}{Optionally, a column in tc$meta to add navigation (only supports simple filtering on unique values).
-This is not possible if annotate is used.}
+This is not possible if category is used.}
 
 \item{top_nav}{A number. If navigation based on token annotations is used, filters will only apply to top x values with highest token occurence in a document}
 

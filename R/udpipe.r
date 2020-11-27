@@ -250,9 +250,9 @@ tCorpus$set('public', 'feats_to_columns', function(keep=NULL, drop=NULL, rm_colu
     if (!is.null(keep) && !col %in% keep) next
     if (col %in% drop) next
     cname = if (col %in% self$names) paste0('feats.', col) else col
-    self$tokens[d$.I, (cname) := d[[col]]]
+    self$tokens[d$.I, (cname) := fast_factor(d[[col]])]
   }
 
-  tc$tokens[]
+  self$tokens[]
   invisible(self)
 })

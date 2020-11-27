@@ -2,31 +2,39 @@
 ud_split_conjunctions <- function(tokens) {
   ## Use different fill settings for long and short distance conjunctions (as a rough heuristic for argument drop)
   no_fill_long_dist = c('acl:relcl','acl','appos','relcl', 'cop', 'nmod:poss',
-                        'advmod','advcl','xcomp','obl','ccomp','aux','det')
+                        'advmod','advcl','xcomp','ccomp','aux','det')
   no_fill_short_dist = c('acl:relcl','relcl', 'conj', 'cop')
   
   tokens %>%
     split_UD_conj(POS = 'VERB', right_fill_dist=F, no_fill=no_fill_long_dist) %>%
     split_UD_conj(min_dist = 3, no_fill=no_fill_long_dist) %>%
-    split_UD_conj(no_fill= no_fill_short_dist)
+    split_UD_conj(no_fill= no_fill_short_dist) %>%
+    chop(relation = c('cc','cc:preconj'))
 }
 
 ## a custom fill for nouns and proper names that are copied in isolated sentences
 ## we only copy the really defining parts of the name (whereas things such as modifiers are isolated)
-object_fill = custom_fill(relation = c('flat','compound','nmod','nmod:poss'), connected=T)
+object_fill = custom_fill(relation = c('flat','compound','nmod','nmod:poss','det'), connected=T)
 
 ud_short_coref <- function(tokens) {
   # short coreference resolution for the most obvious 
   # For any proper name, look for pronouns
   
-  tq = tquery(POS = c('NOUN','PROPN'), relation=c('nsubj'), label='name', object_fill,
+  tq1 = tquery(POS = c('NOUN','PROPN'), relation=c('nsubj','nsubj:pass'), label='name', object_fill,
               children(relation = c('acl','relcl','acl:relcl','relcl'), 
-                       children(POS = 'PRON', relation=c('nsubj','nmod:poss'), label='coref', BREAK(NOT(relation = c('nsubj','nmod:poss'))), depth=Inf)))
+                       children(POS = 'PRON', relation=c('nsubj','nsubj:pass','nmod:poss'), label='coref', BREAK(NOT(relation = c('nsubj','nsubj:pass','nmod:poss'))), depth=Inf)))
   
-  select_nodes(tokens, tq) %>%
-    copy_nodes('name', 'name_copy', copy_fill = T) %>%
-    mutate_nodes('name_copy', parent=coref$parent, relation=coref$relation) %>%
-    remove_nodes('coref')
+  tq2 = tquery(POS = c('NOUN','PROPN'), relation=c('obj'), label='name', object_fill,
+               children(relation = c('acl','relcl','acl:relcl','relcl'), 
+                        children(POS = 'PRON', lemma = c('who','which','that'), relation=c('nsubj','nsubj:pass','nmod:poss'), label='coref', BREAK(NOT(relation = c('nsubj','nsubj:pass','nmod:poss'))), depth=Inf)))
+  
+  for (tq in list(tq1,tq2)) {
+    tokens = select_nodes(tokens, tq) %>%
+      copy_nodes('name', 'name_copy', copy_fill = T) %>%
+      mutate_nodes('name_copy', parent=coref$parent, relation=coref$relation) %>%
+      remove_nodes('coref')
+  }
+  tokens
 }
 
 #' @import rsyntax
@@ -64,13 +72,13 @@ ud_subject_advcl <- function(tokens) {
   #   - [subject] does something
   #   - [subject] [doing] [something else]
   
-  ## note: also allow for xcomp
+  ## note: also allow for xcomp?
   
   ## three versions
   ## - once without a nsubj (often pronoun) child under advcl
-  tq = tquery(label='verb', POS='VERB',
+  tq = tquery(label='verb', POS='VERB', 
               children(relation=c('nsubj','nsubj:pass'), label='subject'),
-              children(relation=c('advcl','xcomp'), label='advcl', depth=Inf, connected=T,
+              children(relation=c('advcl'), label='advcl', depth=Inf, BREAK(NOT(relation = c('advcl','xcomp','conj'))),
                        not_children(relation='nsubj'),
                        children(relation='mark', NOT(lemma='for'), label='mark')))
   
@@ -81,9 +89,9 @@ ud_subject_advcl <- function(tokens) {
     remove_nodes('mark')
   
   ## - once without a mark or nsubj
-  tq = tquery(label='verb', POS='VERB',
+  tq = tquery(label='verb', POS='VERB', 
               children(relation=c('nsubj','nsubj:pass'), label='subject'),
-              children(relation=c('advcl','xcomp'), label='advcl', depth=Inf, connected=T))
+              children(relation=c('advcl'), label='advcl', depth=Inf, BREAK(NOT(relation = c('advcl','xcomp','conj')))))
   
   tokens = select_nodes(tokens, tq) %>%
     copy_nodes('subject', new = 'subject_copy', copy_fill=T) %>%
@@ -91,9 +99,9 @@ ud_subject_advcl <- function(tokens) {
     mutate_nodes('advcl', parent = NA, relation='ROOT', tree_parent=verb$token_id)
   
   ## - once with a nsubj
-  tq = tquery(label='verb', POS='VERB',
+  tq = tquery(label='verb', POS='VERB', 
               children(relation=c('nsubj','nsubj:pass'), label='subject'),
-              children(relation=c('advcl','xcomp'), label='advcl', depth=Inf, connected=T,
+              children(relation=c('advcl'), label='advcl', depth=Inf, BREAK(NOT(relation = c('advcl','xcomp','conj'))),
                        children(relation='mark', NOT(lemma='for'), label='mark')))
   
   tokens = select_nodes(tokens, tq) %>%
@@ -159,7 +167,7 @@ ud_acl_relcl <- function(tokens) {
               children(relation='acl:relcl', label='acl_relcl'))
   
   select_nodes(tokens, tq) %>%
-    mutate_nodes('acl_relcl', parent = NA, relation='ROOT', tree_parent=subject$token_id)
+    mutate_nodes('acl_relcl', parent = NA, relation='ROOT', tree_parent=subject$token_id, tree_relation='implicit')
 }
 
 #' @import rsyntax
@@ -260,4 +268,16 @@ udpipe_simplify <- function(tokens, split_conj=T, rm_punct=F, new_sentences=F) {
   tokens
 }
 
-
+function() {
+  txt = c('Trump attacked Biden, both by lawsuits or stones')
+  
+  tc = udpipe_tcorpus(data.frame(text=txt))
+  tc_plot_tree(tc, sentence_i = 1)
+  tc_plot_tree(tc, sentence_i = 2)
+  
+  
+  tc2 = transform_rsyntax(tc, udpipe_simplify, rm_punct=T)  
+  tc_plot_tree(tc2, sentence_i = 1)
+  tc_plot_tree(tc2, sentence_i = 2)
+  
+}

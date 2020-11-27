@@ -35,3 +35,4 @@ CharacterVector ngrams_cpp(CharacterVector tokens, CharacterVector group, int n,
 
   return out;
 }
+

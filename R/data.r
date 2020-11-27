@@ -19,6 +19,10 @@
 #' @format data.frame
 'tc_sotu_udpipe'
 
+## run if tc methods have been updated
+## tc_sotu_udpipe = refresh_tcorpus(tc_sotu_udpipe)
+## save(tc_sotu_udpipe, file='data/tc_sotu_udpipe.rda')
+
 #' Basic stopword lists
 #'
 #' @docType data
@@ -34,3 +38,4 @@
 #' @usage data(emoticon_dict)
 #' @format A data.frame with a "string" and "code" column.
 "emoticon_dict"
+

@@ -77,10 +77,10 @@ tCorpus$set('public', 'annotate_rsyntax', function(column, ..., block=NULL, fill
 #' txt = 'Bob said that he likes Mary. John did not like that: "how dare he!". "It is I, John, who likes Mary!!"'
 #' tc = udpipe_tcorpus(txt, model = 'english-ewt')
 #' tc$annotate_quotes()
-#' rsyntax::plot_tree(tc$tokens, token, lemma, POS, annotation='quotes')
-#' rsyntax::syntax_reader(tc$tokens, annotation='quotes', value='source', value2='quote')
+#' tc_plot_tree(tc, token, lemma, POS, annotation='quotes')
+#' tc_syntax_reader(tc, annotation='quotes', value='source', value2='quote')
 #' }
-tCorpus$set('public', 'annotate_quotes', function(column='quotes', tqueries = udpipe_quote_tqueries(verb_lemma('quote')), span_quotes=T, say_verbs=verb_lemma('quote')) {
+tCorpus$set('public', 'annotate_quotes', function(column='quote', tqueries = udpipe_quote_tqueries(verb_lemma('quote')), span_quotes=T, say_verbs=verb_lemma('quote')) {
   cnames = paste0(column, c('','_id','_fill'))
   ti = rsyntax::annotate_tqueries(self$tokens, column = column, overwrite = T, copy=T, verbose=F, tqueries) 
   if (span_quotes) ti = ud_span_quotes(ti, quote_column = column, say_verbs=say_verbs)
@@ -103,11 +103,11 @@ tCorpus$set('public', 'annotate_quotes', function(column='quotes', tqueries = ud
 #' \donttest{
 #' tc = tc_sotu_udpipe$copy()
 #' tc$annotate_clauses()
-#' rsyntax::plot_tree(tc$tokens, token, lemma, POS, annotation='clauses')
-#' rsyntax::syntax_reader(tc$tokens, annotation='clauses', value='subject')
+#' tc_plot_tree(tc, token, lemma, POS, annotation='clause')
+#' tc_syntax_reader(tc, annotation='clause', value='subject')
 #' }
-tCorpus$set('public', 'annotate_clauses', function(column='clauses', tqueries = udpipe_clause_tqueries()) {
-  tc$annotate_rsyntax(column, tqueries)
+tCorpus$set('public', 'annotate_clauses', function(column='clause', tqueries = udpipe_clause_tqueries()) {
+  tc$annotate_rsyntax(column, tqueries, overwrite=T)
 })
 
 #' Apply rsyntax transformations
