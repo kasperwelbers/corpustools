@@ -103,7 +103,7 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col='token_id',
   }
   meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
 
-  tc = tCorpus$new(tokens=tokens, meta = meta)
+  tc = tCorpus$new(tokens=tokens, meta = meta, model='imported_tokens')
   if (!is.null(token_col)) tc$set_name(token_col, 'token')
   if (!is.null(parent_col)) tc$set_name(parent_col, 'parent')
   tc

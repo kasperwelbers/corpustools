@@ -29,21 +29,22 @@
 #'                        If a quanteda dictionary is given, the label for the match is in the column named [column].
 #'                        If a dictionary has multiple levels, these are added as [column]_l[level].
 #' @param use_wildcards   Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used.
-#' @param flatten_colloc  If true, collocations in the tokens (rows in tc$tokens) will be considered separate words. For example, "President_Obama" will be split to "president" "obama", so that "president obama" in the dictionary matches correctly.
+#' @param standardize     If true, standardize how terms in the corpus and dictionary are tokenized. This prevens mismatching in cases like collocations ("Barack_Obama" versus "Barack" "Obama") and emoticons
+#'                        (":-)" versus ":" "-" ")"). This is only behind the scenes for the dictionary lookup, and will not affect tokenization in the corpus.
 #' @param ascii           If true, convert text to ascii before matching
 #' @param verbose         If true, report progress
 #'
-#' @return A vector with the id value (taken from dict$id) for each row in tc$tokens
+#' @return the tCorpus
 #'
 #' @name tCorpus$code_dictionary
 #'
 #' @examples
-#' dict = data.frame(string = c('good','bad','ugl*','nice','not pret*'), sentiment=c(1,-1,-1,1,-1))
-#' tc = create_tcorpus(c('The good, the bad and the ugly, is nice but not pretty'))
+#' dict = data.frame(string = c('good','bad','ugl*','nice','not pret*', ':)', ':('), sentiment=c(1,-1,-1,1,-1,1,-1))
+#' tc = create_tcorpus(c('The good, the bad and the ugly, is nice :) but not pretty :('))
 #' tc$code_dictionary(dict)
-#' print(tc$tokens)
+#' tc$tokens
 #' @aliases code_dictionary
-tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', string_col='string', sep=' ', case_sensitive=F, column='code', use_wildcards=T, flatten_colloc=T, ascii=F, verbose=F){
+tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', string_col='string', sep=' ', case_sensitive=F, column='code', use_wildcards=T, standardize=T, ascii=F, verbose=F){
   if (methods::is(dict, 'dictionary2')) dict = melt_quanteda_dict(dict, column = column)
   if (!methods::is(dict, 'data.frame')) stop('dict has to be a data.frame or a quanteda dictionary2 class')
   if (!string_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', string_col))
@@ -53,7 +54,7 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', strin
 
   fl = dictionary_lookup(self, data.table::data.table(string=dict[[string_col]], id = 1:nrow(dict), stringsAsFactors = F), regex_sep = sep,
                         token_col=token_col, case_sensitive=case_sensitive,
-                        flatten_colloc=flatten_colloc, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
+                        standardize=standardize, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
 
   if (is.null(fl)) {
     self$set(column_id, numeric())
@@ -117,7 +118,7 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', strin
 #'                        then after concatenating ASCII emoticons, the tokens will be c(":)", "yay") with token_id c(1,2)
 #' @param case_sensitive  logical, should lookup be case sensitive?
 #' @param use_wildcards   Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used
-#' @param flatten_colloc  If true, collocations in the tokens (tokens with spaces or underscores) will be considered separate words. For example, "President_Obama" will be split to "president" "obama", so that "president obama" in the dictionary matches correctly.
+#' @param standardize     If true, standardize how terms in the corpus and dictionary are tokenized. This prevens mismatching in cases like collocations ("Barack_Obama" versus "Barack" "Obama") and emoticons
 #' @param ascii           If true, convert text to ascii before matching
 #' @param verbose         If true, report progress
 #'
@@ -131,10 +132,10 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', strin
 #' tc$tokens
 #'
 #' @aliases replace_dictionary
-tCorpus$set('public', 'replace_dictionary', function(dict, token_col='token', string_col='string', code_col='code', replace_cols=token_col, sep=' ', code_from_features=F, code_sep='_', decrement_ids=T, case_sensitive=F, use_wildcards=T, flatten_colloc=T, ascii=F, verbose=F){
+tCorpus$set('public', 'replace_dictionary', function(dict, token_col='token', string_col='string', code_col='code', replace_cols=token_col, sep=' ', code_from_features=F, code_sep='_', decrement_ids=T, case_sensitive=F, use_wildcards=T, standardize=T, ascii=F, verbose=F){
   m = search_dictionary(self, dict, token_col=token_col, string_col=string_col, code_col=code_col, sep=sep,
                         case_sensitive=case_sensitive, use_wildcards=use_wildcards,
-                        flatten_colloc=flatten_colloc, ascii=ascii, verbose=verbose)
+                        standardize=standardize, ascii=ascii, verbose=verbose)
   m = m$hits
 
   if (nrow(m) == 0) return(invisible(self))
@@ -228,7 +229,7 @@ melt_quanteda_dict <- function(dict, column='code', .index=NULL) {
 #'                        In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\+' should be used.
 #' @param case_sensitive  logical, should lookup be case sensitive?
 #' @param use_wildcards   Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used
-#' @param flatten_colloc  If true, collocations in the tokens (rows in tc$tokens) will be considered separate words. For example, "President_Obama" will be split to "president" "obama", so that "president obama" in the dictionary matches correctly.
+#' @param standardize     If true, standardize how terms in the corpus and dictionary are tokenized. This prevens mismatching in cases like collocations ("Barack_Obama" versus "Barack" "Obama") and emoticons
 #' @param ascii           If true, convert text to ascii before matching
 #' @param verbose         If true, report progress
 #'
@@ -239,7 +240,7 @@ melt_quanteda_dict <- function(dict, column='code', .index=NULL) {
 #' dict = data.frame(string = c('this is', 'for a', 'not big enough'), code=c('a','c','b'))
 #' tc = create_tcorpus(c('this is a test','This town is not big enough for a test'))
 #' search_dictionary(tc, dict)$hits
-search_dictionary <- function(tc, dict, token_col='token', string_col='string', code_col='code', sep=' ', case_sensitive=F, use_wildcards=T, flatten_colloc=T, ascii=F, verbose=F){
+search_dictionary <- function(tc, dict, token_col='token', string_col='string', code_col='code', sep=' ', case_sensitive=F, use_wildcards=T, standardize=T, ascii=F, verbose=F){
   hit_id = NULL
 
   if (!is_tcorpus(tc)) stop('tc is not a tCorpus')
@@ -249,7 +250,7 @@ search_dictionary <- function(tc, dict, token_col='token', string_col='string', 
   if (!code_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', code_col))
 
   fl = dictionary_lookup(tc, data.table::data.table(string=dict[[string_col]], id = 1:nrow(dict)), regex_sep=sep,
-                        token_col=token_col, case_sensitive=case_sensitive, flatten_colloc=flatten_colloc, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
+                        token_col=token_col, case_sensitive=case_sensitive, standardize=standardize, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
   if (is.null(fl)) return(featureHits(NULL, data.frame()))
 
 
@@ -260,13 +261,12 @@ search_dictionary <- function(tc, dict, token_col='token', string_col='string', 
   if (!'sentence' %in% colnames(hits)) hits[, 'sentence' := numeric()]
   hits = subset(hits, select = intersect(c('doc_id','token_id','sentence','code','hit_id',token_col), colnames(hits)))
   data.table::setnames(hits, token_col, 'feature')
-
-
+  
   queries = data.frame()
   featureHits(hits, queries)
 }
 
-dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_sensitive=F, flatten_colloc=T, ascii=F, use_wildcards=T, context_level=c('document','sentence'), verbose=F){
+dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_sensitive=F, standardize=T, ascii=F, use_wildcards=T, context_level=c('document','sentence'), verbose=F){
   if (!token_col %in% tc$names) stop(sprintf('To use search_dictionary, the tCorpus must have a feature column with clean (not preprocessed) text, labeled "%s"', token_col))
   if (!'string' %in% colnames(dict)) stop('Dictionary must have column named "string"')
   if (!'id' %in% colnames(dict)) stop('Dictionary must have column named "id"')
@@ -280,14 +280,15 @@ dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_s
 
   levels(fi$feature) = normalize_string(levels(fi$feature), lowercase=!case_sensitive, ascii = ascii)
   #data.table::setkey(fi, 'feature')
-  if (flatten_colloc) {
-    is_colloc = grep(' |_', levels(fi$feature))
-    if (length(is_colloc) > 0){
-      fi = flatten_collocations(fi, 'feature', 'i', reset_key = F)
-      message(sprintf('flattened %s collocations', length(is_colloc)))
+  if (standardize) {
+    dict = fix_dict_term_spacing(dict, use_wildcards)
+    
+    is_split = is_splittable(fi$feature)
+    if (any(is_split)){
+      fi = flatten_terms(fi, 'feature', 'i', reset_key = F)
+      flatten = T
     } else {
-      #message('flatten_colloc (collocations) is set to TRUE, but no collocations were found.')
-      flatten_colloc = F ## if there are no collocations, ignore flatten_colloc == T
+      flatten = F ## if there are no collocations, ignore flatten_colloc == T
     }
   }
 
@@ -304,13 +305,12 @@ dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', case_s
   out = do_code_dictionary(as.numeric(fi$feature), context = fi$context, which = initial_i, dict = d, verbose=verbose)
 
 
-  if (flatten_colloc) {
+  if (flatten) {
     out$orig_i = fi$orig_i
     data.table::setorderv(out, 'hit_id', -1)
     out = out[!duplicated(out$orig_i),]
     data.table::setorderv(out, 'orig_i')
   }
-  out
 
   out$hit_id[out$hit_id == 0] = NA
   out$dict_i[out$dict_i == 0] = NA

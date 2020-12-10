@@ -2,7 +2,7 @@
 #'
 #' Implementation of the Simple Good Turing smoothing proposed in: Gale, W. A., \& Sampson, G. (1995). Good turing frequency estimation without tears. Journal of Quantitative Linguistics, 2(3), 217-237.
 #'
-#' @param freq A numeric vector of term frequencies (integers).
+#' @param freq A numeric vector of frequencies (integers).
 #'
 #' @return A numeric vector with the smoothed term proportions
 sgt <- function(freq){

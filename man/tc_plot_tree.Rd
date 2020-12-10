@@ -16,9 +16,10 @@ tc_plot_tree(
 \arguments{
 \item{tc}{a tCorpus}
 
-\item{...}{Arguments passed to \code{\link[rsyntax]{plot_tree}}}
+\item{...}{Arguments passed to \code{\link[rsyntax]{plot_tree}}. Most importantly, this is used to select which specific columns to display on the bottom rows.
+For instance, tc_plot_tree(tc, token, lemma, POS) shows only these three columns.}
 
-\item{annotation}{Optionally, a column with an rsyntax annotation, to add boxes around the annotated nodes.}
+\item{annotation}{Optionally, the name of a column with an rsyntax annotation.}
 
 \item{sentence_i}{By default, plot_tree uses the first sentence (sentence_i = 1) in the data. sentence_i can be changed to select other sentences by position (the i-th unique sentence in the data). Note that sentence_i does not refer to the values in the sentence column (for this use the sentence argument together with doc_id)}
 
@@ -33,5 +34,5 @@ tc_plot_tree(
 A wrapper for the \code{\link[rsyntax]{plot_tree}} function, that can be used directly on a tCorpus.
 }
 \examples{
-tc_plot_tree(tc_sotu_udpipe)
+tc_plot_tree(tc_sotu_udpipe, token, lemma, POS)
 }

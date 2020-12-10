@@ -25,7 +25,7 @@
 #' @param udpipe_model_path If udpipe_model is used, this path wil be used to look for the model, and if the model doesn't yet exist it will be downloaded to this location. Defaults to working directory
 #' @param udpipe_cache      The number of persistent caches to keep for inputs of udpipe. The caches store tokens in batches.
 #'                          This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start over.
-#'                          The caches are stored in the udpipe_models folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.
+#'                          The caches are stored in the corpustools_data folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.
 #' @param udpipe_cores      If udpipe_model is used, this sets the number of parallel cores.
 #' @param udpipe_batchsize  In order to report progress and cache results, texts are parsed with udpipe in batches of 50.
 #'                          The price is that there will be some overhead for each batch, so for very large jobs it can be faster to increase the batchsize.
@@ -79,7 +79,8 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
   } else {
     data = tokenize_to_dataframe(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, remember_spaces=remember_spaces, verbose=verbose)
   }
-  tCorpus$new(tokens = data, meta = base::droplevels(meta))
+  model = if (is.null(udpipe_model)) 'basic tokenization' else udpipe_model
+  tCorpus$new(tokens = data, meta = base::droplevels(meta), model=model)
 }
 
 #' @rdname create_tcorpus

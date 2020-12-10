@@ -22,7 +22,8 @@
 \item{safe_copy}{for advanced use. The get methods always return a copy of the data, even if the full data is returned (i.e. use get without parameters). This is to prevent accidental changes within tCorpus data (which can break it) if the returned data is modified by reference (see data.table documentation). If safe_copy is set to FALSE and get is called without parameters---tc$get(safe_copy=F))---then no copy is made, which is much faster and more memory efficient. Use this if you need speed and efficiency, but make sure not to change the output data.table by reference.}
 }
 \description{
-Get the token and meta data.
+Get (a copy of) the token and meta data. For quick access recommend using tc$tokens and tc$meta to get the tokens and meta data.tables, which does not copy the data.
+However, you should then make sure to not change the data.tables by reference, or you might break the tCorpus.
 
 \strong{Usage:}
 

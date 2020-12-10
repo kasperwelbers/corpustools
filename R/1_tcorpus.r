@@ -60,6 +60,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
      tokens = NULL,
      meta = NULL,
+     model = NULL,
 
      validate = function() {
         self$validate_tokens()
@@ -92,9 +93,10 @@ tCorpus <- R6::R6Class("tCorpus",
        if (!identical(data.table::key(self$meta), 'doc_id')) data.table::setkeyv(self$meta, 'doc_id')
      },
 
-     initialize = function(tokens, meta) {
+     initialize = function(tokens, meta, model) {
        self$tokens = data.table(tokens)
        self$meta = data.table(meta)
+       self$model = model
        private$set_keys()
      },
 
@@ -104,7 +106,8 @@ tCorpus <- R6::R6Class("tCorpus",
 
      copy = function(){
        tCorpus$new(tokens = data.table::copy(self$tokens),
-                   meta = data.table::copy(self$meta))
+                   meta = data.table::copy(self$meta),
+                   model = self$model)
      },
 
 ## SHOW/GET DATA METHODS ##
@@ -281,6 +284,29 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
+
+    merge = function(df, by=NULL, by.x=NULL, by.y=NULL) {
+      if (is.null(by) && is.null(by.x) && is.null(by.y)) return(invisible(self))
+      if (!all(c(by,by.x) %in% self$names)) stop('Not all columns specified in by / by.x exist in $tokens')
+      if (!all(c(by,by.x) %in% colnames(df))) stop('Not all columns specified in by / by.y exist in df')
+      
+      if (methods::is(df, 'data.table'))
+        if (any(duplicated(df[,c(by,by.y), with=F]))) stop('Columns specified in by (or by.y) must be unique in df')
+      else
+        if (any(duplicated(df[,c(by,by.y)]))) stop('Columns specified in by (or by.y) must be unique in df')
+      
+      cnames = setdiff(colnames(df), c(by,by.x,by.y))
+      in_tc = intersect(cnames, self$names)
+      if (length(in_tc) > 0) stop(sprintf('DUPLICATE COLUMN NAMES: Some columns that are to be merged have names that are already used in $tokens (%s)', paste(in_tc, collapse=', ')))
+      
+      if (!is.null(by))
+        self$tokens = merge(self$tokens, data.table::as.data.table(df), by=by, all.x=T)
+      else 
+        self$tokens = merge(self$tokens, data.table::as.data.table(df), by.x=by.x, by.y=by.y, all.x=T)
+      self$validate_tokens()
+      invisible(self)
+    },
+
      set_levels = function(column, levels) {
        if (!column %in% self$names) stop(sprintf('"%s" column does not exists in tokens', column))
        if (!methods::is(self$tokens[[column]], 'factor')) stop(sprintf('"%s" is not a factor', column))
@@ -345,6 +371,29 @@ tCorpus <- R6::R6Class("tCorpus",
        self$meta[]
        invisible(self)
      },
+
+      merge_meta = function(df, by=NULL, by.x=NULL, by.y=NULL) {
+        if (is.null(by) && is.null(by.x) && is.null(by.y)) return(invisible(self))
+        if (!all(c(by,by.x) %in% self$meta_names)) stop('Not all columns specified in by / by.x exist in $meta')
+        if (!all(c(by,by.x) %in% colnames(df))) stop('Not all columns specified in by / by.y exist in df')
+        
+        if (methods::is(df, 'data.table'))
+          if (any(duplicated(df[,c(by,by.y), with=F]))) stop('Columns specified in by (or by.y) must be unique in df')
+        else
+          if (any(duplicated(df[,c(by,by.y)]))) stop('Columns specified in by (or by.y) must be unique in df')
+        
+        
+        cnames = setdiff(colnames(df), c(by,by.x,by.y))
+        in_tc = intersect(cnames, self$meta_names)
+        if (length(in_tc) > 0) stop(sprintf('DUPLICATE COLUMN NAMES: Some columns that are to be merged have names that are already used in $meta (%s)', paste(in_tc, collapse=', ')))
+        
+        if (!is.null(by))
+          self$meta = merge(self$meta, data.table::as.data.table(df), by=by, all.x=T)
+        else 
+          self$meta = merge(self$meta, data.table::as.data.table(df), by.x=by.x, by.y=by.y, all.x=T)
+        self$validate_meta()
+        invisible(self)
+      },
 
      set_meta_levels = function(column, levels) {
         if (!column %in% self$meta_names) stop(sprintf('"%s" column does not exists in meta', column))
@@ -489,7 +538,8 @@ print.tCorpus <- function(x, ...) {
 #' @export
 refresh_tcorpus <- function(tc){
   tCorpus$new(tokens = data.table::copy(tc$get(keep_df = T)),
-              meta = data.table::copy(tc$get_meta(keep_df = T)))
+              meta = data.table::copy(tc$get_meta(keep_df = T)),
+              model = tc$model)
 }
 
 rebuild_tcorpus <- function(tc) {

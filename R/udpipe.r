@@ -13,11 +13,12 @@ prepare_model <- function(udpipe_model, local_path=getwd()) {
     stop(message)
   }
 
-  model_folder = gsub('-', '_', udpipe_model)
-  path = make_dir(local_path, 'udpipe_models', model_folder)
-
+  #model_folder = gsub('-', '_', udpipe_model)
+  path = make_dir(local_path, 'corpustools_data', 'udpipe_models')
+  
   fname = list.files(path, full.names = T, include.dirs = F)
-  fname = fname[grep('udpipe', fname)]
+  fname = fname[grep(udpipe_model, fname, fixed=T)]
+  
   if (length(fname) == 0) fname = NA
   if (!is.na(fname)) {
     m = udpipe::udpipe_load_model(fname)
@@ -67,7 +68,7 @@ udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, c
   n = length(batch_i)
 
   if (cache > 0) {
-    cache_path = make_dir(file.path(udpipe_model_path, 'udpipe_models'), 'caches')
+    cache_path = make_dir(file.path(udpipe_model_path, 'corpustools_data'), 'caches')
     cache_hash =  digest::digest(list(texts, udpipe_model, doc_ids, use_parser, max_sentences, max_tokens, batchsize))
 
     current_caches = list.files(cache_path, full.names = T)
@@ -186,21 +187,6 @@ udpipe_parse_batch <- function(i, texts, batch_i, udpipe_model, doc_ids, cache_d
 }
 
 
-make_dir <- function(path=getwd(), ...) {
-  if (is.null(path)){
-    path = system.file(package='corpustools')
-  } else {
-    path = if (path == '') getwd() else normalizePath(gsub('\\/$', '', path))
-  }
-  if (file.access(path,"6") == -1) stop('You do not have write permission for this location')
-  #path = paste(path, 'ext_resources', sep='/')
-
-  add = paste(unlist(list(...)), collapse='/')
-  if (!add == '') path = file.path(path, add)
-
-  if (!dir.exists(path)) dir.create(path, recursive = TRUE)
-  path
-}
 
 
 #' Cast the "feats" column in UDpipe tokens to columns

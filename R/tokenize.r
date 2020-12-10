@@ -32,7 +32,7 @@ split_tokens <- function(x, max_tokens, remember_spaces=F) {
   } else {
     x = lapply(x, function(x) x[!x %in% c(' ', '\n','\t','\r\n')])
   }
-  if (!is.null(max_tokens)) x = sapply(x, head, max_tokens)
+  if (!is.null(max_tokens)) x = sapply(x, head, max_tokens, simplify=F)
   x
 }
 

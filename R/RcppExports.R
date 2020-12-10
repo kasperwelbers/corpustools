@@ -9,12 +9,12 @@ uncollapse_terms_cpp <- function(term, sep = " ") {
     .Call('_corpustools_uncollapse_terms_cpp', PACKAGE = 'corpustools', term, sep)
 }
 
-coref_ids <- function(x, y, n) {
-    .Call('_corpustools_coref_ids', PACKAGE = 'corpustools', x, y, n)
+group_coref_ids <- function(x, y, n) {
+    .Call('_corpustools_group_coref_ids', PACKAGE = 'corpustools', x, y, n)
 }
 
-coref_candidate_select <- function(doc_id, gn, so, pos, coref_id, lag, lead) {
-    .Call('_corpustools_coref_candidate_select', PACKAGE = 'corpustools', doc_id, gn, so, pos, coref_id, lag, lead)
+coref_candidate_select <- function(needs_coref, doc_id, gender, number, so, person, pt, pos, id, pronoun, lag, lead) {
+    .Call('_corpustools_coref_candidate_select', PACKAGE = 'corpustools', needs_coref, doc_id, gender, number, so, person, pt, pos, id, pronoun, lag, lead)
 }
 
 do_code_dictionary <- function(feature, context, which, dict, verbose) {

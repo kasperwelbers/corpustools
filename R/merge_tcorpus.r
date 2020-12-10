@@ -92,3 +92,5 @@ merge_tcorpora <- function(..., keep_data=c('intersect', 'all'), keep_meta=c('in
 
   tokens_to_tcorpus(data, doc_col='doc_id', sentence_col=sent_col, token_id_col='token_id', meta=meta, sent_is_local = T, token_is_local = T)
 }
+
+

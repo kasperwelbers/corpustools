@@ -15,18 +15,16 @@
 #' @param doc_id      if x is a character/factor vector, doc_id can be used to specify document ids. This has to be a vector of the same length as x
 #' @param doc_column  If x is a data.frame, this specifies the column with the document ids.
 #' @param text_columns if x is a data.frame, this specifies the column(s) that contains text. The texts are paste together in the order specified here.
-#' @param feats       Optionally, a character vector of additional features (options: Case, Definite, Degree, Gender, Mood, NumType, Number, Person, Poss, PronType, Reflex, Tense, Typo, VerbForm, Voice) to include in the tokens data. Default is none. Can also use 'all' to get all features. 
 #' @param model_path  If udpipe_model is used, this path wil be used to look for the model, and if the model doesn't yet exist it will be downloaded to this location. Defaults to working directory
 #' @param cache       The number of persistent caches to keep for inputs of udpipe. The caches store tokens in batches.
 #'                          This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start over.
-#'                          The caches are stored in the udpipe_models folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.
+#'                          The caches are stored in the corpustools_data folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.
 #' @param cores       If udpipe_model is used, this sets the number of parallel cores.
 #' @param batchsize   In order to report progress and cache results, texts are parsed with udpipe in batches of 50.
 #'                          The price is that there will be some overhead for each batch, so for very large jobs it can be faster to increase the batchsize.
 #'                          If the number of texts divided by the number of parallel cores is lower than the batchsize, the texts are evenly distributed over cores.
 #' @param use_parser  If TRUE, use dependency parser (only if udpipe_model is used)
 #' @param start_end   If TRUE, include start and end positions of tokens
-#' @param coref       An experimental, simple rule based implementation for co-reference resolution of proper nouns
 #' @param verbose     If TRUE, report progress. Only if x is large enough to require multiple sequential batches
 #' @param ...         Arguments passed to create_tcorpus.character
 #'
@@ -41,27 +39,18 @@ udpipe_tcorpus <- function(x, ...) {
 #' @rdname udpipe_tcorpus
 #' @examples
 #' \donttest{
-#' tc = udpipe_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'), model = 'english-ewt', cores=4)
+#' tc = udpipe_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'), 
+#'                     model = 'english-ewt', cores=4)
 #' tc$tokens
 #' }
 #' @export
-udpipe_tcorpus.character <- function(x, model='english-ewt', doc_id=1:length(x), meta=NULL, max_sentences=NULL, feats=NULL, model_path=getwd(), cache=3, cores=1, batchsize=50, use_parser=T, start_end=F, coref=T, verbose=T, ...) {
+udpipe_tcorpus.character <- function(x, model='english-ewt', doc_id=1:length(x), meta=NULL, max_sentences=NULL, model_path=getwd(), cache=3, cores=1, batchsize=50, use_parser=T, start_end=F, coref=F, verbose=T, ...) {
   if (is.null(model)) stop('model cannot be NULL')
   tc = create_tcorpus(x=x, doc_id=doc_id, meta=meta, udpipe_model=model, max_sentences=max_sentences, max_tokens=NULL, udpipe_model_path=model_path, udpipe_cache=cache, udpipe_cores=cores, udpipe_batchsize=batchsize, use_parse=use_parser, verbose=verbose, remember_spaces=T, ...)
   if (!start_end) {
     if ('start' %in% tc$names) tc$delete_columns('start')
     if ('end' %in% tc$names) tc$delete_columns('end')
   }
-  if (coref) feats = union(feats, c('Gender','Number'))
-  if (is.null(feats)) {
-    if ('feats' %in% tc$names) tc$tokens$feats = NULL
-  } else {
-      if (feats[1] == 'all')
-        tc = tc$feats_to_columns()
-      else
-        tc = tc$feats_to_columns(feats)
-  }
-  tc$tokens = udpipe_coref(tc$tokens)
   tc
 }
 
@@ -72,23 +61,34 @@ udpipe_tcorpus.character <- function(x, model='english-ewt', doc_id=1:length(x),
 #' tc$tokens
 #' }
 #' @export
-udpipe_tcorpus.data.frame <- function(x, model='english-ewt', text_columns='text', doc_column='doc_id', max_sentences=NULL, feats=NULL, model_path=getwd(), cache=3, cores=1, batchsize=50, use_parser=T, start_end=F, coref=T, verbose=T, ...) {
+udpipe_tcorpus.data.frame <- function(x, model='english-ewt', text_columns='text', doc_column='doc_id', max_sentences=NULL, model_path=getwd(), cache=3, cores=1, batchsize=50, use_parser=T, start_end=F, verbose=T, ...) {
   if (is.null(model)) stop('model cannot be NULL')
   tc = create_tcorpus(x=x, text_columns=text_columns, doc_column=doc_column, udpipe_model=model, max_sentences=max_sentences, max_tokens=NULL, udpipe_model_path=model_path, udpipe_cache=cache, udpipe_cores=cores, udpipe_batchsize=batchsize, use_parse=use_parser, verbose=verbose, remember_spaces=T, ...)
   if (!start_end) {
     if ('start' %in% tc$names) tc$delete_columns('start')
     if ('end' %in% tc$names) tc$delete_columns('end')
   }
-  if (coref) feats = union(feats, c('Gender','Number'))
-  if (is.null(feats)) {
-    if ('feats' %in% colnames(tc$tokens)) tc$tokens$feats = NULL
-  } else {
-    if (feats[1] == 'all')
-      tc = tc$feats_to_columns()
-    else
-      tc = tc$feats_to_columns(feats)
-  }
-  tc$tokens = udpipe_coref(tc$tokens)
+
+  #if (coref) {
+  #  coref_feats = c('Gender','Number','PronType','Person')
+  #  if (!is.null(feats)) {
+  #    drop_feats = if (feats[1] == 'all') c() else setdiff(coref_feats, feats)
+  #  } else drop_feats = coref_feats
+  #  feats = union(feats, coref_feats)
+  #}
+  #if (is.null(feats)) {
+  #  if ('feats' %in% colnames(tc$tokens)) tc$tokens$feats = NULL
+  #} else {
+  #  if (feats[1] == 'all')
+  #    tc = tc$feats_to_columns()
+  #  else
+  #    tc = tc$feats_to_columns(feats)
+  #}
+#  
+#  if (coref) {
+#    tc$tokens = udpipe_coref(tc$tokens)
+#    tc$delete_columns(drop_feats)
+#  }
   tc
 }
 

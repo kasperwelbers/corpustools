@@ -8,6 +8,12 @@ udpipe_simplify(tokens, split_conj = T, rm_punct = F, new_sentences = F)
 }
 \arguments{
 \item{tokens}{A tokenIndex, based on output from the ud parser.}
+
+\item{split_conj}{If TRUE, split conjunctions into separate sentences}
+
+\item{rm_punct}{If TRUE, remove punctuation afterwards}
+
+\item{new_sentences}{If TRUE, assign new sentence and token_id after splitting}
 }
 \value{
 a tokenIndex

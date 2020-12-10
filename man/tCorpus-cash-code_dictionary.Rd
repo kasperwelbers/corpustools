@@ -28,14 +28,15 @@ If a dictionary has multiple levels, these are added as [column]_l[level].}
 
 \item{use_wildcards}{Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used.}
 
-\item{flatten_colloc}{If true, collocations in the tokens (rows in tc$tokens) will be considered separate words. For example, "President_Obama" will be split to "president" "obama", so that "president obama" in the dictionary matches correctly.}
+\item{standardize}{If true, standardize how terms in the corpus and dictionary are tokenized. This prevens mismatching in cases like collocations ("Barack_Obama" versus "Barack" "Obama") and emoticons
+(":-)" versus ":" "-" ")"). This is only behind the scenes for the dictionary lookup, and will not affect tokenization in the corpus.}
 
 \item{ascii}{If true, convert text to ascii before matching}
 
 \item{verbose}{If true, report progress}
 }
 \value{
-A vector with the id value (taken from dict$id) for each row in tc$tokens
+the tCorpus
 }
 \description{
 Add a column to the token data that contains a code (the query label) for tokens that match the dictionary
@@ -47,8 +48,8 @@ Add a column to the token data that contains a code (the query label) for tokens
 \preformatted{code_dictionary(...)}
 }
 \examples{
-dict = data.frame(string = c('good','bad','ugl*','nice','not pret*'), sentiment=c(1,-1,-1,1,-1))
-tc = create_tcorpus(c('The good, the bad and the ugly, is nice but not pretty'))
+dict = data.frame(string = c('good','bad','ugl*','nice','not pret*', ':)', ':('), sentiment=c(1,-1,-1,1,-1,1,-1))
+tc = create_tcorpus(c('The good, the bad and the ugly, is nice :) but not pretty :('))
 tc$code_dictionary(dict)
-print(tc$tokens)
+tc$tokens
 }

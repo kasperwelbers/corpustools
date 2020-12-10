@@ -96,3 +96,20 @@ double_to_single_slash <- function(x) {
   x
 }
 
+
+make_dir <- function(path=getwd(), ...) {
+  if (is.null(path)){
+    path = system.file(package='corpustools')
+  } else {
+    path = if (path == '') getwd() else normalizePath(gsub('\\/$', '', path))
+  }
+  if (file.access(path,"6") == -1) stop('You do not have write permission for this location')
+  #path = paste(path, 'ext_resources', sep='/')
+  
+  add = paste(unlist(list(...)), collapse='/')
+  if (!add == '') path = file.path(path, add)
+  
+  if (!dir.exists(path)) dir.create(path, recursive = TRUE)
+  path
+}
+

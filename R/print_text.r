@@ -46,7 +46,9 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
   mode = 'normal'
   if (!is.null(highlight)) {
     mode = 'highlight'
-    if (!highlight %in% tc$names) stop('highlight is not a valid column name in tc$tokens')
+    class(T)
+    if (!highlight %in% tc$names) stop(paste(highlight, 'is not a valid column name in tc$tokens'))
+    if (methods::is(tc$tokens[[highlight]], 'logical')) tc$tokens[[highlight]] = as.numeric(tc$tokens[[highlight]])
     if (!(is.numeric(tc$tokens[[highlight]]) || is.character(tc$tokens[[highlight]]) || is.factor(tc$tokens[[highlight]]))) stop("highlight has to be a numeric or character value")
     if (is.numeric(tc$tokens[[highlight]])) {
       if (min(tc$tokens[[highlight]], na.rm=T) < 0 || max(tc$tokens[[highlight]], na.rm=T) > 1) stop('highlight has to be a value between 0 and 1')
@@ -54,13 +56,13 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
   }
   if (!is.null(scale)) {
     mode = 'scale'
-    if (!scale %in% tc$names) stop('scale is not a valid column name in tc$tokens')
+    if (!scale %in% tc$names) stop(paste(scale, 'is not a valid column name in tc$tokens'))
     if (!is.numeric(tc$tokens[[scale]])) stop("scale has to be a numeric value")
     if (min(tc$tokens[[scale]], na.rm=T) < -1 || max(tc$tokens[[scale]], na.rm=T) > 1) stop('scale has to be a value between -1 and 1')
   }
   if (!is.null(category)) {
     mode = 'category'
-    if (!category %in% tc$names) stop('category is not a valid column name in tc$tokens')
+    if (!category %in% tc$names) stop(paste(category, 'is not a valid column name in tc$tokens'))
     if (!is.character(tc$tokens[[category]]) && !is.factor(tc$tokens[[category]]) && !is.numeric(tc$tokens[[category]])) stop("category has to be a character/factor or numeric value")
   }
 
@@ -111,7 +113,12 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
     meta = meta[order(meta[[nav]]),]
   }
 
-  space_column = if ('space' %in% colnames(tokens)) 'space' else NULL
+  space_column = if ('space' %in% colnames(sub_tc$tokens)) 'space' else NULL
+  if ('coref_txt' %in% colnames(tc$tokens)) {
+    has_coref = !is.na(sub_tc$tokens$coref_txt)
+    sub_tc$tokens[[token_col]] = as.character(sub_tc$tokens[[token_col]])
+    sub_tc$tokens[[token_col]][has_coref] = stringi::stri_paste(sub_tc$tokens[[token_col]][has_coref], ' [', sub_tc$tokens$coref_txt[has_coref], ']', sep='')
+  }
 
   if (mode == 'normal') url = tokenbrowser::create_browser(sub_tc$tokens, meta=meta, token_col = token_col, space_col = space_column, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
   if (mode == 'highlight') {

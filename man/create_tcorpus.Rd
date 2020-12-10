@@ -77,7 +77,7 @@ GitHub page of the \href{https://github.com/bnosac/udpipe}{udpipe package}.}
 
 \item{udpipe_cache}{The number of persistent caches to keep for inputs of udpipe. The caches store tokens in batches.
 This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start over.
-The caches are stored in the udpipe_models folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.}
+The caches are stored in the corpustools_data folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.}
 
 \item{udpipe_cores}{If udpipe_model is used, this sets the number of parallel cores.}
 

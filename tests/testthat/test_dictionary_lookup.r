@@ -17,6 +17,18 @@ test_that("Testing: Dictionary lookup", {
   tc$replace_dictionary(ed)
   tc$tokens
   expect_equal(as.character(tc$tokens$token), c('yay',':)',':*','happy'))
+
+  ## using quanteda dictionary
+  tc$code_dictionary(quanteda::data_dictionary_LSD2015)
+  expect_equal(as.numeric(table(tc$tokens$code)), c(2,2))
+    
+  ## multitoken matching with weird spacing issues
+  dict = data.frame(string = c('good','bad','ugl*','nice','not pret*', ':)', ': ('), sentiment=c(1,-1,-1,1,-1,1,-1))
+  tc = udpipe_tcorpus(c('The good, the_bad and the ugly, is nice : ) but not pretty :('))
+  tc$code_dictionary(dict)
+  expect_equal(tc$tokens$sentiment, c(NA,1,NA,-1,NA,NA,-1,NA,NA,1,1,1,NA,-1,-1,-1))
+  tc$tokens
+  
 })
 
 

@@ -16,14 +16,13 @@ udpipe_tcorpus(x, ...)
   doc_id = 1:length(x),
   meta = NULL,
   max_sentences = NULL,
-  feats = NULL,
   model_path = getwd(),
   cache = 3,
   cores = 1,
   batchsize = 50,
   use_parser = T,
   start_end = F,
-  coref = T,
+  coref = F,
   verbose = T,
   ...
 )
@@ -34,14 +33,12 @@ udpipe_tcorpus(x, ...)
   text_columns = "text",
   doc_column = "doc_id",
   max_sentences = NULL,
-  feats = NULL,
   model_path = getwd(),
   cache = 3,
   cores = 1,
   batchsize = 50,
   use_parser = T,
   start_end = F,
-  coref = T,
   verbose = T,
   ...
 )
@@ -64,13 +61,11 @@ GitHub page of the \href{https://github.com/bnosac/udpipe}{udpipe package}.}
 
 \item{max_sentences}{An integer. Limits the number of sentences per document to the specified number.}
 
-\item{feats}{Optionally, a character vector of additional features (options: Case, Definite, Degree, Gender, Mood, NumType, Number, Person, Poss, PronType, Reflex, Tense, Typo, VerbForm, Voice) to include in the tokens data. Default is none. Can also use 'all' to get all features.}
-
 \item{model_path}{If udpipe_model is used, this path wil be used to look for the model, and if the model doesn't yet exist it will be downloaded to this location. Defaults to working directory}
 
 \item{cache}{The number of persistent caches to keep for inputs of udpipe. The caches store tokens in batches.
 This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start over.
-The caches are stored in the udpipe_models folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.}
+The caches are stored in the corpustools_data folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.}
 
 \item{cores}{If udpipe_model is used, this sets the number of parallel cores.}
 
@@ -81,8 +76,6 @@ If the number of texts divided by the number of parallel cores is lower than the
 \item{use_parser}{If TRUE, use dependency parser (only if udpipe_model is used)}
 
 \item{start_end}{If TRUE, include start and end positions of tokens}
-
-\item{coref}{An experimental, simple rule based implementation for co-reference resolution of proper nouns}
 
 \item{verbose}{If TRUE, report progress. Only if x is large enough to require multiple sequential batches}
 
@@ -97,7 +90,8 @@ This is the way to create a tCorpus if you want to use the syntax analysis funct
 \examples{
 ## ...
 \donttest{
-tc = udpipe_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'), model = 'english-ewt', cores=4)
+tc = udpipe_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'), 
+                    model = 'english-ewt', cores=4)
 tc$tokens
 }
 \donttest{

@@ -6,5 +6,5 @@
 ^test$
 ^doc$
 ^Meta$
-^udpipe_models$
+^corpustools_data$
 

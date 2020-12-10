@@ -6,7 +6,8 @@
 #' Access the data from a tCorpus
 #'
 #' @description
-#' Get the token and meta data.
+#' Get (a copy of) the token and meta data. For quick access recommend using tc$tokens and tc$meta to get the tokens and meta data.tables, which does not copy the data.
+#' However, you should then make sure to not change the data.tables by reference, or you might break the tCorpus.
 #'
 #' \strong{Usage:}
 #'
@@ -129,6 +130,51 @@ NULL
 #' tc$meta
 NULL
 
+#' Merge the token and meta data.tables of a tCorpus with another data.frame
+#'
+#' Add columns to token/meta by merging with a data.frame df. Only possible for unique matches (i.e. the columns specified in by are unique in df)
+#'
+#' \strong{Usage:}
+#'
+#' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
+#'
+#' \preformatted{merge(df, by, by.x, by.y)}
+#' \preformatted{merge_meta(df, by, by.x, by.y)}
+#'
+#' @param df        A data.frame (can be regular, data.table or tibble)
+#' @param by        The columns to match on. Must exist in both tokens/meta and df. If the columns in tokens/meta and df have different names, use by.x and by.y
+#' @param by.x      The names of the columns used in tokens/meta
+#' @param by.y      The names of the columns used in df
+#'
+#' @name tCorpus$merge
+#' @aliases tCorpus$merge merge merge_meta
+#' @examples
+#' d = data.frame(text = c('This is an example. Best example ever.', 'oh my god', 'so good'),
+#'                id = c('a','b','c'),
+#'                source  =c('aa','bb','cc'))
+#' tc = create_tcorpus(d, doc_col='id', split_sentences = TRUE)
+#' 
+#' df = data.frame(doc_id=c('a','b'), test=c('A','B'))
+#' tc$merge(df, by='doc_id')
+#' tc$tokens
+#' 
+#' df = data.frame(doc_id=c('a','b'), sentence=1, test2=c('A','B'))
+#' tc$merge(df, by=c('doc_id', 'sentence'))
+#' tc$tokens
+#' 
+#' df = data.frame(doc_id=c('a','b'), sentence=1, token_id=c(3,4), test3=c('A','B'))
+#' tc$merge(df, by=c('doc_id', 'sentence', 'token_id'))
+#' tc$tokens
+#' 
+#' meta = data.frame(doc_id=c('a','b'), test=c('A','B'))
+#' tc$merge_meta(meta, by='doc_id')
+#' tc$meta
+#' 
+#' meta = data.frame(source=c('aa'), test2=c('A'))
+#' tc$merge_meta(meta, by='source')
+#' tc$meta
+NULL
+
 #' Change levels of factor columns
 #'
 #' For factor columns, the levels can be changed directly (and by reference). This is particularly usefull for fast preprocessing (e.g., making tokens lowercase, )
@@ -216,14 +262,15 @@ NULL
 #' @description
 #' Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta). The subset arguments work according to the \link{subset.data.table} function.
 #'
-#' Important!! Note that subset is performed by reference. In other words, when performed, subset will delete the rows from the tCorpus, instead of returning a new tCorpus (see example for clarification).
-#' This is the standard behaviour, because it is much more efficient. If you want to create a subset of a copy of the tCorpus, you can set the copy argument to TRUE.
-#'
+#' There are two flavours. You can either use subset(tc, ...) or tc$subset(...). The difference is that the second approach changes the tCorpus by reference. 
+#' In other words, tc$subset() will delete the rows from the tCorpus, instead of creating a new tCorpus.
+#' Modifying the tCorpus by reference is more efficient (which becomes important if the tCorpus is large), but the more classic subset(tc, ...) approach is often more obvious.
+#' 
 #' Subset can also be used to select rows based on token/feature frequences. This is a common step in corpus analysis, where it often makes sense to ignore very rare and/or very frequent tokens.
 #' To do so, there are several special functions that can be used within a subset call.
 #' The freq_filter() and docfreq_filter() can be used to filter terms based on term frequency and document frequency, respectively. (see examples)
 #'
-#' The subset_meta() method is an alternative for using subset(subset_meta = ...), that is added for consistency with the other _meta accessor methods.
+#' The subset_meta() method is an alternative for using subset(subset_meta = ...), that is added for consistency with the other _meta methods.
 #'
 #' Note that you can also use the \link{tCorpus$feature_subset} method if you want to filter out low/high frequency tokens, but do not want to delete the rows in the tCorpus.
 #'
@@ -232,10 +279,12 @@ NULL
 #' ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 #'
 #' \preformatted{
-#' subset(subset = NULL, subset_meta = NULL,
-#'        window = NULL, copy = F)
-#' subset_meta(subset = NULL, copy = F)
-#'              }
+#' subset(tc, subset = NULL, subset_meta = NULL, 
+#'        window = NULL)
+#' tc$subset(subset = NULL, subset_meta = NULL,
+#'           window = NULL, copy = F)
+#' tc$subset_meta(subset = NULL, copy = F)
+#' }
 #'
 #' @param subset logical expression indicating rows to keep in the tokens data.
 #' @param subset_meta logical expression indicating rows to keep in the document meta data.
@@ -249,25 +298,21 @@ NULL
 #' tc$n ## original number of tokens
 #'
 #' ## select only first 20 tokens per document
+#' tc2 = subset(tc, token_id < 20)
+#' tc2$n
+#' 
+#' ## Note that the original is untouched
+#' tc$n
+#' 
+#' ## Now we subset by reference. This doesn't make a copy, but changes tc itself
 #' tc$subset(token_id < 20)
-#'
-#' tc$n ## number of tokens after subset
-#'
-#' ## note that the return value is not assigned to tc, or to a new name.
-#' ## rather, tc is changed by reference. To subset a copy of tc (the more classic R way),
-#' ## the copy argument can be used. The following line creates tc2 as a copy of tc,
-#' ## with only the first 10 tokens per document
-#' tc2 <- tc$subset(token_id < 10, copy=TRUE)
-#'
-#' tc$n   ## unchanged
-#' tc2$n  ## subset of tc
+#' tc$n 
 #'
 #' ## you can filter on term frequency and document frequency with the freq_filter() and
 #' ## docfreq_filter() functions
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #' tc$subset( freq_filter(token, min = 20, max = 100) )
 #' tc$tokens
-#'
 #'
 #' ###### subset can be used for meta data by using the subset_meta argument, or the subset_meta method
 #' tc$n_meta

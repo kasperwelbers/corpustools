@@ -59,6 +59,6 @@ tc = tc_sotu_udpipe$copy()
 
 tc_syntax_reader(tc)
 
-tc$annotate_clauses(column = 'clauses')
-tc_syntax_reader(tc, annotation='clauses', value='subject',n=2)
+tc$udpipe_clauses()
+tc_syntax_reader(tc, annotation='clause', value='subject',n=2)
 }

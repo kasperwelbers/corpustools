@@ -18,14 +18,15 @@
 \description{
 Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta). The subset arguments work according to the \link{subset.data.table} function.
 
-Important!! Note that subset is performed by reference. In other words, when performed, subset will delete the rows from the tCorpus, instead of returning a new tCorpus (see example for clarification).
-This is the standard behaviour, because it is much more efficient. If you want to create a subset of a copy of the tCorpus, you can set the copy argument to TRUE.
+There are two flavours. You can either use subset(tc, ...) or tc$subset(...). The difference is that the second approach changes the tCorpus by reference. 
+In other words, tc$subset() will delete the rows from the tCorpus, instead of creating a new tCorpus.
+Modifying the tCorpus by reference is more efficient (which becomes important if the tCorpus is large), but the more classic subset(tc, ...) approach is often more obvious.
 
 Subset can also be used to select rows based on token/feature frequences. This is a common step in corpus analysis, where it often makes sense to ignore very rare and/or very frequent tokens.
 To do so, there are several special functions that can be used within a subset call.
 The freq_filter() and docfreq_filter() can be used to filter terms based on term frequency and document frequency, respectively. (see examples)
 
-The subset_meta() method is an alternative for using subset(subset_meta = ...), that is added for consistency with the other _meta accessor methods.
+The subset_meta() method is an alternative for using subset(subset_meta = ...), that is added for consistency with the other _meta methods.
 
 Note that you can also use the \link{tCorpus$feature_subset} method if you want to filter out low/high frequency tokens, but do not want to delete the rows in the tCorpus.
 
@@ -34,35 +35,33 @@ Note that you can also use the \link{tCorpus$feature_subset} method if you want 
 ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).
 
 \preformatted{
-subset(subset = NULL, subset_meta = NULL,
-       window = NULL, copy = F)
-subset_meta(subset = NULL, copy = F)
-             }
+subset(tc, subset = NULL, subset_meta = NULL, 
+       window = NULL)
+tc$subset(subset = NULL, subset_meta = NULL,
+          window = NULL, copy = F)
+tc$subset_meta(subset = NULL, copy = F)
+}
 }
 \examples{
 tc = create_tcorpus(sotu_texts, doc_column = 'id')
 tc$n ## original number of tokens
 
 ## select only first 20 tokens per document
+tc2 = subset(tc, token_id < 20)
+tc2$n
+
+## Note that the original is untouched
+tc$n
+
+## Now we subset by reference. This doesn't make a copy, but changes tc itself
 tc$subset(token_id < 20)
-
-tc$n ## number of tokens after subset
-
-## note that the return value is not assigned to tc, or to a new name.
-## rather, tc is changed by reference. To subset a copy of tc (the more classic R way),
-## the copy argument can be used. The following line creates tc2 as a copy of tc,
-## with only the first 10 tokens per document
-tc2 <- tc$subset(token_id < 10, copy=TRUE)
-
-tc$n   ## unchanged
-tc2$n  ## subset of tc
+tc$n 
 
 ## you can filter on term frequency and document frequency with the freq_filter() and
 ## docfreq_filter() functions
 tc = create_tcorpus(sotu_texts, doc_column = 'id')
 tc$subset( freq_filter(token, min = 20, max = 100) )
 tc$tokens
-
 
 ###### subset can be used for meta data by using the subset_meta argument, or the subset_meta method
 tc$n_meta
