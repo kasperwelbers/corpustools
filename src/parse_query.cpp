@@ -188,12 +188,6 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
     }
     char x = q.pop();
 
-    // escape next char
-    if (x == '\\') {
-      term = term + q.pop();
-      continue;
-    }
-
     // skip double spaces
     if (x == ' ') {
       if (lag_space) {
@@ -201,6 +195,19 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
       }
       lag_space = true;
     } else lag_space = false;
+    
+    // escape next char
+    if (x == '\\') {
+      x = q.pop();
+      if (x == '*') {
+        term = term + "\\*";
+      } else if (x == '?') {
+        term = term + "\\?";
+      } else {
+        term= term + x;
+      }
+      continue;
+    }
 
     // nesting within parentheses
     if (x == '(') {
@@ -290,5 +297,5 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
 }
 
 /*** R
-x = parse_query('test# A')
+x = parse_query_cpp('test# A')
 */

@@ -44,7 +44,8 @@ test_that("Query search works", {
   expect_equal(as.character(hits$hits$feature), c('fuel','fuels','fueled','fuel'))
   hits = search_features(tc, 'fue?s')
   expect_equal(as.character(hits$hits$feature), c('fuels'))
-
+  
+  
   ## case sensitive flag
   hits = search_features(tc, 'Rutte~s')
   expect_true(nrow(hits$hits) == 2)
@@ -126,5 +127,31 @@ test_that("Query search works", {
 
   hits = search_features(tc, 'Bob OR "bob smith"', keep_longest = F) # otherwise, match first (bob)
   expect_true(length(hits$hits$feature) == 1)
+  
+  
+  ## working with messy conjunctions and emoticons
+  dict = data.frame(string = c('good','bad','ugl*','nice','not pret*', ':)', ': ('), sentiment=c(1,-1,-1,1,-1,1,-1))
+  tc = create_tcorpus(c('The good, the bad and the ugly, is nice : ) but not pretty :('))
+
+  replace_dict = quanteda::dictionary(list(':('      = ': (',
+                                           'the_bad' = 'the bad'))
+  tc$replace_dictionary(replace_dict)   ## concatenate the_bad and one of the emoticons (just for example)
+  tc$tokens
+  
+  tc$code_features(c('happy# \\:\\)', 'sad# \\:\\('))
+  expect_equal(as.character(stats::na.omit(tc$tokens$code)), c('happy','sad'))
+
 })
 
+
+
+
+function() {
+  ## notes: if I collapse proximity_queries, I probably need to give results a single token_id. Does this damages something within recursive_search?
+  q = parse_query_cpp('(test OR not)~s')
+  jsonlite::toJSON(optimize_query(q), pretty=T)
+  
+  search_features(tc, '<a test>')
+  
+  parse_query_cpp('test\\*')
+}

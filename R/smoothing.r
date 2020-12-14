@@ -32,6 +32,8 @@ can_smooth <- function(freq){
 
 #' Laplace (i.e. add constant) smoothing
 #'
+#' 
+#'
 #' @param freq A numeric vector of term frequencies (integers).
 #' @param add The added value
 #'

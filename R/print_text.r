@@ -10,10 +10,13 @@
 #' @param select      If n is smaller than the number of documents in tc, select determines how the n documents are selected
 #' @param header      Optionally, a title presented at the top of the browser
 #' @param subheader   Optionally, overwrite the subheader. By default the subheader reports the number of documents
-#' @param highlight   The name of a numeric column in tc$tokens with values between 0 and 1, used to highlight tokens.
+#' @param highlight   Highlighe mode: provide the name of a numeric column in tc$tokens with values between 0 and 1, used to highlight tokens.
 #'                    Can also be a character vector, in which case al non-NA values are highlighted
-#' @param scale       The name of a numeric column in tc$tokens with values between -1 and 1, used to color tokens on a scale (set colors with scale_col)
-#' @param category    The name of a character or factor column in tc$tokens. Each unique value will have its own color, and navigation for categories will be added (nav cannot be used with this option)z
+#' @param scale       Scale mode: provide the name of a numeric column in tc$tokens with values between -1 and 1, used to color tokens on a scale (set colors with scale_col)
+#' @param category    Category mode: provide the name of a character or factor column in tc$tokens. Each unique value will have its own color, and navigation for categories will be added (nav cannot be used with this option)
+#' @param rsyntax     rsyntax mode: provide the name of an rsyntax annotation column (see \code{\link{annotate_rsyntax}}) 
+#' @param value       rsyntax mode argument: if rsyntax mode is used, value can be a character vector with values in the rsyntax annotation column. 
+#'                    If used, only these values are fully colored, and the other (non NA) values only have border colors. 
 #' @param meta_cols   A character vector with names of columns in tc$meta, used to only show the selected columns
 #' @param seed        If select is "random", seed can be used to set a random seed. After sampling the seed is re-initialized with set.seed(NULL).
 #' @param nav         Optionally, a column in tc$meta to add navigation (only supports simple filtering on unique values).
@@ -39,9 +42,9 @@
 #' browse_texts(tc, category='code')
 #' }
 browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('first','random'), header='',
-                         subheader=NULL, highlight=NULL, scale=NULL, category=NULL, meta_cols=NULL, seed=NA,
-                         nav=NULL, top_nav=NULL, thres_nav=1, view=T, highlight_col='yellow', scale_col=c('red','blue','green'), filename=NULL) {
-  if (sum(!is.null(highlight), !is.null(scale), !is.null(category)) > 1) stop('Can only use one annotation option (highlight, scale or category)')
+                         subheader=NULL, highlight=NULL, scale=NULL, category=NULL, rsyntax=NULL, value=NULL, 
+                         meta_cols=NULL, seed=NA, nav=NULL, top_nav=NULL, thres_nav=1, view=T, highlight_col='yellow', scale_col=c('red','blue','green'), filename=NULL) {
+  if (sum(!is.null(highlight), !is.null(scale), !is.null(category), !is.null(rsyntax)) > 1) stop('Can only use one annotation option (highlight, scale or category)')
 
   mode = 'normal'
   if (!is.null(highlight)) {
@@ -65,6 +68,14 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
     if (!category %in% tc$names) stop(paste(category, 'is not a valid column name in tc$tokens'))
     if (!is.character(tc$tokens[[category]]) && !is.factor(tc$tokens[[category]]) && !is.numeric(tc$tokens[[category]])) stop("category has to be a character/factor or numeric value")
   }
+  if (!is.null(rsyntax)) {
+    mode = 'rsyntax'
+    if (!rsyntax %in% tc$names) stop(paste(rsyntax, 'is not a valid rsyntax annotation in tc$tokens'))
+    if (!paste0(rsyntax,'_id') %in% tc$names) stop(paste(rsyntax, 'is not a valid rsyntax annotation in tc$tokens'))
+    if (!is.null(value)) 
+      if (!all(value %in% unique(tc$tokens[[rsyntax]]))) stop(paste0(value, ' is/are not valid values in tc$tokens$', rsyntax,'.'))
+  }
+
 
   select = match.arg(select)
   if (!is.null(nav)) {
@@ -114,10 +125,12 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
   }
 
   space_column = if ('space' %in% colnames(sub_tc$tokens)) 'space' else NULL
+  
   if ('coref_txt' %in% colnames(tc$tokens)) {
     has_coref = !is.na(sub_tc$tokens$coref_txt)
     sub_tc$tokens[[token_col]] = as.character(sub_tc$tokens[[token_col]])
     sub_tc$tokens[[token_col]][has_coref] = stringi::stri_paste(sub_tc$tokens[[token_col]][has_coref], ' [', sub_tc$tokens$coref_txt[has_coref], ']', sep='')
+    sub_tc$tokens[[token_col]] = fast_factor(sub_tc$tokens[[token_col]])
   }
 
   if (mode == 'normal') url = tokenbrowser::create_browser(sub_tc$tokens, meta=meta, token_col = token_col, space_col = space_column, doc_nav = nav, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
@@ -132,10 +145,14 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
     if (is.numeric(v)) v = as.character(v)
     url = tokenbrowser::categorical_browser(sub_tc$tokens, meta=meta, token_col=token_col, space_col = space_column, category = v, alpha=0.3, header=header, subheader = subhead, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav)
   }
+  if (mode == 'rsyntax') {
+    if (is.null(header)) header = ''
+    if (is.null(subheader)) subheader = ''
+    url = rsyntax::syntax_reader(sub_tc$tokens, annotation=rsyntax, value=value, value2=NULL, meta=tc$meta, token_col=token_col, space_col=space_column, header=header, subheader=subheader, filename=filename, n=F, top_nav=top_nav, thres_nav=thres_nav, view=F)
+  }
   if (view) tokenbrowser::view_browser(url)
   invisible(url)
 }
-
 
 #' View hits in a browser
 #'

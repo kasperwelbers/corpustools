@@ -18,6 +18,6 @@ This is an experimental implementation of coreference resolution, aimed at coref
 tc = tc_sotu_udpipe$copy()
 tc$annotate_clauses()
 tc_plot_tree(tc, token, lemma, POS, annotation='clause')
-tc_syntax_reader(tc, annotation='clause', value='subject')
+browse_texts(tc, rsyntax='clause', value='subject')
 }
 }

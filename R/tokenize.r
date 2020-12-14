@@ -25,12 +25,14 @@ tokenize_to_dataframe <- function(x, doc_id=1:length(x), split_sentences=F, max_
   tokens
 }
 
+
 split_tokens <- function(x, max_tokens, remember_spaces=F) {
   x = stringi::stri_split_boundaries(x, type='word')
+  
   if (remember_spaces) {
-    x = lapply(x, function(x) collapse_terms_cpp(x, collapse=x %in% c(' ', '\n','\t','\r\n'), sep=" ", sep2=""))
+    x = lapply(x, function(x) collapse_terms_cpp(x, collapse=stringi::stri_detect(x, regex='^\\s+$'), sep=" ", sep2=""))
   } else {
-    x = lapply(x, function(x) x[!x %in% c(' ', '\n','\t','\r\n')])
+    x = lapply(x, function(x) x[!stringi::stri_detect(x, regex='^\\s+$')])
   }
   if (!is.null(max_tokens)) x = sapply(x, head, max_tokens, simplify=F)
   x

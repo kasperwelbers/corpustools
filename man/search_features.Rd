@@ -144,30 +144,5 @@ search_features(tc, 'A AND B', mode = 'features')$hits ## in "features", match a
 # ghost terms (used for conditions) can be repeated
 search_features(tc, 'A AND B~g')$hits
 
-## advanced queries
-tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
-                       sentence_col = 'sentence', token_id_col = 'id')
-head(tc$tokens) ## search in multiple feature columns with "columnname: "
-
-## using the sub/flag query to find only mary as a direct object
-hits = search_features(tc, 'mary~{relation: dobj}', context_level = 'sentence')
-hits$hits
-
-## add a second sub query
-hits = search_features(tc, 'mary~{relation: dobj, parent: 12 20}', context_level = 'sentence')
-hits$hits
-
-## selecting from a different column without changing the feature column
-## (can be used to combine columns)
-hits = search_features(tc, 'relation: nsubj')
-hits$hits
-
-hits = search_features(tc, '(relation: nsubj) AND mary~g{relation: dobj}',
-                          context_level = 'sentence')
-hits$hits
-
-## sequence: nsubj say*
-hits = search_features(tc, '"(relation: nsubj) say*"')
-hits$hits
 }
 }

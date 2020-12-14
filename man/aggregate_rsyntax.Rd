@@ -46,7 +46,7 @@ Now you can aggregate the source tokens  to get a single unique ID, and aggregat
 tc = tc_sotu_udpipe
 tc$udpipe_clauses()
 
-subject_verb_predicate = aggregate_rsyntax(tc, 'clause', txt=T)
+subject_verb_predicate = aggregate_rsyntax(tc, 'clause', txt=TRUE)
 head(subject_verb_predicate)
 
 ## We can also add specific aggregation functions

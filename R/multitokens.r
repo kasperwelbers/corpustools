@@ -52,10 +52,11 @@ add_multitoken_label <- function(tc, colloc_id, feature='token', new_feature=spr
 
 ################## undo multitokens
 
-fix_dict_term_spacing <- function(d, wildcards=T) {
+standardize_dict_term_spacing <- function(d, wildcards=T) {
   d$string = gsub('_', ' ', d$string)
-  d$string = sapply(split_tokens(d$string, Inf, F), paste, collapse=' ')
-  if (wildcards) d$string = gsub(' ([?*])', '\\1', d$string)
+  d$string = sapply(split_tokens(d$string, Inf, T), paste, collapse=' ')
+  if (wildcards) d$string = gsub(' ?([?*]) ?', '\\1', d$string)
+  d$string = gsub(' +', ' ', d$string)
   d
 }
 

@@ -135,6 +135,7 @@ udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, c
     tokens[, space := fast_factor(gsub('Space[s]?After=', '', misc))]
     levels(tokens$space) = ifelse(levels(tokens$space) == 'No', '', levels(tokens$space))
     levels(tokens$space) = double_to_single_slash(levels(tokens$space))
+    levels(tokens$space) = stringi::stri_replace_all(levels(tokens$space), regex = '\\\\s', replacement = ' ')
   } else {
     tokens$start = NULL
     tokens$end = NULL

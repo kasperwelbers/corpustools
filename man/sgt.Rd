@@ -7,7 +7,7 @@
 sgt(freq)
 }
 \arguments{
-\item{freq}{A numeric vector of term frequencies (integers).}
+\item{freq}{A numeric vector of frequencies (integers).}
 }
 \value{
 A numeric vector with the smoothed term proportions

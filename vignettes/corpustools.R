@@ -71,12 +71,12 @@ d = data.frame(doc_id = paste('doc', 1:3),
 
 # document 1 and 2 are duplicates, and the first is deleted
 tc = create_tcorpus(d)
-tc$deduplicate(feature='token', date_col = 'date', similarity = 0.75)
+tc$deduplicate(feature='token', date_col = 'date', similarity = 0.75, verbose = F)
 tc$meta$doc_id     
 
 # document 1 and 2 are duplicates, and the last is deleted
 tc = create_tcorpus(d)
-tc$deduplicate(feature='token', date_col = 'date', similarity = 0.75, keep = 'last')
+tc$deduplicate(feature='token', date_col = 'date', similarity = 0.75, keep = 'last', verbose = F)
 tc$meta$doc_id
 
 ## -----------------------------------------------------------------------------

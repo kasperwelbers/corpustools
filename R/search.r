@@ -1,30 +1,47 @@
+## extends dictionary search
+## after getting the terms with dictionary search
+## apply lucene_like to allow more advanced conditions, like word distances and Boolean
 
-recursive_search <- function(tokens, qlist, lookup_tables=NULL, subcontext=NULL, feature='token', mode = c('unique_hits','features','contexts'), parent_relation='', all_case_sensitive=FALSE, all_ghost=FALSE, all_flag_query=list(), keep_longest=TRUE, as_ascii=F, level=1) {
+get_dict_results <- function(tc, queries, context_level, as_ascii, feature, verbose) {
+  hit_id = NULL
+  context_cols = if (context_level == 'sentence') c('doc_id','sentence') else 'doc_id'
+  
+  features = unique(queries$query_terms$feature)
+  dict_results = vector('list', length(features))
+  names(dict_results) = features
+  
+  for (i in 1:length(features)) {
+    dict = queries$query_terms[list(features[i]),,on='feature']
+    fi = dictionary_lookup(tc, data.frame(id=dict$term, string=dict$term), token_col=features[i], mode = 'features', case_sensitive = dict$case_sensitive,  ascii=as_ascii, context_level=context_level, verbose=F)
+    ## here implement efficients subquery filtering?
+    
+    if (!is.null(fi)) {
+      fi = unique(fi, by='hit_id')
+      fi[, hit_id := NULL]
+      
+      fi = cbind(hit_id=fi$hit_id, dict[fi$dict_i,c('term','case_sensitive')], tc$tokens[fi$feat_i,c(context_cols,'token_id',feature),with=F])
+      data.table::setkeyv(fi, c('term','case_sensitive'))
+    }
+    dict_results[[i]] = fi
+  }
+  dict_results
+}
+
+
+lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','contexts'), subcontext=NULL, parent_relation='', keep_longest=TRUE, level=1) {
   .ghost = NULL; .term_i = NULL; .seq_i = NULL; .group_i = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
-
   mode = match.arg(mode) ## 'unique_hit' created complete and unique sets of hits (needed for counting) but doesn't assign all features
-  ## 'features' mode does not make full sets of hits, but returns all features for which the query is true (needed for coding/dictionaries)
+                         ## 'features' mode does not make full sets of hits, but returns all features for which the query is true (needed for coding/dictionaries)
   i = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
   hit_list = vector('list', length(qlist$terms))
-
-  ## all_ conditions are passed down to nested querie
-  if (qlist$all_case_sensitive) all_case_sensitive = TRUE
-  if (qlist$all_ghost) all_ghost = TRUE
-  if (!qlist$feature == "") feature = qlist[['feature']]  ## if the query specifies a feature column, override the feature parameter
-  for (n in names(qlist$all_flag_query)) all_flag_query[[n]] = unique(c(all_flag_query[[n]], qlist$all_flag_query[[n]]))
-
-  qlist = collapse_or_queries(qlist)
-
+  
   nterms = length(qlist$terms)
-
   for (j in 1:nterms) {
     q = qlist$terms[[j]]
     is_nested = 'terms' %in% names(q)
     if (is_nested) {
-
-
-      jhits = recursive_search(tokens, q, lookup_tables=lookup_tables, subcontext=subcontext, feature=feature, mode=mode, parent_relation=qlist$relation, all_case_sensitive, all_ghost, all_flag_query, keep_longest, as_ascii, level=level+1)
-
+      jhits = lucene_like(dict_results, q, mode=mode, subcontext=subcontext, parent_relation=qlist$relation, keep_longest=keep_longest, level=level+1)
+      
       if (nterms == 1) {
         if (level == 1 && mode == 'contexts' & !is.null(jhits)) jhits = unique(subset(jhits, select=c('doc_id',subcontext)))
         return(jhits)
@@ -36,27 +53,12 @@ recursive_search <- function(tokens, qlist, lookup_tables=NULL, subcontext=NULL,
       }
     } else {
       #st = Sys.time()
-      ## add alternative for OR statements, where all terms are combined into single term for more efficient regex
-      .case_sensitive = q$case_sensitive | all_case_sensitive
-      .ghost = q$ghost | all_ghost
-
-      flag_query = q$flag_query
-      for (n in names(all_flag_query)) flag_query[[n]] = unique(c(flag_query[[n]], all_flag_query[[n]]))
-
-      only_context = mode == 'contexts' && qlist$relation %in% c('AND','NOT')  ## only for AND and NOT, because proximity and sequence require feature positions (and OR can be nested in them)
-
-
-      if (!is.null(lookup_tables)) {
-        #lookup_table_key = sprintf('%s; ignore_case=%s; as_ascii=%s', feature, !.case_sensitive, as_ascii)
-        lookup_table_key = create_lookup_table_key(feature, !.case_sensitive, as_ascii)
-        lookup_table = lookup_tables[[lookup_table_key]]
-      } else lookup_table = NULL  ## if NULL, lookup_table will be created within lookup, but providing one can be faster
-
-      jhits = lookup(tokens, q$term, lookup_table=lookup_table,
-                        feature=feature, ignore_case=!.case_sensitive, sub_query=flag_query, only_context=only_context, subcontext=subcontext, as_ascii=as_ascii)
+      only_context = mode == 'contexts' && qlist$relation %in% c('AND','NOT')  ## only_context is more efficient, but can only be used for AND and NOT, because proximity and sequence require feature positions (and OR can be nested in them)
+      
+      jhits = lookup(dict_results, q$term, feature=q$feature, case_sensitive=q$case_sensitive, only_context=only_context)
 
       if (!is.null(jhits)) {
-        jhits[, .ghost := .ghost]
+        jhits[, .ghost := q$ghost]
         if (qlist$relation %in% c('proximity','sequence','AND')) jhits[,.group_i := paste0(j, '_')] else jhits[,.group_i := ''] ## for keeping track of nested multi word queries
       }
       #print(as.numeric(difftime(Sys.time(), st, units = 'secs')))
@@ -69,80 +71,47 @@ recursive_search <- function(tokens, qlist, lookup_tables=NULL, subcontext=NULL,
     jhits[, .term_i := j]
     if (nrow(jhits) > 0) hit_list[[j]] = jhits
   }
-
+  
   hits = data.table::rbindlist(hit_list, fill=TRUE)
-
   if (nrow(hits) == 0) return(NULL)
-
+  
   feature_mode = mode == 'features'
   if (parent_relation %in% c('AND','proximity','sequence')) feature_mode = TRUE ## with these parents, hit_id will be recalculated, and all valid features should be returned
-
-
+  
   if (qlist$relation %in% c('AND')) get_AND_hit(hits, n_unique = nterms, subcontext=subcontext, group_i = '.group_i', replace = '.ghost', feature_mode=feature_mode) ## assign hit_ids to groups of tokens within the same context
   if (qlist$relation %in% c('NOT')) get_AND_hit(hits, n_unique = nterms, subcontext=subcontext, group_i = '.group_i', replace = '.ghost', feature_mode=T)
   if (qlist$relation == 'proximity') get_proximity_hit(hits, n_unique = nterms, window=qlist$window, subcontext=subcontext, seq_i = '.seq_i', replace='.ghost', feature_mode=feature_mode, directed=qlist$directed) ## assign hit_ids to groups of tokens within the given window
   if (qlist$relation %in% c('OR', '')) get_OR_hit(hits)
   if (qlist$relation == 'sequence') get_sequence_hit(hits, seq_length = nterms, subcontext=subcontext) ## assign hit ids to valid sequences
-
+  
   if (qlist$relation == 'NOT') {
     hits = subset(hits, .term_i == 1 & hit_id == 0) ## if NOT (which is an inverse AND statement), we only want the first term_i (before NOT) where no match was found (hit_id == 0)
   } else {
     hits = subset(hits, hit_id > 0)
   }
   if (nrow(hits) == 0) return(NULL)
-
+  
   if (level == 1 && mode == 'unique_hits') hits = remove_duplicate_hit_id(hits, keep_longest)
   if (level == 1 && mode == 'contexts') hits = unique(subset(hits, select=c('doc_id',subcontext)))
-
+  
   return(hits)
 }
 
-collapse_or_queries <- function(qlist) {
-  if (qlist$relation == 'OR') {
-    nested = sapply(qlist$terms, function(x) 'terms' %in% names(x))
-    has_flag_query = sapply(qlist$terms, function(x) length(x$flag_query) > 0)
-    select = !nested & !has_flag_query # these terms are collapse-able
-
-    if (sum(select) > 1) {
-      terms = sapply(qlist$terms[select], function(x) x[c('case_sensitive','ghost','term')], simplify = F)
-      terms = data.table::rbindlist(terms)
-
-      col_terms = stats::aggregate(term ~ case_sensitive + ghost, data=terms, FUN = c, simplify=F)
-      col_terms = apply(col_terms, 1, as.list)
-      col_terms = sapply(col_terms, function(x) c(x, list(flag_query=list())), simplify = F)
-      qlist$terms = c(col_terms, qlist$terms[!select])
-    }
-  }
-  qlist
+lookup <- function(dict_results, terms, feature='token', case_sensitive=TRUE, subcontext=NULL, only_context=F){
+  if (!feature %in% names(dict_results))
+    return(NULL)
+  
+  dr = dict_results[[feature]]
+  f = data.table::data.table(term=terms, case_sensitive=case_sensitive)
+  out = dr[f, allow.cartesian=T, nomatch=0]
+  if (nrow(out) == 0) return(NULL)
+  
+  out[, case_sensitive := NULL]
+  if (only_context) out = unique(out, by=c('doc_id',subcontext))
+  out
 }
 
 
-get_query_code <- function(query, code=NULL) {
-  hashcount = stringi::stri_count(query, regex='[^\\\\]#')
-  if (any(hashcount > 1)) stop("Can only use 1 hash (#) for labeling. Note that you can escape with double backslash (\\#) to search for #. ");
-  hashcode = ifelse(hashcount == 1, stringi::stri_replace(query, '$1', regex = '([^\\\\])#.*'), NA)
-
-  if (!is.null(code)) {
-    code = as.character(code)
-    if (!length(code) == length(query)) stop('code and query vectors need to have the same length')
-    code = ifelse(is.na(code), hashcode, code)
-  } else code = hashcode
-
-  code[is.na(code)] = paste('query', 1:sum(is.na(code)), sep='_')
-  if (anyDuplicated(code)) stop('Cannot have duplicate codes')
-  code
-}
-
-remove_query_label <- function(query) {
-  ht_count = stringi::stri_count(query, fixed='#')
-  ht_nolabel_count = stringi::stri_count(query, regex='\\\\#')
-  has_label = (ht_count - ht_nolabel_count) > 0
-
-  if (any(has_label)) {
-    query[has_label] = unlist(sapply(stringi::stri_split_fixed(query[has_label], pattern = '#', n=2), function(x) x[[2]]))
-  }
-  query
-}
 
 get_sequence_hit <- function(d, seq_length, subcontext=NULL){
   hit_id = NULL ## used in data.table syntax, but need to have bindings for R CMD check

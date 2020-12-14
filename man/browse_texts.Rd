@@ -15,6 +15,8 @@ browse_texts(
   highlight = NULL,
   scale = NULL,
   category = NULL,
+  rsyntax = NULL,
+  value = NULL,
   meta_cols = NULL,
   seed = NA,
   nav = NULL,
@@ -41,12 +43,17 @@ browse_texts(
 
 \item{subheader}{Optionally, overwrite the subheader. By default the subheader reports the number of documents}
 
-\item{highlight}{The name of a numeric column in tc$tokens with values between 0 and 1, used to highlight tokens.
+\item{highlight}{Highlighe mode: provide the name of a numeric column in tc$tokens with values between 0 and 1, used to highlight tokens.
 Can also be a character vector, in which case al non-NA values are highlighted}
 
-\item{scale}{The name of a numeric column in tc$tokens with values between -1 and 1, used to color tokens on a scale (set colors with scale_col)}
+\item{scale}{Scale mode: provide the name of a numeric column in tc$tokens with values between -1 and 1, used to color tokens on a scale (set colors with scale_col)}
 
-\item{category}{The name of a character or factor column in tc$tokens. Each unique value will have its own color, and navigation for categories will be added (nav cannot be used with this option)z}
+\item{category}{Category mode: provide the name of a character or factor column in tc$tokens. Each unique value will have its own color, and navigation for categories will be added (nav cannot be used with this option)}
+
+\item{rsyntax}{rsyntax mode: provide the name of an rsyntax annotation column (see \code{\link{annotate_rsyntax}})}
+
+\item{value}{rsyntax mode argument: if rsyntax mode is used, value can be a character vector with values in the rsyntax annotation column. 
+If used, only these values are fully colored, and the other (non NA) values only have border colors.}
 
 \item{meta_cols}{A character vector with names of columns in tc$meta, used to only show the selected columns}
 

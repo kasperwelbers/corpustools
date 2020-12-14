@@ -17,7 +17,7 @@
 #' tc = udpipe_tcorpus(txt, model = 'english-ewt')
 #' tc$udpipe_quotes()
 #' tc_plot_tree(tc, token, lemma, POS, annotation='quote')
-#' tc_syntax_reader(tc, annotation='quote', value='source', value2='quote')
+#' browse_texts(tc, rsyntax='quote', value='source')
 #' }
 tCorpus$set('public', 'udpipe_quotes', function(tqueries = udpipe_quote_tqueries(verb_lemma('quote')), span_quotes=T, say_verbs=verb_lemma('quote')) {
   cnames = c('quote','quote_id','quote_verbatim')
@@ -28,11 +28,6 @@ tCorpus$set('public', 'udpipe_quotes', function(tqueries = udpipe_quote_tqueries
   for (cn in cnames) if (cn %in% self$names) self$set(cn, NULL)
   self$tokens = merge(self$tokens, ti, by=c('doc_id','token_id'))
 })
-
-
-
-
-
 
 
 

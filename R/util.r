@@ -61,7 +61,7 @@ pretty_text_paste <- function(x){
   x
 }
 
-fast_dummy_factor <- function(x) { ## if , still return a factor for consistency, but no need to match stuff
+fast_dummy_factor <- function(x) {
   x = as.integer(x)
   nlevels = length(stats::na.omit(unique(x)))
   attr(x, 'levels') = if (nlevels > 0) as.character(1:nlevels) else character()

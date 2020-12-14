@@ -198,7 +198,7 @@ agg_label <- function(label, ...) {
 #' tc = tc_sotu_udpipe
 #' tc$udpipe_clauses()
 #' 
-#' subject_verb_predicate = aggregate_rsyntax(tc, 'clause', txt=T)
+#' subject_verb_predicate = aggregate_rsyntax(tc, 'clause', txt=TRUE)
 #' head(subject_verb_predicate)
 #' 
 #' ## We can also add specific aggregation functions
@@ -230,6 +230,7 @@ agg_label <- function(label, ...) {
 #' head(sent)
 #' sent[,list(sentiment=mean(sentiment, na.rm=T), n=.N), by='subject']
 aggregate_rsyntax <- function(tc, annotation, ..., by_col=NULL, txt=F, labels=NULL, rm_na=T) {
+  token = NULL
   tokens = if (methods::is(tc, 'tCorpus')) tc$tokens else tc
   
   .annotation = annotation

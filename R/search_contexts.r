@@ -170,15 +170,14 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
   cols = if(context_level == 'sentence') c('doc_id','sentence') else c('doc_id')
   subcontext = if(context_level == 'sentence') 'sentence' else NULL
 
+  queries = parse_queries(query, feature = feature)
+  dict_results = get_dict_results(tc, queries, context_level, as_ascii, feature, verbose)
+  
   hits = vector('list', length(query))
-  lookup_tables = list()
   for (i in 1:length(query)) {
     if (verbose) print(code[i])
-    q = parse_query_cpp(as.character(query[i]))
-
-    lookup_tables = prepare_lookup_tables(tc$tokens, q, lookup_tables, feature = feature, as_ascii = as_ascii)
-
-    h = recursive_search(tc$tokens, q, lookup_tables, subcontext=subcontext, feature=feature, mode = 'contexts', as_ascii=as_ascii)
+    h = lucene_like(dict_results, queries$queries[[i]], mode='contexts', subcontext=subcontext, keep_longest=keep_longest)
+    
     if (!is.null(h)) {
       h[, code := codelabel[i]]
       hits[[i]] = h

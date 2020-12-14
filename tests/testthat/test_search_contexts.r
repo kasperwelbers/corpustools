@@ -20,6 +20,7 @@ test_that("Query document search works", {
   hits = search_contexts(tc, '"rutte bos"~5', context_level = 'document') ## should find rutte and bos across sentences
   expect_true(nrow(hits$hits) > 0)
 
+  
   hits = search_contexts(tc, '"rutte bos"~5', context_level = 'sentence') ## should not find rutte and bos across sentences
   expect_true(nrow(hits$hits) == 0)
 

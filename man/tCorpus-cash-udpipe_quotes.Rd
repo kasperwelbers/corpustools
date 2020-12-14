@@ -24,6 +24,6 @@ txt = 'Bob said that he likes Mary. John did not like that:
 tc = udpipe_tcorpus(txt, model = 'english-ewt')
 tc$udpipe_quotes()
 tc_plot_tree(tc, token, lemma, POS, annotation='quote')
-tc_syntax_reader(tc, annotation='quote', value='source', value2='quote')
+browse_texts(tc, rsyntax='quote', value='source')
 }
 }

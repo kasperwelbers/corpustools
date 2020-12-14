@@ -11,6 +11,7 @@ search_dictionary(
   string_col = "string",
   code_col = "code",
   sep = " ",
+  mode = c("unique_hits", "features"),
   case_sensitive = F,
   use_wildcards = T,
   standardize = T,
@@ -38,6 +39,10 @@ If dict is a quanteda dictionary with multiple levels, "code_l2", "code_l3", etc
 \item{sep}{A regular expression for separating multi-word lookup strings (default is " ", which is what quanteda dictionaries use).
 For example, if the dictionary contains "Barack Obama", sep should be " " so that it matches the consequtive tokens "Barack" and "Obama".
 In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\+' should be used.}
+
+\item{mode}{There are two modes: "unique_hits" and "features". The "unique_hits" mode prioritizes finding unique matches, which is recommended for counting how often a dictionary term occurs.
+If a term matches multiple dictionary terms (which should only happen for nested multi-word terms, such as "bad" and "not bad"), the longest term is always used. 
+The features mode does not delete duplicates.}
 
 \item{case_sensitive}{logical, should lookup be case sensitive?}
 

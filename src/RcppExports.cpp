@@ -67,17 +67,19 @@ BEGIN_RCPP
 END_RCPP
 }
 // do_code_dictionary
-DataFrame do_code_dictionary(NumericVector feature, std::vector<int> context, NumericVector which, List dict, bool verbose);
-RcppExport SEXP _corpustools_do_code_dictionary(SEXP featureSEXP, SEXP contextSEXP, SEXP whichSEXP, SEXP dictSEXP, SEXP verboseSEXP) {
+DataFrame do_code_dictionary(NumericVector feature, std::vector<int>& context, std::vector<int>& token_id, NumericVector which, List dict, int hit_id_offset, bool verbose);
+RcppExport SEXP _corpustools_do_code_dictionary(SEXP featureSEXP, SEXP contextSEXP, SEXP token_idSEXP, SEXP whichSEXP, SEXP dictSEXP, SEXP hit_id_offsetSEXP, SEXP verboseSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type feature(featureSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type context(contextSEXP);
+    Rcpp::traits::input_parameter< std::vector<int>& >::type context(contextSEXP);
+    Rcpp::traits::input_parameter< std::vector<int>& >::type token_id(token_idSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type which(whichSEXP);
     Rcpp::traits::input_parameter< List >::type dict(dictSEXP);
+    Rcpp::traits::input_parameter< int >::type hit_id_offset(hit_id_offsetSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(do_code_dictionary(feature, context, which, dict, verbose));
+    rcpp_result_gen = Rcpp::wrap(do_code_dictionary(feature, context, token_id, which, dict, hit_id_offset, verbose));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -177,7 +179,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_corpustools_uncollapse_terms_cpp", (DL_FUNC) &_corpustools_uncollapse_terms_cpp, 2},
     {"_corpustools_group_coref_ids", (DL_FUNC) &_corpustools_group_coref_ids, 3},
     {"_corpustools_coref_candidate_select", (DL_FUNC) &_corpustools_coref_candidate_select, 12},
-    {"_corpustools_do_code_dictionary", (DL_FUNC) &_corpustools_do_code_dictionary, 5},
+    {"_corpustools_do_code_dictionary", (DL_FUNC) &_corpustools_do_code_dictionary, 7},
     {"_corpustools_fast_factor_cpp", (DL_FUNC) &_corpustools_fast_factor_cpp, 2},
     {"_corpustools_AND_hit_ids_cpp", (DL_FUNC) &_corpustools_AND_hit_ids_cpp, 7},
     {"_corpustools_proximity_hit_ids_cpp", (DL_FUNC) &_corpustools_proximity_hit_ids_cpp, 10},

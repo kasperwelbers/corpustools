@@ -36,6 +36,7 @@
 tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token', column='code', add_column=list(), context_level = c('document','sentence'), as_ascii=F, verbose=F, overwrite=T, ...){
   codelabel = get_query_code(query, code)
   code = 1:length(query)
+  
   hits = search_features(self, query, code=code, feature=feature, mode='features', context_level=context_level, keep_longest=F, as_ascii=as_ascii, verbose=verbose)
 
   .i = self$get_token_id(doc_id = hits$hits$doc_id, token_id = hits$hits$token_id)
@@ -207,60 +208,33 @@ tCorpus$set('public', 'search_recode', function(feature, new_value, query, ...){
 #' # ghost terms (used for conditions) can be repeated
 #' search_features(tc, 'A AND B~g')$hits
 #'
-#' ## advanced queries
-#' tc = tokens_to_tcorpus(corenlp_tokens, doc_col = 'doc_id',
-#'                        sentence_col = 'sentence', token_id_col = 'id')
-#' head(tc$tokens) ## search in multiple feature columns with "columnname: "
-#'
-#' ## using the sub/flag query to find only mary as a direct object
-#' hits = search_features(tc, 'mary~{relation: dobj}', context_level = 'sentence')
-#' hits$hits
-#'
-#' ## add a second sub query
-#' hits = search_features(tc, 'mary~{relation: dobj, parent: 12 20}', context_level = 'sentence')
-#' hits$hits
-#'
-#' ## selecting from a different column without changing the feature column
-#' ## (can be used to combine columns)
-#' hits = search_features(tc, 'relation: nsubj')
-#' hits$hits
-#'
-#' hits = search_features(tc, '(relation: nsubj) AND mary~g{relation: dobj}',
-#'                           context_level = 'sentence')
-#' hits$hits
-#'
-#' ## sequence: nsubj say*
-#' hits = search_features(tc, '"(relation: nsubj) say*"')
-#' hits$hits
 #' }
 search_features <- function(tc, query, code=NULL, feature='token', mode = c('unique_hits','features'), context_level=c('document','sentence'), keep_longest=TRUE, as_ascii=F, verbose=F){
   .ghost = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
   is_tcorpus(tc)
   mode = match.arg(mode)
   context_level = match.arg(context_level)
-
+  
   if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(tc$feature_names, collapse=', ')))
   codelabel = get_query_code(query, code)
   query = remove_query_label(query)
   subcontext = if(context_level == 'sentence') 'sentence' else NULL
+  
+  queries = parse_queries(query, feature = feature)
+  dict_results = get_dict_results(tc, queries, context_level, as_ascii, feature, verbose)
+  
   hits = vector('list', length(query))
-
-  lookup_tables = list()
   for (i in 1:length(query)) {
     if (verbose) cat(as.character(codelabel[i]), '\n')
-    q = parse_query_cpp(as.character(query[i]))
-
-    lookup_tables = prepare_lookup_tables(tc$tokens, q, lookup_tables, feature = feature, as_ascii = as_ascii)
-    h = recursive_search(tc$tokens, q, lookup_tables=lookup_tables, subcontext=subcontext, feature=feature, mode = mode, keep_longest=keep_longest, as_ascii=as_ascii)
-
+    h = lucene_like(dict_results, queries$queries[[i]], mode=mode, subcontext=subcontext, keep_longest=keep_longest)
+    
     if (!is.null(h)) {
       h[, code := codelabel[i]]
       hits[[i]] = h
     }
   }
-  t = tc$tokens
   hits = data.table::rbindlist(hits, fill = T)
-
+  
   if (nrow(hits) > 0) {
     data.table::setnames(hits, feature, 'feature')
     setorderv(hits, c('doc_id','token_id'))
@@ -268,8 +242,13 @@ search_features <- function(tc, query, code=NULL, feature='token', mode = c('uni
   } else {
     hits = data.frame(code=factor(), feature=factor(), doc_id=factor(), sentence=numeric(), token_id = numeric(), hit_id=numeric())
   }
-
+  
   queries = data.frame(code=codelabel, query=query)
   featureHits(hits, queries)
 }
+
+
+
+
+
 
