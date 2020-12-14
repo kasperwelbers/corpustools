@@ -226,7 +226,7 @@ agg_label <- function(label, ...) {
 #' 
 #' sent = aggregate_rsyntax(tc, 'clause', txt='predicate',
 #'                   agg_label('subject', subject = na.omit(who)[1]),
-#'                   agg_label('predicate', sentiment = mean(sentiment, na.rm=T)))
+#'                   agg_label('predicate', sentiment = mean(sentiment, na.rm=TRUE)))
 #' head(sent)
 #' sent[,list(sentiment=mean(sentiment, na.rm=T), n=.N), by='subject']
 aggregate_rsyntax <- function(tc, annotation, ..., by_col=NULL, txt=F, labels=NULL, rm_na=T) {

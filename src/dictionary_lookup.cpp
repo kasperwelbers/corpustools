@@ -67,8 +67,6 @@ void match_dictionary(std::vector<int>& dict_i, std::vector<int>& hit_id, std::v
       dict = dict[li];
 
     } else {
-      //int code = as<int>(dict["code"]);
-      //add_code(dict_i, hit_id, feat_i, nterms, hit_id_counter, i, count_terms, code);
       break;
     }
     count_terms++;

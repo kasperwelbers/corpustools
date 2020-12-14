@@ -161,6 +161,7 @@ tCorpus$set('public', 'subset_query', function(query, feature='token', context_l
 #'
 #' }
 search_contexts <- function(tc, query, code=NULL, feature='token', context_level=c('document','sentence'), verbose=F, as_ascii=F){
+  
   is_tcorpus(tc)
   context_level = match.arg(context_level)
   if (!feature %in% tc$names) stop(sprintf('Feature (%s) is not available. Current options are: %s', feature, paste(tc$feature_names, collapse=', ')))
@@ -176,7 +177,7 @@ search_contexts <- function(tc, query, code=NULL, feature='token', context_level
   hits = vector('list', length(query))
   for (i in 1:length(query)) {
     if (verbose) print(code[i])
-    h = lucene_like(dict_results, queries$queries[[i]], mode='contexts', subcontext=subcontext, keep_longest=keep_longest)
+    h = lucene_like(dict_results, queries$queries[[i]], mode='contexts', subcontext=subcontext)
     
     if (!is.null(h)) {
       h[, code := codelabel[i]]

@@ -74,7 +74,7 @@ tc$code_dictionary(dict)
 
 sent = aggregate_rsyntax(tc, 'clause', txt='predicate',
                   agg_label('subject', subject = na.omit(who)[1]),
-                  agg_label('predicate', sentiment = mean(sentiment, na.rm=T)))
+                  agg_label('predicate', sentiment = mean(sentiment, na.rm=TRUE)))
 head(sent)
 sent[,list(sentiment=mean(sentiment, na.rm=T), n=.N), by='subject']
 }
