@@ -1,12 +1,12 @@
 
 #' Annotate tokens based on rsyntax queries
-#'
-#' @description 
-#' Apply queries to extract syntax patterns, and add the results as three columns to a tokenlist.
-#' The first column contains the ids for each hit. The second column contains the annotation label. The third column contains the fill level (which you probably won't use, but is important for some functionalities).
-#' Only nodes that are given a name in the tquery (using the 'label' parameter) will be added as annotation.
 #' 
-#' Note that while queries only find 1 node for each labeld component of a pattern (e.g., quote queries have 1 node for "source" and 1 node for "quote"), 
+#' @description
+#' Apply queries to extract syntax patterns, and add the results as three columns to a tokenlist.
+#' The first column contains the ids for each hit. The second column contains the annotation label. The third column contains the fill level (which you probably won't use, but is important for some features).
+#' Only nodes that are given a name in the tquery (using the label parameter) will be added as annotation.
+#' 
+#' Note that while queries only find 1 node for each labeled component of a pattern (e.g., quote queries have 1 node for "source" and 1 node for "quote"), 
 #' all children of these nodes can be annotated by settting fill to TRUE. If a child has multiple ancestors, only the most direct ancestors are used (see documentation for the fill argument).
 #'
 #' \strong{Usage:}
@@ -19,7 +19,7 @@
 #'                  verbose = FALSE)}
 #'
 #' @param column      The name of the column in which the annotations are added. The unique ids are added as column_id
-#' @param ...         One or multiple tqueries, or a list of queries, as created with \link{tquery}. Queries can be given a named by using a named argument, which will be used in the annotation_id to keep track of which query was used. 
+#' @param ...         One or multiple tqueries, or a list of queries, as created with \code{\link{tquery}}. Queries can be given a named by using a named argument, which will be used in the annotation_id to keep track of which query was used. 
 #' @param block       Optionally, specify ids (doc_id - sentence - token_id triples) that are blocked from querying and filling (ignoring the id and recursive searches through the id). 
 #' @param fill        Logical. If TRUE (default) also assign the fill nodes (as specified in the tquery). Otherwise these are ignored 
 #' @param overwrite   Applies if column already exists. If TRUE, existing column will be overwritten. If FALSE, the existing annotations in the column will be blocked, and new annotations will be added. This is identical to using multiple queries.
@@ -64,8 +64,7 @@ tCorpus$set('public', 'annotate_rsyntax', function(column, ..., block=NULL, fill
 
 #' Fold rsyntax annotations
 #'
-#' @description 
-#' If a tCorpus has rsyntax annotations (see \code{\link{{annotate_rsyntax}}}), it can be convenient to aggregate tokens that have a certain semantic label.
+#' If a tCorpus has rsyntax annotations (see \code{\link{annotate_rsyntax}}), it can be convenient to aggregate tokens that have a certain semantic label.
 #' For example, if you have a query for labeling "source" and "quote", you can add an aggegated value for the sources (such as a unique ID) as a column, and then remove the quote tokens. 
 #' 
 #' \strong{Usage:}
@@ -85,7 +84,6 @@ tCorpus$set('public', 'annotate_rsyntax', function(column, ..., block=NULL, fill
 #' @param copy          If TRUE, return a copy of the transformed tCorpus, instead of transforming the tCorpus by reference
 #' 
 #' @name tCorpus$fold_rsyntax
-#' @aliases fold_rsyntax
 #' @examples
 #' tc = tc_sotu_udpipe$copy()
 #' tc$udpipe_clauses()
@@ -94,7 +92,7 @@ tCorpus$set('public', 'annotate_rsyntax', function(column, ..., block=NULL, fill
 #' tc$tokens
 tCorpus$set('public', 'fold_rsyntax', function(annotation, by_label, ..., txt=F, rm_by=T, copy=F) {
   if (copy) {
-    selfcopy = self$copy()$aggregate_rsyntax(annotation=annotation, by=by, ..., to=to, copy=F)
+    selfcopy = self$copy()$fold_rsyntax(annotation=annotation, by_label=by_label, ..., txt=txt, rm_by=rm_by, copy=F)
     return(selfcopy)
   }
 
@@ -125,8 +123,7 @@ tCorpus$set('public', 'fold_rsyntax', function(annotation, by_label, ..., txt=F,
 
 #' Fold rsyntax annotations
 #'
-#' @description 
-#' If a tCorpus has rsyntax annotations (see \code{\link{{annotate_rsyntax}}}), it can be convenient to aggregate tokens that have a certain semantic label.
+#' If a tCorpus has rsyntax annotations (see \code{\link{annotate_rsyntax}}), it can be convenient to aggregate tokens that have a certain semantic label.
 #' For example, if you have a query for labeling "source" and "quote", you can add an aggegated value for the sources (such as a unique ID) as a column, and then remove the quote tokens. 
 #'
 #' @param tc            A tCorpus
@@ -149,6 +146,7 @@ fold_rsyntax <- function(tc, annotation, by_label, ..., txt=F, rm_by=T) {
   tc$fold_rsyntax(annotation=annotation,by_label=by_label, ..., txt=txt, rm_by=rm_by, copy=T)
 }
 
+
 #' Helper function for aggregate_rsyntax
 #'
 #' This function is used within the \code{\link{aggregate_rsyntax}} function to facilitate aggregating by specific labels. 
@@ -161,11 +159,11 @@ fold_rsyntax <- function(tc, annotation, by_label, ..., txt=F, rm_by=T) {
 #' @export
 #'
 #' @examples
-#' tc = tc_sotu_udpipe
+#' tc = tc_sotu_udpipe$copy()
 #' tc$udpipe_clauses()
 #' 
 #' ## count number of tokens in predicate
-#' aggregate_rsyntax(tc, 'clause', txt=F,
+#' aggregate_rsyntax(tc, 'clause', txt=FALSE,
 #'                   agg_label('predicate', n = length(token_id)))
 agg_label <- function(label, ...) {
   list(label=label, agg_list = substitute(list(...)))
@@ -192,10 +190,10 @@ agg_label <- function(label, ...) {
 #' @param rm_na            If TRUE, remove rows with only NA values
 #'
 #' @return    A data.table
-#' @export
+#' @export    
 #'
 #' @examples
-#' tc = tc_sotu_udpipe
+#' tc = tc_sotu_udpipe$copy()
 #' tc$udpipe_clauses()
 #' 
 #' subject_verb_predicate = aggregate_rsyntax(tc, 'clause', txt=TRUE)
@@ -228,7 +226,7 @@ agg_label <- function(label, ...) {
 #'                   agg_label('subject', subject = na.omit(who)[1]),
 #'                   agg_label('predicate', sentiment = mean(sentiment, na.rm=TRUE)))
 #' head(sent)
-#' sent[,list(sentiment=mean(sentiment, na.rm=T), n=.N), by='subject']
+#' sent[,list(sentiment=mean(sentiment, na.rm=TRUE), n=.N), by='subject']
 aggregate_rsyntax <- function(tc, annotation, ..., by_col=NULL, txt=F, labels=NULL, rm_na=T) {
   token = NULL
   tokens = if (methods::is(tc, 'tCorpus')) tc$tokens else tc
@@ -276,35 +274,6 @@ aggregate_rsyntax <- function(tc, annotation, ..., by_col=NULL, txt=F, labels=NU
   }
   out
 }
-
-
-function() {
-  tc$fold_rsyntax('quote', 'subject', )
-  aggregate_rsyntax(tc, 'clause', agg_label('predicate', n = length(token_id)))
-                    
-  tc = udpipe_tcorpus('Steve left when Bob said that he likes wine when the sun is shining')
-  tc$udpipe_clauses()
-  tc$udpipe_quotes()
-  tc$tokens
-  tc$tokens[tc$tokens$token_id >= 10, c('clause','clause_id') := list(NA,NA)]
-  aggregate_rsyntax(tc, 
-                    agg_by('quote','source', txt=T),
-                    agg_by('quote','verb', txt=T),
-                    agg_by('clause', 'subject', txt=T),
-                    agg_by('clause', 'verb', txt=T),
-                    agg_by('clause','predicate',txt=T))
-  
-  
-  tc$agg_rsyntax('clause', 'subject') 
-  aggregate_rsyntax(tc,
-                    tc$agg_rsyntax('clause', 'subject'),
-                    tc$agg_rsyntax('quote', 'source') 
-                    
-  )
-}
-
-
-
 
 
 

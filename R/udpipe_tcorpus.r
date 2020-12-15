@@ -29,7 +29,7 @@
 #' @param ...         Arguments passed to create_tcorpus.character
 #'
 #' @export
-#' @name create_tcorpus
+#' @name udpipe_tcorpus
 #' @examples
 #' ## ...
 udpipe_tcorpus <- function(x, ...) {
@@ -38,13 +38,11 @@ udpipe_tcorpus <- function(x, ...) {
 
 #' @rdname udpipe_tcorpus
 #' @examples
-#' \donttest{
-#' tc = udpipe_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'), 
-#'                     model = 'english-ewt', cores=4)
-#' tc$tokens
-#' }
+#' #tc = udpipe_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'), 
+#' #                     model = 'english-ewt')
+#' #tc$tokens
 #' @export
-udpipe_tcorpus.character <- function(x, model='english-ewt', doc_id=1:length(x), meta=NULL, max_sentences=NULL, model_path=getwd(), cache=3, cores=1, batchsize=50, use_parser=T, start_end=F, coref=F, verbose=T, ...) {
+udpipe_tcorpus.character <- function(x, model='english-ewt', doc_id=1:length(x), meta=NULL, max_sentences=NULL, model_path=getwd(), cache=3, cores=1, batchsize=50, use_parser=T, start_end=F, verbose=T, ...) {
   if (is.null(model)) stop('model cannot be NULL')
   tc = create_tcorpus(x=x, doc_id=doc_id, meta=meta, udpipe_model=model, max_sentences=max_sentences, max_tokens=NULL, udpipe_model_path=model_path, udpipe_cache=cache, udpipe_cores=cores, udpipe_batchsize=batchsize, use_parse=use_parser, verbose=verbose, remember_spaces=T, ...)
   if (!start_end) {
@@ -56,10 +54,8 @@ udpipe_tcorpus.character <- function(x, model='english-ewt', doc_id=1:length(x),
 
 #' @rdname udpipe_tcorpus
 #' @examples
-#' \donttest{
-#' tc = udpipe_tcorpus(sotu_texts, doc_column='id', model = 'english-ewt', cores=4)
-#' tc$tokens
-#' }
+#' #tc = udpipe_tcorpus(sotu_texts, doc_column='id', model = 'english-ewt')
+#' #tc$tokens
 #' @export
 udpipe_tcorpus.data.frame <- function(x, model='english-ewt', text_columns='text', doc_column='doc_id', max_sentences=NULL, model_path=getwd(), cache=3, cores=1, batchsize=50, use_parser=T, start_end=F, verbose=T, ...) {
   if (is.null(model)) stop('model cannot be NULL')
@@ -69,26 +65,6 @@ udpipe_tcorpus.data.frame <- function(x, model='english-ewt', text_columns='text
     if ('end' %in% tc$names) tc$delete_columns('end')
   }
 
-  #if (coref) {
-  #  coref_feats = c('Gender','Number','PronType','Person')
-  #  if (!is.null(feats)) {
-  #    drop_feats = if (feats[1] == 'all') c() else setdiff(coref_feats, feats)
-  #  } else drop_feats = coref_feats
-  #  feats = union(feats, coref_feats)
-  #}
-  #if (is.null(feats)) {
-  #  if ('feats' %in% colnames(tc$tokens)) tc$tokens$feats = NULL
-  #} else {
-  #  if (feats[1] == 'all')
-  #    tc = tc$feats_to_columns()
-  #  else
-  #    tc = tc$feats_to_columns(feats)
-  #}
-#  
-#  if (coref) {
-#    tc$tokens = udpipe_coref(tc$tokens)
-#    tc$delete_columns(drop_feats)
-#  }
   tc
 }
 
@@ -99,21 +75,19 @@ udpipe_tcorpus.data.frame <- function(x, model='english-ewt', text_columns='text
 #' ##  method for a character vector.
 #' text = factor(c('Text one first sentence', 'Text one second sentence'))
 #' \donttest{
-#' tc = udpipe_tcorpus(text, 'english-ewt-', cores=2)
-#' tc$tokens
+#' #tc = udpipe_tcorpus(text, 'english-ewt-')
+#' #tc$tokens
 #' }
 #' @export
 udpipe_tcorpus.factor <- function(x, ...) {
   udpipe_tcorpus(as.character(x), ...)
 }
 
-#' @rdname create_tcorpus
+#' @rdname udpipe_tcorpus
 #' @examples
 #'
 #' library(quanteda)
-#' \donttest{
-#' create_tcorpus(data_corpus_inaugural, 'english-ewt', cores=2)
-#' }
+#' # udpipe_tcorpus(data_corpus_inaugural, 'english-ewt')
 #' @export
 udpipe_tcorpus.corpus <- function(x, ...) {
   x = quanteda::convert(x, 'data.frame')

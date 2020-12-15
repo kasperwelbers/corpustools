@@ -142,16 +142,3 @@ test_that("Query search works", {
   expect_equal(as.character(stats::na.omit(tc$tokens$code)), c('happy','sad'))
 
 })
-
-
-
-
-function() {
-  ## notes: if I collapse proximity_queries, I probably need to give results a single token_id. Does this damages something within recursive_search?
-  q = parse_query_cpp('(test OR not)~s')
-  jsonlite::toJSON(optimize_query(q), pretty=T)
-  
-  search_features(tc, '<a test>')
-  
-  parse_query_cpp('test\\*')
-}

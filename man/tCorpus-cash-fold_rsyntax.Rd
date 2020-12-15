@@ -2,7 +2,6 @@
 % Please edit documentation in R/rsyntax.r
 \name{tCorpus$fold_rsyntax}
 \alias{tCorpus$fold_rsyntax}
-\alias{fold_rsyntax}
 \title{Fold rsyntax annotations}
 \arguments{
 \item{annotation}{The name of an rsyntax annotation column}
@@ -19,9 +18,10 @@ For example:  subject = paste(token, collapse = ' ')  would create the column 's
 \item{copy}{If TRUE, return a copy of the transformed tCorpus, instead of transforming the tCorpus by reference}
 }
 \description{
-If a tCorpus has rsyntax annotations (see \code{\link{{annotate_rsyntax}}}), it can be convenient to aggregate tokens that have a certain semantic label.
-For example, if you have a query for labeling "source" and "quote", you can add an aggegated value for the sources (such as a unique ID) as a column, and then remove the quote tokens. 
-
+If a tCorpus has rsyntax annotations (see \code{\link{annotate_rsyntax}}), it can be convenient to aggregate tokens that have a certain semantic label.
+For example, if you have a query for labeling "source" and "quote", you can add an aggegated value for the sources (such as a unique ID) as a column, and then remove the quote tokens.
+}
+\details{
 \strong{Usage:}
 
 ## R6 method for class tCorpus. Use as tc$method (where tc is a tCorpus object).

@@ -61,7 +61,7 @@ tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token
 #' Recode features in a tCorpus based on a search string
 #'
 #' @description
-#' Search features (see \link{tCorpus$search_features}) and replace features with a new value
+#' Search features (see \code{\link{search_features}}) and replace features with a new value
 #'
 #' \strong{Usage:}
 #'
@@ -73,8 +73,8 @@ tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token
 #'
 #' @param feature The feature in which to search
 #' @param new_value the character string with which all features that are found are replaced
-#' @param query See \link{tCorpus$search_features} for the query parameters
-#' @param ... Additional search_features parameters. See \link{tCorpus$search_features}
+#' @param query See \code{\link{search_features}} for the query parameters
+#' @param ... Additional search_features parameters. See \code{\link{search_features}}
 #'
 #' @name tCorpus$search_recode
 #' @aliases search_recode

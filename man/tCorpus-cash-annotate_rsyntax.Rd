@@ -7,7 +7,7 @@
 \arguments{
 \item{column}{The name of the column in which the annotations are added. The unique ids are added as column_id}
 
-\item{...}{One or multiple tqueries, or a list of queries, as created with \link{tquery}. Queries can be given a named by using a named argument, which will be used in the annotation_id to keep track of which query was used.}
+\item{...}{One or multiple tqueries, or a list of queries, as created with \code{\link{tquery}}. Queries can be given a named by using a named argument, which will be used in the annotation_id to keep track of which query was used.}
 
 \item{block}{Optionally, specify ids (doc_id - sentence - token_id triples) that are blocked from querying and filling (ignoring the id and recursive searches through the id).}
 
@@ -21,10 +21,10 @@
 }
 \description{
 Apply queries to extract syntax patterns, and add the results as three columns to a tokenlist.
-The first column contains the ids for each hit. The second column contains the annotation label. The third column contains the fill level (which you probably won't use, but is important for some functionalities).
-Only nodes that are given a name in the tquery (using the 'label' parameter) will be added as annotation.
+The first column contains the ids for each hit. The second column contains the annotation label. The third column contains the fill level (which you probably won't use, but is important for some features).
+Only nodes that are given a name in the tquery (using the label parameter) will be added as annotation.
 
-Note that while queries only find 1 node for each labeld component of a pattern (e.g., quote queries have 1 node for "source" and 1 node for "quote"), 
+Note that while queries only find 1 node for each labeled component of a pattern (e.g., quote queries have 1 node for "source" and 1 node for "quote"), 
 all children of these nodes can be annotated by settting fill to TRUE. If a child has multiple ancestors, only the most direct ancestors are used (see documentation for the fill argument).
 
 \strong{Usage:}

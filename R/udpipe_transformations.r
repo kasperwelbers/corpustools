@@ -280,6 +280,7 @@ ud_reindex_sentences <- function(tokens) {
   tokens
 }
 
+
 #' Simplify tokenIndex created with the udpipe parser
 #'
 #' This is an off-the-shelf implementation of several rsyntax transformation for 
@@ -294,6 +295,7 @@ ud_reindex_sentences <- function(tokens) {
 #' @export
 #' @import rsyntax
 #' @examples 
+#' tc = tc_sotu_udpipe$copy()
 #' tc2 = transform_rsyntax(tc, udpipe_simplify)
 #' 
 #' browse_texts(tc2)

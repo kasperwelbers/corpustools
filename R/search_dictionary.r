@@ -39,7 +39,8 @@
 #' @name tCorpus$code_dictionary
 #'
 #' @examples
-#' dict = data.frame(string = c('good','bad','ugl*','nice','not pret*', ':)', ':('), sentiment=c(1,-1,-1,1,-1,1,-1))
+#' dict = data.frame(string = c('good','bad','ugl*','nice','not pret*', ':)', ':('), 
+#'                   sentiment=c(1,-1,-1,1,-1,1,-1))
 #' tc = create_tcorpus(c('The good, the bad and the ugly, is nice :) but not pretty :('))
 #' tc$code_dictionary(dict)
 #' tc$tokens

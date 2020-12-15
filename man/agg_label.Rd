@@ -19,10 +19,10 @@ Not relevant. Should only be used within \code{\link{aggregate_rsyntax}}
 This function is used within the \code{\link{aggregate_rsyntax}} function to facilitate aggregating by specific labels.
 }
 \examples{
-tc = tc_sotu_udpipe
+tc = tc_sotu_udpipe$copy()
 tc$udpipe_clauses()
 
 ## count number of tokens in predicate
-aggregate_rsyntax(tc, 'clause', txt=F,
+aggregate_rsyntax(tc, 'clause', txt=FALSE,
                   agg_label('predicate', n = length(token_id)))
 }

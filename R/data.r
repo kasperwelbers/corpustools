@@ -39,3 +39,4 @@
 #' @format A data.frame with a "string" and "code" column.
 "emoticon_dict"
 
+

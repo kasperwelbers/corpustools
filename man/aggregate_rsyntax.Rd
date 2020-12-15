@@ -43,7 +43,7 @@ that has the labels 'source', 'verb', and 'quote'. You also used code_dictionary
 Now you can aggregate the source tokens  to get a single unique ID, and aggregate the quote tokens to get a single sentiment score.
 }
 \examples{
-tc = tc_sotu_udpipe
+tc = tc_sotu_udpipe$copy()
 tc$udpipe_clauses()
 
 subject_verb_predicate = aggregate_rsyntax(tc, 'clause', txt=TRUE)
@@ -76,5 +76,5 @@ sent = aggregate_rsyntax(tc, 'clause', txt='predicate',
                   agg_label('subject', subject = na.omit(who)[1]),
                   agg_label('predicate', sentiment = mean(sentiment, na.rm=TRUE)))
 head(sent)
-sent[,list(sentiment=mean(sentiment, na.rm=T), n=.N), by='subject']
+sent[,list(sentiment=mean(sentiment, na.rm=TRUE), n=.N), by='subject']
 }

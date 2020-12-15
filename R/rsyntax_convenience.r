@@ -11,7 +11,7 @@
 #' @param doc_id        Optionally, the document id can be specified. If so, sentence_i refers to the i-th sentence within the given document.
 #' @param pdf_file      Directly save the plot as a pdf file
 #'
-#' @return
+#' @return      plots a dependency tree.
 #' @export
 #'
 #' @examples

@@ -14,10 +14,10 @@ a tCorpus
 This is an experimental implementation of coreference resolution, aimed at coreferences of nouns and pronouns.
 }
 \examples{
-\donttest{
 tc = tc_sotu_udpipe$copy()
-tc$annotate_clauses()
-tc_plot_tree(tc, token, lemma, POS, annotation='clause')
-browse_texts(tc, rsyntax='clause', value='subject')
+tc$udpipe_quotes()
+\dontrun{
+ tc$udpipe_coref()
+ tc$tokens[!is.na(tc$tokens$coref_id),]
 }
 }

@@ -24,7 +24,7 @@ For example:  subject = paste(token, collapse = ' ')  would create the column 's
 a transformed tCorpus
 }
 \description{
-If a tCorpus has rsyntax annotations (see \code{\link{{annotate_rsyntax}}}), it can be convenient to aggregate tokens that have a certain semantic label.
+If a tCorpus has rsyntax annotations (see \code{\link{annotate_rsyntax}}), it can be convenient to aggregate tokens that have a certain semantic label.
 For example, if you have a query for labeling "source" and "quote", you can add an aggegated value for the sources (such as a unique ID) as a column, and then remove the quote tokens.
 }
 \examples{

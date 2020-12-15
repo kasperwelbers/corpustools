@@ -28,7 +28,7 @@ For instance, tc_plot_tree(tc, token, lemma, POS) shows only these three columns
 \item{pdf_file}{Directly save the plot as a pdf file}
 }
 \value{
-
+plots a dependency tree.
 }
 \description{
 A wrapper for the \code{\link[rsyntax]{plot_tree}} function, that can be used directly on a tCorpus.

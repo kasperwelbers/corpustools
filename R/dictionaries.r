@@ -6,13 +6,14 @@ get_dictionary_data <- function(dict, local_path=getwd()) {
   fname = fname[grep(dict, fname, fixed=T)]
   if (length(fname) == 0) fname = NA
   
-  if (is.na(fname)) fname = create_dict(dict, path)
+  #if (is.na(fname)) fname = create_dict(dict, path)
   readRDS(fname)
 }
 
+
 download_dictionary_data <- function(dict, path) {
   ## download dictionary files and create dictionary
-  if (dict == 'gender_names_US') fname = gender_names_US(url, path, dict)
+  if (dict == 'gender_names_US') fname = gender_names_US(path)
     
   fname
 }
@@ -20,8 +21,6 @@ download_dictionary_data <- function(dict, path) {
 gender_names_US <- function(path) {
   url = 'https://www.ssa.gov/oact/babynames/names.zip'
   fname = download_dict(url, path, 'gender_names_US')
-  
-  
 }
 
 

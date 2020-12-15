@@ -9,7 +9,7 @@
 #' @param tc a tCorpus
 #' @param hits results of feature search. see \link{search_features}.
 #' @param i instead of the hits argument, you can give the indices of features directly.
-#' @param query instead of using the hits or i arguments, a search string can be given directly. Note that this simply a convenient shorthand for first creating a hits object with \link{search_features}. If a query is given, then the ... argument is used to pass other arguments to \link{tCorpus$search_features}.
+#' @param query instead of using the hits or i arguments, a search string can be given directly. Note that this simply a convenient shorthand for first creating a hits object with \link{search_features}. If a query is given, then the ... argument is used to pass other arguments to \link{search_features}.
 #' @param code if 'i' or 'query' is used, the code argument can be used to add a code label. Should be a vector of the same length that gives the code for each i or query, or a vector of length 1 for a single label.
 #' @param ntokens an integers specifying the size of the context, i.e. the number of tokens left and right of the keyword.
 #' @param n a number, specifying the total number of hits
