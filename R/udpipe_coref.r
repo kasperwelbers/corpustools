@@ -60,10 +60,6 @@ get_coref_feats <- function(tc) {
 }
 
 
-
-
-
-
 #' @import rsyntax
 udpipe_coref <- function(tokens, min_sim=1, max_sim_dist=200, lag=50, lead=10) {
   coref_id = NULL

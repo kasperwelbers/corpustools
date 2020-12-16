@@ -4,6 +4,8 @@
 #' @usage data(sotu_texts)
 #' @format data.frame
 'sotu_texts'
+##save(sotu_texts, file='data/sotu_texts.rda', compression_level = 9)
+
 
 #' coreNLP example sentences
 #'
@@ -21,7 +23,7 @@
 
 ## run if tc methods have been updated
 ## tc_sotu_udpipe = refresh_tcorpus(tc_sotu_udpipe)
-## save(tc_sotu_udpipe, file='data/tc_sotu_udpipe.rda')
+## save(tc_sotu_udpipe, file='data/tc_sotu_udpipe.rda', compression_level = 9)
 
 #' Basic stopword lists
 #'
