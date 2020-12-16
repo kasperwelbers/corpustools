@@ -7,3 +7,4 @@ cache: packages
 before_install:
   - sudo apt-get -qq update
   - sudo apt-get install libgsl0-dev
+  - sudo apt-get install libgit2-dev
