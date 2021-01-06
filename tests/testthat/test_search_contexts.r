@@ -1,6 +1,5 @@
 testthat::context('Search Contexts')
 
-
 test_that("Query document search works", {
   text = c('Renewable fuel is better than fossil fuels!',
            'A fueled debate about fuel',

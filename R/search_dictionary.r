@@ -302,7 +302,7 @@ dictionary_lookup_tokens <- function(tokens, context, token_id, dict, mode=mode,
   if (any(case_sensitive) && !all(case_sensitive)) {
     if (length(case_sensitive) != nrow(dict)) stop('case_sensitive vector needs to be length 1 or length of dictionary')
     out1 = dictionary_lookup_tokens2(fi, dict[case_sensitive,], mode=mode, case_sensitive=T, ascii, regex_sep, use_wildcards, flatten, 1, verbose)
-    out2 = dictionary_lookup_tokens2(fi, dict[!case_sensitive,], mode=mode, case_sensitive=F, ascii, regex_sep, use_wildcards, flatten, max(fi1$hit_id)+1, verbose)
+    out2 = dictionary_lookup_tokens2(fi, dict[!case_sensitive,], mode=mode, case_sensitive=F, ascii, regex_sep, use_wildcards, flatten, max(out1$hit_id)+1, verbose)
     out = rbind(out1,out2)
   } else {
     out = dictionary_lookup_tokens2(fi, dict, mode=mode, unique(case_sensitive), ascii, regex_sep, use_wildcards, flatten, 1, verbose)
