@@ -65,7 +65,7 @@ simplify_query <- function(q, feature='', all_case_sensitive=F, all_ghost=F, all
 }
 
 query_terms <- function(q) {
-  qd = data.table::rbindlist(get_query_terms(q))
+  qd = data.table::rbindlist(get_query_terms(q), fill=T)
   unique(qd)
 }
 
@@ -74,17 +74,22 @@ get_query_terms <- function(q) {
   for (i in seq_along(q$terms)) {
     if ('terms' %in% names(q$terms[[i]])) terms = c(terms, get_query_terms(q$terms[[i]]))
     if ('term' %in% names(q$terms[[i]])) {
-      terms[['']] = data.table::data.table(term = q$terms[[i]]$term, feature = q$terms[[i]]$feature, 
-                                           case_sensitive = q$terms[[i]]$case_sensitive)
+      term = data.table::data.table(term = q$terms[[i]]$term, feature = q$terms[[i]]$feature, 
+                                    case_sensitive = q$terms[[i]]$case_sensitive)
       fq = q$terms[[i]]$flag_query
-      if (length(fq) > 0) {
-        terms[['']] = data.table::data.table(term = unlist(fq), feature = rep(names(fq), sapply(fq, length)),
-                                             case_sensitive = q$terms[[i]]$case_sensitive)        
-      }
+      if ('tokenexpr' %in% names(fq)) term$token_expr = merge_str_expressions(fq[['tokenexpr']])
+      if ('metaexpr' %in% names(fq)) term$meta_expr = merge_str_expressions(fq[['metaexpr']])
+      terms[['']] = term
     }
   }
   terms
 }  
+
+merge_str_expressions <- function(x) {
+  x = x[!x == '']
+  paste(paste0('(',x,')'), collapse=' & ')
+}
+
 
 
 get_query_code <- function(query, code=NULL) {

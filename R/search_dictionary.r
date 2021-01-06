@@ -254,7 +254,6 @@ search_dictionary <- function(tc, dict, token_col='token', string_col='string', 
   fi = dictionary_lookup(tc, data.table::data.table(string=dict[[string_col]], id = 1:nrow(dict)), regex_sep=sep, mode=mode,
                         token_col=token_col, case_sensitive=case_sensitive, standardize=standardize, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
   if (is.null(fi)) return(featureHits(NULL, data.frame()))
-  
  
   hits = tc$tokens[fi$feat_i,]
   hits$hit_id = fi$hit_id
@@ -293,15 +292,31 @@ dictionary_lookup_tokens <- function(tokens, context, token_id, dict, mode=mode,
       flatten = F ## if there are no collocations, ignore flatten_colloc == T
     }
   }
+  
+  #browser()
+  #dict
+  
+  #dict = dict[!dict$string == '*',]
+  #if (nrow(dict) == 0) return(NULL)
 
   if (any(case_sensitive) && !all(case_sensitive)) {
     if (length(case_sensitive) != nrow(dict)) stop('case_sensitive vector needs to be length 1 or length of dictionary')
-    fi1 = dictionary_lookup_tokens2(fi, dict[case_sensitive,], mode=mode, case_sensitive=T, ascii, regex_sep, use_wildcards, flatten, 1, verbose)
-    fi2 = dictionary_lookup_tokens2(fi, dict[!case_sensitive,], mode=mode, case_sensitive=F, ascii, regex_sep, use_wildcards, flatten, max(fi1$hit_id)+1, verbose)
-    rbind(fi1,fi2)
+    out1 = dictionary_lookup_tokens2(fi, dict[case_sensitive,], mode=mode, case_sensitive=T, ascii, regex_sep, use_wildcards, flatten, 1, verbose)
+    out2 = dictionary_lookup_tokens2(fi, dict[!case_sensitive,], mode=mode, case_sensitive=F, ascii, regex_sep, use_wildcards, flatten, max(fi1$hit_id)+1, verbose)
+    out = rbind(out1,out2)
   } else {
-    dictionary_lookup_tokens2(fi, dict, mode=mode, unique(case_sensitive), ascii, regex_sep, use_wildcards, flatten, 1, verbose)
+    out = dictionary_lookup_tokens2(fi, dict, mode=mode, unique(case_sensitive), ascii, regex_sep, use_wildcards, flatten, 1, verbose)
   }
+  
+  is_ast = which(dict$string == '*')
+  if (any(is_ast)) {
+    hit_id_offset = max(out$hit_id)+1
+    ast_out = data.table::data.table(hit_id = 1:nrow(fi) + hit_id_offset, dict_i = is_ast, feat_i = fi$i)
+    rbind(out, ast_out)
+  } else
+    out
+  
+  
 }
 
 dictionary_lookup_tokens2 <- function(fi, dict, mode, case_sensitive, ascii, regex_sep, use_wildcards, flatten, hit_id_offset=1, verbose=F) {
@@ -433,7 +448,7 @@ expand_wildcards <- function(query_list, voc) {
   wctreg = gsub('\\*+', '*', wctreg)
   justast = wctreg == '*'
   if (any(justast)) {
-    warning('Some terms are only an asterisk wildcard, and so could be anything. These are ignored')
+    #warning('Some terms are only an asterisk wildcard, and so could be anything. These are ignored')
     wctreg[justast] = '###IGNORE###'
   }
 
@@ -442,7 +457,6 @@ expand_wildcards <- function(query_list, voc) {
   wctreg = gsub('##ASTER##', '\\*', wctreg, fixed=T)
   wctreg = gsub('##QUEST##', '\\?', wctreg, fixed=T)
   wctreg = paste0('\\b',wctreg,'\\b')
-
 
   full_t = sapply(wctreg, grep, x=voc, value=T, simplify = F)
   nreg = sapply(full_t, length)

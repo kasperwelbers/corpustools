@@ -9,6 +9,8 @@ subset_query(
   query,
   feature = "token",
   context_level = c("document", "sentence"),
+  not = F,
+  as_ascii = F,
   window = NA
 )
 }
@@ -20,6 +22,10 @@ subset_query(
 \item{feature}{The name of the feature columns on which the query is used.}
 
 \item{context_level}{Select whether the query and subset are performed at the document or sentence level.}
+
+\item{not}{If TRUE, perform a NOT search. Return the articles/sentences for which the query is not found.}
+
+\item{as_ascii}{if TRUE, perform search in ascii.}
 
 \item{window}{If used, uses a word distance as the context (overrides context_level)}
 }

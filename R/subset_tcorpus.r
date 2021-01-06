@@ -36,6 +36,8 @@ subset.tCorpus <- function(x, subset=NULL, subset_meta=NULL, window=NULL, ...) {
 #' @param query A character string that is a query. See \link{search_contexts} for query syntax.
 #' @param feature The name of the feature columns on which the query is used.
 #' @param context_level Select whether the query and subset are performed at the document or sentence level.
+#' @param not     If TRUE, perform a NOT search. Return the articles/sentences for which the query is not found.  
+#' @param as_ascii if TRUE, perform search in ascii.
 #' @param window  If used, uses a word distance as the context (overrides context_level)
 #'
 #' @examples
@@ -47,8 +49,8 @@ subset.tCorpus <- function(x, subset=NULL, subset_meta=NULL, window=NULL, ...) {
 #' tc2$meta
 #'
 #' @export
-subset_query <- function(tc, query, feature='token', context_level=c('document','sentence'), window=NA){
-  tc$subset_query(query, feature, context_level, window, copy = T)
+subset_query <- function(tc, query, feature='token', context_level=c('document','sentence'), not=F, as_ascii=F, window=NA){
+  tc$subset_query(query, feature, context_level, window, not=not, as_ascii=as_ascii, copy = T)
 }
 
 x_filter <- function(ft, min=-Inf, max=Inf, top=NULL, bottom=NULL) {

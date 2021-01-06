@@ -10,6 +10,7 @@ search_contexts(
   code = NULL,
   feature = "token",
   context_level = c("document", "sentence"),
+  not = F,
   verbose = F,
   as_ascii = F
 )
@@ -24,6 +25,8 @@ search_contexts(
 \item{feature}{The name of the feature column}
 
 \item{context_level}{Select whether the queries should occur within while "documents" or specific "sentences". Returns results at the specified level.}
+
+\item{not}{If TRUE, perform a NOT search. Return the articles/sentences for which the query is not found.}
 
 \item{verbose}{If TRUE, progress messages will be printed}
 

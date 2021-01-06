@@ -140,5 +140,7 @@ test_that("Query search works", {
   
   tc$code_features(c('happy# \\:\\)', 'sad# \\:\\('))
   expect_equal(as.character(stats::na.omit(tc$tokens$code)), c('happy','sad'))
+  
+  
 
 })

@@ -12,7 +12,11 @@
 
 \item{window}{If used, uses a word distance as the context (overrides context_level)}
 
-\item{copy}{If true, return modified copy of data instead of subsetting the input tcorpus by reference.}
+\item{as_ascii}{if TRUE, perform search in ascii.}
+
+\item{not}{If TRUE, perform a NOT search. Return the articles/sentences for which the query is not found.}
+
+\item{copy}{If TRUE, return modified copy of data instead of subsetting the input tcorpus by reference.}
 }
 \description{
 A convenience function that searches for contexts (documents, sentences), and uses the results to \link[=subset]{subset} the tCorpus token data.

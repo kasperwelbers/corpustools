@@ -34,56 +34,45 @@ void rstrip(std::string &x){
   while (x[x.size()-1] == ' ') x.erase(x.size()-1);
 }
 
+
 List get_flag_query(std::string flag) {
-  // the sub query allows the user to specify additional conditions for a term based on any available column (e.g., POS tag, dependency relation)
-  // the format is {column1: query1, column2: query2}, where the second query is optional.
-  // the query can only contain OR statemens.
-  // (note that QueryIter is not used here)
   std::map<std::string, std::vector<std::string> > out;
-
-  std::string name = "";
-  std::string term = "";
-
-  int part = 1;
-  bool opened = false;
+  
+  bool tokenexpr = false;
+  bool metaexpr = false;
+  std::string txt = "";
   for (char &x: flag) {
     if (x == '{') {
-      if (opened) stop("Trying to open second sub-query (with '{') before closing the first:\n\t" + flag);
-      opened = true;
+      if (tokenexpr) stop("Incorrect flag (~): Trying to open another { before closing it first");
+      if (metaexpr) stop("Incorrect flag (~): Trying to open { before closing current [ ]");
+      tokenexpr = true;
       continue;
     }
-    if (!opened) {
+    if (x == '[') {
+      if (metaexpr) stop("Incorrect flag (~): Trying to open another [ before closing it first");
+      if (tokenexpr) stop("Incorrect flag (~): Trying to open [ before closing current { }");
+      metaexpr = true;
       continue;
     }
-    if (x == ':') {
-      if (part == 2) stop("double separater : between column name and sub-query:\n\t" + flag);
-      rstrip(name);
-      part = 2;
+    if (x == '}') {
+      if (!tokenexpr) stop("Incorrect flag (~): Trying to close } but have not yet opened it");
+      if (metaexpr) stop("Incorrect flag (~): Trying to close } but currently within [ ]");
+      tokenexpr = false;
+      out["tokenexpr"].push_back(txt);
+      txt = "";
       continue;
     }
-    if (part == 1) {
-      if (x == '}') stop("sub query not properly defined: forat is {column1: query1, column2: query2}.\n\t" + flag);
-      if (x == ' ' and name == "") continue;
-      name.push_back(x);
+    if (x == ']') {
+      if (!metaexpr) stop("Incorrect flag (~): Trying to close ] but have not yet opened it");
+      if (tokenexpr) stop("Incorrect flag (~): Trying to close ] but currently within {}");
+      metaexpr = false;
+      out["metaexpr"].push_back(txt);
+      txt = "";
+      continue;
     }
-    if (part == 2) {
-      if (x == ' ' or x == '}' or x == ',') {
-        if (term == "OR") term = "";
-        if (term == "AND") stop("sub query cannot contain Boolean operator AND");
-        if (term == "NOT") stop("sub query cannot contain Boolean operator NOT. For matching everything except a certain term, use the ! symbol as a prefix. e.g. {column: query1 !query2}");
-        if (term != "") out[name].push_back(term);
-        term = "";
-      } else {
-        term.push_back(x);
-      }
-      if (x == '}' or x == ',') {
-        if (!opened) stop("Trying to close sub-query (with '}') before opening:\n\t" + flag);
-        if (name == "" or out[name].size() == 0) stop("sub query not properly defined: forat is {column1: query1, column2: query2}.\n\t" + flag);
-        name = "";
-        part = 1;
-        if (x == '}') opened = false;
-      }
-    }
+    
+    if (tokenexpr) txt.push_back(x);
+    if (metaexpr) txt.push_back(x);
   }
   return wrap(out);
 }
@@ -174,7 +163,8 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
   bool all_sensitive = false; // case sensitive
   bool all_ghost = false;  // ghost terms  are taken into account in the query (e.g., x and y~i) but are not returned in the results
   List all_flag_query;
-
+  std::string meta_expr = "";
+  
   std::string relation = "";
   std::string feature = "";
 
@@ -205,6 +195,29 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
         term = term + "\\?";
       } else {
         term= term + x;
+      }
+      continue;
+    }
+    
+    // add verbatim term
+    if (x == '{') {
+      x = q.pop();
+      bool escape_verbatim_close = false;
+      while (x != '}' &! escape_verbatim_close) {
+        if (x == '{') stop("Trying to open a verbatim term within a verbatim term. In other words: opening another { before closing the current {}");
+        if (x == '*') {
+          term = term + "\\*";
+        } else if (x == '?') {
+          term = term + "\\?";
+        } else {
+          term= term + x;
+        }
+        x = q.pop();
+        if (x == '\\') {
+          escape_verbatim_close = true;
+          x = q.pop();
+        } else escape_verbatim_close = false;
+        if (q.done()) stop("Did not close a verbatim term. i.e. forgot to close a { } part.");
       }
       continue;
     }
@@ -297,5 +310,8 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
 }
 
 /*** R
-x = parse_query_cpp('test# A')
+x = parse_query_cpp('(this~{test}[that])~[ok]')
+#x
+#parse_query('(this~{test}[that])~[ok]')
+#tc$tokens[eval(parse(text=x$terms[[2]]$flag_query)),]
 */

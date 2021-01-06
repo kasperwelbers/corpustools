@@ -1,7 +1,7 @@
 prepare_model <- function(udpipe_model, local_path=getwd()) {
 
   udpipe_models = eval(formals(udpipe::udpipe_download_model)[[1]])
-
+  
   if (!udpipe_model %in% udpipe_models) {
     guess_language = gsub('-.*','',udpipe_model)
     avail_language = stringi::stri_extract(udpipe_models, regex='.*(?=-)')

@@ -41,11 +41,14 @@ std::string QueryIter::get_from(int from) {
 
 std::string QueryIter::pop_till_break () {
   std::string out = "";
-  bool escaped = false;
+  bool escaped1 = false;
+  bool escaped2 = false;
   while (!done()) {
-    if (is('{')) escaped = true;
-    if (is_break() and !escaped) break;
-    if (is('}')) escaped = false;
+    if (is('{')) escaped1 = true;
+    if (is('[')) escaped2 = true;
+    if (is_break() and !escaped1 and !escaped2) break;
+    if (is('}')) escaped1 = false;
+    if (is(']')) escaped2 = false;
     out.push_back(pop());
   }
   return out;
