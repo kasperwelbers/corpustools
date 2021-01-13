@@ -6,6 +6,8 @@
 \title{Perform rule based coreference resolution}
 \arguments{
 \item{keep_feats}{If TRUE, keep the feature columns created for the coref resolution}
+
+\item{rm_unique}{If TRUE, remove unique coref ids (i.e. if )}
 }
 \value{
 a tCorpus

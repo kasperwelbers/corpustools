@@ -25,7 +25,7 @@ feats_to_columns(keep=NULL, drop=NULL, rm_column=TRUE)
 }
 }
 \examples{
-\donttest{
+if (interactive()) {
 tc = create_tcorpus('This is a test Bobby.', udpipe_model='english-ewt')
 tc$feats_to_columns()
 tc$tokens

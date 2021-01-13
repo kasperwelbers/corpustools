@@ -21,7 +21,7 @@
 \preformatted{set_meta_name(oldname, newname)}
 }
 \examples{
-tc = create_tcorpus(sotu_texts, doc_column = 'id')
+tc = create_tcorpus(sotu_texts[1:5,], doc_column = 'id')
 
 ## change column name in token data
 tc$names ## original column names

@@ -34,5 +34,6 @@ plots a dependency tree.
 A wrapper for the \code{\link[rsyntax]{plot_tree}} function, that can be used directly on a tCorpus.
 }
 \examples{
-tc_plot_tree(tc_sotu_udpipe, token, lemma, POS)
+if (interactive()) 
+  tc_plot_tree(tc_sotu_udpipe, token, lemma, POS)
 }

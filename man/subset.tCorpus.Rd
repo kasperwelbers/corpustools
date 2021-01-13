@@ -21,7 +21,8 @@
 S3 subset for tCorpus class
 }
 \examples{
-tc = create_tcorpus(sotu_texts, doc_col='id')
+## create tcorpus of 5 bush and obama docs
+tc = create_tcorpus(sotu_texts[c(1:5,801:805),], doc_col='id')
 
 ## subset to keep only tokens where token_id <= 20 (i.e.first 20 tokens)
 tcs1 = subset(tc, token_id < 20)

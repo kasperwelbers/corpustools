@@ -38,9 +38,11 @@ udpipe_tcorpus <- function(x, ...) {
 
 #' @rdname udpipe_tcorpus
 #' @examples
-#' #tc = udpipe_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'), 
-#' #                     model = 'english-ewt')
-#' #tc$tokens
+#' if (interactive()) {
+#' tc = udpipe_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'), 
+#'                      model = 'english-ewt')
+#' tc$tokens
+#' }
 #' @export
 udpipe_tcorpus.character <- function(x, model='english-ewt', doc_id=1:length(x), meta=NULL, max_sentences=NULL, model_path=getwd(), cache=3, cores=1, batchsize=50, use_parser=T, start_end=F, verbose=T, ...) {
   if (is.null(model)) stop('model cannot be NULL')
@@ -54,8 +56,10 @@ udpipe_tcorpus.character <- function(x, model='english-ewt', doc_id=1:length(x),
 
 #' @rdname udpipe_tcorpus
 #' @examples
-#' #tc = udpipe_tcorpus(sotu_texts, doc_column='id', model = 'english-ewt')
-#' #tc$tokens
+#' if (interactive()) {
+#' tc = udpipe_tcorpus(sotu_texts[1:5,], doc_column='id', model = 'english-ewt')
+#' tc$tokens
+#' }
 #' @export
 udpipe_tcorpus.data.frame <- function(x, model='english-ewt', text_columns='text', doc_column='doc_id', max_sentences=NULL, model_path=getwd(), cache=3, cores=1, batchsize=50, use_parser=T, start_end=F, verbose=T, ...) {
   if (is.null(model)) stop('model cannot be NULL')
@@ -73,10 +77,11 @@ udpipe_tcorpus.data.frame <- function(x, model='english-ewt', text_columns='text
 #' ## It makes little sense to have full texts as factors, but it tends to happen.
 #' ## The create_tcorpus S3 method for factors is essentially identical to the
 #' ##  method for a character vector.
+#' 
 #' text = factor(c('Text one first sentence', 'Text one second sentence'))
-#' \donttest{
-#' #tc = udpipe_tcorpus(text, 'english-ewt-')
-#' #tc$tokens
+#' if (interactive()) {
+#' tc = udpipe_tcorpus(text, 'english-ewt-')
+#' tc$tokens
 #' }
 #' @export
 udpipe_tcorpus.factor <- function(x, ...) {
@@ -85,8 +90,7 @@ udpipe_tcorpus.factor <- function(x, ...) {
 
 #' @rdname udpipe_tcorpus
 #' @examples
-#'
-#' library(quanteda)
+#' # library(quanteda)
 #' # udpipe_tcorpus(data_corpus_inaugural, 'english-ewt')
 #' @export
 udpipe_tcorpus.corpus <- function(x, ...) {

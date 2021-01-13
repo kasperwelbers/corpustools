@@ -15,7 +15,8 @@
 #' @export
 #'
 #' @examples
-#' tc_plot_tree(tc_sotu_udpipe, token, lemma, POS)
+#' if (interactive()) 
+#'   tc_plot_tree(tc_sotu_udpipe, token, lemma, POS)
 tc_plot_tree <- function(tc, ..., annotation=NULL, sentence_i=1, doc_id=NULL, pdf_file=NULL) {
   rsyntax::plot_tree(tc$tokens, ..., annotation=annotation, sentence_i=sentence_i, doc_id=doc_id, pdf_file=pdf_file)  
 }

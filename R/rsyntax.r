@@ -292,11 +292,11 @@ aggregate_rsyntax <- function(tc, annotation, ..., by_col=NULL, txt=F, labels=NU
 #' @export
 #'
 #' @examples
+#' if (interactive()) {
 #' tc = tc_sotu_udpipe$copy()
 #' tc2 = transform_rsyntax(tc, udpipe_simplify)
 #' 
 #' browse_texts(tc2)
-#' if (interactive()) {
 #'    rsyntax::plot_tree(tc$tokens, token, lemma, POS, sentence_i=20)
 #'    rsyntax::plot_tree(tc2$tokens, token, lemma, POS, sentence_i=20)
 #' }

@@ -21,14 +21,16 @@
 #' @aliases udpipe_quotes
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' txt = 'Bob said that he likes Mary. John did not like that: 
 #'        "how dare he!". "It is I, John, who likes Mary!!"'
 #' tc = udpipe_tcorpus(txt, model = 'english-ewt')
 #' tc$udpipe_quotes()
-#' tc_plot_tree(tc, token, lemma, POS, annotation='quote')
-#' browse_texts(tc, rsyntax='quote', value='source')
 #' 
+#' if (interactive()) {
+#'   tc_plot_tree(tc, token, lemma, POS, annotation='quote')
+#'   browse_texts(tc, rsyntax='quote', value='source')
+#' }
 #' 
 #' ## you can provide your own lists of tqueries, or use the two 
 #' ## query generating functions to customize the specific 'verb lemma'
@@ -79,8 +81,10 @@ tCorpus$set('public', 'udpipe_quotes', function(tqueries = udpipe_quote_tqueries
 #' \donttest{
 #' tc = tc_sotu_udpipe$copy()
 #' tc$udpipe_clauses()
-#' tc_plot_tree(tc, token, lemma, POS, annotation='clause')
-#' browse_texts(tc, rsyntax='clause', value='subject')
+#' if (interactive()) {
+#'   tc_plot_tree(tc, token, lemma, POS, annotation='clause')
+#'   browse_texts(tc, rsyntax='clause', value='subject')
+#' }
 #' }
 tCorpus$set('public', 'udpipe_clauses', function(tqueries = udpipe_clause_tqueries()) {
   self$annotate_rsyntax('clause', tqueries, overwrite=T)
@@ -254,7 +258,7 @@ udpipe_spanquote_tqueries <- function(say_verbs = verb_lemma('quote')) {
 verb_lemma <- function(what = c('be', 'quote','should')) {
   what = match.arg(what)
   if (what == 'be') lemma = c('be')
-  if (what == 'quote') lemma = c("tell", "acknowledge", "admit", "affirm", "allege", "argue", "announce", "assert", "attest", "avow", "call", "claim", "comment", "concede", "confirm", "declare", "deny", "describe","exclaim", "express", "insist", "mention", "note", "post","predict", "proclaim", "promise", "reply", "refer", "remark", "report", "say", "speak", "state", "suggest", "talk", "tell", "think","warn","write")
+  if (what == 'quote') lemma = c("tell", "tweet", "acknowledge", "admit", "affirm", "allege", "argue", "announce", "assert", "attest", "avow", "call", "claim", "comment", "concede", "confirm", "declare", "deny", "describe","exclaim", "express", "insist", "mention", "note", "post","predict", "proclaim", "promise", "reply", "refer", "remark", "report", "say", "speak", "state", "suggest", "talk", "tell", "think","warn","write")
   if (what == 'should') lemma = c('should','must')
   lemma
 }

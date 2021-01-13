@@ -90,20 +90,24 @@ This is the way to create a tCorpus if you want to use the syntax analysis funct
 }
 \examples{
 ## ...
-#tc = udpipe_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'), 
-#                     model = 'english-ewt')
-#tc$tokens
-#tc = udpipe_tcorpus(sotu_texts, doc_column='id', model = 'english-ewt')
-#tc$tokens
+if (interactive()) {
+tc = udpipe_tcorpus(c('Text one first sentence. Text one second sentence', 'Text two'), 
+                     model = 'english-ewt')
+tc$tokens
+}
+if (interactive()) {
+tc = udpipe_tcorpus(sotu_texts[1:5,], doc_column='id', model = 'english-ewt')
+tc$tokens
+}
 ## It makes little sense to have full texts as factors, but it tends to happen.
 ## The create_tcorpus S3 method for factors is essentially identical to the
 ##  method for a character vector.
-text = factor(c('Text one first sentence', 'Text one second sentence'))
-\donttest{
-#tc = udpipe_tcorpus(text, 'english-ewt-')
-#tc$tokens
-}
 
-library(quanteda)
+text = factor(c('Text one first sentence', 'Text one second sentence'))
+if (interactive()) {
+tc = udpipe_tcorpus(text, 'english-ewt-')
+tc$tokens
+}
+# library(quanteda)
 # udpipe_tcorpus(data_corpus_inaugural, 'english-ewt')
 }

@@ -29,7 +29,7 @@ Modify the token/meta data.table by setting the values of one (existing or new) 
 \preformatted{set_meta(column, value, subset)}
 }
 \examples{
-tc = create_tcorpus(sotu_texts, doc_column = 'id')
+tc = create_tcorpus(sotu_texts[1:5,], doc_column = 'id')
 
 tc$tokens  ## show original
 

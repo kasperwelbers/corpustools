@@ -19,7 +19,9 @@ An off-the-shelf application of rsyntax for extracting subject-verb clauses. Des
 \donttest{
 tc = tc_sotu_udpipe$copy()
 tc$udpipe_clauses()
-tc_plot_tree(tc, token, lemma, POS, annotation='clause')
-browse_texts(tc, rsyntax='clause', value='subject')
+if (interactive()) {
+  tc_plot_tree(tc, token, lemma, POS, annotation='clause')
+  browse_texts(tc, rsyntax='clause', value='subject')
+}
 }
 }

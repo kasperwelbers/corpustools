@@ -203,7 +203,7 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
     if (x == '{') {
       x = q.pop();
       bool escape_verbatim_close = false;
-      while (x != '}' &! escape_verbatim_close) {
+      while ((x != '}') &! escape_verbatim_close) {
         if (x == '{') stop("Trying to open a verbatim term within a verbatim term. In other words: opening another { before closing the current {}");
         if (x == '*') {
           term = term + "\\*";

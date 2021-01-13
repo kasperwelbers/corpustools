@@ -94,7 +94,9 @@ is_splittable <- function(feature) {
   uf = gsub('_', ' ', uf)
   st = split_tokens(uf, NULL, F)
   level_splittable = sapply(st, length) > 1
-  level_splittable[as.numeric(feature)]
+  out = level_splittable[as.numeric(feature)]
+  out[is.na(out)] = F
+  out
 }
 
 flatten_terms_table <- function(feature, position, i=1:length(feature), sep=' |_'){

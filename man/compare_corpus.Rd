@@ -42,6 +42,7 @@ A vocabularyComparison object
 Compare tCorpus vocabulary to that of another (reference) tCorpus
 }
 \examples{
+\donttest{
 tc = create_tcorpus(sotu_texts, doc_column = 'id')
 
 tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
@@ -52,7 +53,6 @@ bush = tc$subset_meta(president == 'George W. Bush', copy=TRUE)
 comp = compare_corpus(tc, bush, 'feature')
 comp = comp[order(-comp$chi),]
 head(comp)
-\donttest{
 plot(comp)
 }
 }

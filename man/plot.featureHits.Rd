@@ -19,10 +19,10 @@
 S3 plot for featureHits class
 }
 \examples{
+\donttest{
 tc = create_tcorpus(sotu_texts, doc_column='id')
 hits = search_features(tc, c('War# war* OR army OR bomb*','Terrorism# terroris*',
                               'Economy# econom* OR bank*','Education# educat* OR school*'))
-\donttest{
 plot(hits)
 }
 }

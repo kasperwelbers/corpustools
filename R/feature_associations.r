@@ -16,6 +16,7 @@
 #' @return a data.frame
 #' @export
 #' @examples
+#' \donttest{
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #' tc$preprocess()
 #'
@@ -31,6 +32,7 @@
 #' hits = search_features(tc, '"war terror"~10')
 #' topf = feature_associations(tc, 'feature', hits = hits)
 #' head(topf, 20) ## frequent words close to the combination of "war" and "terror" within 10 words
+#' }
 feature_associations <- function(tc, feature, query=NULL, hits=NULL, query_feature='token', window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'), subset=NULL, subset_meta=NULL, include_self=F) {
   if (is.null(query) & is.null(hits)) stop('either keyword or hits has to be specified')
   if (!is.null(query) & !is.null(hits)) stop('only keyword or hits can be specified')

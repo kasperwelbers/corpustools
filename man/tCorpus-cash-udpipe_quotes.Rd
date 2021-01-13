@@ -28,14 +28,16 @@ to the two functions for generarting the default tqueries. The second (more adva
 the label for the source candidate should be 'source'.
 }
 \examples{
-\donttest{
+\dontrun{
 txt = 'Bob said that he likes Mary. John did not like that: 
        "how dare he!". "It is I, John, who likes Mary!!"'
 tc = udpipe_tcorpus(txt, model = 'english-ewt')
 tc$udpipe_quotes()
-tc_plot_tree(tc, token, lemma, POS, annotation='quote')
-browse_texts(tc, rsyntax='quote', value='source')
 
+if (interactive()) {
+  tc_plot_tree(tc, token, lemma, POS, annotation='quote')
+  browse_texts(tc, rsyntax='quote', value='source')
+}
 
 ## you can provide your own lists of tqueries, or use the two 
 ## query generating functions to customize the specific 'verb lemma'

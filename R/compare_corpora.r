@@ -14,6 +14,7 @@
 #' @return A vocabularyComparison object
 #' @export
 #' @examples
+#' \donttest{
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #'
 #' tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
@@ -24,7 +25,6 @@
 #' comp = compare_corpus(tc, bush, 'feature')
 #' comp = comp[order(-comp$chi),]
 #' head(comp)
-#' \donttest{
 #' plot(comp)
 #' }
 compare_corpus <- function(tc, tc_y, feature, smooth=0.1, min_ratio=NULL, min_chi2=NULL, is_subset=F, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
@@ -50,6 +50,7 @@ compare_corpus <- function(tc, tc_y, feature, smooth=0.1, min_ratio=NULL, min_ch
 #' @return A vocabularyComparison object
 #' @export
 #' @examples
+#' \donttest{
 #' tc = create_tcorpus(sotu_texts, doc_column = 'id')
 #'
 #' tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE)
@@ -57,13 +58,13 @@ compare_corpus <- function(tc, tc_y, feature, smooth=0.1, min_ratio=NULL, min_ch
 #' comp = compare_subset(tc, 'feature', subset_meta_x = president == 'Barack Obama')
 #' comp = comp[order(-comp$chi),]
 #' head(comp)
-#' \donttest{
+
 #' plot(comp)
-#' }
 #'
 #' comp = compare_subset(tc, 'feature', query_x = 'terroris*')
 #' comp = comp[order(-comp$chi),]
 #' head(comp, 10)
+#' }
 compare_subset <- function(tc, feature, subset_x=NULL, subset_meta_x=NULL, query_x=NULL, query_feature='token', smooth=0.1, min_ratio=NULL, min_chi2=NULL, yates_cor=c('auto','yes','no'), what=c('freq','docfreq','cooccurrence')){
   subset_x = tc$eval(substitute(subset_x), parent.frame())
   subset_meta_x = tc$eval_meta(substitute(subset_meta_x), parent.frame())

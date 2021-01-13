@@ -45,8 +45,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // coref_candidate_select
-NumericVector coref_candidate_select(LogicalVector needs_coref, CharacterVector doc_id, CharacterVector gender, CharacterVector number, CharacterVector so, CharacterVector person, CharacterVector pt, NumericVector pos, NumericVector id, LogicalVector pronoun, int lag, int lead);
-RcppExport SEXP _corpustools_coref_candidate_select(SEXP needs_corefSEXP, SEXP doc_idSEXP, SEXP genderSEXP, SEXP numberSEXP, SEXP soSEXP, SEXP personSEXP, SEXP ptSEXP, SEXP posSEXP, SEXP idSEXP, SEXP pronounSEXP, SEXP lagSEXP, SEXP leadSEXP) {
+NumericVector coref_candidate_select(LogicalVector needs_coref, CharacterVector doc_id, CharacterVector gender, CharacterVector number, CharacterVector so, CharacterVector person, CharacterVector pt, LogicalVector noun, NumericVector pos, NumericVector id, LogicalVector pronoun, int lag, int lead);
+RcppExport SEXP _corpustools_coref_candidate_select(SEXP needs_corefSEXP, SEXP doc_idSEXP, SEXP genderSEXP, SEXP numberSEXP, SEXP soSEXP, SEXP personSEXP, SEXP ptSEXP, SEXP nounSEXP, SEXP posSEXP, SEXP idSEXP, SEXP pronounSEXP, SEXP lagSEXP, SEXP leadSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -57,12 +57,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< CharacterVector >::type so(soSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type person(personSEXP);
     Rcpp::traits::input_parameter< CharacterVector >::type pt(ptSEXP);
+    Rcpp::traits::input_parameter< LogicalVector >::type noun(nounSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type pos(posSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type id(idSEXP);
     Rcpp::traits::input_parameter< LogicalVector >::type pronoun(pronounSEXP);
     Rcpp::traits::input_parameter< int >::type lag(lagSEXP);
     Rcpp::traits::input_parameter< int >::type lead(leadSEXP);
-    rcpp_result_gen = Rcpp::wrap(coref_candidate_select(needs_coref, doc_id, gender, number, so, person, pt, pos, id, pronoun, lag, lead));
+    rcpp_result_gen = Rcpp::wrap(coref_candidate_select(needs_coref, doc_id, gender, number, so, person, pt, noun, pos, id, pronoun, lag, lead));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -178,7 +179,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_corpustools_collapse_terms_cpp", (DL_FUNC) &_corpustools_collapse_terms_cpp, 4},
     {"_corpustools_uncollapse_terms_cpp", (DL_FUNC) &_corpustools_uncollapse_terms_cpp, 2},
     {"_corpustools_group_coref_ids", (DL_FUNC) &_corpustools_group_coref_ids, 3},
-    {"_corpustools_coref_candidate_select", (DL_FUNC) &_corpustools_coref_candidate_select, 12},
+    {"_corpustools_coref_candidate_select", (DL_FUNC) &_corpustools_coref_candidate_select, 13},
     {"_corpustools_do_code_dictionary", (DL_FUNC) &_corpustools_do_code_dictionary, 7},
     {"_corpustools_fast_factor_cpp", (DL_FUNC) &_corpustools_fast_factor_cpp, 2},
     {"_corpustools_AND_hit_ids_cpp", (DL_FUNC) &_corpustools_AND_hit_ids_cpp, 7},

@@ -210,7 +210,7 @@ udpipe_parse_batch <- function(i, texts, batch_i, udpipe_model, doc_ids, cache_d
 #' @name tCorpus$feats_to_columns
 #' @aliases feats_to_columms
 #' @examples
-#' \donttest{
+#' if (interactive()) {
 #' tc = create_tcorpus('This is a test Bobby.', udpipe_model='english-ewt')
 #' tc$feats_to_columns()
 #' tc$tokens

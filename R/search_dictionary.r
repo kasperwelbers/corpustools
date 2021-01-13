@@ -269,6 +269,7 @@ search_dictionary <- function(tc, dict, token_col='token', string_col='string', 
 dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', mode = c('unique_hits','features'), case_sensitive=F, standardize=T, ascii=F, use_wildcards=T, context_level=c('document','sentence'), verbose=F){
   mode = match.arg(mode)
   if (!token_col %in% tc$names) stop(sprintf('specified token column ("%s") is not a valid column in tokens', token_col))
+  if (!methods::is(tc$tokens[[token_col]], 'factor')) tc$set(token_col, fast_factor(tc$tokens[[token_col]]))
   fi = dictionary_lookup_tokens(tokens = tc$get(token_col), context = as.numeric(tc$context(context_level)), token_id=tc$tokens$token_id, dict=dict, mode=mode,
                                 regex_sep=regex_sep, case_sensitive=case_sensitive, standardize=standardize, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
   
@@ -293,19 +294,13 @@ dictionary_lookup_tokens <- function(tokens, context, token_id, dict, mode=mode,
     }
   }
   
-  #browser()
-  #dict
-  
-  #dict = dict[!dict$string == '*',]
-  #if (nrow(dict) == 0) return(NULL)
-
   if (any(case_sensitive) && !all(case_sensitive)) {
     if (length(case_sensitive) != nrow(dict)) stop('case_sensitive vector needs to be length 1 or length of dictionary')
-    out1 = dictionary_lookup_tokens2(fi, dict[case_sensitive,], mode=mode, case_sensitive=T, ascii, regex_sep, use_wildcards, flatten, 1, verbose)
-    out2 = dictionary_lookup_tokens2(fi, dict[!case_sensitive,], mode=mode, case_sensitive=F, ascii, regex_sep, use_wildcards, flatten, max(out1$hit_id)+1, verbose)
+    out1 = dictionary_lookup_tokens2(fi, dict[case_sensitive,], dict_i_ids = which(case_sensitive), mode=mode, case_sensitive=T, ascii, regex_sep, use_wildcards, flatten, 1, verbose)
+    out2 = dictionary_lookup_tokens2(fi, dict[!case_sensitive,], dict_i_ids = which(!case_sensitive), mode=mode, case_sensitive=F, ascii, regex_sep, use_wildcards, flatten, max(out1$hit_id)+1, verbose)
     out = rbind(out1,out2)
   } else {
-    out = dictionary_lookup_tokens2(fi, dict, mode=mode, unique(case_sensitive), ascii, regex_sep, use_wildcards, flatten, 1, verbose)
+    out = dictionary_lookup_tokens2(fi, dict, dict_i_ids = 1:nrow(dict), mode=mode, unique(case_sensitive), ascii, regex_sep, use_wildcards, flatten, 1, verbose)
   }
   
   is_ast = which(dict$string == '*')
@@ -319,7 +314,7 @@ dictionary_lookup_tokens <- function(tokens, context, token_id, dict, mode=mode,
   
 }
 
-dictionary_lookup_tokens2 <- function(fi, dict, mode, case_sensitive, ascii, regex_sep, use_wildcards, flatten, hit_id_offset=1, verbose=F) {
+dictionary_lookup_tokens2 <- function(fi, dict, dict_i_ids, mode, case_sensitive, ascii, regex_sep, use_wildcards, flatten, hit_id_offset=1, verbose=F) {
   ## split into 2 parts for more efficient processing of queries with both case sensitive and insensitive 
   
   levels(fi$feature) = normalize_string(levels(fi$feature), lowercase=!case_sensitive, ascii = ascii)
@@ -339,6 +334,8 @@ dictionary_lookup_tokens2 <- function(fi, dict, mode, case_sensitive, ascii, reg
   if (verbose) message("Coding features")
   
   out = do_code_dictionary(as.numeric(fi$feature), context = fi$context, token_id = fi$token_id, which = initial_i, dict = d, hit_id_offset=hit_id_offset, verbose=verbose)
+  if (is.null(out) || nrow(out) == 0) return(NULL)
+  out$dict_i = dict_i_ids[out$dict_i]
   
   if (flatten) {
     out$feat_i = fi$orig_i[out$feat_i]

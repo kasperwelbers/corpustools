@@ -29,14 +29,15 @@
 #' @aliases lda_fit
 #' @examples
 #' \donttest{
-#' tc = create_tcorpus(sotu_texts, doc_column = 'id')
-#' tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE, min_freq=10)
-#' set.seed(1)
-#' m = tc$lda_fit('feature', create_feature = 'lda', K = 5, alpha = 0.1)
-#'
-#' m
-#' topicmodels::terms(m, 10)
-#' tc$tokens
+#' if (interactive()) {
+#'   tc = create_tcorpus(sotu_texts, doc_column = 'id')
+#'   tc$preprocess('token', 'feature', remove_stopwords = TRUE, use_stemming = TRUE, min_freq=10)
+#'   set.seed(1)
+#'   m = tc$lda_fit('feature', create_feature = 'lda', K = 5, alpha = 0.1)
+#'   m
+#'   topicmodels::terms(m, 10)
+#'   tc$tokens
+#' }
 #' }
 tCorpus$set('public', 'lda_fit', function(feature, create_feature=NULL, K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250, context_level=c('document','sentence'), ...) {
   require_package('topicmodels')

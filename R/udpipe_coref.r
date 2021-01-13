@@ -5,6 +5,7 @@
 #' This is an experimental implementation of coreference resolution, aimed at coreferences of nouns and pronouns.  
 #'
 #' @param keep_feats   If TRUE, keep the feature columns created for the coref resolution
+#' @param rm_unique    If TRUE, remove unique coref ids (i.e. if )
 #'
 #' @name tCorpus$udpipe_coref
 #' @aliases udpipe_coref
@@ -68,9 +69,9 @@ udpipe_coref <- function(tokens, min_sim=1, max_sim_dist=200, lag=50, lead=10) {
   has_quote = 'quote' %in% colnames(tokens) & 'quote_id' %in% colnames(tokens) & 'quote_verbatim' %in% colnames(tokens)
   if (!has_quote) warning('For better results on identifying coferences within quotes, first apply quote extraction (see tc$annotate_quotes() method).')
   
-  
   tokens = add_gender_information(tokens)
   e = get_coref_nodes(tokens, has_quote)
+  
   ids = get_coref_ids(tokens, e, has_quote, min_sim=1, max_sim_dist=200, lag=50, lead=10)
   ids = remove_unique_coref_ids(ids)
   ids = add_coref_txt(ids, e)
@@ -101,7 +102,7 @@ get_coref_nodes <- function(tokens, has_quote) {
   pronoun = PronType = NULL
   tq1 = rsyntax::tquery(label='entity', POS = c('PRON','PROPN','X'), NOT(relation = c('flat','compound')),
                         custom_fill(relation = c('flat','compound'), POS=c('PROPN','X')))
-  tq2 = rsyntax::tquery(label='entity', POS = c('NOUN'), relation=c('nsubj','nsubj:pass','obj','obl','ROOT'),
+  tq2 = rsyntax::tquery(label='entity', POS = c('NOUN'), relation=c('nsubj','nsubj:pass','obj','obl','ROOT','nmod:poss'),
                         custom_fill(relation = c('flat','compound'), POS=c('NOUN')))
   e = rsyntax::apply_queries(tokens, tq1, tq2)
   
@@ -110,8 +111,7 @@ get_coref_nodes <- function(tokens, has_quote) {
   else
     e = rsyntax::get_nodes(tokens, e, token_cols = c('lemma','relation','Gender','Number','PronType','Person','POS','parent'))
   
-  
-  ## if propn in possessive, get relation of parent to see if its subject or object
+  ## if possessive, get relation of parent to see if its subject or object
   poss = which(e$relation == 'nmod:poss')
   if (length(poss) > 0) e$relation[poss] = tokens[list(e$doc_id[poss], e$sentence[poss], e$parent[poss]), 'relation', on=c('doc_id','sentence','token_id')]$relation
   
@@ -120,18 +120,17 @@ get_coref_nodes <- function(tokens, has_quote) {
 }
 
 
-
 get_coref_ids <- function(tokens, e, has_quote, min_sim, max_sim_dist, lag, lead) {
-  Gender = Number = relation = Person = PronType = token_id = pronoun = quote_id = quote_verbatim = NULL
+  Gender = Number = relation = Person = PronType = token_id = pronoun = quote_id = quote_verbatim = POS = NULL
   if (has_quote) 
-    ids = e[,list(gender = agg_feat(Gender), number = agg_feat(Number), so = agg_so(relation), person = agg_feat(Person), 
+    ids = e[,list(gender = agg_feat(Gender), number = agg_feat(Number), so = agg_so(relation), person = agg_feat(Person), POS = agg_feat(POS),
                   prontype = agg_feat(PronType), pos = mean(token_id), pronoun = any(pronoun, na.rm = T),
                   source_id = agg_source_quote_id(quote, quote_id), verbatim_id = agg_verbatim_quote_id(quote_verbatim, quote_id)), by=c('doc_id','.ID')]
   else 
-    ids = e[,list(gender = agg_feat(Gender), number = agg_feat(Number), so = agg_so(relation), person = agg_feat(Person), 
+    ids = e[,list(gender = agg_feat(Gender), number = agg_feat(Number), so = agg_so(relation), person = agg_feat(Person), POS = agg_feat(POS),
                   prontype = agg_feat(PronType), pos = mean(token_id), pronoun = any(pronoun, na.rm = T)), by=c('doc_id','.ID')]
   
-  ## first, resolve coreferences based on text simimlarities of nouns and proper names
+  ## first, resolve coreferences based on text similarities of nouns and proper names
   ids$id = text_sim_coref_id(e, ids, min_sim, max_sim_dist)
   ids$needs_coref = ids$pronoun
   
@@ -142,7 +141,19 @@ get_coref_ids <- function(tokens, e, has_quote, min_sim, max_sim_dist, lag, lead
   if (has_quote) ids = within_quote_coref(ids)
   
   ## fourth, find coreferences based on gender, number, subject/object (so), person (1st,2nd,3rd), pronoun type and position
-  ids$coref_id = coref_candidate_select(ids$needs_coref, as.character(ids$doc_id), as.character(ids$gender), as.character(ids$number), as.character(ids$so), as.character(ids$person), as.character(ids$prontype), ids$pos, ids$id, ids$pronoun, lag=lag, lead=lead)
+  noun = ids$POS == 'NOUN'
+  ids$coref_id = coref_candidate_select(ids$needs_coref, 
+                                                  as.character(ids$doc_id), 
+                                                  as.character(ids$gender), 
+                                                  as.character(ids$number), 
+                                                  as.character(ids$so), 
+                                                  as.character(ids$person), 
+                                                  as.character(ids$prontype), 
+                                                  noun,
+                                                  ids$pos, 
+                                                  ids$id, 
+                                                  ids$pronoun, 
+                                                  lag=lag, lead=lead)
   ids
 }
 
@@ -154,16 +165,20 @@ remove_unique_coref_ids <- function(ids) {
 }
 
 add_coref_txt <- function(ids, e) {
-  lemma = NULL
-  needs_txt = stats::na.omit(ids$coref_id[ids$pronoun])
+  lemma = NULL; nterms = NULL
+  
+  needs_txt = stats::na.omit(ids$coref_id[ids$pronoun | ids$POS == 'NOUN'])
   id_txt = merge(e[e$POS %in% c('PROPN','NOUN'), c('.ID','lemma','POS')], 
                  ids[!is.na(ids$coref_id) & ids$coref_id %in% needs_txt & !ids$pronoun,c('.ID','coref_id')], by='.ID')
-  data.table::setorderv(id_txt, 'POS', -1)   ## prefer PROPN over NOUN if both match
+  id_txt[, nterms := length(coref_id), by=c('.ID')]
+  data.table::setorderv(id_txt, c('nterms','POS'), -1)   ## prefer PROPN over NOUN if both match and longer terms over shorter
   uids = unique(id_txt, by = 'coref_id')$.ID
   id_txt = id_txt[list(.ID = uids),,on='.ID']
   id_txt = id_txt[,list(coref_txt = paste(lemma, collapse=' ')), by='coref_id']
-  id_txt$pronoun = T
-  ids = merge(ids, id_txt, by=c('coref_id','pronoun'), all.x=T)
+  ids$needs_txt = ids$pronoun | ids$POS == 'NOUN'
+  id_txt$needs_txt = T  
+  ids = merge(ids, id_txt, by=c('coref_id','needs_txt'), all.x=T)
+  ids
 }
 
 agg_feat <- function(x) {
@@ -200,7 +215,7 @@ agg_verbatim_quote_id <- function(quote_verbatim, quote_id) {
 text_sim_coref_id <- function(e, ids, min_sim, max_sim_dist) {
   ## get terms and ids for non pronouns
   use_term = e$POS %in% c("NOUN","PROPN","X")
-  term = as.character(e$lemma[use_term])
+  term = tolower(as.character(e$lemma[use_term]))
   #term[e$POS[use_term] == 'NOUN'] = tolower(term[e$POS[use_term] == 'NOUN'])
   id = e$.ID[use_term]
   voc = unique(term)
@@ -216,7 +231,6 @@ text_sim_coref_id <- function(e, ids, min_sim, max_sim_dist) {
   data.table::setorderv(sim, c('i','j'))
   sim_pos_dist = abs(ids$pos[sim$i+1] - ids$pos[sim$j+1])
   sim = sim[sim_pos_dist <= max_sim_dist,]
-  
   group_coref_ids(sim$i, sim$j, nrow(ids))
 }
 
@@ -270,6 +284,7 @@ syntax_coref_nodes <- function(tokens) {
                         children(POS = 'PRON', relation = 'nmod:poss', label='coref', fill=F, BREAK(NOT(relation = c('nsubj','nsubj:pass','nmod:poss'))), depth=Inf)))
   
   nodes1 = rsyntax::apply_queries(tokens, tq1, tq2, tq3, fill=F)
+  if (nrow(nodes1) == 0) return(nodes1)
   nodes1 = merge(nodes1[nodes1$.ROLE == 'name', c('doc_id','sentence','.ID','token_id')],
                  nodes1[nodes1$.ROLE == 'coref', c('doc_id','sentence','.ID','token_id')], by = c('doc_id','sentence','.ID'))
   data.table::setnames(nodes1, c('token_id.x','token_id.y'), c('name','coref'))

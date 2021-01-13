@@ -108,7 +108,7 @@ NULL
 #' @name tCorpus$set
 #' @aliases tCorpus$set_meta set set_meta
 #' @examples
-#' tc = create_tcorpus(sotu_texts, doc_column = 'id')
+#' tc = create_tcorpus(sotu_texts[1:5,], doc_column = 'id')
 #'
 #' tc$tokens  ## show original
 #'
@@ -216,7 +216,7 @@ NULL
 #' @name tCorpus$set_name
 #' @aliases tCorpus$set_meta_name set_name set_meta_name
 #' @examples
-#' tc = create_tcorpus(sotu_texts, doc_column = 'id')
+#' tc = create_tcorpus(sotu_texts[1:5,], doc_column = 'id')
 #'
 #' ## change column name in token data
 #' tc$names ## original column names
@@ -294,7 +294,7 @@ NULL
 #' @name tCorpus$subset
 #' @aliases tCorpus$subset_meta subset subset_meta
 #' @examples
-#' tc = create_tcorpus(sotu_texts, doc_column = 'id')
+#' tc = create_tcorpus(sotu_texts[1:5,], doc_column = 'id')
 #' tc$n ## original number of tokens
 #'
 #' ## select only first 20 tokens per document
@@ -310,14 +310,13 @@ NULL
 #'
 #' ## you can filter on term frequency and document frequency with the freq_filter() and
 #' ## docfreq_filter() functions
-#' tc = create_tcorpus(sotu_texts, doc_column = 'id')
-#' tc$subset( freq_filter(token, min = 20, max = 100) )
+#' tc = create_tcorpus(sotu_texts[c(1:5,800:805),], doc_column = 'id')
+#' tc$subset( freq_filter(token, min = 2, max = 4) )
 #' tc$tokens
 #'
 #' ###### subset can be used for meta data by using the subset_meta argument, or the subset_meta method
 #' tc$n_meta
+#' tc$meta
 #' tc$subset(subset_meta = president == 'Barack Obama')
-#' tc$n_meta
-#' tc$subset_meta(date == '2013-02-12')
 #' tc$n_meta
 NULL

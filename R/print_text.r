@@ -32,13 +32,13 @@
 #' @export
 #'
 #' @examples
+#' \donttest{
 #' tc = create_tcorpus(sotu_texts, doc_column='id')
 #' 
 #' queries = c('War# war soldier* weapon*',
 #'             'Economy# econom* market* tax*')
 #' tc$code_features(queries)
 #' 
-#' \donttest{
 #' browse_texts(tc, category='code')
 #' }
 browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('first','random'), header='',

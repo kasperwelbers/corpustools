@@ -295,11 +295,11 @@ ud_reindex_sentences <- function(tokens) {
 #' @export
 #' @import rsyntax
 #' @examples 
+#' if (interactive()) {
 #' tc = tc_sotu_udpipe$copy()
 #' tc2 = transform_rsyntax(tc, udpipe_simplify)
 #' 
 #' browse_texts(tc2)
-#' if (interactive()) {
 #'    rsyntax::plot_tree(tc_sotu_udpipe$tokens, token, lemma, POS, sentence_i=20)
 #'    rsyntax::plot_tree(tc2$tokens, token, lemma, POS, sentence_i=20)
 #' }
@@ -319,18 +319,4 @@ udpipe_simplify <- function(tokens, split_conj=T, rm_punct=F, new_sentences=F) {
   if (rm_punct) tokens = chop(tokens, relation = 'punct')
   if (new_sentences) tokens = ud_reindex_sentences(tokens)
   tokens
-}
-
-function() {
-  txt = c('Trump attacked Biden, both by lawsuits or stones')
-  
-  tc = udpipe_tcorpus(data.frame(text=txt))
-  tc_plot_tree(tc, sentence_i = 1)
-  tc_plot_tree(tc, sentence_i = 2)
-  
-  
-  tc2 = transform_rsyntax(tc, udpipe_simplify, rm_punct=T)  
-  tc_plot_tree(tc2, sentence_i = 1)
-  tc_plot_tree(tc2, sentence_i = 2)
-  
 }

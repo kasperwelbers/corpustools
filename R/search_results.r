@@ -155,11 +155,11 @@ summary.contextHits <- function(object, ...){
 #'
 #' @method plot contextHits
 #' @examples
+#' \dontrun{
 #' tc = create_tcorpus(sotu_texts, doc_column='id')
 #' hits = search_contexts(tc, c('War# war* OR army OR bomb*','Terrorism# terroris*',
 #'                               'Economy# econom* OR bank*','Education# educat* OR school*'))
 #'
-#' \dontrun{
 #' plot(hits)
 #' }
 #' @export
@@ -176,10 +176,10 @@ plot.contextHits <- function(x, min_weight=0, backbone_alpha=NA, ...){
 #'
 #' @method plot featureHits
 #' @examples
+#' \donttest{
 #' tc = create_tcorpus(sotu_texts, doc_column='id')
 #' hits = search_features(tc, c('War# war* OR army OR bomb*','Terrorism# terroris*',
 #'                               'Economy# econom* OR bank*','Education# educat* OR school*'))
-#' \donttest{
 #' plot(hits)
 #' }
 #' @export
