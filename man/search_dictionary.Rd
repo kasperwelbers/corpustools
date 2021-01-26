@@ -14,7 +14,6 @@ search_dictionary(
   mode = c("unique_hits", "features"),
   case_sensitive = F,
   use_wildcards = T,
-  standardize = T,
   ascii = F,
   verbose = F
 )
@@ -47,8 +46,6 @@ The features mode does not delete duplicates.}
 \item{case_sensitive}{logical, should lookup be case sensitive?}
 
 \item{use_wildcards}{Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used}
-
-\item{standardize}{If true, standardize how terms in the corpus and dictionary are tokenized. This prevens mismatching in cases like collocations ("Barack_Obama" versus "Barack" "Obama") and emoticons}
 
 \item{ascii}{If true, convert text to ascii before matching}
 

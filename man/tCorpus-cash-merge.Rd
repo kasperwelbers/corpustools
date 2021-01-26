@@ -13,6 +13,8 @@
 \item{by.x}{The names of the columns used in tokens/meta}
 
 \item{by.y}{The names of the columns used in df}
+
+\item{columns}{Optionally, specify which specific columns from df to merge to tokens}
 }
 \description{
 Add columns to token/meta by merging with a data.frame df. Only possible for unique matches (i.e. the columns specified in by are unique in df)

@@ -89,6 +89,7 @@ lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','
   i = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
   hit_list = vector('list', length(qlist$terms))
   
+  
   nterms = length(qlist$terms)
   for (j in 1:nterms) {
     q = qlist$terms[[j]]
@@ -115,6 +116,7 @@ lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','
         jhits[, .ghost := q$ghost]
         if (qlist$relation %in% c('proximity','sequence','AND')) jhits[,.group_i := paste0(j, '_')] else jhits[,.group_i := ''] ## for keeping track of nested multi word queries
       }
+      
       #print(as.numeric(difftime(Sys.time(), st, units = 'secs')))
     }
     if (is.null(jhits)) {
@@ -138,19 +140,26 @@ lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','
   if (qlist$relation %in% c('OR', '')) get_OR_hit(hits)
   if (qlist$relation == 'sequence') get_sequence_hit(hits, seq_length = nterms, subcontext=subcontext) ## assign hit ids to valid sequences
   
+  
   hits = subset(hits, hit_id > 0)
   
   if (nrow(hits) == 0) return(NULL)
   
   if (level == 1 && mode == 'unique_hits') hits = remove_duplicate_hit_id(hits, keep_longest)
   if (level == 1 && mode == 'contexts') hits = unique(subset(hits, select=c('doc_id',subcontext)))
-  
+  #print(nrow(hits))  
   return(hits)
 }
 
 lookup <- function(dict_results, terms, feature='token', case_sensitive=TRUE, subcontext=NULL, only_context=F){
   if (!feature %in% names(dict_results))
     return(NULL)
+  
+  dupl = duplicated(terms)
+  if (any(dupl)) {
+    terms = terms[!dupl]
+    if (length(case_sensitive) > 1) case_sensitive = case_sensitive[!dupl]
+  }
   
   dr = dict_results[[feature]]
   f = data.table::data.table(term=terms, case_sensitive=case_sensitive)
@@ -202,7 +211,8 @@ get_NOT_hit <- function(d, n_unique, subcontext=NULL, group_i=NULL, replace=NULL
   if (!is.null(group_i)) group_i = d[[group_i]]
   if (!is.null(replace)) replace = d[[replace]]
   .hit_id = AND_hit_ids_cpp(as.numeric(d[['doc_id']]), as.numeric(subcontext), as.numeric(d[['.term_i']]), n_unique, as.character(group_i), replace, feature_mode)
-  if (!'hit_id' %in% colnames(d)) d[, hit_id := 1:nrow(d)]
+  if (!'hit_id' %in% colnames(d)) d[, hit_id := integer()]
+  if (any(is.na(d$hit_id))) d[, hit_id := ifelse(is.na(hit_id), 1:nrow(d), hit_id)]
   d[!(d$.term_i == 1 & .hit_id == 0), hit_id := 0]
 }
 
@@ -218,7 +228,6 @@ get_OR_hit <- function(d) {
     if (all(isna)) na_ids = 1:length(.hit_id) else na_ids = 1:sum(isna) + max(.hit_id, na.rm = T)
     .hit_id[isna] = na_ids
   }
-
   if ('.term_i' %in% colnames(d)) .hit_id = global_id(d$.term_i, .hit_id)
   d[,hit_id := .hit_id]
 }

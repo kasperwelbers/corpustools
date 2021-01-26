@@ -39,8 +39,6 @@ then after concatenating ASCII emoticons, the tokens will be c(":)", "yay") with
 
 \item{use_wildcards}{Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used}
 
-\item{standardize}{If true, standardize how terms in the corpus and dictionary are tokenized. This prevens mismatching in cases like collocations ("Barack_Obama" versus "Barack" "Obama") and emoticons}
-
 \item{ascii}{If true, convert text to ascii before matching}
 
 \item{verbose}{If true, report progress}

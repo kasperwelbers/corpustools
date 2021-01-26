@@ -284,25 +284,32 @@ tCorpus <- R6::R6Class("tCorpus",
        invisible(self)
      },
 
-
-    merge = function(df, by=NULL, by.x=NULL, by.y=NULL) {
-      if (is.null(by) && is.null(by.x) && is.null(by.y)) return(invisible(self))
+    merge = function(df, by=NULL, by.x=NULL, by.y=NULL, columns=NULL) {
+      if (is.null(by) && is.null(by.x) && is.null(by.y)) by = intersect(self$names, colnames(df))
       if (!all(c(by,by.x) %in% self$names)) stop('Not all columns specified in by / by.x exist in $tokens')
-      if (!all(c(by,by.x) %in% colnames(df))) stop('Not all columns specified in by / by.y exist in df')
+      if (!all(c(by,by.y) %in% colnames(df))) stop('Not all columns specified in by / by.y exist in df')
       
       if (methods::is(df, 'data.table'))
         if (any(duplicated(df[,c(by,by.y), with=F]))) stop('Columns specified in by (or by.y) must be unique in df')
       else
         if (any(duplicated(df[,c(by,by.y)]))) stop('Columns specified in by (or by.y) must be unique in df')
       
+      if (!is.null(columns)) {
+        if (!is.null(by)) 
+          df = df[,c(by, columns)] 
+        else
+          df = df[,c(by.y, columns)]
+      }
+        
       cnames = setdiff(colnames(df), c(by,by.x,by.y))
       in_tc = intersect(cnames, self$names)
       if (length(in_tc) > 0) stop(sprintf('DUPLICATE COLUMN NAMES: Some columns that are to be merged have names that are already used in $tokens (%s)', paste(in_tc, collapse=', ')))
       
-      if (!is.null(by))
+      if (!is.null(by)) {
         self$tokens = merge(self$tokens, data.table::as.data.table(df), by=by, all.x=T)
-      else 
+      } else { 
         self$tokens = merge(self$tokens, data.table::as.data.table(df), by.x=by.x, by.y=by.y, all.x=T)
+      }
       self$validate_tokens()
       invisible(self)
     },

@@ -29,7 +29,6 @@
 #'                        If a quanteda dictionary is given, the label for the match is in the column named [column].
 #'                        If a dictionary has multiple levels, these are added as [column]_l[level].
 #' @param use_wildcards   Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used.
-#' @param standardize     If true, standardize how terms in the corpus and dictionary are tokenized. This prevens mismatching in cases like collocations ("Barack_Obama" versus "Barack" "Obama") and emoticons
 #'                        (":-)" versus ":" "-" ")"). This is only behind the scenes for the dictionary lookup, and will not affect tokenization in the corpus.
 #' @param ascii           If true, convert text to ascii before matching
 #' @param verbose         If true, report progress
@@ -45,17 +44,17 @@
 #' tc$code_dictionary(dict)
 #' tc$tokens
 #' @aliases code_dictionary
-tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', string_col='string', sep=' ', case_sensitive=F, column='code', use_wildcards=T, standardize=T, ascii=F, verbose=F){
+tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', string_col='string', sep=' ', case_sensitive=F, column='code', use_wildcards=T, ascii=F, verbose=F){
   if (methods::is(dict, 'dictionary2')) dict = melt_quanteda_dict(dict, column = column)
   if (!methods::is(dict, 'data.frame')) stop('dict has to be a data.frame or a quanteda dictionary2 class')
   if (!string_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', string_col))
-
+  
   column_id = paste0(column, '_id')
   if (column_id %in% self$names) self$delete_columns(column_id)
 
   fi = dictionary_lookup(self, data.table::data.table(string=dict[[string_col]], id = 1:nrow(dict), stringsAsFactors = F), regex_sep = sep,
                         token_col=token_col, case_sensitive=case_sensitive,
-                        standardize=standardize, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
+                        standardize=T, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
   
   if (is.null(fi)) {
     self$set(column_id, numeric())
@@ -116,7 +115,6 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', strin
 #'                        then after concatenating ASCII emoticons, the tokens will be c(":)", "yay") with token_id c(1,2)
 #' @param case_sensitive  logical, should lookup be case sensitive?
 #' @param use_wildcards   Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used
-#' @param standardize     If true, standardize how terms in the corpus and dictionary are tokenized. This prevens mismatching in cases like collocations ("Barack_Obama" versus "Barack" "Obama") and emoticons
 #' @param ascii           If true, convert text to ascii before matching
 #' @param verbose         If true, report progress
 #'
@@ -130,10 +128,10 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', strin
 #' tc$tokens
 #'
 #' @aliases replace_dictionary
-tCorpus$set('public', 'replace_dictionary', function(dict, token_col='token', string_col='string', code_col='code', replace_cols=token_col, sep=' ', code_from_features=F, code_sep='_', decrement_ids=T, case_sensitive=F, use_wildcards=T, standardize=T, ascii=F, verbose=F){
+tCorpus$set('public', 'replace_dictionary', function(dict, token_col='token', string_col='string', code_col='code', replace_cols=token_col, sep=' ', code_from_features=F, code_sep='_', decrement_ids=T, case_sensitive=F, use_wildcards=T, ascii=F, verbose=F){
   m = search_dictionary(self, dict, token_col=token_col, string_col=string_col, code_col=code_col, sep=sep,
                         case_sensitive=case_sensitive, use_wildcards=use_wildcards,
-                        standardize=standardize, ascii=ascii, verbose=verbose)
+                        ascii=ascii, verbose=verbose)
   m = m$hits
 
   if (nrow(m) == 0) return(invisible(self))
@@ -230,7 +228,6 @@ melt_quanteda_dict <- function(dict, column='code', .index=NULL) {
 #'                        The features mode does not delete duplicates.
 #' @param case_sensitive  logical, should lookup be case sensitive?
 #' @param use_wildcards   Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used
-#' @param standardize     If true, standardize how terms in the corpus and dictionary are tokenized. This prevens mismatching in cases like collocations ("Barack_Obama" versus "Barack" "Obama") and emoticons
 #' @param ascii           If true, convert text to ascii before matching
 #' @param verbose         If true, report progress
 #'
@@ -241,7 +238,7 @@ melt_quanteda_dict <- function(dict, column='code', .index=NULL) {
 #' dict = data.frame(string = c('this is', 'for a', 'not big enough'), code=c('a','c','b'))
 #' tc = create_tcorpus(c('this is a test','This town is not big enough for a test'))
 #' search_dictionary(tc, dict)$hits
-search_dictionary <- function(tc, dict, token_col='token', string_col='string', code_col='code', sep=' ', mode = c('unique_hits','features'), case_sensitive=F, use_wildcards=T, standardize=T, ascii=F, verbose=F){
+search_dictionary <- function(tc, dict, token_col='token', string_col='string', code_col='code', sep=' ', mode = c('unique_hits','features'), case_sensitive=F, use_wildcards=T, ascii=F, verbose=F){
   hit_id = NULL
   mode = match.arg(mode)
   
@@ -252,9 +249,9 @@ search_dictionary <- function(tc, dict, token_col='token', string_col='string', 
   if (!code_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', code_col))
 
   fi = dictionary_lookup(tc, data.table::data.table(string=dict[[string_col]], id = 1:nrow(dict)), regex_sep=sep, mode=mode,
-                        token_col=token_col, case_sensitive=case_sensitive, standardize=standardize, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
+                        token_col=token_col, case_sensitive=case_sensitive, standardize=T, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
   if (is.null(fi)) return(featureHits(NULL, data.frame()))
- 
+  
   hits = tc$tokens[fi$feat_i,]
   hits$hit_id = fi$hit_id
   hits$code = dict[[code_col]][as.numeric(fi$dict_i)]
@@ -281,7 +278,9 @@ dictionary_lookup_tokens <- function(tokens, context, token_id, dict, mode=mode,
   if (!'id' %in% colnames(dict)) stop('Dictionary must have column named "id"')
   
   if (verbose) message("Preparing features")
+
   fi = data.table::data.table(feature=tokens, i=1:length(tokens), context = context, token_id=token_id)
+
 
   if (standardize) {
     dict = standardize_dict_term_spacing(dict, use_wildcards)
@@ -293,6 +292,7 @@ dictionary_lookup_tokens <- function(tokens, context, token_id, dict, mode=mode,
       flatten = F ## if there are no collocations, ignore flatten_colloc == T
     }
   }
+
   
   if (any(case_sensitive) && !all(case_sensitive)) {
     if (length(case_sensitive) != nrow(dict)) stop('case_sensitive vector needs to be length 1 or length of dictionary')
@@ -323,8 +323,6 @@ dictionary_lookup_tokens2 <- function(fi, dict, dict_i_ids, mode, case_sensitive
   if (verbose) message("Preparing dictionary")
   d = collapse_dict(dict$string, regex_sep, use_wildcards, case_sensitive, ascii, levels(fi$feature))
   if (!'terms' %in% names(d)) return(NULL)
-  
-  collapse_dict(dict$string, regex_sep, use_wildcards, case_sensitive, ascii, levels(fi$feature))
   
   data.table::setindexv(fi, 'feature')
   first_terms = levels(fi$feature)[d$terms_i]
@@ -362,6 +360,7 @@ collapse_dict <- function(string, regex_sep, use_wildcards, case_sensitive, asci
   dict$string = gsub(first_or_last, '', dict$string)
 
   sn = stringi::stri_split(dict$string, regex=regex_sep)
+  
   if (use_wildcards && any(grepl('[?*]', dict$string))) {
     sn = expand_wildcards(sn, feature_levels)
     names(sn) = floor(as.numeric(names(sn)))
@@ -432,10 +431,7 @@ expand_wildcards <- function(query_list, voc) {
     return(query_list)
   }
   wct = unique(ql$t[ql$is_wc])
-
-
   wctreg = gsub('([^a-zA-Z0-9\\*\\?])', '\\\\\\1', wct)
-
 
   ## find more elegant solution for not matching escaped * and ?
   wctreg = gsub('\\\\\\*', '##ASTER##', wctreg)
@@ -448,16 +444,25 @@ expand_wildcards <- function(query_list, voc) {
     #warning('Some terms are only an asterisk wildcard, and so could be anything. These are ignored')
     wctreg[justast] = '###IGNORE###'
   }
-
+  
   wctreg = gsub('\\*', '.*', wctreg)
   wctreg = gsub('\\?', '.{0,1}', wctreg)
   wctreg = gsub('##ASTER##', '\\*', wctreg, fixed=T)
   wctreg = gsub('##QUEST##', '\\?', wctreg, fixed=T)
-  wctreg = paste0('\\b',wctreg,'\\b')
-
-  full_t = sapply(wctreg, grep, x=voc, value=T, simplify = F)
+  
+  ## old approach (just perform regex on all terms)
+  #wctreg = paste0('\\b',wctreg,'\\b') 
+  #full_t = sapply(wctreg, grep, x=voc, value=T, simplify = F)
+  
+  ## new (faster) approach (possible due to the standardize step now implemented in dictionary_lookup)
+  ## seems to give same results. Only exception is that it really relies on what is split by split_tokens (which might be a good thing)
+  ## For instance, "stupid.dot" would before match "dot" because \\b considered the middel dot as a word boundary.
+  ## now it doesn't because split_tokens (based on stringi split boundaries) doesn't consider this as two separate tokens
+  wctreg = paste0('^',wctreg,'$')
+  full_t = fast_wildcard_voc_match(wctreg, voc, n_bin_search = 3)
+  
   nreg = sapply(full_t, length)
-
+  
   if (sum(nreg) > 0) nr = (1:sum(nreg)) + 0 else nr = numeric()
   full_t = data.table(t = rep(wct, nreg),
                       full_t = unlist(full_t),
@@ -473,6 +478,49 @@ expand_wildcards <- function(query_list, voc) {
   has_na = sapply(out, anyNA)
   out[!has_na]
 }
+
+fast_wildcard_voc_match <- function(reg, voc, n_bin_search=3) {
+  ## create an index for every term in vocabulary where key is the separate columns for the first n_bin_search characters
+  ## these enable binary search on first [n_bin_search] terms of the fixed part of a regex
+  voc_index = data.table::data.table(voc=voc, n=nchar(voc))
+  for (i in 1:n_bin_search) voc_index[,(paste0('voc',i)) := substr(voc, i,i)]
+  data.table::setkeyv(voc_index, paste0('voc', 1:n_bin_search))
+  
+  ## get the 'fixed' part of a regex term (only before a wildcard)
+  fixedpart = gsub('\\\\b','',reg)
+  fixedpart = gsub('^\\^|\\$$', '', fixedpart)
+  fixedpart = gsub('\\.[{*].*', '', fixedpart)
+  fixedpart = gsub('\\\\','', fixedpart)
+  n = nchar(fixedpart)
+  
+  ## for every term create a list of the first [n_bin_search] terms from the fixed part
+  bin_search_part = substr(fixedpart, 1, n_bin_search)
+  qlists = stringi::stri_split_boundaries(bin_search_part, type='character')
+  
+  ## use multithreading
+  cl = data.table::getDTthreads()
+  if (.Platform$OS.type %in% c("windows")) {
+    cl = parallel::makeCluster(cl)
+    on.exit(parallel::stopCluster(cl))
+  }
+ 
+  pbapply::pboptions(type='none')
+  full_t = pbapply::pbsapply(1:length(reg), cl=cl, FUN=function(i) {
+    qlist = as.list(qlists[[i]])             ## get first chars. transform to list for use in data.table search
+    subvoc = voc_index
+    if (length(qlist) > 0) 
+      subvoc = subvoc[qlist, nomatch=0]      ## first filter voc with binary search on first part
+    subvoc = subvoc$voc[subvoc$n >= n[i]]    ## also ignore voc terms that are shorter than fixed part of regex
+    if (length(subvoc) > 0)
+      subvoc[stringi::stri_detect(subvoc, regex = reg[i])]
+    else
+      character()
+  }, simplify = F)
+  full_t[sapply(full_t, length) > 0]
+  names(full_t) = reg
+  full_t
+}
+
 
 code_from_features <- function(hits, collapse_sep='_') {
   feature = NULL; hit_id = NULL; group = NULL; code = NULL

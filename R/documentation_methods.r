@@ -145,6 +145,7 @@ NULL
 #' @param by        The columns to match on. Must exist in both tokens/meta and df. If the columns in tokens/meta and df have different names, use by.x and by.y
 #' @param by.x      The names of the columns used in tokens/meta
 #' @param by.y      The names of the columns used in df
+#' @param columns   Optionally, specify which specific columns from df to merge to tokens
 #'
 #' @name tCorpus$merge
 #' @aliases tCorpus$merge merge merge_meta

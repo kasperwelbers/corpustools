@@ -82,6 +82,10 @@ test_that("tCorpus class works", {
   df = data.frame(doc_id=c('a','b'), sentence=1, token_id=c(3,4), test3=c('A','B'))
   tc$merge(df, by=c('doc_id', 'sentence', 'token_id'))
   expect_equal(as.numeric(table(tc$tokens$test3)), c(1,1))
+
+  df = data.frame(document_id=c('a','b'), test=c(1,2), test4=c('A','B'))
+  tc$merge(df, by.x = 'doc_id', by.y='document_id', columns='test4')
+  expect_equal(as.numeric(table(tc$tokens$test)), c(14,5))
   
   meta = data.frame(doc_id=c('a','b'), test=c('A','B'))
   tc$merge_meta(meta, by='doc_id')
@@ -90,5 +94,7 @@ test_that("tCorpus class works", {
   meta = data.frame(source=c('aa'), test2=c('A'))
   tc$merge_meta(meta, by='source')
   expect_equal(as.numeric(table(tc$meta$test2)), c(1))
+  
+  
   
 })

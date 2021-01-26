@@ -115,7 +115,7 @@ udpipe_parse <- function(texts, udpipe_model, udpipe_model_path, udpipe_cores, c
       cl = udpipe_cores
   } else cl = NULL
 
-  tokens = pbapply::pblapply(1:n, cl=cl, FUN=udpipe_parse_batch,
+  tokens = pbapply::pblapply(1:n, cl=cl, FUN=udpipe_parse_batch, 
                    texts=texts, batch_i=batch_i, udpipe_model=m,
                    doc_ids=doc_ids, cache_dir=cache_dir, cached_batches=cached_batches,
                    use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens)

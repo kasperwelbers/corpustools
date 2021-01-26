@@ -26,9 +26,7 @@ In some dictionaries, however, it might say "Barack+Obama", so in that case sep 
 If a quanteda dictionary is given, the label for the match is in the column named [column].
 If a dictionary has multiple levels, these are added as [column]_l[level].}
 
-\item{use_wildcards}{Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used.}
-
-\item{standardize}{If true, standardize how terms in the corpus and dictionary are tokenized. This prevens mismatching in cases like collocations ("Barack_Obama" versus "Barack" "Obama") and emoticons
+\item{use_wildcards}{Use the wildcards * (any number including none of any character) and ? (one or none of any character). If FALSE, exact string matching is used.
 (":-)" versus ":" "-" ")"). This is only behind the scenes for the dictionary lookup, and will not affect tokenization in the corpus.}
 
 \item{ascii}{If true, convert text to ascii before matching}
