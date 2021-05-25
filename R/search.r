@@ -18,10 +18,11 @@ get_dict_results <- function(tc, queries, context_level, as_ascii, feature, verb
     if (!is.null(fi)) if ('meta_expr' %in% colnames(queries$query_terms)) fi = meta_expression_filter(tc, fi, queries)
 
     if (!is.null(fi)) {
-      fi = unique(fi, by='hit_id')
+      #fi = unique(fi, by='hit_id')
+      fi = fi[,list(feat_i=min(feat_i), ngram=(1 + max(feat_i) - min(feat_i))), by=c('hit_id','dict_i')]
       fi[, hit_id := NULL]
       
-      fi = cbind(hit_id=fi$hit_id, dict[fi$dict_i,c('term','case_sensitive')], tc$tokens[fi$feat_i,c(context_cols,'token_id',feature),with=F])
+      fi = cbind(dict[fi$dict_i,c('term','case_sensitive')], tc$tokens[fi$feat_i,c(context_cols,'token_id'),with=F], ngram=fi$ngram)
       data.table::setkeyv(fi, c('term','case_sensitive'))
     }
     dict_results[[i]] = fi
@@ -89,7 +90,6 @@ lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','
   i = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
   hit_list = vector('list', length(qlist$terms))
   
-  
   nterms = length(qlist$terms)
   for (j in 1:nterms) {
     q = qlist$terms[[j]]
@@ -98,6 +98,7 @@ lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','
       jhits = lucene_like(dict_results, q, mode=mode, subcontext=subcontext, parent_relation=qlist$relation, keep_longest=keep_longest, level=level+1)
       
       if (nterms == 1) {
+        if (level == 1 && mode == 'unique_hits' & !is.null(jhits)) jhits = remove_duplicate_hit_id(jhits, keep_longest)
         if (level == 1 && mode == 'contexts' & !is.null(jhits)) jhits = unique(subset(jhits, select=c('doc_id',subcontext)))
         return(jhits)
       }
@@ -116,6 +117,7 @@ lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','
         jhits[, .ghost := q$ghost]
         if (qlist$relation %in% c('proximity','sequence','AND')) jhits[,.group_i := paste0(j, '_')] else jhits[,.group_i := ''] ## for keeping track of nested multi word queries
       }
+
       
       #print(as.numeric(difftime(Sys.time(), st, units = 'secs')))
     }
@@ -130,10 +132,8 @@ lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','
   
   hits = data.table::rbindlist(hit_list, fill=TRUE)
   if (nrow(hits) == 0) return(NULL)
-  
   feature_mode = mode == 'features'
   if (parent_relation %in% c('AND','proximity','sequence')) feature_mode = TRUE ## with these parents, hit_id will be recalculated, and all valid features should be returned
-  
   if (qlist$relation %in% c('AND')) get_AND_hit(hits, n_unique = nterms, subcontext=subcontext, group_i = '.group_i', replace = '.ghost', feature_mode=feature_mode) ## assign hit_ids to groups of tokens within the same context
   if (qlist$relation %in% c('NOT')) get_NOT_hit(hits, n_unique = nterms, subcontext=subcontext, group_i = '.group_i', replace = '.ghost', feature_mode=T)
   if (qlist$relation == 'proximity') get_proximity_hit(hits, n_unique = nterms, window=qlist$window, subcontext=subcontext, seq_i = '.seq_i', replace='.ghost', feature_mode=feature_mode, directed=qlist$directed) ## assign hit_ids to groups of tokens within the given window
@@ -144,10 +144,8 @@ lucene_like <- function(dict_results, qlist, mode = c('unique_hits','features','
   hits = subset(hits, hit_id > 0)
   
   if (nrow(hits) == 0) return(NULL)
-  
   if (level == 1 && mode == 'unique_hits') hits = remove_duplicate_hit_id(hits, keep_longest)
   if (level == 1 && mode == 'contexts') hits = unique(subset(hits, select=c('doc_id',subcontext)))
-  #print(nrow(hits))  
   return(hits)
 }
 
@@ -188,7 +186,6 @@ get_proximity_hit <- function(d, n_unique, window=NA, subcontext=NULL, seq_i=NUL
   if (!is.null(subcontext)) subcontext = d[[subcontext]]
   if (!is.null(seq_i)) seq_i = d[[seq_i]]
   if (!is.null(replace)) replace = d[[replace]]
-
   .hit_id = proximity_hit_ids_cpp(as.numeric(d[['doc_id']]), as.numeric(subcontext), as.numeric(d[['token_id']]), as.numeric(d[['.term_i']]), n_unique, window, as.numeric(seq_i), replace, feature_mode, directed)
   d[,hit_id := .hit_id]
 }
@@ -235,14 +232,19 @@ get_OR_hit <- function(d) {
 remove_duplicate_hit_id <- function(d, keep_longest=TRUE) {
   .hit_id_length = NULL; .ghost = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
   if (!'token_id' %in% colnames(d)) return(d)
-
-  dup = duplicated(d[,c('doc_id','token_id')])
+  
+  ## first ignore duplicates within same hit_id
+  ## this can happen if different feature columns are used
+  if (!'.ghost' %in% colnames(d)) d$.ghost = F
+  d = subset(d, !duplicated(d[,c('doc_id','token_id','hit_id','.ghost')]))
+  
+  dup = duplicated(d[,c('doc_id','token_id')]) & !d$.ghost
+  
   if (any(dup)) {
-    if (!'.ghost' %in% colnames(d)) d$.ghost = F
 
     if (keep_longest) {
-      d[, .hit_id_length := sum(!.ghost), by=hit_id]   ## count non ghost terms per hit_id
-      pd = d[order(-d$.hit_id_length),]                ## sort by this count to keep duplicates with highest score
+      d[, .hit_id_length := sum(ngram[!.ghost]), by=hit_id]   ## count non ghost terms per hit_id
+      pd = data.table::setorderv(d, '.hit_id_length', -1)
       dup_id = pd$hit_id[duplicated(pd[,c('doc_id','token_id')]) & !d$.ghost]
       d[, .hit_id_length := NULL]
     } else {
@@ -250,6 +252,7 @@ remove_duplicate_hit_id <- function(d, keep_longest=TRUE) {
     }
     d = subset(d, !hit_id %in% unique(dup_id))
   }
+  
   d
 }
 

@@ -14,6 +14,16 @@ require_package <- function(package, min_version = NULL) {
   }
 }
 
+use_n_cores <- function(n=NULL) {
+  if (is.null(n)) {
+    if (Sys.getenv('OMP_THREAD_LIMIT') != "") 
+      n = as.numeric(Sys.getenv('OMP_THREAD_LIMIT'))
+    else 
+      n = data.table::getDTthreads()
+  }
+  n
+}
+
 local_id <- function(group, i) {
   ## given global indices per group, make them locally unique
   ## has to be sorted on order(group, i)

@@ -40,6 +40,7 @@ test_that("Query search works", {
   expect_equal(as.character(hits$hits$feature), c('fuel','fuels','fuel'))
 
   ## keyword with wildcard
+  tc$tokens
   hits = search_features(tc, 'fuel*')
   expect_equal(as.character(hits$hits$feature), c('fuel','fuels','fueled','fuel'))
   hits = search_features(tc, 'fue?s')
@@ -139,7 +140,7 @@ test_that("Query search works", {
   tc$tokens
   
   tc$code_features(c('happy# \\:\\)', 'sad# \\:\\('))
-  expect_equal(as.character(stats::na.omit(tc$tokens$code)), c('happy','sad'))
+  expect_equal(as.character(stats::na.omit(tc$tokens$code)), c('happy','happy','sad'))
   
   
 

@@ -69,7 +69,7 @@ mark_relation_dict <- function(x) {
 
 
 #' @import rsyntax
-ud_subject_advcl <- function(tokens) {
+ud_subject_advcl <- function(tokens, rm_mark=F) {
   advcl = mark = verb = NULL
   # [subject] does something [mark_lemma] [doing] [something else]     
   #   - [subject] does something
@@ -88,9 +88,9 @@ ud_subject_advcl <- function(tokens) {
   tokens = select_nodes(tokens, tq) %>%
     copy_nodes('subject', new = 'subject_copy', copy_fill=T) %>%
     mutate_nodes('subject_copy', parent = advcl$token_id) %>%
-    mutate_nodes('advcl', parent = NA, relation='ROOT', tree_parent=advcl$parent, tree_relation=mark_relation_dict(mark$lemma)) %>%
-    remove_nodes('mark')
-
+    mutate_nodes('advcl', parent = NA, relation='ROOT', tree_parent=advcl$parent, tree_relation=mark_relation_dict(mark$lemma))
+  if (rm_mark) tokens = remove_nodes(tokens, 'mark')
+  
   ## - once with a nsubj and mark
   tq = tquery(label='verb', POS='VERB', 
               children(relation=c('nsubj','nsubj:pass'), label='subject'),
@@ -98,8 +98,8 @@ ud_subject_advcl <- function(tokens) {
                        children(relation='mark', NOT(lemma='for'), label='mark')))
   
   tokens = select_nodes(tokens, tq) %>%
-    mutate_nodes('advcl', parent = NA, relation='ROOT', tree_parent=advcl$parent, tree_relation=mark_relation_dict(mark$lemma)) %>%
-    remove_nodes('mark')
+    mutate_nodes('advcl', parent = NA, relation='ROOT', tree_parent=advcl$parent, tree_relation=mark_relation_dict(mark$lemma))
+  if (rm_mark) tokens = remove_nodes(tokens, 'mark')
     
   ## - once without a mark but with subject
   tq = tquery(label='verb', POS='VERB', 
@@ -127,7 +127,7 @@ ud_subject_advcl <- function(tokens) {
 
 
 #' @import rsyntax
-ud_obj_advcl <- function(tokens) {
+ud_obj_advcl <- function(tokens, rm_mark=F) {
   advcl = mark = NULL
   # like subject_advcl, but with advcl as a child of an obj.
   # this seems to (only?) occur when advcl has a subject (so we don't need to not_children(relation='nsubj') here)
@@ -136,13 +136,14 @@ ud_obj_advcl <- function(tokens) {
               children(relation='advcl', label='advcl',
                        children(relation='mark', NOT(lemma='for'), label='mark')))
   
-  select_nodes(tokens, tq) %>%
-    mutate_nodes('advcl', parent = NA, relation='ROOT', tree_parent=advcl$parent, tree_relation=mark_relation_dict(mark$lemma)) %>%
-    remove_nodes('mark')
+  tokens = select_nodes(tokens, tq) %>%
+    mutate_nodes('advcl', parent = NA, relation='ROOT', tree_parent=advcl$parent, tree_relation=mark_relation_dict(mark$lemma))
+  if (rm_mark) tokens = remove_nodes(tokens, 'mark')
+  tokens
 }
 
 #' @import rsyntax
-ud_object_advcl <- function(tokens) {
+ud_object_advcl <- function(tokens, rm_mark=F) {
   advcl = verb = NULL
   ## like subject_advcl, but a somewhat special case where there is an object and a "for" mark, 
   ## in which case the object tends to be the implied subject of the advcl 
@@ -153,15 +154,17 @@ ud_object_advcl <- function(tokens) {
                        not_children(relation='nsubj'),
                        children(relation='mark', lemma='for', label='mark')))
   
-  select_nodes(tokens, tq) %>%
+  tokens = select_nodes(tokens, tq) %>%
     copy_nodes('object', new = 'object_copy', copy_fill=T) %>%
     mutate_nodes('object_copy', parent = advcl$token_id, relation = 'nsubj') %>%
-    mutate_nodes('advcl', parent = NA, relation='ROOT', tree_parent=verb$token_id, tree_relation='cause') %>%
-    remove_nodes('mark')
+    mutate_nodes('advcl', parent = NA, relation='ROOT', tree_parent=verb$token_id, tree_relation='cause')
+  if (rm_mark) tokens = remove_nodes(tokens, 'mark')
+  
+  tokens
 }
 
 #' @import rsyntax
-ud_acl <- function(tokens) {
+ud_acl <- function(tokens, rm_mark=F) {
   acl = subject = mark = NULL
   # [something/someone], by/to [doing] something, does [something else]     
   #   - [something/someone] does something
@@ -170,11 +173,13 @@ ud_acl <- function(tokens) {
               children(relation='acl', label='acl',
                        children(relation='mark', label='mark')))
   
-  select_nodes(tokens, tq) %>%
+  tokens = select_nodes(tokens, tq) %>%
     copy_nodes('subject', new = 'subject_copy', copy_fill=T) %>%
     mutate_nodes('subject_copy', parent = acl$token_id) %>%
-    mutate_nodes('acl', parent = NA, relation='ROOT', tree_parent=subject$token_id, tree_relation=mark_relation_dict(mark$lemma)) %>%
-    remove_nodes('mark')
+    mutate_nodes('acl', parent = NA, relation='ROOT', tree_parent=subject$token_id, tree_relation=mark_relation_dict(mark$lemma))
+  if (rm_mark) tokens = remove_nodes(tokens, 'mark')
+  
+  tokens
 }
 
 #' @import rsyntax
@@ -290,6 +295,7 @@ ud_reindex_sentences <- function(tokens) {
 #' @param split_conj    If TRUE, split conjunctions into separate sentences
 #' @param rm_punct      If TRUE, remove punctuation afterwards
 #' @param new_sentences If TRUE, assign new sentence and token_id after splitting
+#' @param rm_mark       If TRUE, remove children with a mark relation if this is used in the simplification.
 #'
 #' @return a tokenIndex
 #' @export
@@ -303,14 +309,14 @@ ud_reindex_sentences <- function(tokens) {
 #'    rsyntax::plot_tree(tc_sotu_udpipe$tokens, token, lemma, POS, sentence_i=20)
 #'    rsyntax::plot_tree(tc2$tokens, token, lemma, POS, sentence_i=20)
 #' }
-udpipe_simplify <- function(tokens, split_conj=T, rm_punct=F, new_sentences=F) {
+udpipe_simplify <- function(tokens, split_conj=T, rm_punct=F, new_sentences=F, rm_mark=F) {
   tokens = tokens %>%
     ud_short_coref() %>%
     ud_appos() %>%
-    ud_object_advcl() %>%
-    ud_subject_advcl() %>%
-    ud_obj_advcl() %>%
-    ud_acl() %>%
+    ud_object_advcl(rm_mark = rm_mark) %>%
+    ud_subject_advcl(rm_mark = rm_mark) %>%
+    ud_obj_advcl(rm_mark = rm_mark) %>%
+    ud_acl(rm_mark = rm_mark) %>%
     ud_acl_relcl() %>%
     ud_parataxis() %>%
     ud_xcomp()

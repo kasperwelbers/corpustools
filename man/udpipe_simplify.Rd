@@ -4,7 +4,13 @@
 \alias{udpipe_simplify}
 \title{Simplify tokenIndex created with the udpipe parser}
 \usage{
-udpipe_simplify(tokens, split_conj = T, rm_punct = F, new_sentences = F)
+udpipe_simplify(
+  tokens,
+  split_conj = T,
+  rm_punct = F,
+  new_sentences = F,
+  rm_mark = F
+)
 }
 \arguments{
 \item{tokens}{A tokenIndex, based on output from the ud parser.}
@@ -14,6 +20,8 @@ udpipe_simplify(tokens, split_conj = T, rm_punct = F, new_sentences = F)
 \item{rm_punct}{If TRUE, remove punctuation afterwards}
 
 \item{new_sentences}{If TRUE, assign new sentence and token_id after splitting}
+
+\item{rm_mark}{If TRUE, remove children with a mark relation if this is used in the simplification.}
 }
 \value{
 a tokenIndex

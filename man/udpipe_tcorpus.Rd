@@ -68,7 +68,7 @@ GitHub page of the \href{https://github.com/bnosac/udpipe}{udpipe package}.}
 This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start over.
 The caches are stored in the corpustools_data folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.}
 
-\item{cores}{If udpipe_model is used, this sets the number of parallel cores. If not specified, will use the same number of cores as used by data.table}
+\item{cores}{If udpipe_model is used, this sets the number of parallel cores. If not specified, will use the same number of cores as used by data.table (or limited to OMP_THREAD_LIMIT)}
 
 \item{batchsize}{In order to report progress and cache results, texts are parsed with udpipe in batches of 50.
 The price is that there will be some overhead for each batch, so for very large jobs it can be faster to increase the batchsize.

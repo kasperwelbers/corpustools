@@ -1,16 +1,14 @@
-parse_queries <- function(q, feature='', optimize=T) {
-  queries = lapply(q, parse_query, feature=feature)
+parse_queries <- function(q, feature='', optimize_OR=T, optimize_seq=T) {
+  queries = lapply(q, parse_query, feature=feature, optimize_OR=optimize_OR, optimize_seq=optimize_seq)
   list(queries = lapply(queries, function(x) x$query),
        query_terms = data.table::rbindlist(lapply(queries, function(x) x$query_terms), fill = T))
 }
 
-parse_query <- function(q, feature='', optimize=T) {
+parse_query <- function(q, feature='', optimize_OR=T, optimize_seq=T) {
   q = parse_query_cpp(q)
   q = simplify_query(q, feature=feature)
-  if (optimize) {
-    q = optimize_query(q, collapse_or_queries)
-    #q = optimize_query(q, collapse_sequence_queries)  ## maybe add at some point. Might be faster (would use multitoken search form dictionary lookup), but current implementation is more versatile
-  }
+  if (optimize_OR) q = optimize_query(q, collapse_or_queries)
+  if (optimize_seq) q = optimize_query(q, collapse_sequence_queries)
   list(query = q,
        query_terms = query_terms(q))
 }
@@ -41,6 +39,33 @@ collapse_or_queries <- function(qlist) {
   }
   qlist
 }
+
+collapse_sequence_queries <- function(qlist) {
+  if (qlist$relation == 'sequence') {
+    has_nested = any(sapply(qlist$terms, function(x) 'terms' %in% names(x)))
+    if (has_nested) return(qlist)
+    diff_conditions = length(unique(lapply(qlist$terms, function(x) list(x$ghost, x$case_sensitive, x$feature, x$flag_query)))) > 1
+    if (diff_conditions) return(qlist)
+    
+  
+    terms = sapply(qlist$terms, function(x) x$term)
+    qlist$flag_query = qlist$terms[[1]]$flag_query
+    qlist$ghost = qlist$terms[[1]]$ghost
+    qlist$case_sensitive = qlist$terms[[1]]$case_sensitive
+    qlist$feature = qlist$terms[[1]]$feature
+    qlist$term = paste(terms, collapse=' ')
+    qlist$terms = NULL
+    qlist$relation = NULL
+      #terms = sapply(qlist$terms[select], function(x) x[c('feature','case_sensitive','ghost','term')], simplify = F)
+      #terms = data.table::rbindlist(terms)
+      ##col_terms = stats::aggregate(term ~ feature + case_sensitive + ghost, data=terms, FUN = c, simplify=F)
+      #col_terms = apply(col_terms, 1, as.list)
+      #col_terms = sapply(col_terms, function(x) c(x, list(flag_query=list())), simplify = F)
+      #qlist$terms = c(col_terms, qlist$terms[!select])
+  }
+  qlist
+}
+
 
 simplify_query <- function(q, feature='', all_case_sensitive=F, all_ghost=F, all_flag_query=list()) {
   if (!q$feature == "") feature = q[['feature']]  

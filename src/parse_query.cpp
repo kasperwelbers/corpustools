@@ -27,6 +27,7 @@ int get_number(std::string &x) {
   for (auto xi : x) {
     if (isdigit(xi)) numchar.push_back(xi);
   }
+  if (numchar.length() == 0) return -1;
   return atoi(numchar.c_str());
 }
 
@@ -256,7 +257,7 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
       all_ghost = char_in_flag(flag, 'g');
       all_sensitive = char_in_flag(flag, 's');
       all_flag_query = get_flag_query(flag);
-      if (window == 0) {
+      if (window < 0) {
         relation = "sequence";  // if no window is given, its a sequence query
       } else {
         relation = "proximity"; // otherwise, a proximity query
@@ -267,7 +268,7 @@ List get_nested_terms(QueryIter &q, int nested_i = 0, int in_quote = 0, bool in_
     }
 
     if (x == ':') {
-      if (terms.size() != 0 or term == "") stop("Manual feature column has to be specified at the beginning of query or nested query, as: 'column: ...'. To use double dot regularly, escape it with \\: (double slash if typed in R)");
+      if (terms.size() != 0 or term == "") stop("The colon symbol ':' is used to specify a manual feature column, but this has to be at the start of a query or directly after an open parenthesis '('. If you wanted to use a colon regularly, escape it with \\: (double slash if typed in R)");
       feature = term;
       term = "";
       continue;

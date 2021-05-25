@@ -19,7 +19,7 @@
 #' @param cache       The number of persistent caches to keep for inputs of udpipe. The caches store tokens in batches.
 #'                          This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start over.
 #'                          The caches are stored in the corpustools_data folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.
-#' @param cores       If udpipe_model is used, this sets the number of parallel cores. If not specified, will use the same number of cores as used by data.table
+#' @param cores       If udpipe_model is used, this sets the number of parallel cores. If not specified, will use the same number of cores as used by data.table (or limited to OMP_THREAD_LIMIT)
 #' @param batchsize   In order to report progress and cache results, texts are parsed with udpipe in batches of 50.
 #'                          The price is that there will be some overhead for each batch, so for very large jobs it can be faster to increase the batchsize.
 #'                          If the number of texts divided by the number of parallel cores is lower than the batchsize, the texts are evenly distributed over cores.
@@ -45,7 +45,7 @@ udpipe_tcorpus <- function(x, ...) {
 #' }
 #' @export
 udpipe_tcorpus.character <- function(x, model='english-ewt', doc_id=1:length(x), meta=NULL, max_sentences=NULL, model_path=getwd(), cache=3, cores=NULL, batchsize=50, use_parser=T, start_end=F, verbose=T, ...) {
-  if (is.null(cores)) cores = data.table::getDTthreads()
+  if (is.null(cores)) cores = use_n_cores(cores)
   
   if (is.null(model)) stop('model cannot be NULL')
   tc = create_tcorpus(x=x, doc_id=doc_id, meta=meta, udpipe_model=model, max_sentences=max_sentences, max_tokens=NULL, udpipe_model_path=model_path, udpipe_cache=cache, udpipe_cores=cores, udpipe_batchsize=batchsize, use_parse=use_parser, verbose=verbose, remember_spaces=T, ...)

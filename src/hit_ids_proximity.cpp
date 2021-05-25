@@ -30,7 +30,6 @@ NumericVector proximity_hit_ids_cpp(NumericVector con, NumericVector subcon, Num
   NumericVector out(n);
 
   std::map<int,std::set<int>> tracker;       // keeps track of new unique term_is and their position. When n_unique is reached: returns hit_id and resets
-
   int iw = 0;
   int hit_id = 1;
   for (int i = 0; i < n; i++) {

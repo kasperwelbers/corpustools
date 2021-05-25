@@ -10,7 +10,9 @@ have a column named "string"  (or use string_col argument) that contains the dic
 label/code represented by this string. Each row has a single string, that can be
 a single word or a sequence of words seperated by a whitespace (e.g., "not bad"), and can have the common ? and * wildcards.
 If a quanteda dictionary is given, it is automatically converted to this type of data.frame with the
-\code{\link{melt_quanteda_dict}} function. This can be done manually for more control over labels.}
+\code{\link{melt_quanteda_dict}} function. This can be done manually for more control over labels.
+Finally, you can also just pass a character vector. All multi word strings (like emoticons) will then be
+collapsed into single tokens.}
 
 \item{token_col}{The feature in tc that contains the token text.}
 
@@ -52,7 +54,7 @@ Multi-token matches (e.g., "Barack Obama") will become single tokens. Multiple l
 alternatives such as "Barack Obama", "president Obama" and "Obama".
 
 This method can also be use to concatenate ASCII symbols into emoticons, given a dictionary of emoticons.
-A dictionary with common emoticons is included in the corpustools data as "emoticon_dict" (see examples).
+
 
 \strong{Usage:}
 
@@ -61,8 +63,25 @@ A dictionary with common emoticons is included in the corpustools data as "emoti
 \preformatted{replace_dictionary(...)}
 }
 \examples{
-tc = create_tcorpus('yay :) :* happy')
+tc = create_tcorpus('happy :) sad :( happy 8-)')
+tc$tokens   ## tokenization has broken up emoticons (as it should)
+
+# corpustools dictionary lookup automatically normalizes tokenization of 
+# tokens and dictionary strings. The dictionary string ":)" would match both
+# the single token ":)" and two consequtive tokens c(":", ")"). This 
+# makes it easy and foolproof to look for emoticons like this:
+emoticon_dict = data.frame(
+   code   = c('happy_emo','happy_emo', 'sad_emo'), 
+   string = c(':)',             '8-)',      ':(')) 
+   
 tc$replace_dictionary(emoticon_dict)
+tc$tokens
+
+# If a string is passed to replace dictionary, it will collapse multi-word
+# strings. .
+tc = create_tcorpus('happy :) sad :( Barack Obama')
+tc$tokens
+tc$replace_dictionary(c(':)', '8-)', 'Barack Obama'))
 tc$tokens
 
 }

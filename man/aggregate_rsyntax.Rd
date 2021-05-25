@@ -43,6 +43,7 @@ that has the labels 'source', 'verb', and 'quote'. You also used code_dictionary
 Now you can aggregate the source tokens  to get a single unique ID, and aggregate the quote tokens to get a single sentiment score.
 }
 \examples{
+\dontrun{
 tc = tc_sotu_udpipe$copy()
 tc$udpipe_clauses()
 
@@ -59,7 +60,7 @@ aggregate_rsyntax(tc, 'clause',
 aggregate_rsyntax(tc, 'clause', txt='subject',
                   agg_label('predicate', n = length(token_id)))
 
-                                    
+                                
 ## example application: sentiment scores for specific subjects
 
 # first use queries to code subjects
@@ -77,4 +78,5 @@ sent = aggregate_rsyntax(tc, 'clause', txt='predicate',
                   agg_label('predicate', sentiment = mean(sentiment, na.rm=TRUE)))
 head(sent)
 sent[,list(sentiment=mean(sentiment, na.rm=TRUE), n=.N), by='subject']
+}
 }

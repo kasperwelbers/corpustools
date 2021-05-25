@@ -26,7 +26,7 @@
 #' @param udpipe_cache      The number of persistent caches to keep for inputs of udpipe. The caches store tokens in batches.
 #'                          This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start over.
 #'                          The caches are stored in the corpustools_data folder (in udpipe_model_path). Only the most recent [udpipe_caches] caches will be stored.
-#' @param udpipe_cores      If udpipe_model is used, this sets the number of parallel cores. If not specified, will use the same number of cores as used by data.table.
+#' @param udpipe_cores      If udpipe_model is used, this sets the number of parallel cores. If not specified, will use the same number of cores as used by data.table (or limited to OMP_THREAD_LIMIT).
 #' @param udpipe_batchsize  In order to report progress and cache results, texts are parsed with udpipe in batches of 50.
 #'                          The price is that there will be some overhead for each batch, so for very large jobs it can be faster to increase the batchsize.
 #'                          If the number of texts divided by the number of parallel cores is lower than the batchsize, the texts are evenly distributed over cores.
@@ -61,7 +61,7 @@ create_tcorpus <- function(x, ...) {
 #' tc
 #' @export
 create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, udpipe_cores=NULL, udpipe_batchsize=50, use_parser=F, remember_spaces=TRUE, verbose=T, ...) {
-  if (is.null(udpipe_cores)) udpipe_cores = data.table::getDTthreads()
+  if (is.null(udpipe_cores)) udpipe_cores = use_n_cores(udpipe_cores)
   if (any(duplicated(doc_id))) stop('doc_id should not contain duplicate values')
   if (!is.null(meta)){
     if (!methods::is(meta, 'data.frame')) stop('"meta" is not a data.frame or data.table')
@@ -148,4 +148,6 @@ create_tcorpus.corpus <- function(x, ...) {
   x = quanteda::convert(x, 'data.frame')
   create_tcorpus(x, text_columns='text', doc_column='doc_id', ...)
 }
+
+
 

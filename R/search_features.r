@@ -42,6 +42,7 @@ tCorpus$set('public', 'code_features', function(query, code=NULL, feature='token
   .i = self$get_token_id(doc_id = hits$hits$doc_id, token_id = hits$hits$token_id)
   .value = codelabel[as.numeric(hits$hits$code)]
   if (column %in% self$names && overwrite) self$delete_columns(column)
+  
   self$set(column=column, subset=.i, value=.value, subset_value=F)
 
   add_column = c(add_column, list(...))
@@ -223,20 +224,26 @@ search_features <- function(tc, query, code=NULL, feature='token', mode = c('uni
   queries = parse_queries(query, feature = feature)
   dict_results = get_dict_results(tc, queries, context_level, as_ascii, feature, verbose)
   
-  hits = vector('list', length(query))
-  for (i in 1:length(query)) {
-    if (verbose) cat(as.character(codelabel[i]), '\n')
-    h = lucene_like(dict_results, queries$queries[[i]], mode=mode, subcontext=subcontext, keep_longest=keep_longest)
-    
-    if (!is.null(h)) {
-      h[, code := codelabel[i]]
-      hits[[i]] = h
-    }
-  }
-  hits = data.table::rbindlist(hits, fill = T)
+  if (verbose)
+    pbapply::pboptions(type = "txt", style=3)
+  else
+    pbapply::pboptions(type='none')
   
+  hits = pbapply::pblapply(1:length(query), function(i) {
+    h = lucene_like(dict_results, queries$queries[[i]], mode=mode, subcontext=subcontext, keep_longest=keep_longest)
+    if (!is.null(h)) h[, code := codelabel[i]]
+    h
+  })
+  
+  hits = data.table::rbindlist(hits, fill = T)
   if (nrow(hits) > 0) {
-    data.table::setnames(hits, feature, 'feature')
+    ngram = hits$ngram
+    if (any(ngram > 1)) {
+      hits = hits[rep(1:nrow(hits), hits$ngram),]  
+      hits$token_id = hits$token_id + unlist(lapply(ngram, function(x) 0:(x-1)))
+    }  
+    
+    hits = merge(hits, data.table::data.table(doc_id=tc$tokens$doc_id, token_id=tc$tokens$token_id, feature=tc$tokens[[feature]]), by=c('doc_id','token_id'), all.x=T)
     setorderv(hits, c('doc_id','token_id'))
     hits = subset(hits, subset=!.ghost)
   } else {

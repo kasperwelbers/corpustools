@@ -165,7 +165,7 @@ remove_unique_coref_ids <- function(ids) {
 }
 
 add_coref_txt <- function(ids, e) {
-  lemma = NULL; nterms = NULL
+  lemma = NULL; nterms = NULL; coref_id = NULL
   
   needs_txt = stats::na.omit(ids$coref_id[ids$pronoun | ids$POS == 'NOUN'])
   id_txt = merge(e[e$POS %in% c('PROPN','NOUN'), c('.ID','lemma','POS')], 

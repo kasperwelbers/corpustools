@@ -14,7 +14,7 @@ test_that("Testing: Dictionary lookup", {
   expect_equal(hits$hits$token_id, c(1,2,3,4,8,9))
 
   tc = create_tcorpus(c('yay :) :* happy.', 'boo sad :('))
-  tc$replace_dictionary(emoticon_dict)
+  tc$replace_dictionary(c(':)',':\\*',':('))
   tc$tokens
   expect_equal(as.character(tc$tokens$token), c('yay',':)',':*','happy','.','boo','sad',':('))
 
