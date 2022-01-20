@@ -34,7 +34,7 @@
 #'                          The price is that there will be some overhead for each batch, so for very large jobs it can be faster to increase the batchsize.
 #'                          If the number of texts divided by the number of parallel cores is lower than the batchsize, the texts are evenly distributed over cores.
 #' @param use_parser        If TRUE, use dependency parser (only if udpipe_model is used)
-#' @param remember_spaces   If TRUE, a column with spaces after each token and column with the start and end positions of tokens are included. Enables correct reconstruction of original text.
+#' @param remember_spaces   If TRUE, a column with spaces after each token and column with the start and end positions of tokens are included. Can turn it of for a bit more speed and less memory use, but some features won't work.
 #' @param verbose           If TRUE, report progress. Only if x is large enough to require multiple sequential batches
 #' @param ...               Arguments passed to create_tcorpus.character
 #'
@@ -173,12 +173,12 @@ create_tcorpus.corpus <- function(x, ...) {
 
 transparent_trim <- function(x, remember_spaces) {
   beforetrim = nchar(as.character(x))
-  x = stringi::stri_trim_left(x)
+  x = stringi::stri_trim(x)
   aftertrim = nchar(as.character(x))
   trimmed = sum(aftertrim < beforetrim)
   if (trimmed > 0) {
     warnoffset = if (remember_spaces) '(The start and end positions are for the trimmed text)' else ''
-    warning(sprintf("Leading whitespace has been trimmed for %s texts. %s", trimmed, warnoffset))
+    warning(sprintf("Leading and trailing whitespace has been trimmed for %s texts. %s", trimmed, warnoffset))
   }
   x
 }

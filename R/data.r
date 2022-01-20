@@ -4,7 +4,7 @@
 #' @usage data(sotu_texts)
 #' @format data.frame
 'sotu_texts'
-##save(sotu_texts, file='data/sotu_texts.rda', compression_level = 9)
+#save(sotu_texts, file='data/sotu_texts.rda', compression_level = 9)
 
 
 #' coreNLP example sentences

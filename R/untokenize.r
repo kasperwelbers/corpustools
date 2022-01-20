@@ -1,4 +1,28 @@
 
+
+
+#' Reconstruct original texts
+#' 
+#' If the tCorpus was created with remember_spaces = T, you can rebuild the original texts.
+#'
+#' @param tc   A tCorpus, created with \code{\link{create_tcorpus}}, with remember_spaces = TRUE
+#'
+#' @return  A data.table with the text fields and meta fields as columns.
+#' @export
+#'
+#' @examples
+#' tc = create_tcorpus(sotu_texts, doc_column='id')
+#' untokenize(tc)
+untokenize <- function(tc) {
+  tokens = tc$tokens
+  if (!'field' %in% colnames(tokens)) tokens$field = 'text'
+  if (!'space' %in% colnames(tokens)) tokens$space = ' '
+  d = tokens[, list(text = concatenate_text(token,space)),
+                by=c('doc_id','field')]
+  d = data.table::dcast(d, doc_id ~ field, value.var='text')
+  merge(d, tc$meta, by='doc_id')
+}
+
 #' Export span annotations
 #' 
 #' Export columns from a tCorpus as span annotations (annotations over a span of text).
@@ -32,13 +56,13 @@ export_span_annotations <- function(tc, variables) {
   for (variable in variables) {
     ann = tokens[!is.na(tokens[[variable]]),]
     if (!'field' %in% colnames(ann)) ann$field = 'text'
-  
+    
     n = nrow(ann)
     ann$new_span = c(T, ann$token_id[2:n] != ann$token_id[1:(n-1)] +1)
     ann$span_id = cumsum(ann$new_span)  ## can span across documents, but thats taken care of in the aggregateion
     ann = ann[,list(offset = first(start), 
                     length = last(end) - first(start) + 1, 
-                    text = annotation_text(token,space)),
+                    text = concatenate_text(token,space)),
               by=c('doc_id','field','span_id',variable)]
     
     data.table::setnames(ann, variable, 'value')
@@ -48,9 +72,10 @@ export_span_annotations <- function(tc, variables) {
   data.table::rbindlist(annotations)
 }
 
-annotation_text <- function(token, space) {
+concatenate_text <- function(token, space) {
   token = as.character(token)
   space = as.character(space)
   space[length(space)] = ''
-  paste(paste0(token,space), collapse='')
+  stringi::stri_paste(stringi::stri_paste(token,space, sep=''), collapse='')
 }
+
