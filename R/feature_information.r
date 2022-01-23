@@ -51,7 +51,7 @@ top_features <- function(tc, feature, n=10, group_by=NULL, group_by_meta=NULL, r
   .N = NULL   ## data.table bindings
   if (!is.null(group_by)) group_by = match.arg(group_by, tc$names, several.ok = T)
   if (!is.null(group_by_meta)) group_by_meta = match.arg(group_by_meta, tc$meta_names, several.ok = T)
-  if (!length(feature) == 1 || !methods::is(feature,'character')) stop("feature argument has to be a single character value")
+  if (!length(feature) == 1 || !inherits(feature,'character')) stop("feature argument has to be a single character value")
 
   feat = tc$get(c(feature, group_by), keep_df=T)
   if (!is.null(group_by_meta))

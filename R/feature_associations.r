@@ -47,8 +47,8 @@ feature_associations <- function(tc, feature, query=NULL, hits=NULL, query_featu
 
 
 feature_associations_fun <- function(tc, hits, feature='token', window=15,  n=25, min_freq=1, sort_by= c('chi2', 'ratio', 'freq'), subset=NULL, subset_meta=NULL, include_self=F) {
-  if(methods::is(substitute(subset), 'call')) subset = tc$eval(substitute(subset), parent.frame())
-  if(methods::is(substitute(subset_meta), 'call')) subset_meta = tc$eval_meta(substitute(subset_meta), parent.frame())
+  if(inherits(substitute(subset), 'call')) subset = tc$eval(substitute(subset), parent.frame())
+  if(inherits(substitute(subset_meta), 'call')) subset_meta = tc$eval_meta(substitute(subset_meta), parent.frame())
   sort_by = match.arg(sort_by)
 
   window = tc$get_token_id(hits$hits$doc_id, hits$hits$token_id, subset, subset_meta, window=window)

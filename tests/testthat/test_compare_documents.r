@@ -11,9 +11,6 @@ test_that("comparing documents works", {
   ## compare as DTM
   dtm = get_dtm(tc, 'token', weight = 'norm_tfidf')
 
-  #igraph::get.data.frame(dtm_document_comparison(dtm, meta=tc$get_meta(), date_col = 'date', verbose=F))
-  #igraph::get.data.frame(compare_documents_dtm(dtm, meta=tc$get_meta(), date_col = 'date', verbose=F))
-
   ## find out why dtm is suddenly empty...
   g = compare_documents(tc, verbose=F)
   testthat::expect_equal(round(igraph::E(g)$weight,3), round(c(0.027, 0.027, 0.022, 0.022),3))

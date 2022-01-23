@@ -86,7 +86,7 @@ x_filter <- function(ft, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
 #' tc$tokens
 #' @export
 freq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
-  if (methods::is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
+  if (is.character(x)) x = eval(parse(text=x), envir = parent.frame(1))
   freq_table = table(droplevels(x))
   x %in% x_filter(freq_table, min=min, max=max, top=top, bottom=bottom)
 }
@@ -113,7 +113,7 @@ freq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL) {
 #' tc$tokens
 #' @export
 docfreq_filter <- function(x, min=-Inf, max=Inf, top=NULL, bottom=NULL, doc_id=parent.frame()$doc_id) {
-  if (methods::is(x, 'character')) x = eval(parse(text=x), envir = parent.frame(1))
+  if (is.character(x)) x = eval(parse(text=x), envir = parent.frame(1))
   freq_table = unique(data.frame(doc_id=doc_id, x=x))
   freq_table = table(droplevels(freq_table$x))
   x %in% x_filter(freq_table, min=min, max=max, top=top, bottom=bottom)

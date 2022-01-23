@@ -1,6 +1,5 @@
 
 
-
 #' Reconstruct original texts
 #' 
 #' If the tCorpus was created with remember_spaces = T, you can rebuild the original texts.
@@ -14,6 +13,7 @@
 #' tc = create_tcorpus(sotu_texts, doc_column='id')
 #' untokenize(tc)
 untokenize <- function(tc) {
+  token = space = NULL
   tokens = tc$tokens
   if (!'field' %in% colnames(tokens)) tokens$field = 'text'
   if (!'space' %in% colnames(tokens)) tokens$space = ' '
@@ -41,13 +41,15 @@ untokenize <- function(tc) {
 #' @export
 #'
 #' @examples
-#' tc = create_tcorpus(sotu_texts, c('president','text'))
+#' tc = create_tcorpus(sotu_texts, c('president','text'), doc_column='id', remember_spaces=TRUE)
 #' tc$code_features(c('war# war peace', 'us being# <(i we) (am are)>'))
-#' 
 #' export_span_annotations(tc, 'code')
 export_span_annotations <- function(tc, variables) {
+  start = end = token = space = NULL
   tokens = tc$tokens
-  if (!variable %in% colnames(tokens)) stop('selected variable is not a column im the tokens data.frame')
+  for (v in variables) {
+    if (!v %in% colnames(tokens)) stop(sprintf('"%s" is not a column im the tokens data.frame', v))
+  }
   if (!'start' %in% colnames(tokens)) stop('can only export annotations if tokens has a column with start positions')
   if (!'end' %in% colnames(tokens)) stop('can only export annotations if tokens has a column with end positions')
   if (!'space' %in% colnames(tokens)) stop('can only export annotations if tokens has a column with space positions')

@@ -3,7 +3,7 @@
 ## apply lucene_like to allow more advanced conditions, like word distances and Boolean
 
 get_dict_results <- function(tc, queries, context_level, as_ascii, feature, verbose) {
-  hit_id = NULL
+  hit_id = feat_i = NULL
   context_cols = if (context_level == 'sentence') c('doc_id','sentence') else 'doc_id'
   
   features = unique(queries$query_terms$feature)
@@ -39,7 +39,7 @@ token_expression_filter <- function(tc, fi, queries) {
     which_expr_false = tryCatch(tc$tokens[fi$feat_i[fi_has_expr]][!eval(parse(text=expr)),,which=T], error = function(e) e) ## evaluate expression for these features in tc$tokens
     
     ## special error handling, because this can be confusing
-    if (methods::is(which_expr_false, 'simpleError')) 
+    if (inherits(which_expr_false, 'simpleError')) 
       stop(call. = F, paste('A token subset expression used in a query gave an error:', paste0('The expression\n', expr), paste0('The error\n',which_expr_false$message), sep='\n\n'))
     
     which_expr_false = tc$tokens[fi$feat_i[fi_has_expr]][!eval(parse(text=expr)),,which=T]                                  ## evaluate expression for these features in tc$tokens
@@ -70,7 +70,7 @@ meta_expression_filter <- function(tc, fi, queries) {
     #stop('Does not work yet. The filtering on udoc ids messes up if doc does not exist')
     which_expr_false = tryCatch(tc$meta[list(udoc_ids),,on='doc_id'][!eval(parse(text=expr)),,which=T], error = function(e) e)
     ## special error handling, because this can be confusing
-    if (methods::is(which_expr_false, 'simpleError')) 
+    if (inherits(which_expr_false, 'simpleError')) 
       stop(call. = F, paste('A meta subset expression used in a query gave an error:', paste0('The expression\n', expr), paste0('The error\n',which_expr_false$message), sep='\n\n'))
     
     rm_doc_id = udoc_ids[which_expr_false]
@@ -230,7 +230,7 @@ get_OR_hit <- function(d) {
 }
 
 remove_duplicate_hit_id <- function(d, keep_longest=TRUE) {
-  .hit_id_length = NULL; .ghost = NULL; hit_id = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
+  .hit_id_length = .ghost = hit_id = ngram = NULL ## for solving CMD check notes (data.table syntax causes "no visible binding" message)
   if (!'token_id' %in% colnames(d)) return(d)
   
   ## first ignore duplicates within same hit_id

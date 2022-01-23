@@ -47,14 +47,16 @@ tokens_to_tcorpus <- function(tokens, doc_col='doc_id', token_id_col='token_id',
   tokens[,'doc_id' := fast_factor(tokens$doc_id)]
   if (!is.null(sentence_col)) {
     data.table::setnames(tokens, which(colnames(tokens) == sentence_col), 'sentence')
-    if (!methods::is(tokens$sentence, 'numeric')) stop('sentence_col has to be numeric/integer')
-    if (!methods::is(tokens$sentence, 'integer')) tokens[,sentence := as.numeric(sentence)]
+    if (!is.numeric(tokens$sentence)) stop('sentence_col has to be numeric')
+    #if (!inherits(tokens$sentence, 'integer')) tokens[,sentence := as.numeric(sentence)]
   }
+  
+  
 
   if (!is.null(token_id_col)) {
     data.table::setnames(tokens, which(colnames(tokens) == token_id_col), 'token_id')
-    if (!methods::is(tokens$token_id, 'numeric')) stop('token_id_col has to be numeric/integer')
-    if (!methods::is(tokens$token_id, 'integer')) tokens[,token_id := as.numeric(token_id)]
+    if (!is.numeric(tokens$token_id)) stop('token_id_col has to be numeric')
+    #if (!inherits(tokens$token_id, 'integer')) tokens[,token_id := as.numeric(token_id)]
   } else {
     warning('No token_id column specified. token order used instead (see documentation).')
     tokens$token_id = 1:nrow(tokens)

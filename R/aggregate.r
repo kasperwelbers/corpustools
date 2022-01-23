@@ -37,8 +37,8 @@ count_tcorpus <- function(tc, meta_cols=NULL, hits=NULL, feature=NULL, count=c('
   if (!is.null(hits) | !is.null(feature)){
     if (!is.null(hits) && !is.null(feature)) stop('Cannot specify both hits and feature')
     if (!is.null(hits)) {
-      if (!methods::is(hits, c('featureHits', 'contextHits'))) stop('hits must be a featureHits or contextHits object (see the search_features and search_contexts functions)')
-      if (methods::is(hits, 'featureHits')) {
+      if (!inherits(hits, c('featureHits', 'contextHits'))) stop('hits must be a featureHits or contextHits object (see the search_features and search_contexts functions)')
+      if (inherits(hits, 'featureHits')) {
         coldata = hits$hits[!duplicated(hits$hits[,c('code', 'hit_id')]),]
       } else {
         coldata = hits$hits

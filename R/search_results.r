@@ -13,8 +13,9 @@ featureHits <- function(hits, queries) {
   fh
 }
 
+
 is.featureHits <- function(fh, ...) {
-  if (!methods::is(fh$hits, 'data.frame')) return(FALSE)
+  if (!inherits(fh$hits, 'data.frame')) return(FALSE)
   if (!all(c('code','feature','doc_id','hit_id', 'sentence', 'token_id') %in% colnames(fh$hits))) return(FALSE)
   #if (!all(c('keyword','condition','code','condition_once') %in% colnames(fh$queries))) return(FALSE)
   return(TRUE)
@@ -89,7 +90,7 @@ contextHits <- function(hits, queries) {
 }
 
 is.contextHits <- function(ch, ...) {
-  if (!methods::is(ch$hits, 'data.frame')) return(FALSE)
+  if (!inherits(ch$hits, 'data.frame')) return(FALSE)
   if (!all(c('code','doc_id','sentence') %in% colnames(ch$hits))) return(FALSE)
   if (!all(c('query','code') %in% colnames(ch$queries))) return(FALSE)
   return(TRUE)
@@ -188,8 +189,8 @@ plot.featureHits <- function(x, min_weight=0, backbone_alpha=NA, ...){
 }
 
 plot_associations <- function(hits, min_weight=0, backbone_alpha=NA, measure=c('con_prob','con_prob_weighted','cosine','count_directed','count_undirected','chi'), context_level=c('document','sentence'), n=c('documents','sentences','hits'), ...) {
-  if (!methods::is(hits, 'featureHits') && !methods::is(hits, 'contextHits')) stop('hits has to be a featureHits or contextHits object')
-  if (methods::is(hits, 'contextHits') && n=='hits') stop('count cannot be "hits" for contextHits results')
+  if (!inherits(hits, 'featureHits') && !inherits(hits, 'contextHits')) stop('hits has to be a featureHits or contextHits object')
+  if (inherits(hits, 'contextHits') && n=='hits') stop('count cannot be "hits" for contextHits results')
   measure = match.arg(measure)
   context_level = match.arg(context_level)
 

@@ -40,7 +40,7 @@ get_kwic <- function(tc, hits=NULL, i=NULL, query=NULL, code='', ntokens=10, n=N
 
 keyword_in_context <- function(tc, hits=NULL, i=NULL, code='', ntokens=10, n=NA, nsample=NA, output_feature='token', context_level=c('document', 'sentence'), kw_tag=c('<','>')){
   feature = NULL; hit_id = NULL  ## for data.table
-  if (class(i) == 'logical') i = which(i)
+  if (is.logical(i)) i = which(i)
   ## remove i and code parameters
 
   if(!is.null(hits) && !is.featureHits(hits)) stop('hits must be a featureHits object (created with search_features()')

@@ -45,8 +45,8 @@
 #' tc$tokens
 #' @aliases code_dictionary
 tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', string_col='string', sep=' ', case_sensitive=F, column='code', use_wildcards=T, ascii=F, verbose=F){
-  if (methods::is(dict, 'dictionary2')) dict = melt_quanteda_dict(dict, column = column)
-  if (!methods::is(dict, 'data.frame')) stop('dict has to be a data.frame or a quanteda dictionary2 class')
+  if (inherits(dict, 'dictionary2')) dict = melt_quanteda_dict(dict, column = column)
+  if (!inherits(dict, 'data.frame')) stop('dict has to be a data.frame or a quanteda dictionary2 class')
   if (!string_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', string_col))
   
   column_id = paste0(column, '_id')
@@ -148,7 +148,7 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', strin
 #'
 #' @aliases replace_dictionary
 tCorpus$set('public', 'replace_dictionary', function(dict, token_col='token', string_col='string', code_col='code', replace_cols=token_col, sep=' ', code_from_features=F, code_sep='_', decrement_ids=T, case_sensitive=F, use_wildcards=T, ascii=F, verbose=F){
-  if (methods::is(dict, 'character')) dict = data.frame(code=stringi::stri_unescape_unicode(dict), string=dict)
+  if (inherits(dict, 'character')) dict = data.frame(code=stringi::stri_unescape_unicode(dict), string=dict)
   m = search_dictionary(self, dict, token_col=token_col, string_col=string_col, code_col=code_col, sep=sep,
                         case_sensitive=case_sensitive, use_wildcards=use_wildcards,
                         ascii=ascii, verbose=verbose)
@@ -201,7 +201,7 @@ tCorpus$set('public', 'replace_dictionary', function(dict, token_col='token', st
 #' }
 melt_quanteda_dict <- function(dict, column='code', .index=NULL) {
   if (is.null(.index)) {
-    if (!methods::is(dict, 'dictionary2')) stop('dict is not a quanteda dictionary2 class')
+    if (!inherits(dict, 'dictionary2')) stop('dict is not a quanteda dictionary2 class')
     .index = data.table(string = character(length(dict)))
   }
   cname = if (ncol(.index) > 1) paste0(column, '_l', ncol(.index)) else column
@@ -263,8 +263,8 @@ search_dictionary <- function(tc, dict, token_col='token', string_col='string', 
   mode = match.arg(mode)
   
   if (!is_tcorpus(tc)) stop('tc is not a tCorpus')
-  if (methods::is(dict, 'dictionary2')) dict = melt_quanteda_dict(dict)
-  if (!methods::is(dict, 'data.frame')) stop('dict has to be a data.frame or a quanteda dictionary2 class')
+  if (inherits(dict, 'dictionary2')) dict = melt_quanteda_dict(dict)
+  if (!inherits(dict, 'data.frame')) stop('dict has to be a data.frame or a quanteda dictionary2 class')
   if (!string_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', string_col))
   if (!code_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', code_col))
 
@@ -286,7 +286,7 @@ search_dictionary <- function(tc, dict, token_col='token', string_col='string', 
 dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', mode = c('unique_hits','features'), case_sensitive=F, standardize=T, ascii=F, use_wildcards=T, context_level=c('document','sentence'), verbose=F){
   mode = match.arg(mode)
   if (!token_col %in% tc$names) stop(sprintf('specified token column ("%s") is not a valid column in tokens', token_col))
-  if (!methods::is(tc$tokens[[token_col]], 'factor')) tc$set(token_col, fast_factor(tc$tokens[[token_col]]))
+  if (!is.factor(tc$tokens[[token_col]])) tc$set(token_col, fast_factor(tc$tokens[[token_col]]))
   fi = dictionary_lookup_tokens(tokens = tc$get(token_col), context = as.numeric(tc$context(context_level)), token_id=tc$tokens$token_id, dict=dict, mode=mode,
                                 regex_sep=regex_sep, case_sensitive=case_sensitive, standardize=standardize, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
   

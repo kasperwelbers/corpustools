@@ -123,7 +123,7 @@ dtm_wordcloud <- function(dtm=NULL, nterms=100, freq.fun=NULL, terms=NULL, freqs
 #' }
 #' @export
 plot.vocabularyComparison <- function(x, n=25, mode=c('both', 'ratio_x','ratio_y'), balance=T, size = c('chi2','freq','ratio'), ...){
-  #if (!methods::is(x, 'vocabularyComparison')) stop('x has to be a vocabularyComparison object')
+  #if (!inherits(x, 'vocabularyComparison')) stop('x has to be a vocabularyComparison object')
   mode = match.arg(mode)
   size = match.arg(size)
 

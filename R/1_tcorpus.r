@@ -146,7 +146,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
     get_levels = function(column){
       if (!column %in% self$names) stop(sprintf('"%s" column does not exists in tokens', column))
-      if (!methods::is(self$tokens[[column]], 'factor')) stop(sprintf('"%s" is not a factor', column))
+      if (!is.factor(self$tokens[[column]])) stop(sprintf('"%s" is not a factor', column))
       data.table::copy(levels(self$tokens[[column]]))
     },
 
@@ -176,14 +176,14 @@ tCorpus <- R6::R6Class("tCorpus",
       if (as.df) d = as.data.frame(d)
       if (per_token) {
         exp_i = match(self$tokens$doc_id, self$meta$doc_id)
-        d = if (methods::is(d, 'data.frame')) d[exp_i,,drop=!keep_df & !is.null(columns)] else d[exp_i]
+        d = if (inherits(d, 'data.frame')) d[exp_i,,drop=!keep_df & !is.null(columns)] else d[exp_i]
       }
       if(copy) data.table::copy(d) else d
     },
 
     get_meta_levels = function(column){
       if (!column %in% self$meta_names) stop(sprintf('"%s" column does not exists in meta', column))
-      if (!methods::is(self$meta[[column]], 'factor')) stop(sprintf('"%s" is not a factor', column))
+      if (!is.factor(self$meta[[column]])) stop(sprintf('"%s" is not a factor', column))
       data.table::copy(levels(self$meta[[column]]))
     },
 
@@ -202,8 +202,8 @@ tCorpus <- R6::R6Class("tCorpus",
       if (is.null(doc_id) && !is.null(token_id)) stop('token_id can only be given in pairs with doc_id')
 
       ## enable subset to be called from a character string. (e.g. used in search_features)
-      if(methods::is(subset, 'character')) subset = eval(parse(text=subset), self$tokens, parent.frame())
-      if(methods::is(subset_meta, 'character')) subset_meta = eval(parse(text=subset_meta), self$meta, parent.frame())
+      if(inherits(subset, 'character')) subset = eval(parse(text=subset), self$tokens, parent.frame())
+      if(inherits(subset_meta, 'character')) subset_meta = eval(parse(text=subset_meta), self$meta, parent.frame())
 
       i = NULL
       if (!is.null(doc_id)) {
@@ -241,7 +241,7 @@ tCorpus <- R6::R6Class("tCorpus",
          if (subset_value && length(value) > 1) value = value[subset]
          if (!column %in% colnames(self$tokens)) {
            self$tokens[,(column) := NA]
-           if (methods::is(value, 'factor')) {
+           if (is.factor(value)) {
              self$tokens[,(column) := fast_factor(self$tokens[[column]])]
            } else {
              self$tokens[,(column) := methods::as(self$tokens[[column]], class(value))]
@@ -249,7 +249,7 @@ tCorpus <- R6::R6Class("tCorpus",
          }
 
          if (column %in% c('sentence','token_id')) {  ## for position columns, first perform checks (inefficient, but this should be a rare case anyway)
-            if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')
+            if (!is.numeric(value)) stop('position column has to be numeric/integer')
             value = as.numeric(value)
             mod = if ('sentence' %in% self$names) self$tokens[,c('doc_id','sentence','token_id')] else self$tokens[,c('doc_id','token_id')]
             mod[subset, (column) := value]
@@ -262,7 +262,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
        } else {
          if (column %in% c('sentence','token_id')) {
-           if (!methods::is(value, 'numeric')) stop('position column has to be numeric/integer')
+           if (!is.numeric(value)) stop('position column has to be numeric/integer')
            value = as.numeric(value)
            mod = if ('sentence' %in% self$names) self$tokens[,c('doc_id','sentence','token_id')] else self$tokens[,c('doc_id','token_id')]
            suppressWarnings(mod[, (column) := value])
@@ -289,7 +289,7 @@ tCorpus <- R6::R6Class("tCorpus",
       if (!all(c(by,by.x) %in% self$names)) stop('Not all columns specified in by / by.x exist in $tokens')
       if (!all(c(by,by.y) %in% colnames(df))) stop('Not all columns specified in by / by.y exist in df')
       
-      if (methods::is(df, 'data.table'))
+      if (inherits(df, 'data.table'))
         if (any(duplicated(df[,c(by,by.y), with=F]))) stop('Columns specified in by (or by.y) must be unique in df')
       else
         if (any(duplicated(df[,c(by,by.y)]))) stop('Columns specified in by (or by.y) must be unique in df')
@@ -316,7 +316,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
      set_levels = function(column, levels) {
        if (!column %in% self$names) stop(sprintf('"%s" column does not exists in tokens', column))
-       if (!methods::is(self$tokens[[column]], 'factor')) stop(sprintf('"%s" is not a factor', column))
+       if (!is.factor(self$tokens[[column]])) stop(sprintf('"%s" is not a factor', column))
        if (!length(levels) == length(levels(self$tokens[[column]]))) stop('new levels of different length than current levels')
        if (column == 'doc_id') {
          self$meta$doc_id = levels[match(levels(self$tokens$doc_id), self$meta$doc_id)]
@@ -355,7 +355,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
          if (!column %in% colnames(self$meta)) {
            self$meta[[column]] = NA
-           if (methods::is(value, 'factor')) {
+           if (is.factor(value)) {
              self$meta[[column]] = fast_factor(self$meta[[column]])
            } else {
              self$meta[,(column) := methods::as(self$meta[[column]], class(value))]
@@ -384,7 +384,7 @@ tCorpus <- R6::R6Class("tCorpus",
         if (!all(c(by,by.x) %in% self$meta_names)) stop('Not all columns specified in by / by.x exist in $meta')
         if (!all(c(by,by.x) %in% colnames(df))) stop('Not all columns specified in by / by.y exist in df')
         
-        if (methods::is(df, 'data.table'))
+        if (inherits(df, 'data.table'))
           if (any(duplicated(df[,c(by,by.y), with=F]))) stop('Columns specified in by (or by.y) must be unique in df')
         else
           if (any(duplicated(df[,c(by,by.y)]))) stop('Columns specified in by (or by.y) must be unique in df')
@@ -404,7 +404,7 @@ tCorpus <- R6::R6Class("tCorpus",
 
      set_meta_levels = function(column, levels) {
         if (!column %in% self$meta_names) stop(sprintf('"%s" column does not exists in meta', column))
-        if (!methods::is(self$meta[[column]], 'factor')) stop(sprintf('"%s" is not a factor', column))
+        if (!is.factor(self$meta[[column]])) stop(sprintf('"%s" is not a factor', column))
         data.table::setattr(self$meta[[column]], 'levels', levels)
       },
 
@@ -462,7 +462,7 @@ tCorpus <- R6::R6Class("tCorpus",
        private$droplevels()
        self$tokens[]
        self$meta[]
-       if (!methods::is(self$tokens$doc_id, 'factor')) self$tokens$doc_id = fast_factor(self$tokens$doc_id)
+       if (!is.factor(self$tokens$doc_id)) self$tokens$doc_id = fast_factor(self$tokens$doc_id)
        invisible(self)
      },
 
@@ -471,12 +471,6 @@ tCorpus <- R6::R6Class("tCorpus",
         if (class(substitute(subset)) %in% c('call', 'name')) subset = self$eval_meta(substitute(subset), parent.frame())
         .subset = subset
         self$subset(subset_meta = .subset, copy=copy)
-      },
-
-     aggregate = function(meta_cols=NULL, hits=NULL, feature=NULL, count=c('documents','tokens', 'hits'), wide=T){
-        msg = "This function is deprecated because it is badly named, and the R6 method style is confusion. This is now the regular function count_tcorpus. Also see agg_tcorpus for aggregation"
-        warning(warningCondition(msg, class = "deprecatedWarning"))
-        as.data.frame(count_tcorpus(self, meta_cols, hits, feature, count, wide=T))
       },
 
       indices = function() data.table::indices(self$tokens),
@@ -611,8 +605,8 @@ is_tcorpus <- function(x){
 
 safe_selection <- function(d, selection){
   if (any(is.na(selection))) stop('selection cannot contain NA')
-  if (!methods::is(selection, 'numeric') && !methods::is(selection,'logical')) stop('selection has to be either a logical vector or a numerical vector (indices for TRUE values)')
-  if (methods::is(selection, 'numeric')) selection = 1:nrow(d) %in% selection
+  if (!is.numeric(selection) && !is.logical(selection)) stop('selection has to be either a logical vector or a numerical vector (indices for TRUE values)')
+  if (is.numeric(selection)) selection = 1:nrow(d) %in% selection
   selection
 }
 

@@ -231,7 +231,7 @@ agg_label <- function(label, ...) {
 #' }
 aggregate_rsyntax <- function(tc, annotation, ..., by_col=NULL, txt=F, labels=NULL, rm_na=T) {
   token = NULL
-  tokens = if (methods::is(tc, 'tCorpus')) tc$tokens else tc
+  tokens = if (inherits(tc, 'tCorpus')) tc$tokens else tc
   
   .annotation = annotation
   .annotation_id = paste0(.annotation, '_id')
@@ -242,7 +242,7 @@ aggregate_rsyntax <- function(tc, annotation, ..., by_col=NULL, txt=F, labels=NU
   
   if (is.null(labels)) labels = unique(tokens[[.annotation]])
   
-  if (methods::is(txt, 'logical')) {
+  if (is.logical(txt)) {
     txt = if (txt) labels else c()
   }
   

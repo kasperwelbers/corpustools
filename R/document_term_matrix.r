@@ -75,7 +75,7 @@ do_get_dtm <- function(tc, feature, context_level=c('document','sentence'), weig
   context_levels = match.arg(context_level)
 
   i = if (!is.null(context)) context else tc$context(context_level, with_labels = context_labels)
-  if (!methods::is(i, 'factor')) i = fast_factor(i)
+  if (!is.factor(i)) i = fast_factor(i)
 
   if (!is.null(subset_tokens) | !is.null(subset_meta)) {
     .subset_tokens = subset_tokens
@@ -91,7 +91,7 @@ do_get_dtm <- function(tc, feature, context_level=c('document','sentence'), weig
 
   feature = tc$get(feature)
 
-  if(!methods::is(feature, 'factor')) feature = fast_factor(feature)
+  if(!is.factor(feature)) feature = fast_factor(feature)
   if (!is.na(ngrams)) {
     filter = if (ngram_before_subset) NULL else sub_i
     feature = grouped_ngrams(feature, group = i, n = ngrams, filter = filter, label = feature_labels) ## designed to work fast if no labels are needed
@@ -102,11 +102,11 @@ do_get_dtm <- function(tc, feature, context_level=c('document','sentence'), weig
   } else idf = NULL
 
   feature = feature[sub_i]
-  if(drop_empty_terms && methods::is(feature, 'factor')) feature = droplevels(feature)
+  if(drop_empty_terms && is.factor(feature)) feature = droplevels(feature)
   notNA = !is.na(feature)
 
 
-  if (methods::is(feature, 'factor')) {
+  if (is.factor(feature)) {
     cols = length(levels(feature))
     j = as.numeric(feature)[notNA]
   } else {
@@ -165,7 +165,7 @@ weight_dtm <- function(m, weight, idf=NULL){
 }
 
 as_dgTMatrix <- function(dtm){
-  if (!methods::is(dtm, 'DocumentTermMatrix')) return(methods::as(dtm, 'dgTMatrix'))
+  if (!inherits(dtm, 'DocumentTermMatrix')) return(methods::as(dtm, 'dgTMatrix'))
   sm = Matrix::spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
   rownames(sm) = rownames(dtm)
   colnames(sm) = colnames(dtm)

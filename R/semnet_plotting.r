@@ -110,7 +110,7 @@ set_network_attributes <- function(g, size_attribute='freq', color_attribute=NA,
 
 set_vertex_colors <- function(g, color){
   if (!is.null(color)){
-    if (class(color) == 'numeric'){
+    if (is.numeric(color)){
       pal = substr(grDevices::rainbow(length(unique(color)), s=0.5,alpha=0.5), 1,7)
       duplicates = unique(color[duplicated(color)])
       color = match(color, duplicates) # re-index colors, and setting isolates to NA

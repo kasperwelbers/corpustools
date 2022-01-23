@@ -19,6 +19,7 @@
 #'  tc$tokens[!is.na(tc$tokens$coref_id),]
 #' }
 tCorpus$set('public', 'udpipe_coref', function(keep_feats=F) {
+  .Deprecated("a dedicated coreference resolution module in an NLP pipeline")
   coref_id = coref_txt = NULL
   feats = c('Gender','Number','Person','PronType')
   for (f in feats) if (f %in% self$names) data.table::setnames(self$tokens, f, paste0('.TEMP',f))

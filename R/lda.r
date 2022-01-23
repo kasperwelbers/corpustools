@@ -56,7 +56,7 @@ tCorpus$set('public', 'lda_fit', function(feature, create_feature=NULL, K=50, nu
 
 lda_features <- function(tc, m, feature, new_feature='LDA_topic', context_level=c('document','sentence')){
   context_level = match.arg(context_level)
-  if (!methods::is(m, 'LDA_Gibbs')) stop('An LDA model of class LDA_Gibbs (topicmodels::LDA with method = "Gibbs") is required')
+  if (!inherits(m, 'LDA_Gibbs')) stop('An LDA model of class LDA_Gibbs (topicmodels::LDA with method = "Gibbs") is required')
 
   d = data.table(context = tc$context(context_level),
                  feature = fast_factor(tc$get(feature)),
@@ -72,7 +72,7 @@ lda_features <- function(tc, m, feature, new_feature='LDA_topic', context_level=
 
 lda_fit <- function(dtm, method='Gibbs', K=50, num.iterations=500, alpha=50/K, eta=.01, burnin=250) {
   require_package('topicmodels')
-  if (methods::is(dtm, 'DocumentTermMatrix')) dtm = as_dgTMatrix(dtm)
+  if (inherits(dtm, 'DocumentTermMatrix')) dtm = as_dgTMatrix(dtm)
 
   empty_rows = sum(Matrix::rowSums(dtm) == 0)
   empty_cols = sum(Matrix::rowSums(dtm) == 0)

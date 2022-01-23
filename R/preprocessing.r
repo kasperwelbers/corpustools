@@ -94,7 +94,7 @@ tCorpus$set('public', 'feature_subset', function(column, subset=NULL, new_column
     return(selfcopy)
   }
 
-  if (methods::is(subset, 'numeric')) subset = 1:self$n %in% subset ## this can be the case if a vector of indices is passed to subset (which is not a valid call, but is allowed for convenience because it is a common way of subsetting)
+  if (is.numeric(subset)) subset = 1:self$n %in% subset ## this can be the case if a vector of indices is passed to subset (which is not a valid call, but is allowed for convenience because it is a common way of subsetting)
 
   .subset = if (inverse) !subset else subset
 
@@ -119,7 +119,7 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
   is_tcorpus(tc)
 
   feature = tc$get(column)
-  if (!methods::is(feature, 'factor')) feature = factor(feature)
+  if (!is.factor(feature)) feature = factor(feature)
 
   if (ngrams == 1 && is.null(min_docfreq)) {
     .feature = preprocess_tokens(feature, context=NA, language=language, use_stemming=use_stemming, lowercase=lowercase, as_ascii=as_ascii, remove_punctuation=remove_punctuation, remove_stopwords=remove_stopwords, remove_numbers=remove_numbers, min_freq=min_freq, min_docfreq=min_docfreq, max_freq=max_freq, max_docfreq=max_docfreq, min_char=min_char, max_char=max_char)
@@ -131,7 +131,6 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
   tc$tokens[]
   tc
 }
-
 
 #' Preprocess tokens in a character vector
 #'
@@ -167,7 +166,7 @@ preprocess_feature <- function(tc, column, new_column, lowercase=T, ngrams=1, ng
 #' @return a factor vector
 preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=F, lowercase=T, ngrams=1, replace_whitespace=F, as_ascii=F, remove_punctuation=T, remove_stopwords=F, remove_numbers=F, min_freq=NULL, min_docfreq=NULL, max_freq=NULL, max_docfreq=NULL, min_char=NULL, max_char=NULL, ngram_skip_empty=T){
   language = match.arg(language, choices=c('danish','dutch','english','finnish','french','german','hungarian','italian','norwegian','porter','portuguese','romanian','russian','spanish','swedish','turkish'))
-  if (!methods::is(x, 'factor')) x = fast_factor(x)
+  if (!is.factor(x)) x = fast_factor(x)
   if (replace_whitespace) levels(x) = gsub(' ', '_', levels(x), fixed=T)
   if (lowercase) levels(x) = tolower(levels(x))
   if (as_ascii) {
@@ -232,7 +231,7 @@ grouped_ngrams <- function(tokens, group, n, filter=rep(T, length(tokens)), labe
     tokens = tokens[filter]
     group = if (length(group) == 1) rep(group, length(tokens)) else group[filter]
   } else {
-    if (methods::is(tokens, 'factor')) levels(tokens) = union(levels(tokens), '')
+    if (is.factor(tokens)) levels(tokens) = union(levels(tokens), '')
     group = if (length(group) == 1) rep(group, length(tokens)) else group
   }
 

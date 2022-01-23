@@ -33,13 +33,13 @@ semnet <- function(tc, feature='token', measure=c('con_prob', 'con_prob_weighted
   measure = match.arg(measure)
   context_level = match.arg(context_level)
 
-  if (!methods::is(tc, 'tCorpus') && !methods::is(tc, 'featureHits') && !methods::is(tc, 'contextHits')) stop('tc has to be a tCorpus, featureHits or contextHits object')
+  if (!inherits(tc, 'tCorpus') && !inherits(tc, 'featureHits') && !inherits(tc, 'contextHits')) stop('tc has to be a tCorpus, featureHits or contextHits object')
 
 
-  if (methods::is(tc, 'featureHits') || methods::is(tc, 'contextHits')) {
+  if (inherits(tc, 'featureHits') || inherits(tc, 'contextHits')) {
     sentence_col = if (anyNA(tc$hits$sentence)) NULL else 'sentence'
     hits = tc$hits
-    if (methods::is(tc, 'contextHits')) {
+    if (inherits(tc, 'contextHits')) {
       hits$hit_id = 1:nrow(hits)
       hits$token_id = 1:nrow(hits) ## doesn't matter for document/sentence level semnet
     }
@@ -128,9 +128,9 @@ semnet_window <- function(tc, feature='token', measure=c('con_prob', 'cosine', '
   context_level = match.arg(context_level)
   matrix_mode = match.arg(matrix_mode)
 
-  if (!methods::is(tc, 'tCorpus') && !methods::is(tc, 'featureHits')) stop('tc has to be a tCorpus or featureHits object')
+  if (!inherits(tc, 'tCorpus') && !inherits(tc, 'featureHits')) stop('tc has to be a tCorpus or featureHits object')
 
-  if (methods::is(tc, 'featureHits')) {
+  if (inherits(tc, 'featureHits')) {
     sentence_col = if (anyNA(tc$hits$sentence)) NULL else 'sentence'
     hits = tc$hits
     if (measure %in% c('count_directed','count_undirected')) hits = hits[!duplicated(hits[,c('code','hit_id')])]

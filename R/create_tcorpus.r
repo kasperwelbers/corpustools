@@ -11,6 +11,7 @@
 #' @rdname create_tcorpus
 #'
 #' @param x                 main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.
+#'                          If x (or a text_column in x) has leading or trailing whitespace, this is cut off (and you'll get a warning about it). 
 #' @param meta              A data.frame with document meta information (e.g., date, source). The rows of the data.frame need to match the values of x
 #' @param udpipe_model      Optionally, the name of a Universal Dependencies language model (e.g., "english-ewt", "dutch-alpino"), to use the udpipe package
 #'                          (\code{\link[udpipe]{udpipe_annotate}}) for natural language processing. You can use \code{\link{show_udpipe_models}} to get
@@ -21,10 +22,8 @@
 #' @param max_sentences     An integer. Limits the number of sentences per document to the specified number. If set when split_sentences == FALSE, split_sentences will be set to TRUE.
 #' @param doc_id            if x is a character/factor vector, doc_id can be used to specify document ids. This has to be a vector of the same length as x
 #' @param doc_column        If x is a data.frame, this specifies the column with the document ids.
-#' @param text_columns      if x is a data.frame, this specifies the column(s) that contains text. Note that using multiple text columns does more than just paste
-#'                          them together (which you can do yourself if you're note interested in distinguisthing the text fields). If multiple columns are used,
-#'                          A "field" column is added to the tokens that indicates from which text_column it came. If remember_spaces is used, the start and end positions 
-#'                          are local within fields.
+#' @param text_columns      if x is a data.frame, this specifies the column(s) that contains text. If multiple columns are used, they are pasted together separated by a double line break.
+#'                          If remember_spaces is true, a "field" column is also added that show the column name for each token, and the start/end positions are local within these fields
 #' @param udpipe_model_path If udpipe_model is used, this path wil be used to look for the model, and if the model doesn't yet exist it will be downloaded to this location. Defaults to working directory
 #' @param udpipe_cache      The number of persistent caches to keep for inputs of udpipe. The caches store tokens in batches.
 #'                          This way, if a lot of data has to be parsed, or if R crashes, udpipe can continue from the latest batch instead of start over.
@@ -63,11 +62,11 @@ create_tcorpus <- function(x, ...) {
 #'                     meta = meta)
 #' tc
 #' @export
-create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, udpipe_cores=NULL, udpipe_batchsize=50, use_parser=F, remember_spaces=TRUE, verbose=T, ...) {
+create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, udpipe_cores=NULL, udpipe_batchsize=50, use_parser=F, remember_spaces=F, verbose=T, ...) {
   if (is.null(udpipe_cores)) udpipe_cores = use_n_cores(udpipe_cores)
   if (any(duplicated(doc_id))) stop('doc_id should not contain duplicate values')
   if (!is.null(meta)){
-    if (!methods::is(meta, 'data.frame')) stop('"meta" is not a data.frame or data.table')
+    if (!inherits(meta, 'data.frame')) stop('"meta" is not a data.frame or data.table')
     if (!nrow(meta) == length(x)) stop('The number of rows in "meta" does not match the number of texts in "x"')
     if (!'doc_id' %in% colnames(meta)) meta = cbind(doc_id=doc_id, meta)
     meta = data.table::data.table(meta, key = 'doc_id')
@@ -84,6 +83,7 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
   } else {
     data = tokenize_to_dataframe(x, doc_id=doc_id, split_sentences=split_sentences, max_sentences=max_sentences, max_tokens=max_tokens, remember_spaces=remember_spaces, verbose=verbose)
   }
+  
   model = if (is.null(udpipe_model)) 'basic tokenization' else udpipe_model
   tCorpus$new(tokens = data, meta = base::droplevels(meta), model=model)
 }
@@ -109,7 +109,7 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
 #' tc
 #' tc$tokens
 #' @export
-create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id', udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, udpipe_cores=NULL, udpipe_batchsize=50, use_parser=F, remember_spaces=TRUE, verbose=T, ...) {
+create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id', udpipe_model=NULL, split_sentences=F, max_sentences=NULL, max_tokens=NULL, udpipe_model_path=getwd(), udpipe_cache=3, udpipe_cores=NULL, udpipe_batchsize=50, use_parser=F, remember_spaces=F, verbose=T, ...) {
   
   for(cname in text_columns) {
     if (!cname %in% colnames(x)) stop(sprintf('text_column "%s" not in data.frame', cname))
@@ -124,26 +124,24 @@ create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id
 
   if (!doc_column %in% colnames(x)) {
     message('No existing document column (doc_column) specified. Using indices as id.')
-    doc_id = 1:nrow(x)
-  } else doc_id = x[[doc_column]]
+    doc_id = as.character(1:nrow(x))
+  } else doc_id = as.character(x[[doc_column]])
 
-  need_spaces = remember_spaces || length(text_columns) > 1
   tc = create_tcorpus(text,
                  doc_id = doc_id,
                  meta = x[,!colnames(x) %in% c(text_columns, doc_column), drop=F],
                  udpipe_model=udpipe_model, split_sentences = split_sentences, max_sentences = max_sentences, max_tokens = max_tokens, 
                  udpipe_model_path=udpipe_model_path, udpipe_cache=udpipe_cache, udpipe_cores=udpipe_cores, udpipe_batchsize=udpipe_batchsize, 
-                 use_parser=use_parser, remember_spaces=need_spaces, verbose=verbose)
+                 use_parser=use_parser, remember_spaces=remember_spaces, verbose=verbose)
   
-  if (length(text_columns) > 1) {
-    tc = add_fields(tc, x, text_columns)
-  } 
-  
-  if (need_spaces && !remember_spaces) {
-    tc$tokens$start = NULL
-    tc$tokens$end = NULL
-    tc$tokens$space = NULL
+  if (remember_spaces) {
+    if (length(text_columns) > 1) {
+      tc = add_fields(tc, x, doc_id, text_columns)
+    } else {
+      tc$tokens$field = text_columns
+    }
   }
+  
   tc
 }
 
@@ -183,20 +181,19 @@ transparent_trim <- function(x, remember_spaces) {
   x
 }
 
-add_fields <- function(tc, x, text_columns, local_positions=T) {
-  tc$tokens$len = nchar(as.character(tc$tokens$token)) + nchar(as.character(tc$tokens$space))
-  tc$tokens[,start := 1 + c(0, head(cumsum(len),-1)), by='doc_id']
-  tc$tokens[,end := start + nchar(as.character(token)) - 1]
-  
-  tf_start = data.table::data.table(doc_id = unique(tc$tokens$doc_id), offset=1)
+add_fields <- function(tc, x, doc_id, text_columns, local_positions=T) {
+  field = end = start = NULL
+  tf_start = data.table::data.table(doc_id = doc_id, offset=1)
   tf_start[['1']] = 1
+  i=2
   for (i in 2:length(text_columns)) {
     tf_start$offset = tf_start$offset + nchar(x[[text_columns[i-1]]]) + nchar('\n\n')
     tf_start[[as.character(i)]] = tf_start$offset
   }
+  tf_start$`2`
   tf_start$offset = NULL
   tf_start = data.table::melt(tf_start, id.vars='doc_id', variable.name='field', value.name = 'start')
-  
+
   tc$tokens = tc$tokens[tf_start, field := as.numeric(tf_start$field), on=c('doc_id','start')]
   tc$tokens[, field := data.table::nafill(field, 'locf'), by='doc_id']
   tc$tokens$field = fast_factor(text_columns[tc$tokens$field])

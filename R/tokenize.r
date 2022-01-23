@@ -2,7 +2,7 @@
 ## todo: test whether tokenize package is better match
 
 tokenize_to_dataframe <- function(x, doc_id=1:length(x), split_sentences=F, max_sentences=NULL, max_tokens=NULL, remember_spaces =F, verbose=F){
-  space = NULL ## data.table bindings
+  space = start = len = end = token = NULL ## data.table bindings
 
   batch_i = get_batch_i(length(doc_id), batchsize=5000, return_list=T)
   prog = if (verbose) 'text' else 'none'
@@ -17,10 +17,17 @@ tokenize_to_dataframe <- function(x, doc_id=1:length(x), split_sentences=F, max_
   }
 
   tokens = data.table::rbindlist(tokens)
+  setkey(tokens, 'doc_id', 'token_id')
+  
   if (remember_spaces) {
     split_terms = uncollapse_terms_cpp(as.character(tokens$token))
     tokens$token = fast_factor(split_terms$left)
     tokens[, space := fast_factor(split_terms$right)]
+    
+    tokens$len = nchar(as.character(tokens$token)) + nchar(as.character(tokens$space))
+    tokens[,start := 1 + c(0, head(cumsum(len),-1)), by='doc_id']
+    tokens[,end := start + nchar(as.character(token)) - 1]
+    tokens$len = NULL
   }
   tokens
 }

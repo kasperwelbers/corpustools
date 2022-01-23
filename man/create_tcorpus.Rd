@@ -23,7 +23,7 @@ create_tcorpus(x, ...)
   udpipe_cores = NULL,
   udpipe_batchsize = 50,
   use_parser = F,
-  remember_spaces = TRUE,
+  remember_spaces = F,
   verbose = T,
   ...
 )
@@ -41,7 +41,7 @@ create_tcorpus(x, ...)
   udpipe_cores = NULL,
   udpipe_batchsize = 50,
   use_parser = F,
-  remember_spaces = FALSE,
+  remember_spaces = F,
   verbose = T,
   ...
 )
@@ -51,7 +51,8 @@ create_tcorpus(x, ...)
 \method{create_tcorpus}{corpus}(x, ...)
 }
 \arguments{
-\item{x}{main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.}
+\item{x}{main input. can be a character (or factor) vector where each value is a full text, or a data.frame that has a column that contains full texts.
+If x (or a text_column in x) has leading or trailing whitespace, this is cut off (and you'll get a warning about it).}
 
 \item{...}{Arguments passed to create_tcorpus.character}
 
@@ -84,11 +85,12 @@ If the number of texts divided by the number of parallel cores is lower than the
 
 \item{use_parser}{If TRUE, use dependency parser (only if udpipe_model is used)}
 
-\item{remember_spaces}{If TRUE, a column with spaces after each token is included. Enables correct reconstruction of original text and keeps annotations at the level of character positions (e.g., brat) intact.}
+\item{remember_spaces}{If TRUE, a column with spaces after each token and column with the start and end positions of tokens are included. Can turn it of for a bit more speed and less memory use, but some features won't work.}
 
 \item{verbose}{If TRUE, report progress. Only if x is large enough to require multiple sequential batches}
 
-\item{text_columns}{if x is a data.frame, this specifies the column(s) that contains text. The texts are paste together in the order specified here.}
+\item{text_columns}{if x is a data.frame, this specifies the column(s) that contains text. If multiple columns are used, they are pasted together separated by a double line break.
+If remember_spaces is true, a "field" column is also added that show the column name for each token, and the start/end positions are local within these fields}
 
 \item{doc_column}{If x is a data.frame, this specifies the column with the document ids.}
 }

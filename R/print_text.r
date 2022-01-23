@@ -51,7 +51,7 @@ browse_texts <- function(tc, doc_ids=NULL, token_col='token', n=500, select=c('f
     mode = 'highlight'
     class(T)
     if (!highlight %in% tc$names) stop(paste(highlight, 'is not a valid column name in tc$tokens'))
-    if (methods::is(tc$tokens[[highlight]], 'logical')) tc$tokens[[highlight]] = as.numeric(tc$tokens[[highlight]])
+    if (is.logical(tc$tokens[[highlight]])) tc$tokens[[highlight]] = as.numeric(tc$tokens[[highlight]])
     if (!(is.numeric(tc$tokens[[highlight]]) || is.character(tc$tokens[[highlight]]) || is.factor(tc$tokens[[highlight]]))) stop("highlight has to be a numeric or character value")
     if (is.numeric(tc$tokens[[highlight]])) {
       if (min(tc$tokens[[highlight]], na.rm=T) < 0 || max(tc$tokens[[highlight]], na.rm=T) > 1) stop('highlight has to be a value between 0 and 1')

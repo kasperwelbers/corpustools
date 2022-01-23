@@ -23,7 +23,7 @@ tokenWindowOccurence <- function(tc, feature, context_level=c('document','senten
   if (direction == '>') shifts = 0:window.size
 
   feature = tc$get(feature)
-  if (!methods::is(feature,'factor')) feature = fast_factor(feature)
+  if (!is.factor(feature)) feature = fast_factor(feature)
   if (drop_empty_terms) feature = base::droplevels(feature)
   term_index = as.numeric(feature)
   position = get_global_i(tc, context_level, window.size)
