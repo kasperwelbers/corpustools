@@ -40,7 +40,6 @@ void match_dictionary(std::vector<int>& dict_i, std::vector<int>& hit_id, std::v
   double feat;
   int li;
   int count_terms = 0;
-  int code = -1;
 
   for (int j=0; j < 100; j++) {   // 100 is max nr of words in dict term, which I think is fair
     if (dict.containsElementNamed("code")) {
