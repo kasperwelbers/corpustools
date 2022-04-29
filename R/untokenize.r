@@ -60,6 +60,7 @@ export_span_annotations <- function(tc, variables) {
     if (!'field' %in% colnames(ann)) ann$field = 'text'
     
     n = nrow(ann)
+    if (n == 0) next
     ann$new_span = c(T, ann$token_id[2:n] != ann$token_id[1:(n-1)] +1)
     ann$span_id = cumsum(ann$new_span)  ## can span across documents, but thats taken care of in the aggregateion
     ann = ann[,list(offset = first(start), 

@@ -103,6 +103,10 @@ corpus is given, the ids and texts are already specified, and the docvars will b
 By default, texts will only be tokenized, and basic preprocessing techniques (lowercasing, stemming) can be applied with the
 \code{\link{preprocess}} method. Alternatively, the udpipe package can be used to apply more advanced NLP preprocessing, by
 using the udpipe_model argument.
+
+For certain advanced features you need to set remember_spaces to true. We are often used to forgetting all about spaces when
+we do bag-of-word type stuff, and that's sad. With remember_spaces, the exact position of each token is remembered, including 
+what type of space follows the token (like a space or a line break), and what text field the token came from (if multiple text_columns are specified in create_tcorpus.data.frame)
 }
 \examples{
 ## ...

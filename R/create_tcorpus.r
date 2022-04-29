@@ -7,6 +7,10 @@
 #' By default, texts will only be tokenized, and basic preprocessing techniques (lowercasing, stemming) can be applied with the
 #' \code{\link{preprocess}} method. Alternatively, the udpipe package can be used to apply more advanced NLP preprocessing, by
 #' using the udpipe_model argument.
+#' 
+#' For certain advanced features you need to set remember_spaces to true. We are often used to forgetting all about spaces when
+#' we do bag-of-word type stuff, and that's sad. With remember_spaces, the exact position of each token is remembered, including 
+#' what type of space follows the token (like a space or a line break), and what text field the token came from (if multiple text_columns are specified in create_tcorpus.data.frame) 
 #'
 #' @rdname create_tcorpus
 #'
@@ -76,8 +80,10 @@ create_tcorpus.character <- function(x, doc_id=1:length(x), meta=NULL, udpipe_mo
   }
   meta$doc_id = as.character(meta$doc_id) ## prevent factors, which are unnecessary here and can only lead to conflicting levels with the doc_id in data
 
-  
-  x = transparent_trim(x, remember_spaces)
+  ## NAs won't stop us
+  x[is.na(x)] = ''
+
+    x = transparent_trim(x, remember_spaces)
   if (!is.null(udpipe_model)) {
     data = udpipe_parse(x, udpipe_model, udpipe_model_path, udpipe_cores=udpipe_cores, cache=udpipe_cache, max_batchsize=udpipe_batchsize, doc_ids=doc_id, use_parser=use_parser, max_sentences=max_sentences, max_tokens=max_tokens, remember_spaces=remember_spaces, verbose=verbose)
   } else {
@@ -113,6 +119,7 @@ create_tcorpus.data.frame <- function(x, text_columns='text', doc_column='doc_id
   
   for(cname in text_columns) {
     if (!cname %in% colnames(x)) stop(sprintf('text_column "%s" not in data.frame', cname))
+    x[is.na(x)] = ''
     x[[cname]] = transparent_trim(x[[cname]], remember_spaces)
   }
  
@@ -175,7 +182,7 @@ transparent_trim <- function(x, remember_spaces) {
   aftertrim = nchar(as.character(x))
   trimmed = sum(aftertrim < beforetrim)
   if (trimmed > 0) {
-    warnoffset = if (remember_spaces) '(The start and end positions are for the trimmed text)' else ''
+    warnoffset = if (remember_spaces) '(The positions in tokens$start and tokens$end are for the trimmed text)' else ''
     warning(sprintf("Leading and trailing whitespace has been trimmed for %s texts. %s", trimmed, warnoffset))
   }
   x
@@ -190,7 +197,8 @@ add_fields <- function(tc, x, doc_id, text_columns, local_positions=T) {
     tf_start$offset = tf_start$offset + nchar(x[[text_columns[i-1]]]) + nchar('\n\n')
     tf_start[[as.character(i)]] = tf_start$offset
   }
-  tf_start$`2`
+  
+  # tf_start$`2`
   tf_start$offset = NULL
   tf_start = data.table::melt(tf_start, id.vars='doc_id', variable.name='field', value.name = 'start')
 
