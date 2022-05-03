@@ -18,7 +18,7 @@ If a quanteda dictionary is given, it is automatically converted to this type of
 
 \item{sep}{A regular expression for separating multi-word lookup strings (default is " ", which is what quanteda dictionaries use).
 For example, if the dictionary contains "Barack Obama", sep should be " " so that it matches the consequtive tokens "Barack" and "Obama".
-In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\+' should be used.}
+In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\\\+' should be used.}
 
 \item{case_sensitive}{logical, should lookup be case sensitive?}
 

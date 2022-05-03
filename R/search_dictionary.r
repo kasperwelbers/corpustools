@@ -23,7 +23,7 @@
 #' @param string_col      If dict is a data.frame, the name of the column in dict that contains the dictionary lookup string
 #' @param sep             A regular expression for separating multi-word lookup strings (default is " ", which is what quanteda dictionaries use).
 #'                        For example, if the dictionary contains "Barack Obama", sep should be " " so that it matches the consequtive tokens "Barack" and "Obama".
-#'                        In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\+' should be used.
+#'                        In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\\\+' should be used.
 #' @param case_sensitive  logical, should lookup be case sensitive?
 #' @param column          The name of the column added to $tokens. [column]_id contains the unique id of the match.
 #'                        If a quanteda dictionary is given, the label for the match is in the column named [column].
@@ -52,7 +52,7 @@ tCorpus$set('public', 'code_dictionary', function(dict, token_col='token', strin
   column_id = paste0(column, '_id')
   if (column_id %in% self$names) self$delete_columns(column_id)
 
-  fi = dictionary_lookup(self, data.table::data.table(string=dict[[string_col]], id = 1:nrow(dict), stringsAsFactors = F), regex_sep = sep,
+  fi = dictionary_lookup(self, data.table::data.table(string=dict[[string_col]], id = 1:nrow(dict), stringsAsFactors = F), sep = sep,
                         token_col=token_col, case_sensitive=case_sensitive,
                         standardize=T, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
   
@@ -242,7 +242,7 @@ melt_quanteda_dict <- function(dict, column='code', .index=NULL) {
 #'                        If dict is a quanteda dictionary with multiple levels, "code_l2", "code_l3", etc. can be used to select levels..
 #' @param sep             A regular expression for separating multi-word lookup strings (default is " ", which is what quanteda dictionaries use).
 #'                        For example, if the dictionary contains "Barack Obama", sep should be " " so that it matches the consequtive tokens "Barack" and "Obama".
-#'                        In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\+' should be used.
+#'                        In some dictionaries, however, it might say "Barack+Obama", so in that case sep = '\\\\+' should be used.
 #' @param mode            There are two modes: "unique_hits" and "features". The "unique_hits" mode prioritizes finding unique matches, which is recommended for counting how often a dictionary term occurs.
 #'                        If a term matches multiple dictionary terms (which should only happen for nested multi-word terms, such as "bad" and "not bad"), the longest term is always used. 
 #'                        The features mode does not delete duplicates.
@@ -268,7 +268,7 @@ search_dictionary <- function(tc, dict, token_col='token', string_col='string', 
   if (!string_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', string_col))
   if (!code_col %in% colnames(dict)) stop(sprintf('dict does not have a column named "%s"', code_col))
 
-  fi = dictionary_lookup(tc, data.table::data.table(string=dict[[string_col]], id = 1:nrow(dict)), regex_sep=sep, mode=mode,
+  fi = dictionary_lookup(tc, data.table::data.table(string=dict[[string_col]], id = 1:nrow(dict)), sep=sep, mode=mode,
                         token_col=token_col, case_sensitive=case_sensitive, standardize=T, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
   if (is.null(fi)) return(featureHits(NULL, data.frame()))
   
@@ -283,17 +283,18 @@ search_dictionary <- function(tc, dict, token_col='token', string_col='string', 
   featureHits(hits, queries)
 }
 
-dictionary_lookup <- function(tc, dict, regex_sep=' ', token_col='token', mode = c('unique_hits','features'), case_sensitive=F, standardize=T, ascii=F, use_wildcards=T, context_level=c('document','sentence'), verbose=F){
+dictionary_lookup <- function(tc, dict, sep=' ', token_col='token', mode = c('unique_hits','features'), case_sensitive=F, standardize=T, ascii=F, use_wildcards=T, context_level=c('document','sentence'), verbose=F){
+  if (sep != ' ') dict$string = gsub(sep, ' ', dict$string)
   mode = match.arg(mode)
   if (!token_col %in% tc$names) stop(sprintf('specified token column ("%s") is not a valid column in tokens', token_col))
   if (!is.factor(tc$tokens[[token_col]])) tc$set(token_col, fast_factor(tc$tokens[[token_col]]))
   fi = dictionary_lookup_tokens(tokens = tc$get(token_col), context = as.numeric(tc$context(context_level)), token_id=tc$tokens$token_id, dict=dict, mode=mode,
-                                regex_sep=regex_sep, case_sensitive=case_sensitive, standardize=standardize, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
+                                case_sensitive=case_sensitive, standardize=standardize, ascii=ascii, use_wildcards=use_wildcards, verbose=verbose)
   
 }
 
 
-dictionary_lookup_tokens <- function(tokens, context, token_id, dict, mode=mode, regex_sep=' ', case_sensitive=F, standardize=T, ascii=F, use_wildcards=T, verbose=F){
+dictionary_lookup_tokens <- function(tokens, context, token_id, dict, mode=mode, case_sensitive=F, standardize=T, ascii=F, use_wildcards=T, verbose=F){
   if (!'string' %in% colnames(dict)) stop('Dictionary must have column named "string"')
   if (!'id' %in% colnames(dict)) stop('Dictionary must have column named "id"')
   
@@ -316,11 +317,11 @@ dictionary_lookup_tokens <- function(tokens, context, token_id, dict, mode=mode,
   
   if (any(case_sensitive) && !all(case_sensitive)) {
     if (length(case_sensitive) != nrow(dict)) stop('case_sensitive vector needs to be length 1 or length of dictionary')
-    out1 = dictionary_lookup_tokens2(fi, dict[case_sensitive,], dict_i_ids = which(case_sensitive), mode=mode, case_sensitive=T, ascii, regex_sep, use_wildcards, flatten, 1, verbose)
-    out2 = dictionary_lookup_tokens2(fi, dict[!case_sensitive,], dict_i_ids = which(!case_sensitive), mode=mode, case_sensitive=F, ascii, regex_sep, use_wildcards, flatten, max(out1$hit_id)+1, verbose)
+    out1 = dictionary_lookup_tokens2(fi, dict[case_sensitive,], dict_i_ids = which(case_sensitive), mode=mode, case_sensitive=T, ascii, use_wildcards, flatten, 1, verbose)
+    out2 = dictionary_lookup_tokens2(fi, dict[!case_sensitive,], dict_i_ids = which(!case_sensitive), mode=mode, case_sensitive=F, ascii, use_wildcards, flatten, max(out1$hit_id)+1, verbose)
     out = rbind(out1,out2)
   } else {
-    out = dictionary_lookup_tokens2(fi, dict, dict_i_ids = 1:nrow(dict), mode=mode, unique(case_sensitive), ascii, regex_sep, use_wildcards, flatten, 1, verbose)
+    out = dictionary_lookup_tokens2(fi, dict, dict_i_ids = 1:nrow(dict), mode=mode, unique(case_sensitive), ascii, use_wildcards, flatten, 1, verbose)
   }
   
   is_ast = which(dict$string == '*')
@@ -334,14 +335,14 @@ dictionary_lookup_tokens <- function(tokens, context, token_id, dict, mode=mode,
   
 }
 
-dictionary_lookup_tokens2 <- function(fi, dict, dict_i_ids, mode, case_sensitive, ascii, regex_sep, use_wildcards, flatten, hit_id_offset=1, verbose=F) {
+dictionary_lookup_tokens2 <- function(fi, dict, dict_i_ids, mode, case_sensitive, ascii, use_wildcards, flatten, hit_id_offset=1, verbose=F) {
   ## split into 2 parts for more efficient processing of queries with both case sensitive and insensitive 
   
   levels(fi$feature) = normalize_string(levels(fi$feature), lowercase=!case_sensitive, ascii = ascii)
   #data.table::setkey(fi, 'feature')
   
   if (verbose) message("Preparing dictionary")
-  d = collapse_dict(dict$string, regex_sep, use_wildcards, case_sensitive, ascii, levels(fi$feature))
+  d = collapse_dict(dict$string, use_wildcards, case_sensitive, ascii, levels(fi$feature))
   if (!'terms' %in% names(d)) return(NULL)
   
   data.table::setindexv(fi, 'feature')
@@ -372,14 +373,14 @@ normalize_string <- function(x, lowercase=T, ascii=T, trim=T){
   x
 }
 
-collapse_dict <- function(string, regex_sep, use_wildcards, case_sensitive, ascii, feature_levels) {
+collapse_dict <- function(string, use_wildcards, case_sensitive, ascii, feature_levels) {
   dict = data.table::data.table(string = normalize_string(string, lowercase=!case_sensitive, ascii=ascii))
 
   ## remove separator if at start or end of word
-  first_or_last = paste0('^',regex_sep, '|', regex_sep, '$')
+  first_or_last = '^ | $'
   dict$string = gsub(first_or_last, '', dict$string)
 
-  sn = stringi::stri_split(dict$string, regex=regex_sep)
+  sn = stringi::stri_split(dict$string, regex=' ')
   
   if (use_wildcards && any(grepl('[?*]', dict$string))) {
     sn = expand_wildcards(sn, feature_levels)
@@ -395,10 +396,10 @@ collapse_dict <- function(string, regex_sep, use_wildcards, case_sensitive, asci
   sn = replace_string_with_factor(sn, feature_levels)
 
   if (length(sn) == 0) return(NULL)
-  rec_collapse_dict(sn, regex_sep=regex_sep)
+  rec_collapse_dict(sn)
 }
 
-rec_collapse_dict <- function(l, i=1, regex_sep=' ') {
+rec_collapse_dict <- function(l, i=1) {
   out = list()
 
   has_terms = !is.na(sapply(l, '[', j=i))
@@ -411,7 +412,7 @@ rec_collapse_dict <- function(l, i=1, regex_sep=' ') {
   term = sapply(l, '[', j=i, simplify = T)
   terms = split(l, term)
 
-  out$terms = sapply(terms, rec_collapse_dict, i=i+1, regex_sep=regex_sep, USE.NAMES = F, simplify=F)
+  out$terms = sapply(terms, rec_collapse_dict, i=i+1, USE.NAMES = F, simplify=F)
   if (length(out$terms) == 0) {
     out$terms = NULL
   } else {
