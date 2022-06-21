@@ -183,7 +183,7 @@ transparent_trim <- function(x, remember_spaces) {
   trimmed = sum(aftertrim < beforetrim)
   if (trimmed > 0) {
     warnoffset = if (remember_spaces) '(The positions in tokens$start and tokens$end are for the trimmed text)' else ''
-    warning(sprintf("Leading and trailing whitespace has been trimmed for %s texts. %s", trimmed, warnoffset))
+    warning(sprintf("Leading and trailing whitespace has been trimmed for %s items. %s", trimmed, warnoffset))
   }
   x
 }

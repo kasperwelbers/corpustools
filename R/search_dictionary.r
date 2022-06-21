@@ -285,6 +285,8 @@ search_dictionary <- function(tc, dict, token_col='token', string_col='string', 
 
 dictionary_lookup <- function(tc, dict, sep=' ', token_col='token', mode = c('unique_hits','features'), case_sensitive=F, standardize=T, ascii=F, use_wildcards=T, context_level=c('document','sentence'), verbose=F){
   if (sep != ' ') dict$string = gsub(sep, ' ', dict$string)
+  dict$string = stringi::stri_trim(dict$string)
+  
   mode = match.arg(mode)
   if (!token_col %in% tc$names) stop(sprintf('specified token column ("%s") is not a valid column in tokens', token_col))
   if (!is.factor(tc$tokens[[token_col]])) tc$set(token_col, fast_factor(tc$tokens[[token_col]]))

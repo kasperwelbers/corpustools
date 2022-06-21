@@ -54,6 +54,7 @@ add_multitoken_label <- function(tc, colloc_id, feature='token', new_feature=spr
 
 standardize_dict_term_spacing <- function(d, wildcards=T) {
   d$string = gsub('_', ' ', d$string)
+  d$string = stringi::stri_trim(d$string)
   d$string = sapply(split_tokens(d$string, Inf, T), paste, collapse=' ')
   if (wildcards) d$string = gsub(' ?([?*]) ?', '\\1', d$string)
   d$string = gsub(' +', ' ', d$string)
