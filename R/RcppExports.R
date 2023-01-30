@@ -9,14 +9,6 @@ uncollapse_terms_cpp <- function(term, sep = " ") {
     .Call('_corpustools_uncollapse_terms_cpp', PACKAGE = 'corpustools', term, sep)
 }
 
-group_coref_ids <- function(x, y, n) {
-    .Call('_corpustools_group_coref_ids', PACKAGE = 'corpustools', x, y, n)
-}
-
-coref_candidate_select <- function(needs_coref, doc_id, gender, number, so, person, pt, noun, pos, id, pronoun, lag, lead) {
-    .Call('_corpustools_coref_candidate_select', PACKAGE = 'corpustools', needs_coref, doc_id, gender, number, so, person, pt, noun, pos, id, pronoun, lag, lead)
-}
-
 do_code_dictionary <- function(feature, context, token_id, which, dict, hit_id_offset, verbose) {
     .Call('_corpustools_do_code_dictionary', PACKAGE = 'corpustools', feature, context, token_id, which, dict, hit_id_offset, verbose)
 }

@@ -179,7 +179,7 @@ preprocess_tokens <- function(x, context=NULL, language='english', use_stemming=
   if (remove_punctuation && !remove_numbers) levels(x)[!grepl("[[:alnum:]]", levels(x))] = NA
   if (!remove_punctuation && remove_numbers) levels(x)[!grepl("[[:alpha:][:punct:]]", levels(x))] = NA
 
-  if (use_stemming) levels(x) = SnowballC::wordStem(levels(x), language=language)
+  if (use_stemming) levels(x) = quanteda::char_wordstem(levels(x), language=language)
 
   if (ngrams > 1) {
     if (is.null(context)) stop('For ngrams, the "context" argument has to be specified. If no context is available, "context" can be NA')

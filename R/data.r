@@ -6,7 +6,6 @@
 'sotu_texts'
 #save(sotu_texts, file='data/sotu_texts.rda', compression_level = 9)
 
-
 #' coreNLP example sentences
 #'
 #' @docType data

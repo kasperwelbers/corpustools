@@ -13,7 +13,6 @@ Depends:
 Imports: 
     methods, 
     wordcloud (>= 2.5), 
-    SnowballC,
     stringi, 
     Rcpp (>= 0.12.12), 
     R6,
@@ -33,8 +32,7 @@ Suggests:
     tm (>= 0.6),
     topicmodels,
     knitr,
-    rmarkdown,
-    gender
+    rmarkdown
 LinkingTo: Rcpp, RcppProgress
 LazyData: true
 Encoding: UTF-8

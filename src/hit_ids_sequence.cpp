@@ -17,7 +17,7 @@ NumericVector sequence_hit_ids_cpp(NumericVector con, NumericVector subcon, Nume
       if (out[i+seq_i] > 0) continue;            // skip already assigned
       if (term_i[i+seq_i] != seq_i+1) break;     // seq_i (starting at 0) should match the number of the word in the sequence (starting at 1)
 
-      if ((pos[i+seq_i] - pos[i] > (0 + seq_i)) | (con[i+seq_i] != con[i])) break;      // there cant be a gap (or same context)
+      if ((pos[i+seq_i] - pos[i] > (0 + seq_i)) || (con[i+seq_i] != con[i])) break;      // there cant be a gap (or same context)
       if (use_subcon) {
         if (subcon[i+seq_i] != subcon[i]) break;
       }
