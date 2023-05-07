@@ -2,6 +2,8 @@ testthat::context('Advanced query search')
 
 
 test_that("Advanced query search works", {
+  options(Matrix.warnDeprecatedCoerce = 2)
+  
   ## include meta subset
   tc = create_tcorpus(sotu_texts, doc_column = 'id')
   hits = search_contexts(tc, 'test~[party == "nothing"]')

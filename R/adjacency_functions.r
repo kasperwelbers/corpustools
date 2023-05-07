@@ -42,7 +42,7 @@ tokenWindowOccurence <- function(tc, feature, context_level=c('document','senten
 
 transform_count <- function(m, count_mode=c('normal','dicho','prob'), alpha=2){
   count_mode = match.arg(count_mode)
-  m = methods::as(methods::as(m, 'dgCMatrix'), 'dgTMatrix') ## ensure that values above 1 are not spread out over different indices
+  m = methods::as(methods::as(m, 'generalMatrix'), 'TsparseMatrix') ## ensure that values above 1 are not spread out over different indices
   if (count_mode == 'normal') NULL
   if (count_mode == 'dicho') m@x[m@x > 0] = 1
   if (count_mode == 'prob') {
@@ -64,18 +64,18 @@ feature_cooccurrence <- function(tc, feature, matrix_mode=c('dtm', 'windowXwindo
   if (matrix_mode %in% c('positionXwindow', 'windowXwindow')) {
     ml = cooccurrence_matrix_window(tc, feature, matrix_mode=matrix_mode, count_mode=count_mode, mat_stats=mat_stats, context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
   }
-  ml$mat = methods::as(methods::as(ml$mat, 'dgCMatrix'), 'dgTMatrix')
+  ml$mat = methods::as(methods::as(ml$mat, 'generalMatrix'), 'TsparseMatrix')
   ml
 }
 
 cooccurrence_crossprod <- function(m1, m2=NULL, count_mode, mat_stats, alpha){
-  m1 = transform_count(methods::as(m1, 'dgTMatrix'), count_mode=count_mode, alpha=alpha)
+  m1 = transform_count(methods::as(m1, 'TsparseMatrix'), count_mode=count_mode, alpha=alpha)
 
   if (is.null(m2)){
     mat = Matrix::crossprod(m1)
     mat_stats = get_matrix_stats(m1, mat_stats=mat_stats)
   } else {
-    m2 = transform_count(methods::as(m2, 'dgTMatrix'), count_mode=count_mode, alpha=alpha)
+    m2 = transform_count(methods::as(m2, 'TsparseMatrix'), count_mode=count_mode, alpha=alpha)
     mat = Matrix::crossprod(m1,m2)
     mat_stats = get_matrix_stats(m1, m2=m2, mat_stats=mat_stats)
   }
@@ -170,7 +170,7 @@ is_symmetrical <- function(mat) identical(colnames(mat), rownames(mat))
 squarify_matrix <- function(mat){
   if (!is_symmetrical(mat)){
     ## necessary since graph.adjacency (for making an igraph object out of a matrix) needs matrix to be symmetrical
-    mat = methods::as(mat, 'dgTMatrix')
+    mat = methods::as(mat, 'TsparseMatrix')
     rnames = rownames(mat)
     cnames = colnames(mat)
     dnames = unique(c(rnames,cnames))

@@ -67,7 +67,7 @@ get_dfm(
 A document term matrix, in the format specified in the form argument
 }
 \description{
-Create a document term matrix. The default output is a sparse matrix (Matrix, dgTMatrix). Alternatively, the dtm style from the tm and quanteda package can be used.
+Create a document term matrix. The default output is a sparse matrix (Matrix, TsparseMatrix). Alternatively, the dtm style from the tm and quanteda package can be used.
 
 The dfm function is shorthand for using quanteda's dfm (document feature matrix) class. The meta data in the tcorpus is then automatically added as docvars in the dfm.
 }

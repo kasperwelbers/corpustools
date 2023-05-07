@@ -50,7 +50,7 @@ ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_
     adj = igraph::get.adjacency(g, type='both')
     min_weight = NA; top_edges = NA
   }
-  adj = methods::as(adj, 'dgTMatrix')
+  adj = methods::as(methods::as(adj, 'generalMatrix'), 'TsparseMatrix')
   if (igraph::is.directed(g)){
     if (directed == 'out') dt = summary(adj)
     if (directed == 'in') dt = summary(t(adj))

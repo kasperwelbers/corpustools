@@ -32,7 +32,7 @@ tag_ngrams <- function(value, ngrams, doc_id, priority=c('long','short','first')
 
 tc_add_idf <- function(tc) {
   dtm = corpustools::get_dtm(tc, feature='feature', weight = 'norm_tfidf', drop_empty_terms = F, context_labels = T, feature_labels=T, ngrams=1)
-  dtm = methods::as(dtm, 'dgTMatrix')
+  dtm = methods::as(methods::as(dtm, 'generalMatrix'), 'TsparseMatrix')
   dtm = data.table::data.table(doc_id = rownames(dtm)[dtm@i+1], feature=colnames(dtm)[dtm@j+1], tfidf=dtm@x)
   tc$tokens = merge(tc$tokens, dtm, by=c('doc_id','feature'))
   tc

@@ -2,6 +2,8 @@ testthat::context('Preprocessing')
 
 
 test_that("preprocessing works", {
+  options(Matrix.warnDeprecatedCoerce = 2)
+  
   tokens = data.frame(document = c(rep(1, 8), rep(2, 5), rep(3, 5)),
                       sentence = c(rep(1, 8), rep(2, 5), rep(3, 5)),
                       id = 1:18,

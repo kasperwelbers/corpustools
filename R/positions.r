@@ -95,10 +95,10 @@ position_matrix <- function(i, j, shifts=0, count_once=T, distance_as_value=F, a
       }
     } else{
       mat = spMatrix(nrow=nrows, ncol=ncols, i=newi[select], j=newj[select], x=rep(1, sum(select)))
-      mat = methods::as(mat, 'dgCMatrix')
+      mat = methods::as(mat, 'CsparseMatrix')
       if (count_once) mat@x[mat@x>0] = 1
     }
   }
-  mat = methods::as(mat, 'dgTMatrix')
+  mat = methods::as(methods::as(mat, 'generalMatrix'), 'TsparseMatrix')
   mat[return_i,,drop=F]
 }

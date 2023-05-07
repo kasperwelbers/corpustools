@@ -2,6 +2,8 @@ testthat::context('tCorpus')
 
 
 test_that("tCorpus class works", {
+  options(Matrix.warnDeprecatedCoerce = 2)
+  
   ### create from data.frame
   tokens = data.frame(document = c(rep(1, 8), rep(2, 5), rep(3, 5)),
                  sentence = c(rep(1,8), rep(1,5), rep(1,5)),

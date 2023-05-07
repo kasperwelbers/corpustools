@@ -1,7 +1,7 @@
 #' Create a document term matrix.
 #'
 #' @description
-#' Create a document term matrix. The default output is a sparse matrix (Matrix, dgTMatrix). Alternatively, the dtm style from the tm and quanteda package can be used.
+#' Create a document term matrix. The default output is a sparse matrix (Matrix, TsparseMatrix). Alternatively, the dtm style from the tm and quanteda package can be used.
 #'
 #' The dfm function is shorthand for using quanteda's dfm (document feature matrix) class. The meta data in the tcorpus is then automatically added as docvars in the dfm.
 #'
@@ -128,7 +128,7 @@ do_get_dtm <- function(tc, feature, context_level=c('document','sentence'), weig
     if(!weight %in% c('termfreq','tfidf', 'tfidf_norm')) attributes(m)$weighting = c(weight, weight)
   }
   if (form == 'quanteda_dfm') {
-    m = quanteda::as.dfm(methods::as(m, 'dgCMatrix'))
+    m = quanteda::as.dfm(methods::as(m, 'CsparseMatrix'))
     dvars = tc$get_meta(copy=T, keep_df = T)
     dvars = dvars[match(rownames(m), dvars$doc_id),]  ## in case of subsetting
     for (dvar in colnames(dvars)) {
@@ -148,7 +148,7 @@ get_idf <- function(context, feature) {
 }
 
 weight_dtm <- function(m, weight, idf=NULL){
-  m = methods::as(m, 'dgTMatrix')
+  m = methods::as(methods::as(m, 'generalMatrix'), 'TsparseMatrix')
   if(weight %in% c('tfidf', 'norm_tfidf')){
     if(weight == 'norm_tfidf') m@x = m@x / rowSums(m)[m@i+1]
     if(is.null(idf)) {
@@ -161,13 +161,13 @@ weight_dtm <- function(m, weight, idf=NULL){
   if(weight == 'docfreq') {
     m = m > 0
   }
-  methods::as(m,'dgCMatrix')
+  methods::as(m,'CsparseMatrix')
 }
 
 as_dgTMatrix <- function(dtm){
-  if (!inherits(dtm, 'DocumentTermMatrix')) return(methods::as(dtm, 'dgTMatrix'))
+  if (!inherits(dtm, 'DocumentTermMatrix')) return(methods::as(methods::as(dtm, 'generalMatrix'), 'TsparseMatrix'))
   sm = Matrix::spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
   rownames(sm) = rownames(dtm)
   colnames(sm) = colnames(dtm)
-  methods::as(sm, 'dgTMatrix')
+  methods::as(methods::as(sm, 'generalMatrix'), 'TsparseMatrix')
 }

@@ -1,6 +1,9 @@
 testthat::context('Compare documents')
 
 test_that("comparing documents works", {
+  options(Matrix.warnDeprecatedCoerce = 2)
+  
+  
   d = data.frame(text = c('Renewable fuel is better than fossil fuels!',
                           'A fueled debate about fuel',
                           'Mark Rutte is simply Rutte'),

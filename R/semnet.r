@@ -210,7 +210,7 @@ DocumentTermMatrix_to_dgTMatrix <- function(dtm){
   sm = spMatrix(nrow(dtm), ncol(dtm), dtm$i, dtm$j, dtm$v)
   rownames(sm) = rownames(dtm)
   colnames(sm) = colnames(dtm)
-  methods::as(sm, 'dgTMatrix')
+  methods::as(methods::as(sm, 'generalMatrix'), 'TsparseMatrix')
 }
 
 

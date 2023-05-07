@@ -2,6 +2,9 @@ testthat::context('Feature stats')
 
 
 test_that("feature associations", {
+  options(Matrix.warnDeprecatedCoerce = 2)
+  
+  
   library(corpustools)
   tc = create_tcorpus(sotu_texts)
 

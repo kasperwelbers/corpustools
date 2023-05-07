@@ -1,6 +1,9 @@
 testthat::context('Dictionary lookup')
 
 test_that("Testing: Dictionary lookup", {
+  options(Matrix.warnDeprecatedCoerce = 2)
+  
+  
   dict = data.frame(string = c('this is', 'a', 'test'))
   tc = create_tcorpus(c('this is a test','This town is not big enough for a test'))
 
