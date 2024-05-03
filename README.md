@@ -6,6 +6,7 @@ The corpustools package offers various tools for anayzing text corpora. The back
 One of the primary goals of corpustools is to make computational text analysis available and intuitive for users that are not experienced programmers. Notably, the authors are both active as researchers in the social sciences, and strive to promote the use of computational text analysis as a research method. This is also why we double down on the feature to reconstruct the original texts to enable a more qualitative investigation and validation of results. 
 
 
+
 Getting started
 ============
 
