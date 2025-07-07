@@ -66,7 +66,7 @@ ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_
     i = unique(c(ego$x, ego$y))
     g = igraph::delete.vertices(g, which(!1:igraph::vcount(g) %in% i))
   } else {
-    i = igraph::get.edge.ids(g, vp=rbind(ego$x, ego$y))
+    i = igraph::get_edge_ids(g, vp=c(rbind(ego$x, ego$y)))
     g = igraph::delete_edges(g, which(!1:igraph::ecount(g) %in% i))
     g = igraph::delete_vertices(g, which(igraph::degree(g) == 0))
   }
