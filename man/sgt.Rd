@@ -13,5 +13,5 @@ sgt(freq)
 A numeric vector with the smoothed term proportions
 }
 \description{
-Implementation of the Simple Good Turing smoothing proposed in: Gale, W. A., \& Sampson, G. (1995). Good turing frequency estimation without tears. Journal of Quantitative Linguistics, 2(3), 217-237.
+Implementation of the Simple Good Turing smoothing proposed in: Gale, W. A., and Sampson, G. (1995). Good turing frequency estimation without tears. Journal of Quantitative Linguistics, 2(3), 217-237.
 }

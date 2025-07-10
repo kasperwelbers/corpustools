@@ -40,7 +40,7 @@ plot_semnet <- function(g, weight_attr='weight', min_weight=NA, delete_isolates=
   if (igraph::ecount(g) > 0) {
     igraph::E(g)$weight = igraph::get.edge.attribute(g, weight_attr)
     if (!is.na(min_weight)) g = igraph::delete.edges(g, which(igraph::E(g)$weight < min_weight))
-    if (delete_isolates) g = igraph::delete.vertices(g, which(igraph::degree(g) == 0))
+    if (delete_isolates) g = igraph::delete_vertices(g, which(igraph::degree(g) == 0))
   }
   if (igraph::vcount(g) == 0) {
     igraph::plot.igraph(g, ...)

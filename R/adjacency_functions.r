@@ -169,7 +169,7 @@ is_symmetrical <- function(mat) identical(colnames(mat), rownames(mat))
 
 squarify_matrix <- function(mat){
   if (!is_symmetrical(mat)){
-    ## necessary since graph.adjacency (for making an igraph object out of a matrix) needs matrix to be symmetrical
+    ## necessary because graph.adjacency (for making an igraph object out of a matrix) needs matrix to be symmetrical
     mat = methods::as(mat, 'TsparseMatrix')
     rnames = rownames(mat)
     cnames = colnames(mat)
@@ -186,7 +186,7 @@ squarify_matrix <- function(mat){
 }
 
 cooc_chi2 <- function(g, x_sum, y_sum=x_sum, autocorrect=T){
-  cooc = igraph::get.edgelist(g, names = F)
+  cooc = igraph::as_edgelist(g, names = F)
   cooc = data.frame(x = cooc[,1], y = cooc[,2], cooc = igraph::E(g)$weight)
 
   cooc$chi2 = calc_chi2(a = cooc$cooc,                                                   # x=1, y=1

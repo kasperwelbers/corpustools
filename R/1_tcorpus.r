@@ -100,10 +100,6 @@ tCorpus <- R6::R6Class("tCorpus",
        private$set_keys()
      },
 
-     finalize = function() {
-       #forget_all_mem()
-     },
-
      copy = function(){
        tCorpus$new(tokens = data.table::copy(self$tokens),
                    meta = data.table::copy(self$meta),

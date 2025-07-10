@@ -7,7 +7,7 @@
 \arguments{
 \item{column}{The name of the column in which the annotations are added. The unique ids are added as column_id}
 
-\item{...}{One or multiple tqueries, or a list of queries, as created with \code{\link{tquery}}. Queries can be given a named by using a named argument, which will be used in the annotation_id to keep track of which query was used.}
+\item{...}{One or multiple tqueries, or a list of queries. Queries can be given a named by using a named argument, which will be used in the annotation_id to keep track of which query was used.}
 
 \item{block}{Optionally, specify ids (doc_id - sentence - token_id triples) that are blocked from querying and filling (ignoring the id and recursive searches through the id).}
 

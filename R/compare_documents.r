@@ -25,13 +25,13 @@
 #' tc = create_tcorpus(d)
 #'
 #' g = compare_documents(tc)
-#' igraph::get.data.frame(g)
+#' igraph::as_data_frame(g)
 #'
 #' g = compare_documents(tc, measure = 'overlap_pct')
-#' igraph::get.data.frame(g)
+#' igraph::as_data_frame(g)
 #'
 #' g = compare_documents(tc, date_col = 'date', hour_window = c(0,36))
-#' igraph::get.data.frame(g)
+#' igraph::as_data_frame(g)
 compare_documents <- function(tc, feature='token', date_col=NULL, meta_cols=NULL, hour_window=c(24), measure=c('cosine','overlap_pct'), min_similarity=0, weight=c('norm_tfidf', 'tfidf', 'termfreq','docfreq'), ngrams=NA, from_subset=NULL, to_subset=NULL, return_igraph=T, verbose=T) {
   weight = match.arg(weight)
   measure = match.arg(measure)

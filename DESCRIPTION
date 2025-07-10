@@ -1,12 +1,18 @@
 Package: corpustools
-Version: 0.5.1
-Date: 2023-05-07
+Version: 0.5.2
+Date: 2025-07-07
 Title: Managing, Querying and Analyzing Tokenized Text
 Description: Provides text analysis in R, focusing on the use of a tokenized text format. In this format, the positions of tokens are maintained, and each token can be annotated (e.g., part-of-speech tags, dependency relations).
     Prominent features include advanced Lucene-like querying for specific tokens or contexts (e.g., documents, sentences),
     similarity statistics for words and documents, exporting to DTM for compatibility with many text analysis packages,
     and the possibility to reconstruct original text from tokens to facilitate interpretation.
-Author: Kasper Welbers and Wouter van Atteveldt
+Authors@R: c(person(given = "Kasper",
+                  family = "Welbers",
+                  role = c("aut", "cre"),
+                  email = "kasperwelbers@gmail.com"),
+             person(given = "Wouter",
+                  family = "van Atteveldt",
+                  role = "aut"))
 Maintainer: Kasper Welbers <kasperwelbers@gmail.com>
 Depends: 
     R (>= 3.5.0)
@@ -38,5 +44,5 @@ LazyData: true
 Encoding: UTF-8
 License: GPL-3
 URL: https://github.com/kasperwelbers/corpustools
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.2
 VignetteBuilder: knitr

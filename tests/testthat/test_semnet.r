@@ -21,7 +21,7 @@ test_that("Semnet works", {
   expect_equal(round(sum(igraph::E(g)$weight),2), 36.35)
 
   g_ego = ego_semnet(g, c('fuel','fuels'), only_filter_vertices = F)
-  expect_equal(unique(igraph::get.data.frame(g_ego)$from), c('fuel','fuels'))
+  expect_equal(unique(igraph::as_data_frame(g_ego)$from), c('fuel','fuels'))
 
   ## windowed semnet
   g = semnet_window(tc, 'token', window.size = 10, measure = 'count_directed')

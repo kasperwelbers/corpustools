@@ -29,9 +29,9 @@ backbone_filter <- function(g, alpha=0.05, direction='none', delete_isolates=T, 
   if (direction == 'none') igraph::E(g)$alpha = backbone_alpha(g, k_is_n)
   if (direction == 'in') igraph::E(g)$alpha = backbone_indegree_alpha(g, k_is_n)
   if (direction == 'out') igraph::E(g)$alpha = backbone_outdegree_alpha(g, k_is_n)
-  g = igraph::delete.edges(g, which(igraph::E(g)$alpha >= alpha))
+  g = igraph::delete_edges(g, which(igraph::E(g)$alpha >= alpha))
   if (!is.null(max_vertices) && igraph::ecount(g) > 0) g = filter_vertices_by_edgeweight(g, 'alpha', max_vertices, use_original_alpha)
-  if (delete_isolates) g = igraph::delete.vertices(g, which(igraph::degree(g) == 0))
+  if (delete_isolates) g = igraph::delete_vertices(g, which(igraph::degree(g) == 0))
   if (igraph::ecount(g) == 0) {
     warning("No significant edges (backbone) remain!! Accept it (or lower the backbone_alpha)")
     return(g)
@@ -47,12 +47,12 @@ calcAlpha <- function(mat, weightsum, k){
 }
 
 backbone_alpha <- function(g, k_is_n=F){
-  if (igraph::has.multiple(g)) stop('The corpustools implementation of backbone extraction does not support parallel edges (i.e. having multiple edges between the same nodes with the same direction). If summing multiple edges is OK with you, you can use Igraphs simplify() function')
+  if (igraph::any_multiple(g)) stop('The corpustools implementation of backbone extraction does not support parallel edges (i.e. having multiple edges between the same nodes with the same direction). If summing multiple edges is OK with you, you can use Igraphs simplify() function')
 
-  mat = igraph::get.adjacency(g, attr='weight')
-  edgelist_ids = igraph::get.edgelist(g, names=F)
+  mat = igraph::as_adjacency_matrix(g, attr='weight')
+  edgelist_ids = igraph::as_edgelist(g, names=F)
 
-  if(!igraph::is.directed(g)) {
+  if(!igraph::is_directed(g)) {
     mat[lower.tri(mat)] = 0 # prevents counting edges double in symmetric matrix (undirected graph)
     weightsum_ij = weightsum_ji = Matrix::rowSums(mat) + Matrix::colSums(mat)
     k_ij = k_ji = if(k_is_n) nrow(mat) else Matrix::rowSums(mat>0) + Matrix::colSums(mat>0)
@@ -69,27 +69,27 @@ backbone_alpha <- function(g, k_is_n=F){
 }
 
 backbone_outdegree_alpha <- function(g, k_is_n=F){
-  if (igraph::has.multiple(g)) stop('The corpustools implementation of backbone extraction does not support parallel edges (i.e. having multiple edges between the same nodes with the same direction). If summing multiple edges is OK with you, you can use Igraphs simplify() function')
+  if (igraph::any_multiple(g)) stop('The corpustools implementation of backbone extraction does not support parallel edges (i.e. having multiple edges between the same nodes with the same direction). If summing multiple edges is OK with you, you can use Igraphs simplify() function')
 
-  mat = igraph::get.adjacency(g, attr='weight')
+  mat = igraph::as_adjacency_matrix(g, attr='weight')
   weightsum = Matrix::rowSums(mat)
   k = if (k_is_n) nrow(mat) else Matrix::rowSums(mat > 0)
-  edgelist_ids = igraph::get.edgelist(g, names=F)
+  edgelist_ids = igraph::as_edgelist(g, names=F)
   calcAlpha(mat, weightsum, k)[edgelist_ids]
 }
 
 backbone_indegree_alpha <- function(g, k_is_n=F){
-  if (igraph::has.multiple(g)) stop('The corpustools implementation of backbone extraction does not support parallel edges (i.e. having multiple edges between the same nodes with the same direction). If summing multiple edges is OK with you, you can use Igraphs simplify() function')
+  if (igraph::any_multiple(g)) stop('The corpustools implementation of backbone extraction does not support parallel edges (i.e. having multiple edges between the same nodes with the same direction). If summing multiple edges is OK with you, you can use Igraphs simplify() function')
 
-  mat = igraph::get.adjacency(g, attr='weight')
+  mat = igraph::as_adjacency_matrix(g, attr='weight')
   weightsum = Matrix::colSums(mat)
   k = if (k_is_n) nrow(mat) else Matrix::colSums(mat > 0)
-  edgelist_ids = igraph::get.edgelist(g, names=F)
+  edgelist_ids = igraph::as_edgelist(g, names=F)
   Matrix::t(calcAlpha(Matrix::t(mat), weightsum, k))[edgelist_ids]
 }
 
 get_max_alpha_filters <- function(g, weight_attr, max_vertices){
-  el = igraph::get.data.frame(g)
+  el = igraph::as_data_frame(g)
   a = unique(data.frame(node=c(el$from,el$to), weight=c(el[[weight_attr]],el[[weight_attr]])))
   a = a[order(a$weight),]
   a = a[!duplicated(a$node),]
@@ -112,11 +112,11 @@ filter_vertices_by_edgeweight <- function(g, weight_attr, max_vertices, keep.ori
     message(paste('Used cutoff edge-weight', filters$max.weight, 'to keep number of vertices under', max_vertices))
     if (keep.original.weight){
       message(paste('(For the edges the original weight is still used)'))
-      g = igraph::delete.edges(g, filters$delete.edges)
+      g = igraph::delete_edges(g, filters$delete.edges)
     } else {
-      g = igraph::delete.edges(g, which(igraph::get.edge.attribute(g, weight_attr) >= filters$max.weight))
+      g = igraph::delete_edges(g, which(igraph::get.edge.attribute(g, weight_attr) >= filters$max.weight))
     }
   }
-  if (delete_isolates) g = igraph::delete.vertices(g, which(igraph::degree(g) == 0))
+  if (delete_isolates) g = igraph::delete_vertices(g, which(igraph::degree(g) == 0))
   g
 }

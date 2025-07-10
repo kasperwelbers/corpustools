@@ -45,20 +45,20 @@ The function is similar to the ego function in igraph, but with some notable dif
 tc = create_tcorpus(c('a b c', 'd e f', 'a d'))
 g = semnet(tc, 'token')
 
-igraph::get.data.frame(g)
+igraph::as_data_frame(g)
 \donttest{plot_semnet(g)}
 ## only keep nodes directly connected to given node
 g_ego = ego_semnet(g, 'e')
-igraph::get.data.frame(g_ego)
+igraph::as_data_frame(g_ego)
 \donttest{plot_semnet(g_ego)}
 
 ## only keep edges directly connected to given node
 g_ego = ego_semnet(g, 'e', only_filter_vertices = FALSE)
-igraph::get.data.frame(g_ego)
+igraph::as_data_frame(g_ego)
 \donttest{plot_semnet(g_ego)}
 
 ## only keep nodes connected to given node with a specified degree (i.e. distance)
 g_ego = ego_semnet(g, 'e', depth = 2)
-igraph::get.data.frame(g_ego)
+igraph::as_data_frame(g_ego)
 \donttest{plot_semnet(g_ego)}
 }

@@ -19,7 +19,7 @@
 #'                  verbose = FALSE)}
 #'
 #' @param column      The name of the column in which the annotations are added. The unique ids are added as column_id
-#' @param ...         One or multiple tqueries, or a list of queries, as created with \code{\link{tquery}}. Queries can be given a named by using a named argument, which will be used in the annotation_id to keep track of which query was used. 
+#' @param ...         One or multiple tqueries, or a list of queries. Queries can be given a named by using a named argument, which will be used in the annotation_id to keep track of which query was used. 
 #' @param block       Optionally, specify ids (doc_id - sentence - token_id triples) that are blocked from querying and filling (ignoring the id and recursive searches through the id). 
 #' @param fill        Logical. If TRUE (default) also assign the fill nodes (as specified in the tquery). Otherwise these are ignored 
 #' @param overwrite   Applies if column already exists. If TRUE, existing column will be overwritten. If FALSE, the existing annotations in the column will be blocked, and new annotations will be added. This is identical to using multiple queries.
@@ -64,7 +64,7 @@ tCorpus$set('public', 'annotate_rsyntax', function(column, ..., block=NULL, fill
 
 #' Fold rsyntax annotations
 #'
-#' If a tCorpus has rsyntax annotations (see \code{\link{annotate_rsyntax}}), it can be convenient to aggregate tokens that have a certain semantic label.
+#' If a tCorpus has rsyntax annotations, it can be convenient to aggregate tokens that have a certain semantic label.
 #' For example, if you have a query for labeling "source" and "quote", you can add an aggegated value for the sources (such as a unique ID) as a column, and then remove the quote tokens. 
 #' 
 #' \strong{Usage:}

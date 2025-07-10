@@ -39,6 +39,6 @@ tc = create_tcorpus(text, doc_id = c('a','b','c','d'), split_sentences = TRUE)
 
 g = semnet(tc, 'token')
 g
-igraph::get.data.frame(g)
+igraph::as_data_frame(g)
 \donttest{plot_semnet(g)}
 }

@@ -61,11 +61,11 @@ d = data.frame(text = c('a b c d e',
 tc = create_tcorpus(d)
 
 g = compare_documents(tc)
-igraph::get.data.frame(g)
+igraph::as_data_frame(g)
 
 g = compare_documents(tc, measure = 'overlap_pct')
-igraph::get.data.frame(g)
+igraph::as_data_frame(g)
 
 g = compare_documents(tc, date_col = 'date', hour_window = c(0,36))
-igraph::get.data.frame(g)
+igraph::as_data_frame(g)
 }

@@ -459,7 +459,7 @@ We can create semantic networks based on the cooccurence of queries in documents
 g = semnet(hits, measure = 'con_prob')
 ```
 
-The output `g` is a network in the igraph format. The data can also be extracted as an edgelist (`igraph::get.data.frame(g, 'edges')`) or adjacency matrix (`igraph::get.adjacency(g, attr = 'weight')`).
+The output `g` is a network in the igraph format. The data can also be extracted as an edgelist (`igraph::as_data_frame(g, 'edges')`) or adjacency matrix (`igraph::get.adjacency(g, attr = 'weight')`).
 
 ```{r}
 igraph::get.adjacency(g, attr = 'weight')

@@ -729,7 +729,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h3>Associations</h3>
 <p>We can create semantic networks based on the cooccurence of queries in documents. For more information on using the <code>semnet</code> and <code>semnet_window</code> functions and visualizing semantic networks, see the brief tutorial below.</p>
 <div class="sourceCode" id="cb65"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb65-1"><a href="#cb65-1"></a>g =<span class="st"> </span><span class="kw">semnet</span>(hits, <span class="dt">measure =</span> <span class="st">&#39;con_prob&#39;</span>)</span></code></pre></div>
-<p>The output <code>g</code> is a network in the igraph format. The data can also be extracted as an edgelist (<code>igraph::get.data.frame(g, &#39;edges&#39;)</code>) or adjacency matrix (<code>igraph::get.adjacency(g, attr = &#39;weight&#39;)</code>).</p>
+<p>The output <code>g</code> is a network in the igraph format. The data can also be extracted as an edgelist (<code>igraph::as_data_frame(g, &#39;edges&#39;)</code>) or adjacency matrix (<code>igraph::get.adjacency(g, attr = &#39;weight&#39;)</code>).</p>
 <div class="sourceCode" id="cb66"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1"></a>igraph<span class="op">::</span><span class="kw">get.adjacency</span>(g, <span class="dt">attr =</span> <span class="st">&#39;weight&#39;</span>)</span></code></pre></div>
 <pre><code>## 4 x 4 sparse Matrix of class &quot;dgCMatrix&quot;
 ##           Economy Education Terrorism    War

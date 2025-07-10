@@ -26,7 +26,7 @@
 #'
 #' g = semnet(tc, 'token')
 #' g
-#' igraph::get.data.frame(g)
+#' igraph::as_data_frame(g)
 #' \donttest{plot_semnet(g)}
 semnet <- function(tc, feature='token', measure=c('con_prob', 'con_prob_weighted', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), backbone=F, n.batches=NA){
   alpha = 2
@@ -121,7 +121,7 @@ semnet <- function(tc, feature='token', measure=c('con_prob', 'con_prob_weighted
 #'
 #' g = semnet_window(tc, 'token', window.size = 1)
 #' g
-#' igraph::get.data.frame(g)
+#' igraph::as_data_frame(g)
 #' \donttest{plot_semnet(g)}
 semnet_window <- function(tc, feature='token', measure=c('con_prob', 'cosine', 'count_directed', 'count_undirected', 'chi2'), context_level=c('document','sentence'), window.size=10, direction='<>', backbone=F, n.batches=5, matrix_mode=c('positionXwindow', 'windowXwindow')){
   measure = match.arg(measure)
@@ -167,25 +167,25 @@ create_semnet <- function(tc, feature, measure, matrix_mode, context_level, dire
   if (measure == 'cosine') {
     ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='normal', mat_stats=c('sum.x','count.x','magnitude.x','magnitude.y'), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
     ml$mat@x = ml$mat@x / (ml$magnitude.x[ml$mat@i+1] * ml$magnitude.y[ml$mat@j+1])
-    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'upper', diag = F, weighted = T)
+    g = igraph::graph_from_adjacency_matrix(squarify_matrix(ml$mat), mode = 'upper', diag = F, weighted = T)
   }
   if (measure == 'con_prob') {
     ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='dicho', mat_stats=c('sum.x'), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
     ml$mat = ml$mat / ml$sum.x
-    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'directed', diag = F, weighted = T)
+    g = igraph::graph_from_adjacency_matrix(squarify_matrix(ml$mat), mode = 'directed', diag = F, weighted = T)
   }
   if (measure == 'con_prob_weighted') {
     ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='prob', mat_stats=c('sum.x'), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
     ml$mat = ml$mat / ml$sum.x
-    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'directed', diag = F, weighted = T)
+    g = igraph::graph_from_adjacency_matrix(squarify_matrix(ml$mat), mode = 'directed', diag = F, weighted = T)
   }
   if (measure == 'count_directed') {
     ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='dicho', mat_stats=c(), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
-    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'directed', diag = F, weighted = T)
+    g = igraph::graph_from_adjacency_matrix(squarify_matrix(ml$mat), mode = 'directed', diag = F, weighted = T)
   }
   if (measure == 'count_undirected') {
     ml = feature_cooccurrence(tc, feature, matrix_mode=matrix_mode, count_mode='dicho', mat_stats=c(), context_level=context_level, direction=direction, window.size=window.size, n.batches=n.batches, alpha=alpha)
-    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'upper', diag = F, weighted = T)
+    g = igraph::graph_from_adjacency_matrix(squarify_matrix(ml$mat), mode = 'upper', diag = F, weighted = T)
   }
   if (measure == 'chi2'){
     ## add sign and/or ratio
@@ -196,7 +196,7 @@ create_semnet <- function(tc, feature, measure, matrix_mode, context_level, dire
                       c = ml$sum.y[ml$mat@j+1] - ml$mat@x)    # x=1, y=0
     xtab$d = ml$nrow - ((xtab$b + xtab$c) - xtab$a)           # x=0, y=0
     ml$mat@x = calc_chi2(xtab$a, xtab$b, xtab$c, xtab$d, correct=T) ## replace sparse matrix values with chi2
-    g = igraph::graph.adjacency(squarify_matrix(ml$mat), mode = 'directed', diag = F, weighted = T)
+    g = igraph::graph_from_adjacency_matrix(squarify_matrix(ml$mat), mode = 'directed', diag = F, weighted = T)
   }
 
   ## match frequencies (and if available document frequencies)

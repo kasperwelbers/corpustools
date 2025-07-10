@@ -261,7 +261,7 @@ NULL
 #' Subset a tCorpus
 #'
 #' @description
-#' Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta). The subset arguments work according to the \link{subset.data.table} function.
+#' Returns the subset of a tCorpus. The selection can be made separately (and simultaneously) for the token data (using subset) and the meta data (using subset_meta).
 #'
 #' There are two flavours. You can either use subset(tc, ...) or tc$subset(...). The difference is that the second approach changes the tCorpus by reference. 
 #' In other words, tc$subset() will delete the rows from the tCorpus, instead of creating a new tCorpus.

@@ -18,22 +18,22 @@
 #' tc = create_tcorpus(c('a b c', 'd e f', 'a d'))
 #' g = semnet(tc, 'token')
 #'
-#' igraph::get.data.frame(g)
+#' igraph::as_data_frame(g)
 #' \donttest{plot_semnet(g)}
 #
 #' ## only keep nodes directly connected to given node
 #' g_ego = ego_semnet(g, 'e')
-#' igraph::get.data.frame(g_ego)
+#' igraph::as_data_frame(g_ego)
 #' \donttest{plot_semnet(g_ego)}
 #'
 #' ## only keep edges directly connected to given node
 #' g_ego = ego_semnet(g, 'e', only_filter_vertices = FALSE)
-#' igraph::get.data.frame(g_ego)
+#' igraph::as_data_frame(g_ego)
 #' \donttest{plot_semnet(g_ego)}
 #'
 #' ## only keep nodes connected to given node with a specified degree (i.e. distance)
 #' g_ego = ego_semnet(g, 'e', depth = 2)
-#' igraph::get.data.frame(g_ego)
+#' igraph::as_data_frame(g_ego)
 #' \donttest{plot_semnet(g_ego)}
 #' @export
 ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_attr='weight', min_weight=NULL, top_edges=NULL, max_edges_level=NULL, directed=c('out','in')){
@@ -43,17 +43,17 @@ ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_
   if (length(missing) == length(vertex_names)) stop('None of the given vertex_names exist in g')
   if (length(missing) > 0) warning(sprintf('Some of the given vertex_names do not exist in g: [%s]', paste(missing, collapse=', ')))
 
-  igraph::delete.edges(g, igraph::E(g))
+  igraph::delete_edges(g, igraph::E(g))
   if (!is.na(weight_attr)) {
-    adj = igraph::get.adjacency(g, type='both', attr = weight_attr)
+    adj = igraph::as_adjacency_matrix(g, type='both', attr = weight_attr)
   } else {
-    adj = igraph::get.adjacency(g, type='both')
+    adj = igraph::as_adjacency_matrix(g, type='both')
     min_weight = NA; top_edges = NA
   }
   adj = methods::as(methods::as(adj, 'generalMatrix'), 'TsparseMatrix')
-  if (igraph::is.directed(g)){
+  if (igraph::is_directed(g)){
     if (directed == 'out') dt = summary(adj)
-    if (directed == 'in') dt = summary(t(adj))
+    # if (directed == 'in') dt = summary(t(adj))
   } else {
     dt = summary(adj)
   }
@@ -64,7 +64,7 @@ ego_semnet <- function(g, vertex_names, depth=1, only_filter_vertices=T, weight_
   ego = build_ego_network(dt, vertex_ids, level=1, depth=depth, min_weight=min_weight, top_edges=top_edges, max_edges_level=max_edges_level)
   if (only_filter_vertices){
     i = unique(c(ego$x, ego$y))
-    g = igraph::delete.vertices(g, which(!1:igraph::vcount(g) %in% i))
+    g = igraph::delete_vertices(g, which(!1:igraph::vcount(g) %in% i))
   } else {
     i = igraph::get_edge_ids(g, vp=c(rbind(ego$x, ego$y)))
     g = igraph::delete_edges(g, which(!1:igraph::ecount(g) %in% i))
